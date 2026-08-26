@@ -4,18 +4,11 @@ import 'package:flame/components.dart';
 
 /// Short-lived puff left behind a flying rocket.
 class SmokeTrailComponent extends PositionComponent {
-  SmokeTrailComponent({required Vector2 position})
-    : super(position: position, anchor: Anchor.center);
-
-  double _age = 0;
   static const _duration = 0.4;
 
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _age += dt;
-    if (_age >= _duration) removeFromParent();
-  }
+  double _age = 0;
+  SmokeTrailComponent({required Vector2 position})
+    : super(position: position, anchor: Anchor.center);
 
   @override
   void render(Canvas canvas) {
@@ -30,5 +23,12 @@ class SmokeTrailComponent extends PositionComponent {
           t,
         )!,
     );
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= _duration) removeFromParent();
   }
 }

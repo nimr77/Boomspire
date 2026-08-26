@@ -5,9 +5,9 @@ import 'build_menu.dart';
 
 /// Top status bar (health/wave/gold) plus the bottom tower build menu.
 class HudOverlay extends StatelessWidget {
-  const HudOverlay({super.key, required this.game});
-
   final CircuitDefenseGame game;
+
+  const HudOverlay({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +48,50 @@ class HudOverlay extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          ValueListenableBuilder<String>(
+            valueListenable: game.commanderNote,
+            builder: (context, note, _) {
+              if (note.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xB31A1F26),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.purpleAccent.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.smart_toy,
+                          color: Colors.purpleAccent,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          note,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: BuildMenu(game: game),
@@ -59,11 +103,11 @@ class HudOverlay extends StatelessWidget {
 }
 
 class _StatChip extends StatelessWidget {
-  const _StatChip({required this.icon, required this.color, required this.label});
-
   final IconData icon;
+
   final Color color;
   final String label;
+  const _StatChip({required this.icon, required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {

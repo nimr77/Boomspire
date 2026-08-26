@@ -5,158 +5,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-const sampleRate = 44100;
-
-List<double> silence(double seconds) =>
-    List.filled((seconds * sampleRate).round(), 0.0);
-
-/// Oscillator with linear frequency sweep from [startFreq] to [endFreq].
-List<double> tone(
-  double startFreq,
-  double endFreq,
-  double seconds, {
-  double amp = 1,
-  String shape = 'sine',
-}) {
-  final n = (seconds * sampleRate).round();
-  final out = List<double>.filled(n, 0);
-  var phase = 0.0;
-  for (var i = 0; i < n; i++) {
-    final t = n <= 1 ? 0.0 : i / n;
-    final freq = startFreq + (endFreq - startFreq) * t;
-    phase += 2 * pi * freq / sampleRate;
-    double v;
-    switch (shape) {
-      case 'square':
-        v = sin(phase) >= 0 ? 1.0 : -1.0;
-      case 'saw':
-        v = 2 * ((phase / (2 * pi)) % 1) - 1;
-      default:
-        v = sin(phase);
-    }
-    out[i] = v * amp;
-  }
-  return out;
-}
-
-List<double> noise(double seconds, {double amp = 1, int seed = 1}) {
-  final r = Random(seed);
-  final n = (seconds * sampleRate).round();
-  return List<double>.generate(n, (_) => (r.nextDouble() * 2 - 1) * amp);
-}
-
-List<double> lowPass(List<double> input, double alpha) {
-  final out = List<double>.filled(input.length, 0);
-  var y = 0.0;
-  for (var i = 0; i < input.length; i++) {
-    y += alpha * (input[i] - y);
-    out[i] = y;
-  }
-  return out;
-}
-
-List<double> highPass(List<double> input, double alpha) {
-  final lp = lowPass(input, alpha);
-  return List<double>.generate(input.length, (i) => input[i] - lp[i]);
-}
-
-/// Fast attack ramp followed by exponential decay.
-List<double> envelope(
-  List<double> input, {
-  double attackSec = 0.005,
-  double decayTau = 0.15,
-}) {
-  final n = input.length;
-  final out = List<double>.filled(n, 0);
-  final attackSamples = (attackSec * sampleRate).round().clamp(1, max(n, 1));
-  for (var i = 0; i < n; i++) {
-    final t = i / sampleRate;
-    final env = i < attackSamples
-        ? i / attackSamples
-        : exp(-(t - attackSec) / decayTau);
-    out[i] = input[i] * env;
-  }
-  return out;
-}
-
-List<double> mix(List<List<double>> layers, {List<double>? gains}) {
-  final n = layers.map((l) => l.length).reduce(max);
-  final out = List<double>.filled(n, 0);
-  for (var li = 0; li < layers.length; li++) {
-    final g = gains != null ? gains[li] : 1.0;
-    final layer = layers[li];
-    for (var i = 0; i < layer.length; i++) {
-      out[i] += layer[i] * g;
-    }
-  }
-  return out;
-}
-
-List<double> concat(List<List<double>> parts) =>
-    parts.expand((e) => e).toList(growable: false);
-
-/// Mixes [layer] into [base] starting at [offsetSeconds], extending base if
-/// needed.
-List<double> addAt(
-  List<double> base,
-  List<double> layer,
-  double offsetSeconds, {
-  double gain = 1,
-}) {
-  final offset = (offsetSeconds * sampleRate).round();
-  final needed = offset + layer.length;
-  final out = List<double>.from(base);
-  if (out.length < needed) {
-    out.addAll(List.filled(needed - out.length, 0.0));
-  }
-  for (var i = 0; i < layer.length; i++) {
-    out[offset + i] += layer[i] * gain;
-  }
-  return out;
-}
-
-List<double> normalize(List<double> input, {double peak = 0.9}) {
-  var maxAbs = 0.0;
-  for (final v in input) {
-    if (v.abs() > maxAbs) maxAbs = v.abs();
-  }
-  if (maxAbs == 0) return input;
-  final scale = peak / maxAbs;
-  return input.map((v) => v * scale).toList();
-}
-
-void writeWav(String path, List<double> samples) {
-  final pcm = Int16List(samples.length);
-  for (var i = 0; i < samples.length; i++) {
-    pcm[i] = (samples[i].clamp(-1.0, 1.0) * 32767).round();
-  }
-  final dataBytes = pcm.buffer.asUint8List();
-  final bytes = BytesBuilder();
-  void str(String s) => bytes.add(s.codeUnits);
-  void u32(int v) =>
-      bytes.add([v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >> 24) & 0xff]);
-  void u16(int v) => bytes.add([v & 0xff, (v >> 8) & 0xff]);
-
-  str('RIFF');
-  u32(36 + dataBytes.length);
-  str('WAVE');
-  str('fmt ');
-  u32(16);
-  u16(1); // PCM
-  u16(1); // mono
-  u32(sampleRate);
-  u32(sampleRate * 2); // byte rate
-  u16(2); // block align
-  u16(16); // bits per sample
-  str('data');
-  u32(dataBytes.length);
-  bytes.add(dataBytes);
-
-  final file = File(path)..createSync(recursive: true);
-  file.writeAsBytesSync(bytes.toBytes());
-  stdout.writeln('wrote $path (${samples.length} samples)');
-}
-
 void main() {
   const dir = 'assets/audio';
 
@@ -300,5 +148,207 @@ void main() {
     ])),
   );
 
+  // Cannon shot: deep booming thump with a heavy sub punch.
+  writeWav(
+    '$dir/cannon_shot.wav',
+    normalize(mix([
+      envelope(tone(160, 55, 0.35, amp: 0.9, shape: 'sine'), attackSec: 0.004, decayTau: 0.16),
+      envelope(highPass(noise(0.06, seed: 99), 0.55), attackSec: 0.001, decayTau: 0.03),
+      envelope(lowPass(noise(0.3, seed: 101), 0.08), attackSec: 0.01, decayTau: 0.2),
+    ])),
+  );
+
+  // Anti-air flak burst: sharp crackling triple-pop.
+  writeWav(
+    '$dir/anti_air_shot.wav',
+    normalize(concat([
+      envelope(highPass(noise(0.04, seed: 102), 0.6), decayTau: 0.02),
+      silence(0.02),
+      envelope(highPass(noise(0.04, seed: 103), 0.6), decayTau: 0.02),
+      silence(0.02),
+      envelope(highPass(noise(0.05, seed: 104), 0.6), decayTau: 0.025),
+    ])),
+  );
+
+  // Tower destroyed: heavy metallic collapse.
+  writeWav(
+    '$dir/tower_destroyed.wav',
+    normalize(mix([
+      envelope(tone(180, 40, 0.7, amp: 0.85, shape: 'saw'), attackSec: 0.005, decayTau: 0.35),
+      envelope(lowPass(noise(0.8, seed: 105), 0.05), attackSec: 0.02, decayTau: 0.5),
+      envelope(highPass(noise(0.15, seed: 106), 0.5), attackSec: 0.001, decayTau: 0.08),
+    ])),
+  );
+
+  // Tower repair: friendly ascending mechanical chime.
+  writeWav(
+    '$dir/tower_repair.wav',
+    normalize(concat([
+      envelope(tone(420, 520, 0.09, amp: 0.5, shape: 'square'), decayTau: 0.06),
+      envelope(tone(620, 740, 0.12, amp: 0.5, shape: 'square'), decayTau: 0.08),
+    ])),
+  );
+
+  // Enemy gunfire: harsher, lower-pitched crack than the player's turret.
+  writeWav(
+    '$dir/enemy_shot.wav',
+    normalize(mix([
+      envelope(highPass(noise(0.06, seed: 107), 0.5), attackSec: 0.001, decayTau: 0.03),
+      envelope(tone(900, 400, 0.05, amp: 0.5, shape: 'square'), decayTau: 0.03),
+    ])),
+  );
+
   stdout.writeln('Audio generation complete.');
+}
+
+const sampleRate = 44100;
+
+/// Mixes [layer] into [base] starting at [offsetSeconds], extending base if
+/// needed.
+List<double> addAt(
+  List<double> base,
+  List<double> layer,
+  double offsetSeconds, {
+  double gain = 1,
+}) {
+  final offset = (offsetSeconds * sampleRate).round();
+  final needed = offset + layer.length;
+  final out = List<double>.from(base);
+  if (out.length < needed) {
+    out.addAll(List.filled(needed - out.length, 0.0));
+  }
+  for (var i = 0; i < layer.length; i++) {
+    out[offset + i] += layer[i] * gain;
+  }
+  return out;
+}
+
+List<double> concat(List<List<double>> parts) =>
+    parts.expand((e) => e).toList(growable: false);
+
+/// Fast attack ramp followed by exponential decay.
+List<double> envelope(
+  List<double> input, {
+  double attackSec = 0.005,
+  double decayTau = 0.15,
+}) {
+  final n = input.length;
+  final out = List<double>.filled(n, 0);
+  final attackSamples = (attackSec * sampleRate).round().clamp(1, max(n, 1));
+  for (var i = 0; i < n; i++) {
+    final t = i / sampleRate;
+    final env = i < attackSamples
+        ? i / attackSamples
+        : exp(-(t - attackSec) / decayTau);
+    out[i] = input[i] * env;
+  }
+  return out;
+}
+
+List<double> highPass(List<double> input, double alpha) {
+  final lp = lowPass(input, alpha);
+  return List<double>.generate(input.length, (i) => input[i] - lp[i]);
+}
+
+List<double> lowPass(List<double> input, double alpha) {
+  final out = List<double>.filled(input.length, 0);
+  var y = 0.0;
+  for (var i = 0; i < input.length; i++) {
+    y += alpha * (input[i] - y);
+    out[i] = y;
+  }
+  return out;
+}
+
+List<double> mix(List<List<double>> layers, {List<double>? gains}) {
+  final n = layers.map((l) => l.length).reduce(max);
+  final out = List<double>.filled(n, 0);
+  for (var li = 0; li < layers.length; li++) {
+    final g = gains != null ? gains[li] : 1.0;
+    final layer = layers[li];
+    for (var i = 0; i < layer.length; i++) {
+      out[i] += layer[i] * g;
+    }
+  }
+  return out;
+}
+
+List<double> noise(double seconds, {double amp = 1, int seed = 1}) {
+  final r = Random(seed);
+  final n = (seconds * sampleRate).round();
+  return List<double>.generate(n, (_) => (r.nextDouble() * 2 - 1) * amp);
+}
+
+List<double> normalize(List<double> input, {double peak = 0.9}) {
+  var maxAbs = 0.0;
+  for (final v in input) {
+    if (v.abs() > maxAbs) maxAbs = v.abs();
+  }
+  if (maxAbs == 0) return input;
+  final scale = peak / maxAbs;
+  return input.map((v) => v * scale).toList();
+}
+
+List<double> silence(double seconds) =>
+    List.filled((seconds * sampleRate).round(), 0.0);
+
+/// Oscillator with linear frequency sweep from [startFreq] to [endFreq].
+List<double> tone(
+  double startFreq,
+  double endFreq,
+  double seconds, {
+  double amp = 1,
+  String shape = 'sine',
+}) {
+  final n = (seconds * sampleRate).round();
+  final out = List<double>.filled(n, 0);
+  var phase = 0.0;
+  for (var i = 0; i < n; i++) {
+    final t = n <= 1 ? 0.0 : i / n;
+    final freq = startFreq + (endFreq - startFreq) * t;
+    phase += 2 * pi * freq / sampleRate;
+    double v;
+    switch (shape) {
+      case 'square':
+        v = sin(phase) >= 0 ? 1.0 : -1.0;
+      case 'saw':
+        v = 2 * ((phase / (2 * pi)) % 1) - 1;
+      default:
+        v = sin(phase);
+    }
+    out[i] = v * amp;
+  }
+  return out;
+}
+
+void writeWav(String path, List<double> samples) {
+  final pcm = Int16List(samples.length);
+  for (var i = 0; i < samples.length; i++) {
+    pcm[i] = (samples[i].clamp(-1.0, 1.0) * 32767).round();
+  }
+  final dataBytes = pcm.buffer.asUint8List();
+  final bytes = BytesBuilder();
+  void str(String s) => bytes.add(s.codeUnits);
+  void u32(int v) =>
+      bytes.add([v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >> 24) & 0xff]);
+  void u16(int v) => bytes.add([v & 0xff, (v >> 8) & 0xff]);
+
+  str('RIFF');
+  u32(36 + dataBytes.length);
+  str('WAVE');
+  str('fmt ');
+  u32(16);
+  u16(1); // PCM
+  u16(1); // mono
+  u32(sampleRate);
+  u32(sampleRate * 2); // byte rate
+  u16(2); // block align
+  u16(16); // bits per sample
+  str('data');
+  u32(dataBytes.length);
+  bytes.add(dataBytes);
+
+  final file = File(path)..createSync(recursive: true);
+  file.writeAsBytesSync(bytes.toBytes());
+  stdout.writeln('wrote $path (${samples.length} samples)');
 }

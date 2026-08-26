@@ -6,13 +6,13 @@ import 'package:flame/components.dart';
 /// Rocket impact: a bright expanding flash ring plus scattering embers,
 /// scaled to the tower's splash radius.
 class ExplosionComponent extends PositionComponent {
-  ExplosionComponent({required Vector2 position, required this.radius})
-    : super(position: position, anchor: Anchor.center, priority: 30);
+  static const _duration = 0.6;
 
   final double radius;
   double _age = 0;
-  static const _duration = 0.6;
   late final List<_Ember> _embers;
+  ExplosionComponent({required Vector2 position, required this.radius})
+    : super(position: position, anchor: Anchor.center, priority: 30);
 
   @override
   Future<void> onLoad() async {
@@ -22,13 +22,6 @@ class ExplosionComponent extends PositionComponent {
       final speed = radius * (0.6 + rnd.nextDouble() * 1.2);
       return _Ember(Vector2(cos(a), sin(a)) * speed, rnd.nextDouble() * 0.15);
     });
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _age += dt;
-    if (_age >= _duration) removeFromParent();
   }
 
   @override
@@ -42,12 +35,11 @@ class ExplosionComponent extends PositionComponent {
         Offset.zero,
         ringRadius,
         Paint()
-          ..color =
-              Color.lerp(
-                const Color(0xFFFFF3C4),
-                const Color(0x00FF6A00),
-                ringT,
-              )!
+          ..color = Color.lerp(
+            const Color(0xFFFFF3C4),
+            const Color(0x00FF6A00),
+            ringT,
+          )!
           ..style = PaintingStyle.stroke
           ..strokeWidth = 6 * (1 - ringT),
       );
@@ -55,12 +47,11 @@ class ExplosionComponent extends PositionComponent {
         Offset.zero,
         radius * 0.35 * (1 - ringT * 0.6),
         Paint()
-          ..color =
-              Color.lerp(
-                const Color(0xFFFFFFFF),
-                const Color(0x00FFAE42),
-                ringT,
-              )!,
+          ..color = Color.lerp(
+            const Color(0xFFFFFFFF),
+            const Color(0x00FFAE42),
+            ringT,
+          )!,
       );
     }
 
@@ -84,10 +75,17 @@ class ExplosionComponent extends PositionComponent {
       );
     }
   }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= _duration) removeFromParent();
+  }
 }
 
 class _Ember {
-  _Ember(this.velocity, this.delay);
   final Vector2 velocity;
   final double delay;
+  _Ember(this.velocity, this.delay);
 }

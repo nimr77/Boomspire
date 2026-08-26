@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../../towers/domain/models/tower_blueprint.dart';
 import '../../../towers/domain/models/tower_type.dart';
+import '../../../towers/presentation/tower_sprites.dart';
 import '../circuit_defense_game.dart';
 
 /// Bottom build bar: pick a tower type, then tap an empty pad on the field
 /// to place it (costs gold, needs a free build slot).
 class BuildMenu extends StatelessWidget {
-  const BuildMenu({super.key, required this.game});
-
   final CircuitDefenseGame game;
+
+  const BuildMenu({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +45,11 @@ class BuildMenu extends StatelessWidget {
 }
 
 class _TowerButton extends StatelessWidget {
+  final TowerBlueprint blueprint;
+
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
   const _TowerButton({
     required this.blueprint,
     required this.selected,
@@ -51,16 +57,9 @@ class _TowerButton extends StatelessWidget {
     required this.onTap,
   });
 
-  final TowerBlueprint blueprint;
-  final bool selected;
-  final bool enabled;
-  final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
-    final accent = blueprint.type.name == 'rocket'
-        ? const Color(0xFFFF6B35)
-        : const Color(0xFF4FC3F7);
+    final accent = TowerSpriteFactory.accentColor(blueprint.type);
     return Opacity(
       opacity: enabled ? 1 : 0.45,
       child: InkWell(
@@ -77,16 +76,24 @@ class _TowerButton extends StatelessWidget {
               width: selected ? 2.5 : 1,
             ),
             boxShadow: selected
-                ? [BoxShadow(color: accent.withValues(alpha: 0.5), blurRadius: 12)]
+                ? [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.5),
+                      blurRadius: 12,
+                    ),
+                  ]
                 : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                blueprint.type.name == 'rocket'
-                    ? Icons.local_fire_department
-                    : Icons.gps_fixed,
+                switch (blueprint.type) {
+                  TowerType.rocket => Icons.local_fire_department,
+                  TowerType.cannon => Icons.whatshot,
+                  TowerType.antiAir => Icons.radar,
+                  TowerType.machineGun => Icons.gps_fixed,
+                },
                 color: accent,
                 size: 26,
               ),

@@ -4,7 +4,11 @@ import '../../enemies/presentation/enemy_component.dart';
 import 'tower_component.dart';
 
 class RocketTowerComponent extends TowerComponent {
-  RocketTowerComponent({required super.slot, required super.blueprint});
+  RocketTowerComponent({
+    required super.position,
+    required super.cellSize,
+    required super.blueprint,
+  });
 
   @override
   void fire(EnemyComponent target) {

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 /// Rising "+Ng" text popup shown when an enemy is killed, reinforcing the
 /// gold reward.
 class FloatingTextComponent extends TextComponent {
+  static const _duration = 0.8;
+
+  double _age = 0;
   FloatingTextComponent({required super.text, required Vector2 position})
     : super(
         position: position,
@@ -18,9 +21,6 @@ class FloatingTextComponent extends TextComponent {
           ),
         ),
       );
-
-  double _age = 0;
-  static const _duration = 0.8;
 
   @override
   void update(double dt) {

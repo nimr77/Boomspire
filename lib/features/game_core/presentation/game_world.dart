@@ -2,10 +2,13 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 
 import '../../enemies/presentation/enemy_component.dart';
+import '../../terrain/presentation/cloud_layer_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../../waves/presentation/wave_director_component.dart';
 import 'circuit_defense_game.dart';
+import 'home_base_component.dart';
+import 'spawn_indicator_component.dart';
 
 /// Root of the game scene graph. Holds the terrain, wave director, active
 /// towers/enemies, and routes arena taps back to the game for tower
@@ -18,11 +21,35 @@ class GameWorld extends World
   Future<void> initialize() async {
     await add(TerrainComponent(terrainMap: game.terrainMap));
     await add(WaveDirectorComponent());
+    await add(
+      CloudLayerComponent(
+        arenaSize: Vector2(
+          game.terrainMap.arenaWidth,
+          game.terrainMap.arenaHeight,
+        ),
+      ),
+    );
+    await add(
+      SpawnIndicatorComponent(
+        position: Vector2(
+          game.terrainMap.spawnPoint.x,
+          game.terrainMap.spawnPoint.y - 34,
+        ),
+      ),
+    );
+    await add(
+      HomeBaseComponent(
+        position: Vector2(
+          game.terrainMap.basePoint.x,
+          game.terrainMap.basePoint.y,
+        ),
+      ),
+    );
   }
 
-  void spawnEnemy(EnemyComponent enemy) {
-    activeEnemies.add(enemy);
-    add(enemy);
+  @override
+  void onTapDown(TapDownEvent event) {
+    game.handleArenaTap(event.localPosition);
   }
 
   void removeEnemy(EnemyComponent enemy) {
@@ -30,16 +57,21 @@ class GameWorld extends World
     enemy.removeFromParent();
   }
 
-  void spawnTower(TowerComponent tower) {
-    activeTowers.add(tower);
-    add(tower);
+  void removeTower(TowerComponent tower) {
+    activeTowers.remove(tower);
+    tower.removeFromParent();
   }
 
   /// Adds any transient visual/audio effect component to the scene.
   void spawn(Component component) => add(component);
 
-  @override
-  void onTapDown(TapDownEvent event) {
-    game.handleArenaTap(event.localPosition);
+  void spawnEnemy(EnemyComponent enemy) {
+    activeEnemies.add(enemy);
+    add(enemy);
+  }
+
+  void spawnTower(TowerComponent tower) {
+    activeTowers.add(tower);
+    add(tower);
   }
 }

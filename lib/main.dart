@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'features/game_core/presentation/game_page.dart';
+import 'features/level_select/presentation/level_select_page.dart';
 
 void main() {
   runApp(const CircuitDefenseApp());
@@ -15,7 +15,7 @@ class CircuitDefenseApp extends StatelessWidget {
       title: 'Circuit Defense',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true),
-      home: const GamePage(),
+      home: const LevelSelectPage(),
     );
   }
 }

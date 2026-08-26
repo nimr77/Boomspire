@@ -7,16 +7,16 @@ import '../models/game_status.dart';
 /// Extends [ChangeNotifier] so the presentation layer (HUD, overlays) can
 /// simply `AnimatedBuilder`/`ListenableBuilder` on it.
 abstract class GameStateRepository extends ChangeNotifier {
-  int get health;
-  int get gold;
   int get currentWave;
-  int get totalWaves;
+  int get gold;
+  int get health;
   GameStatus get status;
+  int get totalWaves;
 
-  void damagePlayer(int amount);
-  bool spendGold(int amount);
   void addGold(int amount);
-  void setWave(int waveNumber, {required int totalWaves});
-  void setStatus(GameStatus status);
+  void damagePlayer(int amount);
   void reset();
+  void setStatus(GameStatus status);
+  void setWave(int waveNumber, {required int totalWaves});
+  bool spendGold(int amount);
 }

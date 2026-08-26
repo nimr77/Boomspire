@@ -33,8 +33,7 @@ class Grid {
     cell.y * cellSize + cellSize / 2,
   );
 
-  bool isBlocked(int col, int row) =>
-      !inBounds(col, row) || blocked[row][col];
+  bool isBlocked(int col, int row) => !inBounds(col, row) || blocked[row][col];
 
   void setTowerOccupied(int col, int row, bool occupied) {
     if (!inBounds(col, row)) return;
@@ -44,7 +43,10 @@ class Grid {
   void setMountain(int col, int row, bool isMountain) {
     if (!inBounds(col, row)) return;
     mountain[row][col] = isMountain;
-    if (isMountain) blocked[row][col] = true;
+    // Must also clear `blocked` when un-marking a mountain, otherwise a cell
+    // that was ever blocked (e.g. by a winding river) stays permanently
+    // impassable even after this call reports it as open ground.
+    blocked[row][col] = isMountain;
   }
 
   /// Flood-fill reachability check, used to guarantee the map is solvable

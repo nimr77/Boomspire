@@ -1,20 +1,22 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
 
-/// Quick bright flash at a tower's muzzle when it fires.
+/// Quick bright flash at a tower's muzzle when it fires, with a few
+/// radiating sparks layered on for a punchier shot.
 class MuzzleFlashComponent extends PositionComponent {
+  static const _duration = 0.09;
+  static final Random _rnd = Random();
+
+  double _age = 0;
+  late final List<double> _sparkAngles;
   MuzzleFlashComponent({required Vector2 position})
     : super(position: position, anchor: Anchor.center, priority: 25);
 
-  double _age = 0;
-  static const _duration = 0.06;
-
   @override
-  void update(double dt) {
-    super.update(dt);
-    _age += dt;
-    if (_age >= _duration) removeFromParent();
+  Future<void> onLoad() async {
+    _sparkAngles = List.generate(5, (_) => _rnd.nextDouble() * 2 * pi);
   }
 
   @override
@@ -30,5 +32,29 @@ class MuzzleFlashComponent extends PositionComponent {
           t,
         )!,
     );
+
+    final sparkPaint = Paint()
+      ..color = Color.lerp(
+        const Color(0xFFFFE082),
+        const Color(0x00FFB703),
+        t,
+      )!
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round;
+    final sparkLength = 12 * (1 - t);
+    for (final a in _sparkAngles) {
+      canvas.drawLine(
+        Offset.zero,
+        Offset(cos(a), sin(a)) * sparkLength,
+        sparkPaint,
+      );
+    }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= _duration) removeFromParent();
   }
 }

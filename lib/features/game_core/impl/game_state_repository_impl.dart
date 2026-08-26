@@ -10,15 +10,21 @@ class GameStateRepositoryImpl extends GameStateRepository {
   GameStatus _status = GameStatus.playing;
 
   @override
-  int get health => _health;
+  int get currentWave => _currentWave;
   @override
   int get gold => _gold;
   @override
-  int get currentWave => _currentWave;
-  @override
-  int get totalWaves => _totalWaves;
+  int get health => _health;
   @override
   GameStatus get status => _status;
+  @override
+  int get totalWaves => _totalWaves;
+
+  @override
+  void addGold(int amount) {
+    _gold += amount;
+    notifyListeners();
+  }
 
   @override
   void damagePlayer(int amount) {
@@ -32,23 +38,11 @@ class GameStateRepositoryImpl extends GameStateRepository {
   }
 
   @override
-  bool spendGold(int amount) {
-    if (_gold < amount) return false;
-    _gold -= amount;
-    notifyListeners();
-    return true;
-  }
-
-  @override
-  void addGold(int amount) {
-    _gold += amount;
-    notifyListeners();
-  }
-
-  @override
-  void setWave(int waveNumber, {required int totalWaves}) {
-    _currentWave = waveNumber;
-    _totalWaves = totalWaves;
+  void reset() {
+    _health = GameConfig.startingHealth;
+    _gold = GameConfig.startingGold;
+    _currentWave = 1;
+    _status = GameStatus.playing;
     notifyListeners();
   }
 
@@ -62,11 +56,17 @@ class GameStateRepositoryImpl extends GameStateRepository {
   }
 
   @override
-  void reset() {
-    _health = GameConfig.startingHealth;
-    _gold = GameConfig.startingGold;
-    _currentWave = 1;
-    _status = GameStatus.playing;
+  void setWave(int waveNumber, {required int totalWaves}) {
+    _currentWave = waveNumber;
+    _totalWaves = totalWaves;
     notifyListeners();
+  }
+
+  @override
+  bool spendGold(int amount) {
+    if (_gold < amount) return false;
+    _gold -= amount;
+    notifyListeners();
+    return true;
   }
 }

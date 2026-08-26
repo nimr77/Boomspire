@@ -35,6 +35,12 @@ class WaveRepositoryImpl implements WaveRepository {
               interval: 1.4,
               startDelay: 2,
             ),
+            SpawnEntry(
+              type: EnemyType.air,
+              count: 2,
+              interval: 1.8,
+              startDelay: 3,
+            ),
           ],
         );
       case 4:
@@ -47,6 +53,12 @@ class WaveRepositoryImpl implements WaveRepository {
               count: 4,
               interval: 1.2,
               startDelay: 1.5,
+            ),
+            SpawnEntry(
+              type: EnemyType.air,
+              count: 3,
+              interval: 1.5,
+              startDelay: 2,
             ),
           ],
         );
@@ -61,6 +73,12 @@ class WaveRepositoryImpl implements WaveRepository {
               interval: 1.0,
               startDelay: 1,
             ),
+            SpawnEntry(
+              type: EnemyType.air,
+              count: 4,
+              interval: 1.3,
+              startDelay: 1.5,
+            ),
           ],
         );
       case 6:
@@ -72,6 +90,12 @@ class WaveRepositoryImpl implements WaveRepository {
               type: EnemyType.heavySoldier,
               count: 8,
               interval: 0.8,
+              startDelay: 1,
+            ),
+            SpawnEntry(
+              type: EnemyType.air,
+              count: 6,
+              interval: 1.0,
               startDelay: 1,
             ),
           ],

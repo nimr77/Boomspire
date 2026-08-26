@@ -5,14 +5,22 @@ import '../../enemies/presentation/enemy_component.dart';
 import 'tower_component.dart';
 
 class MachineGunTowerComponent extends TowerComponent {
-  MachineGunTowerComponent({required super.slot, required super.blueprint});
+  MachineGunTowerComponent({
+    required super.position,
+    required super.cellSize,
+    required super.blueprint,
+  });
 
   @override
   void fire(EnemyComponent target) {
     final dir = (target.position - position).normalized();
     final spawnPos = position + dir * (size.x / 2);
     game.world.spawn(
-      BulletComponent(start: spawnPos, target: target, damage: blueprint.damage),
+      BulletComponent(
+        start: spawnPos,
+        target: target,
+        damage: blueprint.damage,
+      ),
     );
     game.world.spawn(MuzzleFlashComponent(position: spawnPos));
     game.audioRepository.play(SfxType.machineGunShot, volume: 0.5);

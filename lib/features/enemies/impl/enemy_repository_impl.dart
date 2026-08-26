@@ -11,6 +11,9 @@ class EnemyRepositoryImpl implements EnemyRepository {
       speed: 70,
       bounty: 12,
       size: 34,
+      attackDamage: 4,
+      attackRange: 130,
+      attackInterval: 1.1,
     ),
     EnemyType.heavySoldier: EnemyBlueprint(
       type: EnemyType.heavySoldier,
@@ -19,6 +22,21 @@ class EnemyRepositoryImpl implements EnemyRepository {
       speed: 40,
       bounty: 30,
       size: 46,
+      attackDamage: 10,
+      attackRange: 140,
+      attackInterval: 1.4,
+    ),
+    EnemyType.air: EnemyBlueprint(
+      type: EnemyType.air,
+      name: 'Attack Drone',
+      maxHealth: 60,
+      speed: 95,
+      bounty: 22,
+      size: 38,
+      isFlying: true,
+      attackDamage: 6,
+      attackRange: 160,
+      attackInterval: 0.9,
     ),
   };
 

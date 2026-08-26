@@ -11,6 +11,7 @@ class TowerRepositoryImpl implements TowerRepository {
       range: 150,
       damage: 7,
       fireRate: 0.15,
+      maxHp: 90,
     ),
     TowerType.rocket: TowerBlueprint(
       type: TowerType.rocket,
@@ -20,12 +21,34 @@ class TowerRepositoryImpl implements TowerRepository {
       damage: 60,
       fireRate: 1.7,
       splashRadius: 75,
+      maxHp: 120,
+    ),
+    TowerType.cannon: TowerBlueprint(
+      type: TowerType.cannon,
+      name: 'Siege Cannon',
+      cost: 140,
+      range: 190,
+      damage: 95,
+      fireRate: 2.4,
+      splashRadius: 55,
+      maxHp: 200,
+    ),
+    TowerType.antiAir: TowerBlueprint(
+      type: TowerType.antiAir,
+      name: 'Flak Battery',
+      cost: 110,
+      range: 260,
+      damage: 26,
+      fireRate: 0.5,
+      maxHp: 100,
+      canTargetGround: false,
+      canTargetAir: true,
     ),
   };
 
   @override
-  TowerBlueprint blueprintFor(TowerType type) => _blueprints[type]!;
+  List<TowerBlueprint> get all => _blueprints.values.toList(growable: false);
 
   @override
-  List<TowerBlueprint> get all => _blueprints.values.toList(growable: false);
+  TowerBlueprint blueprintFor(TowerType type) => _blueprints[type]!;
 }

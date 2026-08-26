@@ -4,9 +4,9 @@ import '../circuit_defense_game.dart';
 import 'end_screen.dart';
 
 class GameOverOverlay extends StatelessWidget {
-  const GameOverOverlay({super.key, required this.game});
-
   final CircuitDefenseGame game;
+
+  const GameOverOverlay({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +15,7 @@ class GameOverOverlay extends StatelessWidget {
       subtitle: 'The circuit has been breached.',
       accentColor: Colors.redAccent,
       onRestart: game.restart,
+      onChangeMap: () => Navigator.of(context).pop(),
     );
   }
 }

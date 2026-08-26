@@ -1,0 +1,158 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:circuit_defense/features/ai_director/domain/models/strategy_directive.dart';
+import 'package:http/http.dart' as http;
+
+/// Local proxy that lets the game ask Gemini how the enemy AI should command
+/// the next wave, without ever putting the API key in the Flutter client.
+///
+/// Run with:
+///   GEMINI_API_KEY=your-key dart run server/gemini_proxy.dart
+///
+/// If GEMINI_API_KEY is unset, or the Gemini call fails/times out, this
+/// serves a deterministic heuristic directive instead - the game is fully
+/// playable either way.
+const _defaultPort = 8787;
+const _model = 'gemini-2.0-flash';
+
+Future<void> main() async {
+  final apiKey =
+      Platform.environment['GEMINI_API_KEY'] ?? _loadDotEnv()['GEMINI_API_KEY'];
+  final port = int.tryParse(Platform.environment['PORT'] ?? '') ?? _defaultPort;
+
+  final server = await HttpServer.bind(InternetAddress.anyIPv4, port);
+  stdout.writeln('AI director proxy listening on http://localhost:$port');
+  stdout.writeln(
+    apiKey == null || apiKey.isEmpty
+        ? 'GEMINI_API_KEY not set - serving heuristic fallback strategies only.'
+        : 'GEMINI_API_KEY detected - will call Gemini for live strategy calls.',
+  );
+
+  server.listen((request) => _handle(request, apiKey));
+}
+
+Future<void> _handle(HttpRequest request, String? apiKey) async {
+  request.response.headers
+    ..set('Access-Control-Allow-Origin', '*')
+    ..set('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    ..set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (request.method == 'OPTIONS') {
+    request.response.statusCode = HttpStatus.noContent;
+    await request.response.close();
+    return;
+  }
+
+  if (request.method != 'POST' || request.uri.path != '/strategy') {
+    request.response.statusCode = HttpStatus.notFound;
+    await request.response.close();
+    return;
+  }
+
+  var waveNumber = 1;
+  try {
+    final body = await utf8.decoder.bind(request).join();
+    final snapshot = jsonDecode(body) as Map<String, dynamic>;
+    waveNumber = (snapshot['waveNumber'] as num?)?.toInt() ?? 1;
+
+    final directive = (apiKey != null && apiKey.isNotEmpty)
+        ? await _askGemini(apiKey, snapshot, waveNumber)
+        : StrategyDirective.fallback(waveNumber);
+
+    request.response
+      ..statusCode = HttpStatus.ok
+      ..headers.contentType = ContentType.json
+      ..write(jsonEncode(directive.toJson()));
+  } catch (e) {
+    stderr.writeln('AI director proxy falling back after error: $e');
+    request.response
+      ..statusCode = HttpStatus.ok
+      ..headers.contentType = ContentType.json
+      ..write(jsonEncode(StrategyDirective.fallback(waveNumber).toJson()));
+  } finally {
+    await request.response.close();
+  }
+}
+
+Future<StrategyDirective> _askGemini(
+  String apiKey,
+  Map<String, dynamic> snapshot,
+  int waveNumber,
+) async {
+  final prompt =
+      '''
+You are the enemy commander AI in a tower-defense game. Battlefield snapshot (JSON):
+${jsonEncode(snapshot)}
+
+Decide the strategy for wave $waveNumber. Respond with ONLY a JSON object of this exact shape:
+{"aggression": <0..1 float>, "focusHint": "nearestTower"|"weakestTower"|"rushBase", "compositionBias": {"soldier": <float>, "heavySoldier": <float>, "air": <float>}, "commanderNote": "<one short in-character sentence, max 12 words>"}
+
+aggression scales how many enemies spawn and how fast. compositionBias multiplies each enemy type's planned count (1.0 = unchanged, >1 = more of that type). focusHint tells enemies what to prioritize: nearestTower, weakestTower (lowest HP%), or rushBase (mostly ignore towers and run for the base).
+''';
+
+  final uri = Uri.parse(
+    'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent?key=$apiKey',
+  );
+  final response = await http
+      .post(
+        uri,
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt},
+              ],
+            },
+          ],
+          'generationConfig': {'responseMimeType': 'application/json'},
+        }),
+      )
+      .timeout(const Duration(seconds: 8));
+
+  if (response.statusCode != 200) {
+    throw Exception('Gemini HTTP ${response.statusCode}: ${response.body}');
+  }
+
+  final data = jsonDecode(response.body) as Map<String, dynamic>;
+  final candidates = data['candidates'] as List;
+  final text =
+      (candidates.first as Map<String, dynamic>)['content']['parts'][0]['text']
+          as String;
+  final json = jsonDecode(_stripCodeFence(text)) as Map<String, dynamic>;
+  return StrategyDirective.fromJson(json);
+}
+
+String _stripCodeFence(String text) {
+  final trimmed = text.trim();
+  if (!trimmed.startsWith('```')) return trimmed;
+  return trimmed
+      .replaceFirst(RegExp(r'^```[a-zA-Z]*\n?'), '')
+      .replaceFirst(RegExp(r'```$'), '')
+      .trim();
+}
+
+/// Minimal KEY=VALUE parser for `server/.env`, resolved relative to this
+/// script so it works no matter what directory `dart run` is invoked from.
+Map<String, String> _loadDotEnv() {
+  final scriptDir = File(Platform.script.toFilePath()).parent;
+  final file = File('${scriptDir.path}/.env');
+  if (!file.existsSync()) return const {};
+
+  final values = <String, String>{};
+  for (final line in file.readAsLinesSync()) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+    final eq = trimmed.indexOf('=');
+    if (eq <= 0) continue;
+    var value = trimmed.substring(eq + 1).trim();
+    if (value.length >= 2 &&
+        ((value.startsWith('"') && value.endsWith('"')) ||
+            (value.startsWith("'") && value.endsWith("'")))) {
+      value = value.substring(1, value.length - 1);
+    }
+    values[trimmed.substring(0, eq).trim()] = value;
+  }
+  return values;
+}
