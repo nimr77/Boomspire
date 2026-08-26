@@ -312,24 +312,6 @@ class TowerSpriteFactory {
     _paintViewhole(canvas, center.translate(-7, 6));
   }
 
-  static void _paintTurret(Canvas canvas, TowerType type) {
-    const center = Offset(24, 24);
-    switch (type) {
-      case TowerType.machineGun:
-        _paintMachineGunTurret(canvas, center);
-      case TowerType.rocket:
-        _paintRocketTurret(canvas, center);
-      case TowerType.cannon:
-        _paintCannonTurret(canvas, center);
-      case TowerType.antiAir:
-        _paintAntiAirTurret(canvas, center);
-      case TowerType.laser:
-        _paintLaserTurret(canvas, center);
-      case TowerType.techLab:
-        _paintTechLabTurret(canvas, center);
-    }
-  }
-
   static void _paintTechLabTurret(Canvas canvas, Offset center) {
     // A tilted dish on a mast - reads as a sensor/uplink structure rather
     // than a weapon, since it never actually fires.
@@ -372,6 +354,24 @@ class TowerSpriteFactory {
         ..color = const Color(0xFF1DE9B6),
     );
     _paintViewhole(canvas, center.translate(0, 7));
+  }
+
+  static void _paintTurret(Canvas canvas, TowerType type) {
+    const center = Offset(24, 24);
+    switch (type) {
+      case TowerType.machineGun:
+        _paintMachineGunTurret(canvas, center);
+      case TowerType.rocket:
+        _paintRocketTurret(canvas, center);
+      case TowerType.cannon:
+        _paintCannonTurret(canvas, center);
+      case TowerType.antiAir:
+        _paintAntiAirTurret(canvas, center);
+      case TowerType.laser:
+        _paintLaserTurret(canvas, center);
+      case TowerType.techLab:
+        _paintTechLabTurret(canvas, center);
+    }
   }
 
   /// A small crew vision-slit with a glass glint, reused by every turret so

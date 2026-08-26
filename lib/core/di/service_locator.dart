@@ -12,6 +12,7 @@ import '../../features/game_core/domain/repos/game_state_repository.dart';
 import '../../features/game_core/impl/game_state_repository_impl.dart';
 import '../../features/progress/domain/repos/progress_repository.dart';
 import '../../features/progress/impl/local_progress_repository_impl.dart';
+import '../../features/terrain/domain/models/biome.dart';
 import '../../features/terrain/domain/repos/terrain_repository.dart';
 import '../../features/terrain/impl/terrain_repository_impl.dart';
 import '../../features/towers/domain/repos/tower_repository.dart';
@@ -45,7 +46,8 @@ void setupServiceLocator() {
     )
     // Per-run session state - a fresh instance is required every game.
     ..registerFactory<GameStateRepository>(() => GameStateRepositoryImpl())
-    ..registerFactoryParam<WaveRepository, int, void>(
-      (totalWaves, _) => WaveRepositoryImpl(totalWaves: totalWaves),
+    ..registerFactoryParam<WaveRepository, int, Biome>(
+      (totalWaves, biome) =>
+          WaveRepositoryImpl(totalWaves: totalWaves, biome: biome),
     );
 }

@@ -1,4 +1,5 @@
 import '../../enemies/domain/models/enemy_type.dart';
+import '../../terrain/domain/models/biome.dart';
 import '../domain/models/wave_definition.dart';
 import '../domain/repos/wave_repository.dart';
 
@@ -9,7 +10,9 @@ class WaveRepositoryImpl implements WaveRepository {
   @override
   final int totalWaves;
 
-  WaveRepositoryImpl({required int totalWaves})
+  final Biome biome;
+
+  WaveRepositoryImpl({required int totalWaves, this.biome = Biome.grassPlains})
     : totalWaves = totalWaves.clamp(3, 30);
 
   @override
@@ -43,13 +46,21 @@ class WaveRepositoryImpl implements WaveRepository {
     }
 
     if (n >= 4) {
+      // Tanks can't sail - swap them for gunboats on sea maps.
       spawns.add(
-        SpawnEntry(
-          type: EnemyType.tank,
-          count: (1 + (n - 4) * 0.5).round(),
-          interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
-          startDelay: 4,
-        ),
+        biome == Biome.sea
+            ? SpawnEntry(
+                type: EnemyType.gunboat,
+                count: (1 + (n - 4) * 0.5).round(),
+                interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
+                startDelay: 4,
+              )
+            : SpawnEntry(
+                type: EnemyType.tank,
+                count: (1 + (n - 4) * 0.5).round(),
+                interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
+                startDelay: 4,
+              ),
       );
     }
 

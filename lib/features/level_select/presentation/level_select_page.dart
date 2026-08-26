@@ -25,6 +25,42 @@ class LevelSelectPage extends StatefulWidget {
   State<LevelSelectPage> createState() => _LevelSelectPageState();
 }
 
+/// Segmented easy/normal/hard picker - scales AI aggression and rations the
+/// Laser Lance build limit for the run about to start.
+class _DifficultySelector extends StatelessWidget {
+  final GameDifficulty value;
+  final ValueChanged<GameDifficulty> onChanged;
+
+  const _DifficultySelector({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (final difficulty in GameDifficulty.values)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ChoiceChip(
+              label: Text(difficulty.label),
+              selected: value == difficulty,
+              onSelected: (_) => onChanged(difficulty),
+              labelStyle: TextStyle(
+                color: value == difficulty ? Colors.black : Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+              selectedColor: Colors.cyanAccent,
+              backgroundColor: const Color(0xFF1A1F26),
+              side: BorderSide(
+                color: value == difficulty ? Colors.cyanAccent : Colors.white24,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _LevelSelectPageState extends State<LevelSelectPage> {
   final ProgressRepository _progressRepository = getIt<ProgressRepository>();
   final AccountRepository _accountRepository = getIt<AccountRepository>();
@@ -317,44 +353,6 @@ class _SceneCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Segmented easy/normal/hard picker - scales AI aggression and rations the
-/// Laser Lance build limit for the run about to start.
-class _DifficultySelector extends StatelessWidget {
-  final GameDifficulty value;
-  final ValueChanged<GameDifficulty> onChanged;
-
-  const _DifficultySelector({required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (final difficulty in GameDifficulty.values)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: ChoiceChip(
-              label: Text(difficulty.label),
-              selected: value == difficulty,
-              onSelected: (_) => onChanged(difficulty),
-              labelStyle: TextStyle(
-                color: value == difficulty ? Colors.black : Colors.white70,
-                fontWeight: FontWeight.bold,
-              ),
-              selectedColor: Colors.cyanAccent,
-              backgroundColor: const Color(0xFF1A1F26),
-              side: BorderSide(
-                color: value == difficulty
-                    ? Colors.cyanAccent
-                    : Colors.white24,
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

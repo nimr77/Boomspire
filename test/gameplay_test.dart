@@ -134,7 +134,10 @@ BoomspireGame _newGame(GameScene scene) => BoomspireGame(
   terrainRepository: TerrainRepositoryImpl(),
   towerRepository: TowerRepositoryImpl(),
   enemyRepository: EnemyRepositoryImpl(),
-  waveRepository: WaveRepositoryImpl(totalWaves: scene.waveCount),
+  waveRepository: WaveRepositoryImpl(
+    totalWaves: scene.waveCount,
+    biome: scene.biome,
+  ),
   audioRepository: _FakeAudioRepository(),
   gameState: GameStateRepositoryImpl(),
   aiDirector: AiDirectorRepositoryImpl(),
