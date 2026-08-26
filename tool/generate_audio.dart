@@ -19,10 +19,7 @@ void main() {
     attackSec: 0.001,
     decayTau: 0.025,
   );
-  writeWav(
-    '$dir/machine_gun_shot.wav',
-    normalize(mix([mgCrack, mgClick])),
-  );
+  writeWav('$dir/machine_gun_shot.wav', normalize(mix([mgCrack, mgClick])));
 
   // Rocket launch: airy whoosh + low thrust rumble.
   final whoosh = envelope(
@@ -44,19 +41,31 @@ void main() {
   var explosion = <double>[];
   explosion = addAt(
     explosion,
-    envelope(highPass(noise(0.18, seed: 33), 0.6), attackSec: 0.001, decayTau: 0.05),
+    envelope(
+      highPass(noise(0.18, seed: 33), 0.6),
+      attackSec: 0.001,
+      decayTau: 0.05,
+    ),
     0,
     gain: 1.0,
   );
   explosion = addAt(
     explosion,
-    envelope(tone(130, 42, 1.0, amp: 1.0, shape: 'sine'), attackSec: 0.008, decayTau: 0.5),
+    envelope(
+      tone(130, 42, 1.0, amp: 1.0, shape: 'sine'),
+      attackSec: 0.008,
+      decayTau: 0.5,
+    ),
     0,
     gain: 1.0,
   );
   explosion = addAt(
     explosion,
-    envelope(lowPass(noise(1.3, seed: 44), 0.045), attackSec: 0.02, decayTau: 0.9),
+    envelope(
+      lowPass(noise(1.3, seed: 44), 0.045),
+      attackSec: 0.02,
+      decayTau: 0.9,
+    ),
     0,
     gain: 0.85,
   );
@@ -68,63 +77,118 @@ void main() {
       attackSec: 0.001,
       decayTau: 0.015 + rnd.nextDouble() * 0.02,
     );
-    explosion = addAt(explosion, pop, offset, gain: 0.35 + rnd.nextDouble() * 0.25);
+    explosion = addAt(
+      explosion,
+      pop,
+      offset,
+      gain: 0.35 + rnd.nextDouble() * 0.25,
+    );
   }
   writeWav('$dir/explosion.wav', normalize(explosion, peak: 0.95));
 
   // Bullet impact ping.
   writeWav(
     '$dir/enemy_hit.wav',
-    normalize(mix([
-      envelope(tone(520, 280, 0.08, amp: 0.6, shape: 'square'), decayTau: 0.04),
-      envelope(highPass(noise(0.05, seed: 55), 0.5), attackSec: 0.001, decayTau: 0.02),
-    ])),
+    normalize(
+      mix([
+        envelope(
+          tone(520, 280, 0.08, amp: 0.6, shape: 'square'),
+          decayTau: 0.04,
+        ),
+        envelope(
+          highPass(noise(0.05, seed: 55), 0.5),
+          attackSec: 0.001,
+          decayTau: 0.02,
+        ),
+      ]),
+    ),
   );
 
   // Enemy death thud.
   writeWav(
     '$dir/enemy_death.wav',
-    normalize(mix([
-      envelope(tone(300, 75, 0.28, amp: 0.8, shape: 'sine'), decayTau: 0.15),
-      envelope(lowPass(noise(0.2, seed: 66), 0.1), attackSec: 0.001, decayTau: 0.1),
-    ])),
+    normalize(
+      mix([
+        envelope(tone(300, 75, 0.28, amp: 0.8, shape: 'sine'), decayTau: 0.15),
+        envelope(
+          lowPass(noise(0.2, seed: 66), 0.1),
+          attackSec: 0.001,
+          decayTau: 0.1,
+        ),
+      ]),
+    ),
   );
 
   // Enemy breach alarm (escaped past defenses).
   writeWav(
     '$dir/enemy_escape.wav',
-    normalize(concat([
-      envelope(tone(660, 660, 0.12, amp: 0.6, shape: 'square'), decayTau: 0.08),
-      silence(0.04),
-      envelope(tone(550, 550, 0.16, amp: 0.6, shape: 'square'), decayTau: 0.1),
-    ])),
+    normalize(
+      concat([
+        envelope(
+          tone(660, 660, 0.12, amp: 0.6, shape: 'square'),
+          decayTau: 0.08,
+        ),
+        silence(0.04),
+        envelope(
+          tone(550, 550, 0.16, amp: 0.6, shape: 'square'),
+          decayTau: 0.1,
+        ),
+      ]),
+    ),
   );
 
   // Gold gain "cha-ching".
   writeWav(
     '$dir/gold_gain.wav',
-    normalize(concat([
-      envelope(tone(880, 900, 0.07, amp: 0.55, shape: 'sine'), decayTau: 0.05),
-      envelope(tone(1320, 1340, 0.1, amp: 0.55, shape: 'sine'), decayTau: 0.08),
-    ])),
+    normalize(
+      concat([
+        envelope(
+          tone(880, 900, 0.07, amp: 0.55, shape: 'sine'),
+          decayTau: 0.05,
+        ),
+        envelope(
+          tone(1320, 1340, 0.1, amp: 0.55, shape: 'sine'),
+          decayTau: 0.08,
+        ),
+      ]),
+    ),
   );
 
   // Tower build/placement clunk.
   writeWav(
     '$dir/build_place.wav',
-    normalize(mix([
-      envelope(tone(220, 160, 0.1, amp: 0.6, shape: 'square'), decayTau: 0.05),
-      envelope(lowPass(noise(0.08, seed: 77), 0.2), attackSec: 0.001, decayTau: 0.04),
-    ])),
+    normalize(
+      mix([
+        envelope(
+          tone(220, 160, 0.1, amp: 0.6, shape: 'square'),
+          decayTau: 0.05,
+        ),
+        envelope(
+          lowPass(noise(0.08, seed: 77), 0.2),
+          attackSec: 0.001,
+          decayTau: 0.04,
+        ),
+      ]),
+    ),
   );
 
   // Wave start alert.
   writeWav(
     '$dir/wave_start.wav',
-    normalize(mix([
-      envelope(tone(400, 820, 0.45, amp: 0.55, shape: 'sine'), attackSec: 0.02, decayTau: 0.3),
-      envelope(tone(600, 920, 0.4, amp: 0.35, shape: 'square'), attackSec: 0.02, decayTau: 0.25),
-    ])),
+    normalize(
+      mix([
+        envelope(
+          tone(400, 820, 0.45, amp: 0.55, shape: 'sine'),
+          attackSec: 0.02,
+          decayTau: 0.3,
+        ),
+        envelope(
+          tone(600, 920, 0.4, amp: 0.35, shape: 'square'),
+          attackSec: 0.02,
+          decayTau: 0.25,
+        ),
+      ]),
+    ),
   );
 
   // Victory arpeggio.
@@ -133,7 +197,10 @@ void main() {
   for (var i = 0; i < notes.length; i++) {
     victory = addAt(
       victory,
-      envelope(tone(notes[i], notes[i], 0.45, amp: 0.6, shape: 'sine'), decayTau: 0.5),
+      envelope(
+        tone(notes[i], notes[i], 0.45, amp: 0.6, shape: 'sine'),
+        decayTau: 0.5,
+      ),
       i * 0.16,
     );
   }
@@ -142,88 +209,174 @@ void main() {
   // Defeat descending tone + rumble.
   writeWav(
     '$dir/defeat.wav',
-    normalize(mix([
-      envelope(tone(300, 70, 1.0, amp: 0.75, shape: 'sine'), attackSec: 0.01, decayTau: 0.6),
-      envelope(lowPass(noise(1.0, seed: 88), 0.06), attackSec: 0.02, decayTau: 0.7),
-    ])),
+    normalize(
+      mix([
+        envelope(
+          tone(300, 70, 1.0, amp: 0.75, shape: 'sine'),
+          attackSec: 0.01,
+          decayTau: 0.6,
+        ),
+        envelope(
+          lowPass(noise(1.0, seed: 88), 0.06),
+          attackSec: 0.02,
+          decayTau: 0.7,
+        ),
+      ]),
+    ),
   );
 
   // Cannon shot: deep booming thump with a heavy sub punch.
   writeWav(
     '$dir/cannon_shot.wav',
-    normalize(mix([
-      envelope(tone(160, 55, 0.35, amp: 0.9, shape: 'sine'), attackSec: 0.004, decayTau: 0.16),
-      envelope(highPass(noise(0.06, seed: 99), 0.55), attackSec: 0.001, decayTau: 0.03),
-      envelope(lowPass(noise(0.3, seed: 101), 0.08), attackSec: 0.01, decayTau: 0.2),
-    ])),
+    normalize(
+      mix([
+        envelope(
+          tone(160, 55, 0.35, amp: 0.9, shape: 'sine'),
+          attackSec: 0.004,
+          decayTau: 0.16,
+        ),
+        envelope(
+          highPass(noise(0.06, seed: 99), 0.55),
+          attackSec: 0.001,
+          decayTau: 0.03,
+        ),
+        envelope(
+          lowPass(noise(0.3, seed: 101), 0.08),
+          attackSec: 0.01,
+          decayTau: 0.2,
+        ),
+      ]),
+    ),
   );
 
   // Anti-air flak burst: sharp crackling triple-pop.
   writeWav(
     '$dir/anti_air_shot.wav',
-    normalize(concat([
-      envelope(highPass(noise(0.04, seed: 102), 0.6), decayTau: 0.02),
-      silence(0.02),
-      envelope(highPass(noise(0.04, seed: 103), 0.6), decayTau: 0.02),
-      silence(0.02),
-      envelope(highPass(noise(0.05, seed: 104), 0.6), decayTau: 0.025),
-    ])),
+    normalize(
+      concat([
+        envelope(highPass(noise(0.04, seed: 102), 0.6), decayTau: 0.02),
+        silence(0.02),
+        envelope(highPass(noise(0.04, seed: 103), 0.6), decayTau: 0.02),
+        silence(0.02),
+        envelope(highPass(noise(0.05, seed: 104), 0.6), decayTau: 0.025),
+      ]),
+    ),
   );
 
   // Tower destroyed: heavy metallic collapse.
   writeWav(
     '$dir/tower_destroyed.wav',
-    normalize(mix([
-      envelope(tone(180, 40, 0.7, amp: 0.85, shape: 'saw'), attackSec: 0.005, decayTau: 0.35),
-      envelope(lowPass(noise(0.8, seed: 105), 0.05), attackSec: 0.02, decayTau: 0.5),
-      envelope(highPass(noise(0.15, seed: 106), 0.5), attackSec: 0.001, decayTau: 0.08),
-    ])),
+    normalize(
+      mix([
+        envelope(
+          tone(180, 40, 0.7, amp: 0.85, shape: 'saw'),
+          attackSec: 0.005,
+          decayTau: 0.35,
+        ),
+        envelope(
+          lowPass(noise(0.8, seed: 105), 0.05),
+          attackSec: 0.02,
+          decayTau: 0.5,
+        ),
+        envelope(
+          highPass(noise(0.15, seed: 106), 0.5),
+          attackSec: 0.001,
+          decayTau: 0.08,
+        ),
+      ]),
+    ),
   );
 
   // Tower repair: friendly ascending mechanical chime.
   writeWav(
     '$dir/tower_repair.wav',
-    normalize(concat([
-      envelope(tone(420, 520, 0.09, amp: 0.5, shape: 'square'), decayTau: 0.06),
-      envelope(tone(620, 740, 0.12, amp: 0.5, shape: 'square'), decayTau: 0.08),
-    ])),
+    normalize(
+      concat([
+        envelope(
+          tone(420, 520, 0.09, amp: 0.5, shape: 'square'),
+          decayTau: 0.06,
+        ),
+        envelope(
+          tone(620, 740, 0.12, amp: 0.5, shape: 'square'),
+          decayTau: 0.08,
+        ),
+      ]),
+    ),
   );
 
   // Enemy gunfire: harsher, lower-pitched crack than the player's turret.
   writeWav(
     '$dir/enemy_shot.wav',
-    normalize(mix([
-      envelope(highPass(noise(0.06, seed: 107), 0.5), attackSec: 0.001, decayTau: 0.03),
-      envelope(tone(900, 400, 0.05, amp: 0.5, shape: 'square'), decayTau: 0.03),
-    ])),
+    normalize(
+      mix([
+        envelope(
+          highPass(noise(0.06, seed: 107), 0.5),
+          attackSec: 0.001,
+          decayTau: 0.03,
+        ),
+        envelope(
+          tone(900, 400, 0.05, amp: 0.5, shape: 'square'),
+          decayTau: 0.03,
+        ),
+      ]),
+    ),
   );
 
   // Laser lance shot: thin, bright, sustained sine zap with a quick chirp.
   writeWav(
     '$dir/laser_shot.wav',
-    normalize(mix([
-      envelope(tone(2200, 900, 0.06, amp: 0.55, shape: 'sine'), attackSec: 0.001, decayTau: 0.02),
-      envelope(tone(3400, 2600, 0.05, amp: 0.25, shape: 'square'), attackSec: 0.001, decayTau: 0.015),
-    ])),
+    normalize(
+      mix([
+        envelope(
+          tone(2200, 900, 0.06, amp: 0.55, shape: 'sine'),
+          attackSec: 0.001,
+          decayTau: 0.02,
+        ),
+        envelope(
+          tone(3400, 2600, 0.05, amp: 0.25, shape: 'square'),
+          attackSec: 0.001,
+          decayTau: 0.015,
+        ),
+      ]),
+    ),
   );
 
   // Tower upgrade: bright rising three-note power-up chime.
   writeWav(
     '$dir/tower_upgrade.wav',
-    normalize(concat([
-      envelope(tone(440, 440, 0.08, amp: 0.55, shape: 'sine'), decayTau: 0.06),
-      envelope(tone(660, 660, 0.08, amp: 0.55, shape: 'sine'), decayTau: 0.06),
-      envelope(tone(880, 1100, 0.16, amp: 0.6, shape: 'sine'), decayTau: 0.12),
-    ])),
+    normalize(
+      concat([
+        envelope(
+          tone(440, 440, 0.08, amp: 0.55, shape: 'sine'),
+          decayTau: 0.06,
+        ),
+        envelope(
+          tone(660, 660, 0.08, amp: 0.55, shape: 'sine'),
+          decayTau: 0.06,
+        ),
+        envelope(
+          tone(880, 1100, 0.16, amp: 0.6, shape: 'sine'),
+          decayTau: 0.12,
+        ),
+      ]),
+    ),
   );
 
   // Tower sell: soft descending mechanical chime (inverse of repair/upgrade).
   writeWav(
     '$dir/tower_sell.wav',
-    normalize(concat([
-      envelope(tone(700, 620, 0.09, amp: 0.5, shape: 'square'), decayTau: 0.06),
-      envelope(tone(500, 380, 0.12, amp: 0.5, shape: 'square'), decayTau: 0.08),
-    ])),
+    normalize(
+      concat([
+        envelope(
+          tone(700, 620, 0.09, amp: 0.5, shape: 'square'),
+          decayTau: 0.06,
+        ),
+        envelope(
+          tone(500, 380, 0.12, amp: 0.5, shape: 'square'),
+          decayTau: 0.08,
+        ),
+      ]),
+    ),
   );
 
   stdout.writeln('Audio generation complete.');
@@ -357,8 +510,12 @@ void writeWav(String path, List<double> samples) {
   final dataBytes = pcm.buffer.asUint8List();
   final bytes = BytesBuilder();
   void str(String s) => bytes.add(s.codeUnits);
-  void u32(int v) =>
-      bytes.add([v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >> 24) & 0xff]);
+  void u32(int v) => bytes.add([
+    v & 0xff,
+    (v >> 8) & 0xff,
+    (v >> 16) & 0xff,
+    (v >> 24) & 0xff,
+  ]);
   void u16(int v) => bytes.add([v & 0xff, (v >> 8) & 0xff]);
 
   str('RIFF');

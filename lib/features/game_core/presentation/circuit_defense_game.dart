@@ -84,6 +84,11 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
   @override
   Color backgroundColor() => const Color(0xFF14181d);
 
+  /// Leaves the current battle and returns to level select (see
+  /// [onExitToMenu]) - used by the game-over/victory "change map" actions
+  /// and the in-battle exit button.
+  void backToLevelSelect() => onExitToMenu?.call();
+
   /// Routes an arena tap to selecting a tower under the tap (for the
   /// repair/upgrade/sell action panel), or - if a tower type is selected -
   /// building on an empty, reachable grid cell.
@@ -111,6 +116,14 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     camera.viewfinder.position = Vector2.zero();
     await audioRepository.preload();
     await world.initialize();
+  }
+
+  /// Repairs the currently-selected tower (see [selectedTower]) to full HP,
+  /// if the player can afford it.
+  void repairSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null) return;
+    _repairTower(tower);
   }
 
   void restart() {
@@ -148,10 +161,17 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     selectedTowerType.value = selectedTowerType.value == type ? null : type;
   }
 
-  /// Leaves the current battle and returns to level select (see
-  /// [onExitToMenu]) - used by the game-over/victory "change map" actions
-  /// and the in-battle exit button.
-  void backToLevelSelect() => onExitToMenu?.call();
+  /// Sells the currently-selected tower for a partial gold refund and frees
+  /// up its grid cell.
+  void sellSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null) return;
+    gameState.addGold(tower.sellValue);
+    terrainMap.grid.setTowerOccupied(tower.col, tower.row, false);
+    audioRepository.play(SfxType.towerSell, volume: 0.7);
+    selectedTower.value = null;
+    world.removeTower(tower);
+  }
 
   /// Nudges the camera briefly whenever something fires - stronger weapons
   /// and shots closer to the camera's focal point (the arena's center)
@@ -189,6 +209,15 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
           _shakeRandom.nextDouble() * 2 - 1,
         ) *
         (_shakePower * falloff);
+  }
+
+  /// Upgrades the currently-selected tower by one tier, if affordable and
+  /// not already at the maximum tier.
+  void upgradeSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null || !tower.canUpgrade) return;
+    if (!gameState.spendGold(tower.upgradeCost)) return;
+    tower.upgrade();
   }
 
   void _buildTower(TowerType type, Vector2 point) {
@@ -268,35 +297,6 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     if (!gameState.spendGold(cost)) return;
     tower.repair(tower.maxHp);
     audioRepository.play(SfxType.towerRepair, volume: 0.7);
-  }
-
-  /// Repairs the currently-selected tower (see [selectedTower]) to full HP,
-  /// if the player can afford it.
-  void repairSelectedTower() {
-    final tower = selectedTower.value;
-    if (tower == null) return;
-    _repairTower(tower);
-  }
-
-  /// Upgrades the currently-selected tower by one tier, if affordable and
-  /// not already at the maximum tier.
-  void upgradeSelectedTower() {
-    final tower = selectedTower.value;
-    if (tower == null || !tower.canUpgrade) return;
-    if (!gameState.spendGold(tower.upgradeCost)) return;
-    tower.upgrade();
-  }
-
-  /// Sells the currently-selected tower for a partial gold refund and frees
-  /// up its grid cell.
-  void sellSelectedTower() {
-    final tower = selectedTower.value;
-    if (tower == null) return;
-    gameState.addGold(tower.sellValue);
-    terrainMap.grid.setTowerOccupied(tower.col, tower.row, false);
-    audioRepository.play(SfxType.towerSell, volume: 0.7);
-    selectedTower.value = null;
-    world.removeTower(tower);
   }
 
   TowerComponent? _towerAt(Vector2 point) {

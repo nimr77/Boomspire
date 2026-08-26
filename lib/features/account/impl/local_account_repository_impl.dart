@@ -14,18 +14,6 @@ class LocalAccountRepositoryImpl implements AccountRepository {
   static const _key = 'circuit_defense.account.v1';
 
   @override
-  Future<Account?> currentAccount() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
-    if (raw == null) return null;
-    try {
-      return Account.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  @override
   Future<Account> createAccount({required String name}) async {
     final trimmed = name.trim();
     final account = Account(
@@ -36,6 +24,18 @@ class LocalAccountRepositoryImpl implements AccountRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, jsonEncode(account.toJson()));
     return account;
+  }
+
+  @override
+  Future<Account?> currentAccount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    if (raw == null) return null;
+    try {
+      return Account.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

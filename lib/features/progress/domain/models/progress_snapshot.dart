@@ -11,7 +11,7 @@ part 'progress_snapshot.g.dart';
 /// remote backend such as Firebase, without changing any call site.
 @freezed
 abstract class ProgressSnapshot with _$ProgressSnapshot {
-  const ProgressSnapshot._();
+  static const empty = ProgressSnapshot();
 
   const factory ProgressSnapshot({
     @Default(<String>{}) Set<String> completedSceneIds,
@@ -21,11 +21,11 @@ abstract class ProgressSnapshot with _$ProgressSnapshot {
   factory ProgressSnapshot.fromJson(Map<String, dynamic> json) =>
       _$ProgressSnapshotFromJson(json);
 
-  static const empty = ProgressSnapshot();
-
-  bool isCompleted(String sceneId) => completedSceneIds.contains(sceneId);
+  const ProgressSnapshot._();
 
   int bestWaveFor(String sceneId) => bestWaveByScene[sceneId] ?? 0;
+
+  bool isCompleted(String sceneId) => completedSceneIds.contains(sceneId);
 
   ProgressSnapshot withResult({
     required String sceneId,

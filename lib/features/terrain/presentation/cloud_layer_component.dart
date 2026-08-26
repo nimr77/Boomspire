@@ -8,13 +8,13 @@ import 'package:flame/components.dart';
 /// "aerial view" depth cue. Purely decorative for now - weather effects
 /// with real gameplay impact (fog/rain) build on top of this later.
 class CloudLayerComponent extends PositionComponent {
+  final Vector2 _arenaSize;
+
+  final List<_Cloud> _clouds = [];
+  final List<_FogBank> _fogBanks = [];
   CloudLayerComponent({required Vector2 arenaSize})
     : _arenaSize = arenaSize,
       super(position: Vector2.zero(), size: arenaSize, priority: 200);
-
-  final Vector2 _arenaSize;
-  final List<_Cloud> _clouds = [];
-  final List<_FogBank> _fogBanks = [];
 
   @override
   Future<void> onLoad() async {
@@ -51,25 +51,6 @@ class CloudLayerComponent extends PositionComponent {
           bobPhase: rnd.nextDouble() * 2 * pi,
         ),
       );
-    }
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    for (final cloud in _clouds) {
-      cloud.position.x += cloud.speed * cloud.depth * dt;
-      cloud.bobPhase += dt * 0.35 * cloud.depth;
-      if (cloud.position.x - cloud.scale * 90 > _arenaSize.x) {
-        cloud.position.x = -cloud.scale * 90;
-      }
-    }
-    for (final fog in _fogBanks) {
-      fog.position.x += fog.speed * dt;
-      fog.bobPhase += dt * 0.25;
-      if (fog.position.x - fog.scale * 140 > _arenaSize.x) {
-        fog.position.x = -fog.scale * 140;
-      }
     }
   }
 
@@ -120,9 +101,36 @@ class CloudLayerComponent extends PositionComponent {
       }
     }
   }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    for (final cloud in _clouds) {
+      cloud.position.x += cloud.speed * cloud.depth * dt;
+      cloud.bobPhase += dt * 0.35 * cloud.depth;
+      if (cloud.position.x - cloud.scale * 90 > _arenaSize.x) {
+        cloud.position.x = -cloud.scale * 90;
+      }
+    }
+    for (final fog in _fogBanks) {
+      fog.position.x += fog.speed * dt;
+      fog.bobPhase += dt * 0.25;
+      if (fog.position.x - fog.scale * 140 > _arenaSize.x) {
+        fog.position.x = -fog.scale * 140;
+      }
+    }
+  }
 }
 
 class _Cloud {
+  Vector2 position;
+
+  final double speed;
+  final double scale;
+  final double baseOpacity;
+  final int seed;
+  double bobPhase;
+  final double depth;
   _Cloud({
     required this.position,
     required this.speed,
@@ -132,17 +140,16 @@ class _Cloud {
     required this.bobPhase,
     required this.depth,
   });
+}
 
+class _FogBank {
   Vector2 position;
+
   final double speed;
   final double scale;
   final double baseOpacity;
   final int seed;
   double bobPhase;
-  final double depth;
-}
-
-class _FogBank {
   _FogBank({
     required this.position,
     required this.speed,
@@ -151,11 +158,4 @@ class _FogBank {
     required this.seed,
     required this.bobPhase,
   });
-
-  Vector2 position;
-  final double speed;
-  final double scale;
-  final double baseOpacity;
-  final int seed;
-  double bobPhase;
 }

@@ -59,7 +59,13 @@ abstract class TowerComponent extends PositionComponent
          priority: 5,
        );
 
+  bool get canUpgrade => upgradeLevel < kMaxTowerUpgradeLevel;
+
   bool get destroyed => _destroyed;
+
+  double get effectiveDamage => blueprint.damage * _upgradeMultiplier;
+
+  double get effectiveRange => blueprint.range * (1 + upgradeLevel * 0.08);
 
   /// Gold cost to fully repair from current HP - 0 once at full health.
   int get repairCost {
@@ -75,12 +81,15 @@ abstract class TowerComponent extends PositionComponent
     return (_investedGold * 0.5 * (0.6 + hpRatio * 0.4)).round();
   }
 
-  bool get canUpgrade => upgradeLevel < kMaxTowerUpgradeLevel;
-
   /// Gold cost for the next upgrade tier - rises steeply so upgrades stay a
   /// meaningful late-game gold sink.
   int get upgradeCost =>
       (blueprint.cost * 0.75 * pow(1.6, upgradeLevel + 1)).ceil();
+
+  /// Multiplier applied to [blueprint.damage]/[blueprint.range] based on
+  /// [upgradeLevel] - subclasses' `fire()` should read effective stats
+  /// through [effectiveDamage]/[effectiveRange] instead of the raw blueprint.
+  double get _upgradeMultiplier => pow(1.25, upgradeLevel).toDouble();
 
   /// Spawns the appropriate projectile/effect toward [target].
   void fire(EnemyComponent target);
@@ -176,39 +185,6 @@ abstract class TowerComponent extends PositionComponent
     );
   }
 
-  /// Spends gold (already deducted by the caller) to raise this tower's
-  /// damage/range/max-HP by one tier and brighten its visuals.
-  void upgrade() {
-    if (_destroyed || !canUpgrade) return;
-    _investedGold += upgradeCost;
-    upgradeLevel++;
-    final missing = maxHp - hp;
-    maxHp *= 1.25;
-    hp = maxHp - missing;
-    game.audioRepository.play(SfxType.towerUpgrade, volume: 0.7);
-    game.world.spawn(
-      ImpactSparkComponent(
-        position: position.clone(),
-        color: const Color(0xFFFFD54A),
-      ),
-    );
-    add(
-      SequenceEffect([
-        ScaleEffect.to(Vector2.all(1.22), EffectController(duration: 0.12)),
-        ScaleEffect.to(Vector2.all(1), EffectController(duration: 0.22)),
-      ]),
-    );
-  }
-
-  /// Multiplier applied to [blueprint.damage]/[blueprint.range] based on
-  /// [upgradeLevel] - subclasses' `fire()` should read effective stats
-  /// through [effectiveDamage]/[effectiveRange] instead of the raw blueprint.
-  double get _upgradeMultiplier => pow(1.25, upgradeLevel).toDouble();
-
-  double get effectiveDamage => blueprint.damage * _upgradeMultiplier;
-
-  double get effectiveRange => blueprint.range * (1 + upgradeLevel * 0.08);
-
   @override
   void takeDamage(double amount) {
     if (_destroyed) return;
@@ -258,6 +234,30 @@ abstract class TowerComponent extends PositionComponent
       );
       _cooldown = blueprint.fireRate;
     }
+  }
+
+  /// Spends gold (already deducted by the caller) to raise this tower's
+  /// damage/range/max-HP by one tier and brighten its visuals.
+  void upgrade() {
+    if (_destroyed || !canUpgrade) return;
+    _investedGold += upgradeCost;
+    upgradeLevel++;
+    final missing = maxHp - hp;
+    maxHp *= 1.25;
+    hp = maxHp - missing;
+    game.audioRepository.play(SfxType.towerUpgrade, volume: 0.7);
+    game.world.spawn(
+      ImpactSparkComponent(
+        position: position.clone(),
+        color: const Color(0xFFFFD54A),
+      ),
+    );
+    add(
+      SequenceEffect([
+        ScaleEffect.to(Vector2.all(1.22), EffectController(duration: 0.12)),
+        ScaleEffect.to(Vector2.all(1), EffectController(duration: 0.22)),
+      ]),
+    );
   }
 
   EnemyComponent? _acquireTarget() {

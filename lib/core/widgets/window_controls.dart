@@ -9,15 +9,15 @@ import '../../generated/l10n.dart';
 /// any background. Fullscreen toggling only applies on desktop platforms;
 /// on web/mobile only [onExit] (if provided) is shown.
 class WindowControls extends StatelessWidget {
-  final VoidCallback? onExit;
-
-  const WindowControls({super.key, this.onExit});
-
   static bool get _supportsFullscreen =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.macOS ||
           defaultTargetPlatform == TargetPlatform.windows ||
           defaultTargetPlatform == TargetPlatform.linux);
+
+  final VoidCallback? onExit;
+
+  const WindowControls({super.key, this.onExit});
 
   @override
   Widget build(BuildContext context) {
