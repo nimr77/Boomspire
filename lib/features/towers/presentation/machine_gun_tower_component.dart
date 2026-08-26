@@ -16,11 +16,7 @@ class MachineGunTowerComponent extends TowerComponent {
     final dir = (target.position - position).normalized();
     final spawnPos = position + dir * (size.x / 2);
     game.world.spawn(
-      BulletComponent(
-        start: spawnPos,
-        target: target,
-        damage: blueprint.damage,
-      ),
+      BulletComponent(start: spawnPos, target: target, damage: effectiveDamage),
     );
     game.world.spawn(MuzzleFlashComponent(position: spawnPos));
     game.audioRepository.play(SfxType.machineGunShot, volume: 0.5);

@@ -1,0 +1,107 @@
+{
+  "@@locale": "en",
+  "appTitle": "Circuit Defense",
+  "@appTitle": {},
+
+  "levelSelectTitle": "CIRCUIT DEFENSE",
+  "@levelSelectTitle": {},
+
+  "levelSelectSubtitle": "Choose a campaign",
+  "@levelSelectSubtitle": {},
+
+  "wavesCount": "{count} WAVES",
+  "@wavesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "bestWaveReached": "Best: wave {wave}",
+  "@bestWaveReached": {
+    "placeholders": {
+      "wave": {"type": "int"}
+    }
+  },
+
+  "sceneCompleted": "COMPLETED",
+  "@sceneCompleted": {},
+
+  "hudWaveLabel": "WAVE {current} / {total}",
+  "@hudWaveLabel": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+
+  "baseOverrunTitle": "BASE OVERRUN",
+  "@baseOverrunTitle": {},
+
+  "baseOverrunSubtitle": "The circuit has been breached.",
+  "@baseOverrunSubtitle": {},
+
+  "defenseHoldsTitle": "DEFENSE HOLDS",
+  "@defenseHoldsTitle": {},
+
+  "defenseHoldsSubtitle": "All {waves} waves repelled!",
+  "@defenseHoldsSubtitle": {
+    "placeholders": {
+      "waves": {"type": "int"}
+    }
+  },
+
+  "playAgain": "PLAY AGAIN",
+  "@playAgain": {},
+
+  "changeMap": "CHANGE MAP",
+  "@changeMap": {},
+
+  "exitFullscreenTooltip": "Exit fullscreen",
+  "@exitFullscreenTooltip": {},
+
+  "enterFullscreenTooltip": "Enter fullscreen",
+  "@enterFullscreenTooltip": {},
+
+  "exitToMenuTooltip": "Exit to menu",
+  "@exitToMenuTooltip": {},
+
+  "exitConfirmTitle": "Leave battle?",
+  "@exitConfirmTitle": {},
+
+  "exitConfirmBody": "Your current run will be lost.",
+  "@exitConfirmBody": {},
+
+  "exitConfirmConfirm": "Exit",
+  "@exitConfirmConfirm": {},
+
+  "exitConfirmCancel": "Cancel",
+  "@exitConfirmCancel": {},
+
+  "towerMax": "MAX",
+  "@towerMax": {},
+
+  "towerTier": "Tier {tier}",
+  "@towerTier": {
+    "placeholders": {
+      "tier": {"type": "int"}
+    }
+  },
+
+  "accountWelcomeTitle": "Welcome, Commander",
+  "@accountWelcomeTitle": {},
+
+  "accountWelcomeSubtitle": "Enter your name to save your campaign progress.",
+  "@accountWelcomeSubtitle": {},
+
+  "accountNameHint": "Your name",
+  "@accountNameHint": {},
+
+  "accountContinue": "CONTINUE",
+  "@accountContinue": {},
+
+  "accountQuickPlay": "Quick Play",
+  "@accountQuickPlay": {},
+
+  "accountNameRequired": "Please enter a name",
+  "@accountNameRequired": {}
+}

@@ -44,6 +44,17 @@ class TowerRepositoryImpl implements TowerRepository {
       canTargetGround: false,
       canTargetAir: true,
     ),
+    TowerType.laser: TowerBlueprint(
+      type: TowerType.laser,
+      name: 'Laser Lance',
+      cost: 170,
+      range: 210,
+      damage: 14,
+      fireRate: 0.08,
+      maxHp: 110,
+      canTargetGround: true,
+      canTargetAir: true,
+    ),
   };
 
   @override

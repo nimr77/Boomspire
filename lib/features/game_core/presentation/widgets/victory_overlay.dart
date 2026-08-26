@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../generated/l10n.dart';
 import '../circuit_defense_game.dart';
 import 'end_screen.dart';
 
@@ -11,11 +12,11 @@ class VictoryOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return EndScreen(
-      title: 'DEFENSE HOLDS',
-      subtitle: 'All ${game.waveRepository.totalWaves} waves repelled!',
+      title: S.current.defenseHoldsTitle,
+      subtitle: S.current.defenseHoldsSubtitle(game.waveRepository.totalWaves),
       accentColor: Colors.greenAccent,
       onRestart: game.restart,
-      onChangeMap: () => Navigator.of(context).pop(),
+      onChangeMap: game.backToLevelSelect,
     );
   }
 }

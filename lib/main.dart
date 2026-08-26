@@ -1,21 +1,80 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:window_manager/window_manager.dart';
 
+import 'features/account/domain/models/account.dart';
+import 'features/account/domain/repos/account_repository.dart';
+import 'features/account/impl/local_account_repository_impl.dart';
+import 'features/account/presentation/create_account_content.dart';
 import 'features/level_select/presentation/level_select_page.dart';
+import 'features/messaging/presentation/glass_message.dart';
+import 'generated/l10n.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.macOS ||
+          defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux)) {
+    await windowManager.ensureInitialized();
+  }
   runApp(const CircuitDefenseApp());
 }
 
-class CircuitDefenseApp extends StatelessWidget {
+class CircuitDefenseApp extends StatefulWidget {
   const CircuitDefenseApp({super.key});
+
+  @override
+  State<CircuitDefenseApp> createState() => _CircuitDefenseAppState();
+}
+
+class _CircuitDefenseAppState extends State<CircuitDefenseApp> {
+  final AccountRepository _accountRepository = LocalAccountRepositoryImpl();
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  bool _prompted = false;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Circuit Defense',
+      navigatorKey: _navigatorKey,
+      onGenerateTitle: (context) => S.current.appTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true),
+      localizationsDelegates: const [
+        S.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: S.delegate.supportedLocales,
       home: const LevelSelectPage(),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _maybePromptForAccount(),
+    );
+  }
+
+  /// Prompts for a commander name (via the glassy [showGlassMessage] sheet)
+  /// on first launch, unless the player already has one or picks Quick Play.
+  Future<void> _maybePromptForAccount() async {
+    if (_prompted) return;
+    _prompted = true;
+    final existing = await _accountRepository.currentAccount();
+    final navContext = _navigatorKey.currentContext;
+    if (existing != null || navContext == null || !navContext.mounted) return;
+    await showGlassMessage<Account?>(
+      navContext,
+      barrierDismissible: false,
+      contentBuilder: (context) => CreateAccountContent(
+        accountRepository: _accountRepository,
+        onDone: (account) => Navigator.of(context).pop(account),
+      ),
     );
   }
 }

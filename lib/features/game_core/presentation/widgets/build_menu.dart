@@ -101,6 +101,7 @@ class _TowerButton extends StatelessWidget {
                         TowerType.cannon => Icons.whatshot,
                         TowerType.antiAir => Icons.radar,
                         TowerType.machineGun => Icons.gps_fixed,
+                        TowerType.laser => Icons.bolt,
                       },
                       color: accent,
                       size: 22,

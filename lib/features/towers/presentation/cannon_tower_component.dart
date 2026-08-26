@@ -21,7 +21,7 @@ class CannonTowerComponent extends TowerComponent {
       RocketComponent(
         start: spawnPos,
         target: target,
-        damage: blueprint.damage,
+        damage: effectiveDamage,
         splashRadius: blueprint.splashRadius,
         bodyColor: const Color(0xFF616161),
         tipColor: const Color(0xFFFFC107),

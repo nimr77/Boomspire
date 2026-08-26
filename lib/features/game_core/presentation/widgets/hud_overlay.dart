@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../generated/l10n.dart';
 import '../circuit_defense_game.dart';
 import 'build_menu.dart';
 
@@ -17,62 +19,81 @@ class HudOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Container(
-        height: 112,
-        decoration: const BoxDecoration(
-          color: Color(0xE60F1216),
-          border: Border(top: BorderSide(color: Color(0xFF2A323C), width: 2)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: ListenableBuilder(
-                listenable: game.gameState,
-                builder: (context, _) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _StatChip(
-                        icon: Icons.favorite,
-                        color: Colors.redAccent,
-                        label: '${game.gameState.health}',
-                      ),
-                      _StatChip(
-                        icon: Icons.monetization_on,
-                        color: Colors.amberAccent,
-                        label: '${game.gameState.gold}',
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: ListenableBuilder(
-                  listenable: game.gameState,
-                  builder: (context, _) {
-                    return Text(
-                      'WAVE ${game.gameState.currentWave} / ${game.gameState.totalWaves}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                        shadows: [Shadow(blurRadius: 4, color: Colors.black)],
-                      ),
-                    );
-                  },
+      child:
+          Container(
+                height: 112,
+                decoration: const BoxDecoration(
+                  color: Color(0xE60F1216),
+                  border: Border(
+                    top: BorderSide(color: Color(0xFF2A323C), width: 2),
+                  ),
                 ),
-              ),
-            ),
-            BuildMenu(game: game),
-          ],
-        ),
-      ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: ListenableBuilder(
+                        listenable: game.gameState,
+                        builder: (context, _) {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _StatChip(
+                                icon: Icons.favorite,
+                                color: Colors.redAccent,
+                                label: '${game.gameState.health}',
+                              ),
+                              _StatChip(
+                                icon: Icons.monetization_on,
+                                color: Colors.amberAccent,
+                                label: '${game.gameState.gold}',
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: ListenableBuilder(
+                          listenable: game.gameState,
+                          builder: (context, _) {
+                            return Text(
+                              S.current.hudWaveLabel(
+                                game.gameState.currentWave,
+                                game.gameState.totalWaves,
+                              ),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                                shadows: [
+                                  Shadow(blurRadius: 4, color: Colors.black),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    BuildMenu(game: game),
+                  ],
+                ),
+              )
+              .animate()
+              .slideY(
+                begin: 1,
+                end: 0,
+                duration: 380.ms,
+                curve: Curves.easeOutCubic,
+              )
+              .fadeIn(duration: 280.ms),
     );
   }
 }

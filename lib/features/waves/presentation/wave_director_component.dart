@@ -124,7 +124,7 @@ class WaveDirectorComponent extends Component
     for (final tower in game.world.activeTowers) {
       towersByType
           .putIfAbsent(tower.blueprint.type.name, () => [])
-          .add(tower.hp / tower.blueprint.maxHp);
+          .add(tower.hp / tower.maxHp);
     }
     final snapshot = BattlefieldSnapshot(
       waveNumber: waveNumber,

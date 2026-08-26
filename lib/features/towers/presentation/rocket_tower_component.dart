@@ -18,7 +18,7 @@ class RocketTowerComponent extends TowerComponent {
       RocketComponent(
         start: spawnPos,
         target: target,
-        damage: blueprint.damage,
+        damage: effectiveDamage,
         splashRadius: blueprint.splashRadius,
       ),
     );

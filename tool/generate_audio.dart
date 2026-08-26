@@ -198,6 +198,34 @@ void main() {
     ])),
   );
 
+  // Laser lance shot: thin, bright, sustained sine zap with a quick chirp.
+  writeWav(
+    '$dir/laser_shot.wav',
+    normalize(mix([
+      envelope(tone(2200, 900, 0.06, amp: 0.55, shape: 'sine'), attackSec: 0.001, decayTau: 0.02),
+      envelope(tone(3400, 2600, 0.05, amp: 0.25, shape: 'square'), attackSec: 0.001, decayTau: 0.015),
+    ])),
+  );
+
+  // Tower upgrade: bright rising three-note power-up chime.
+  writeWav(
+    '$dir/tower_upgrade.wav',
+    normalize(concat([
+      envelope(tone(440, 440, 0.08, amp: 0.55, shape: 'sine'), decayTau: 0.06),
+      envelope(tone(660, 660, 0.08, amp: 0.55, shape: 'sine'), decayTau: 0.06),
+      envelope(tone(880, 1100, 0.16, amp: 0.6, shape: 'sine'), decayTau: 0.12),
+    ])),
+  );
+
+  // Tower sell: soft descending mechanical chime (inverse of repair/upgrade).
+  writeWav(
+    '$dir/tower_sell.wav',
+    normalize(concat([
+      envelope(tone(700, 620, 0.09, amp: 0.5, shape: 'square'), decayTau: 0.06),
+      envelope(tone(500, 380, 0.12, amp: 0.5, shape: 'square'), decayTau: 0.08),
+    ])),
+  );
+
   stdout.writeln('Audio generation complete.');
 }
 

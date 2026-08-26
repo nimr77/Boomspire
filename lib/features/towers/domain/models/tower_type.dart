@@ -1,1 +1,1 @@
-enum TowerType { machineGun, rocket, cannon, antiAir }
+enum TowerType { machineGun, rocket, cannon, antiAir, laser }

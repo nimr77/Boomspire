@@ -39,6 +39,15 @@ dependencies:
   dio: ^5.11.0
   flame_rive: ^1.11.2
   flame_lottie: ^0.4.3+23
+  flutter_animate: ^4.5.2
+  shared_preferences: ^2.5.5
+  window_manager: ^0.5.2
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
+  intl: ^0.20.3
+  glassmorphism: ^3.0.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +60,11 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flame_test: ^2.3.1
+  freezed: ^4.0.0
+  build_runner: ^2.16.0
+  json_serializable: ^6.14.1
+  flutter_gen_runner: ^5.15.0
+  intl_utils: ^2.8.16
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -96,3 +110,25 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Flutter Intl (intl_utils) - generates lib/generated/l10n.dart with a `S`
+# class (`S.current`) from the ARB files in lib/l10n. Run with:
+#   dart run intl_utils:generate
+flutter_intl:
+  enabled: true
+  class_name: S
+  main_locale: en
+  arb_dir: lib/l10n
+  output_dir: lib/generated
+
+# flutter_gen (flutter_gen_runner) - generates lib/gen/assets.gen.dart so
+# assets are referenced as typed Dart constants instead of raw strings.
+# Runs alongside freezed/json_serializable via:
+#   dart run build_runner build --delete-conflicting-outputs
+flutter_gen:
+  output: lib/gen/
+  line_length: 80
+  integrations:
+    flutter_svg: false
+    rive: false
+    lottie: false

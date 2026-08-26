@@ -19,6 +19,7 @@ import '../../towers/domain/models/tower_type.dart';
 import '../../towers/domain/repos/tower_repository.dart';
 import '../../towers/presentation/anti_air_tower_component.dart';
 import '../../towers/presentation/cannon_tower_component.dart';
+import '../../towers/presentation/laser_tower_component.dart';
 import '../../towers/presentation/machine_gun_tower_component.dart';
 import '../../towers/presentation/rocket_tower_component.dart';
 import '../../towers/presentation/tower_component.dart';
@@ -48,7 +49,12 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
   late TerrainMap terrainMap;
 
   final ValueNotifier<TowerType?> selectedTowerType = ValueNotifier(null);
+  final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
   final ValueNotifier<String> commanderNote = ValueNotifier('');
+
+  /// Set by [GamePage] - lets a Flame overlay (which has no [BuildContext])
+  /// ask the host page to leave battle and return to level select.
+  VoidCallback? onExitToMenu;
 
   /// What the enemy AI director wants enemies to prioritize this wave.
   FocusHint enemyFocusHint = FocusHint.nearestTower;
@@ -78,17 +84,20 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
   @override
   Color backgroundColor() => const Color(0xFF14181d);
 
-  /// Routes an arena tap to either repairing a damaged tower under the tap,
-  /// or - if a tower type is selected - building on an empty, reachable
-  /// grid cell.
+  /// Routes an arena tap to selecting a tower under the tap (for the
+  /// repair/upgrade/sell action panel), or - if a tower type is selected -
+  /// building on an empty, reachable grid cell.
   void handleArenaTap(Vector2 point) {
     if (gameState.status != GameStatus.playing) return;
 
     final tappedTower = _towerAt(point);
     if (tappedTower != null) {
-      _repairTower(tappedTower);
+      selectedTower.value = selectedTower.value == tappedTower
+          ? null
+          : tappedTower;
       return;
     }
+    selectedTower.value = null;
 
     final type = selectedTowerType.value;
     if (type == null) return;
@@ -132,11 +141,17 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     enemyFocusHint = FocusHint.nearestTower;
     commanderNote.value = '';
     selectedTowerType.value = null;
+    selectedTower.value = null;
   }
 
   void selectTowerType(TowerType? type) {
     selectedTowerType.value = selectedTowerType.value == type ? null : type;
   }
+
+  /// Leaves the current battle and returns to level select (see
+  /// [onExitToMenu]) - used by the game-over/victory "change map" actions
+  /// and the in-battle exit button.
+  void backToLevelSelect() => onExitToMenu?.call();
 
   /// Nudges the camera briefly whenever something fires - stronger weapons
   /// and shots closer to the camera's focal point (the arena's center)
@@ -239,6 +254,11 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
         cellSize: cellSize,
         blueprint: blueprint,
       ),
+      TowerType.laser => LaserTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
     };
   }
 
@@ -246,8 +266,37 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     final cost = tower.repairCost;
     if (cost <= 0) return;
     if (!gameState.spendGold(cost)) return;
-    tower.repair(tower.blueprint.maxHp);
+    tower.repair(tower.maxHp);
     audioRepository.play(SfxType.towerRepair, volume: 0.7);
+  }
+
+  /// Repairs the currently-selected tower (see [selectedTower]) to full HP,
+  /// if the player can afford it.
+  void repairSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null) return;
+    _repairTower(tower);
+  }
+
+  /// Upgrades the currently-selected tower by one tier, if affordable and
+  /// not already at the maximum tier.
+  void upgradeSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null || !tower.canUpgrade) return;
+    if (!gameState.spendGold(tower.upgradeCost)) return;
+    tower.upgrade();
+  }
+
+  /// Sells the currently-selected tower for a partial gold refund and frees
+  /// up its grid cell.
+  void sellSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null) return;
+    gameState.addGold(tower.sellValue);
+    terrainMap.grid.setTowerOccupied(tower.col, tower.row, false);
+    audioRepository.play(SfxType.towerSell, volume: 0.7);
+    selectedTower.value = null;
+    world.removeTower(tower);
   }
 
   TowerComponent? _towerAt(Vector2 point) {

@@ -168,9 +168,7 @@ abstract class EnemyComponent extends PositionComponent
       // "Score" is what we minimize: distance for nearest-tower/rush-base
       // targeting, remaining HP ratio (scaled small so ties break on
       // distance) when the director wants weak towers focused down first.
-      final score = hint == FocusHint.weakestTower
-          ? tower.hp / tower.blueprint.maxHp
-          : d;
+      final score = hint == FocusHint.weakestTower ? tower.hp / tower.maxHp : d;
       if (score < bestScore) {
         best = tower;
         bestScore = score;
@@ -215,6 +213,12 @@ abstract class EnemyComponent extends PositionComponent
 
   bool _maybeEngageTower(double dt) {
     if (blueprint.attackDamage <= 0) return false;
+    // When the director orders a base rush, this unit ignores defenses
+    // entirely - no stopping to trade shots, straight for the home base.
+    if (game.enemyFocusHint == FocusHint.rushBase) {
+      _engaging = null;
+      return false;
+    }
 
     if (_engaging != null && (_engaging!.destroyed || !_engaging!.isMounted)) {
       _engaging = null;
