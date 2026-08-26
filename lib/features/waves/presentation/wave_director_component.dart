@@ -7,11 +7,11 @@ import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../enemies/domain/models/enemy_type.dart';
 import '../../enemies/presentation/attack_plane_component.dart';
-import '../../enemies/presentation/helicopter_component.dart';
-import '../../enemies/presentation/tank_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
 import '../../enemies/presentation/green_soldier_component.dart';
 import '../../enemies/presentation/heavy_soldier_component.dart';
+import '../../enemies/presentation/helicopter_component.dart';
+import '../../enemies/presentation/tank_component.dart';
 import '../../game_core/domain/models/game_status.dart';
 import '../../game_core/presentation/circuit_defense_game.dart';
 

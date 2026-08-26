@@ -409,28 +409,31 @@ void main() {
   writeWav(
     '$dir/vehicle_explosion.wav',
     normalize(
-      mix([
-        envelope(
-          tone(110, 35, 0.8, amp: 1.0, shape: 'sine'),
-          attackSec: 0.006,
-          decayTau: 0.4,
-        ),
-        envelope(
-          highPass(noise(0.2, seed: 202), 0.55),
-          attackSec: 0.001,
-          decayTau: 0.06,
-        ),
-        envelope(
-          lowPass(noise(1.0, seed: 203), 0.04),
-          attackSec: 0.02,
-          decayTau: 0.7,
-        ),
-        envelope(
-          tone(920, 640, 0.3, amp: 0.35, shape: 'square'),
-          attackSec: 0.002,
-          decayTau: 0.18,
-        ),
-      ], gains: [1.0, 1.0, 0.9, 0.5]),
+      mix(
+        [
+          envelope(
+            tone(110, 35, 0.8, amp: 1.0, shape: 'sine'),
+            attackSec: 0.006,
+            decayTau: 0.4,
+          ),
+          envelope(
+            highPass(noise(0.2, seed: 202), 0.55),
+            attackSec: 0.001,
+            decayTau: 0.06,
+          ),
+          envelope(
+            lowPass(noise(1.0, seed: 203), 0.04),
+            attackSec: 0.02,
+            decayTau: 0.7,
+          ),
+          envelope(
+            tone(920, 640, 0.3, amp: 0.35, shape: 'square'),
+            attackSec: 0.002,
+            decayTau: 0.18,
+          ),
+        ],
+        gains: [1.0, 1.0, 0.9, 0.5],
+      ),
     ),
   );
 

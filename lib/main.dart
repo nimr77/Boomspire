@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'core/di/service_locator.dart';
 import 'features/account/domain/models/account.dart';
 import 'features/account/domain/repos/account_repository.dart';
-import 'features/account/impl/local_account_repository_impl.dart';
 import 'features/account/presentation/create_account_content.dart';
 import 'features/level_select/presentation/level_select_page.dart';
 import 'features/messaging/presentation/glass_message.dart';
@@ -13,6 +13,7 @@ import 'generated/l10n.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setupServiceLocator();
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.macOS ||
           defaultTargetPlatform == TargetPlatform.windows ||
@@ -30,7 +31,7 @@ class CircuitDefenseApp extends StatefulWidget {
 }
 
 class _CircuitDefenseAppState extends State<CircuitDefenseApp> {
-  final AccountRepository _accountRepository = LocalAccountRepositoryImpl();
+  final AccountRepository _accountRepository = getIt<AccountRepository>();
   final _navigatorKey = GlobalKey<NavigatorState>();
   bool _prompted = false;
 

@@ -37,6 +37,11 @@ abstract class EnemyComponent extends PositionComponent
     implements Targetable {
   final EnemyBlueprint blueprint;
 
+  /// Enemies within this squared distance of each other push apart a bit
+  /// (see [_steer]) instead of overlapping/stacking while converging on the
+  /// same path or base.
+  static const _separationRadiusSq = 26.0 * 26.0;
+
   double health;
   List<Vector2> _path = [];
 
@@ -56,11 +61,11 @@ abstract class EnemyComponent extends PositionComponent
         priority: 10,
       );
 
-  Future<Sprite> buildSprite();
-
   /// Hook for subclasses to attach extra always-on visuals (spinning rotors,
   /// blinking lights, etc.) once [_visual] is loaded.
   Future<void> addExtraVisuals(PositionComponent visual) async {}
+
+  Future<Sprite> buildSprite();
 
   @override
   Future<void> onLoad() async {
@@ -146,9 +151,8 @@ abstract class EnemyComponent extends PositionComponent
       _followPath(dt);
     }
 
-    _bobPhase += dt * (blueprint.movementStyle == EnemyMovementStyle.roll
-        ? 6
-        : 10);
+    _bobPhase +=
+        dt * (blueprint.movementStyle == EnemyMovementStyle.roll ? 6 : 10);
     switch (blueprint.movementStyle) {
       case EnemyMovementStyle.walk:
         _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 1.5);
@@ -235,7 +239,7 @@ abstract class EnemyComponent extends PositionComponent
       _escape();
       return;
     }
-    final dir = toTarget / dist;
+    final dir = _steer(toTarget / dist);
     position += dir * step;
     _visual.angle = atan2(dir.y, dir.x) + pi / 2;
 
@@ -270,10 +274,31 @@ abstract class EnemyComponent extends PositionComponent
       _pathIndex++;
       if (_pathIndex >= _path.length) _escape();
     } else {
-      final dir = toTarget / dist;
+      final dir = _steer(toTarget / dist);
       position += dir * step;
       _visual.angle = atan2(dir.y, dir.x) + pi / 2;
     }
+  }
+
+  /// Blends the raw path/beeline direction with a short-range separation
+  /// push away from nearby enemies of the same domain (ground vs air don't
+  /// need to avoid each other) - without this, enemies converging on the
+  /// same waypoint/base pile up directly on top of one another instead of
+  /// flowing around each other like a real crowd would.
+  Vector2 _steer(Vector2 dir) {
+    final separation = Vector2.zero();
+    for (final other in game.world.activeEnemies) {
+      if (identical(other, this)) continue;
+      if (other.blueprint.isFlying != blueprint.isFlying) continue;
+      final delta = position - other.position;
+      final distSq = delta.length2;
+      if (distSq > 0 && distSq < _separationRadiusSq) {
+        separation.add(delta / distSq);
+      }
+    }
+    if (separation.isZero()) return dir;
+    final blended = dir + separation.normalized() * 0.5;
+    return blended.isZero() ? dir : blended.normalized();
   }
 
   bool _maybeEngageTower(double dt) {

@@ -9,6 +9,7 @@ import '../models/game_status.dart';
 abstract class GameStateRepository extends ChangeNotifier {
   int get currentWave;
   int get gold;
+  int get goldEarned;
   int get health;
   GameStatus get status;
   int get totalWaves;

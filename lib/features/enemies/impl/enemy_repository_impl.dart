@@ -78,4 +78,3 @@ class EnemyRepositoryImpl implements EnemyRepository {
   @override
   EnemyBlueprint blueprintFor(EnemyType type) => _blueprints[type]!;
 }
-

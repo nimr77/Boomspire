@@ -20,6 +20,8 @@ class RocketTowerComponent extends TowerComponent {
         target: target,
         damage: effectiveDamage,
         splashRadius: blueprint.splashRadius,
+        canHitAir: blueprint.canTargetAir,
+        canHitGround: blueprint.canTargetGround,
       ),
     );
     game.audioRepository.play(SfxType.rocketLaunch, volume: 0.6);

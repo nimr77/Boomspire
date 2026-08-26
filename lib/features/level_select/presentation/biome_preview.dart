@@ -2,9 +2,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../../core/di/service_locator.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../terrain/domain/models/terrain_map.dart';
-import '../../terrain/impl/terrain_repository_impl.dart';
+import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/terrain_painter.dart';
 
 /// Live small-scale render of a scene's actual terrain generation (not a
@@ -14,7 +15,7 @@ class BiomePreview extends StatelessWidget {
 
   final TerrainMap terrainMap;
   BiomePreview({super.key, required this.scene})
-    : terrainMap = TerrainRepositoryImpl().loadTerrain(scene: scene);
+    : terrainMap = getIt<TerrainRepository>().loadTerrain(scene: scene);
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +41,18 @@ class _BiomeThumbPainter extends CustomPainter {
       ui.Size(terrainMap.arenaWidth, terrainMap.arenaHeight),
       terrainMap,
     );
+    final riverPath = TerrainPainter.riverPath(
+      terrainMap,
+      terrainMap.arenaHeight,
+    );
+    if (riverPath != null) {
+      TerrainPainter.paintRiverFlow(
+        canvas,
+        riverPath,
+        terrainMap.grid.cellSize,
+        0,
+      );
+    }
     canvas.restore();
   }
 

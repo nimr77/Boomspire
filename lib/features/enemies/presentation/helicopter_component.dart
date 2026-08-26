@@ -9,12 +9,12 @@ class HelicopterComponent extends EnemyComponent {
   HelicopterComponent({required super.blueprint});
 
   @override
-  Future<Sprite> buildSprite() => EnemySpriteFactory.helicopter();
-
-  @override
   Future<void> addExtraVisuals(PositionComponent visual) async {
     await visual.add(_RotorComponent(position: visual.size / 2));
   }
+
+  @override
+  Future<Sprite> buildSprite() => EnemySpriteFactory.helicopter();
 }
 
 /// Always-spinning main rotor blur disc, layered above the static
@@ -31,31 +31,17 @@ class _RotorComponent extends PositionComponent {
       );
 
   @override
-  void update(double dt) {
-    super.update(dt);
-    _spin += dt * 18;
-  }
-
-  @override
   void render(Canvas canvas) {
     final center = size / 2;
     canvas.save();
     canvas.translate(center.x, center.y);
     canvas.rotate(_spin);
     canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset.zero,
-        width: size.x,
-        height: size.y * 0.1,
-      ),
+      Rect.fromCenter(center: Offset.zero, width: size.x, height: size.y * 0.1),
       Paint()..color = const Color(0x66B0BEC5),
     );
     canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset.zero,
-        width: size.x * 0.1,
-        height: size.y,
-      ),
+      Rect.fromCenter(center: Offset.zero, width: size.x * 0.1, height: size.y),
       Paint()..color = const Color(0x66B0BEC5),
     );
     canvas.restore();
@@ -64,5 +50,11 @@ class _RotorComponent extends PositionComponent {
       size.x * 0.04,
       Paint()..color = const Color(0xFF1a1c20),
     );
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _spin += dt * 18;
   }
 }

@@ -16,6 +16,7 @@ abstract class ProgressSnapshot with _$ProgressSnapshot {
   const factory ProgressSnapshot({
     @Default(<String>{}) Set<String> completedSceneIds,
     @Default(<String, int>{}) Map<String, int> bestWaveByScene,
+    @Default(0) int totalScore,
   }) = _ProgressSnapshot;
 
   factory ProgressSnapshot.fromJson(Map<String, dynamic> json) =>
@@ -31,6 +32,7 @@ abstract class ProgressSnapshot with _$ProgressSnapshot {
     required String sceneId,
     required int waveReached,
     required bool completed,
+    int score = 0,
   }) {
     final bestSoFar = bestWaveFor(sceneId);
     return copyWith(
@@ -39,6 +41,7 @@ abstract class ProgressSnapshot with _$ProgressSnapshot {
         ...bestWaveByScene,
         sceneId: waveReached > bestSoFar ? waveReached : bestSoFar,
       },
+      totalScore: totalScore + score,
     );
   }
 }

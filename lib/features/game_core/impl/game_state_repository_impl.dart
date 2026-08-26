@@ -5,6 +5,7 @@ import '../domain/repos/game_state_repository.dart';
 class GameStateRepositoryImpl extends GameStateRepository {
   int _health = GameConfig.startingHealth;
   int _gold = GameConfig.startingGold;
+  int _goldEarned = 0;
   int _currentWave = 1;
   int _totalWaves = 1;
   GameStatus _status = GameStatus.playing;
@@ -13,6 +14,8 @@ class GameStateRepositoryImpl extends GameStateRepository {
   int get currentWave => _currentWave;
   @override
   int get gold => _gold;
+  @override
+  int get goldEarned => _goldEarned;
   @override
   int get health => _health;
   @override
@@ -23,6 +26,7 @@ class GameStateRepositoryImpl extends GameStateRepository {
   @override
   void addGold(int amount) {
     _gold += amount;
+    _goldEarned += amount;
     notifyListeners();
   }
 
@@ -41,6 +45,7 @@ class GameStateRepositoryImpl extends GameStateRepository {
   void reset() {
     _health = GameConfig.startingHealth;
     _gold = GameConfig.startingGold;
+    _goldEarned = 0;
     _currentWave = 1;
     _status = GameStatus.playing;
     notifyListeners();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:glassmorphism/glassmorphism.dart';
 
+import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../game_core/domain/models/game_scene.dart';
@@ -9,7 +10,6 @@ import '../../game_core/domain/models/game_scenes.dart';
 import '../../game_core/presentation/game_page.dart';
 import '../../progress/domain/models/progress_snapshot.dart';
 import '../../progress/domain/repos/progress_repository.dart';
-import '../../progress/impl/local_progress_repository_impl.dart';
 import '../../terrain/domain/models/biome.dart';
 import 'biome_preview.dart';
 
@@ -23,7 +23,7 @@ class LevelSelectPage extends StatefulWidget {
 }
 
 class _LevelSelectPageState extends State<LevelSelectPage> {
-  final ProgressRepository _progressRepository = LocalProgressRepositoryImpl();
+  final ProgressRepository _progressRepository = getIt<ProgressRepository>();
 
   @override
   Widget build(BuildContext context) {

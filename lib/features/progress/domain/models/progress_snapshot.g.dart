@@ -18,10 +18,12 @@ _ProgressSnapshot _$ProgressSnapshotFromJson(Map<String, dynamic> json) =>
             (k, e) => MapEntry(k, (e as num).toInt()),
           ) ??
           const <String, int>{},
+      totalScore: (json['totalScore'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$ProgressSnapshotToJson(_ProgressSnapshot instance) =>
     <String, dynamic>{
       'completedSceneIds': instance.completedSceneIds.toList(),
       'bestWaveByScene': instance.bestWaveByScene,
+      'totalScore': instance.totalScore,
     };

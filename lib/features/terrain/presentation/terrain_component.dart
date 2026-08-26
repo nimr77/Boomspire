@@ -12,12 +12,16 @@ import 'terrain_painter.dart';
 /// scattered high-ground obstacles (mountains/dunes) and a winding
 /// river/valley crossing (also used as pathfinding obstacles). A thin
 /// dynamic overlay highlights the buildable cell under the cursor/selection
-/// while in build mode.
+/// while in build mode. Rivers additionally get a lightweight animated
+/// overlay (see [_riverPath]/[_riverPhase]) drawn live on top of the cached
+/// image so the water visibly flows instead of looking like a static ribbon.
 class TerrainComponent extends PositionComponent
     with HasGameReference<CircuitDefenseGame> {
   final TerrainMap terrainMap;
 
   late final ui.Image _baseImage;
+  ui.Path? _riverPath;
+  double _riverPhase = 0;
   TerrainComponent({required this.terrainMap})
     : super(
         position: Vector2.zero(),
@@ -32,11 +36,36 @@ class TerrainComponent extends PositionComponent
       size.y.round(),
       _paintBase,
     );
+    _riverPath = TerrainPainter.riverPath(terrainMap, size.y);
   }
 
   @override
   void render(ui.Canvas canvas) {
-    canvas.drawImage(_baseImage, ui.Offset.zero, ui.Paint());
+    // The base image is baked at a supersampled resolution (see
+    // renderToImage) purely for source detail - it must always be scaled
+    // back down to this component's logical size, never drawn 1:1, or the
+    // terrain renders zoomed-in/cropped.
+    canvas.drawImageRect(
+      _baseImage,
+      ui.Rect.fromLTWH(
+        0,
+        0,
+        _baseImage.width.toDouble(),
+        _baseImage.height.toDouble(),
+      ),
+      ui.Rect.fromLTWH(0, 0, size.x, size.y),
+      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+    );
+
+    final riverPath = _riverPath;
+    if (riverPath != null) {
+      TerrainPainter.paintRiverFlow(
+        canvas,
+        riverPath,
+        terrainMap.grid.cellSize,
+        _riverPhase,
+      );
+    }
 
     final selected = game.selectedTowerType.value;
     if (selected == null) return;
@@ -65,6 +94,12 @@ class TerrainComponent extends PositionComponent
         );
       }
     }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _riverPhase += dt;
   }
 
   void _paintBase(ui.Canvas canvas) {

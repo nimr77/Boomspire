@@ -84,11 +84,10 @@ class _AnimatedLabel extends StatelessWidget {
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
         child: SlideTransition(
-          position:
-              Tween<Offset>(
-                begin: const Offset(0, 0.4),
-                end: Offset.zero,
-              ).animate(animation),
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.4),
+            end: Offset.zero,
+          ).animate(animation),
           child: child,
         ),
       ),
@@ -112,10 +111,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
           transitionBuilder: (child, animation) => FadeTransition(
             opacity: animation,
             child: ScaleTransition(
-              scale: Tween<double>(
-                begin: 0.85,
-                end: 1,
-              ).animate(animation),
+              scale: Tween<double>(begin: 0.85, end: 1).animate(animation),
               alignment: Alignment.bottomCenter,
               child: child,
             ),
@@ -130,6 +126,23 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // The selected tower's HP changes continuously from combat (a Flame
+    // component, not a Listenable) - poll at a modest rate so the card
+    // stays live without wiring a full ChangeNotifier through it.
+    _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      if (widget.game.selectedTower.value != null && mounted) setState(() {});
+    });
   }
 
   Widget _buildCard(TowerComponent tower) {
@@ -214,22 +227,5 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // The selected tower's HP changes continuously from combat (a Flame
-    // component, not a Listenable) - poll at a modest rate so the card
-    // stays live without wiring a full ChangeNotifier through it.
-    _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      if (widget.game.selectedTower.value != null && mounted) setState(() {});
-    });
   }
 }

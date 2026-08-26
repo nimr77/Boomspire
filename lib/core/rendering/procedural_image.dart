@@ -23,5 +23,8 @@ Future<ui.Image> renderToImage(
   canvas.scale(kSpriteSupersample.toDouble());
   paint(canvas);
   final picture = recorder.endRecording();
-  return picture.toImage(width * kSpriteSupersample, height * kSpriteSupersample);
+  return picture.toImage(
+    width * kSpriteSupersample,
+    height * kSpriteSupersample,
+  );
 }

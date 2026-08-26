@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ProgressSnapshot {
 
- Set<String> get completedSceneIds; Map<String, int> get bestWaveByScene;
+ Set<String> get completedSceneIds; Map<String, int> get bestWaveByScene; int get totalScore;
 /// Create a copy of ProgressSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $ProgressSnapshotCopyWith<ProgressSnapshot> get copyWith => _$ProgressSnapshotCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProgressSnapshot&&const DeepCollectionEquality().equals(other.completedSceneIds, completedSceneIds)&&const DeepCollectionEquality().equals(other.bestWaveByScene, bestWaveByScene));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProgressSnapshot&&const DeepCollectionEquality().equals(other.completedSceneIds, completedSceneIds)&&const DeepCollectionEquality().equals(other.bestWaveByScene, bestWaveByScene)&&(identical(other.totalScore, totalScore) || other.totalScore == totalScore));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(completedSceneIds),const DeepCollectionEquality().hash(bestWaveByScene));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(completedSceneIds),const DeepCollectionEquality().hash(bestWaveByScene),totalScore);
 
 @override
 String toString() {
-  return 'ProgressSnapshot(completedSceneIds: $completedSceneIds, bestWaveByScene: $bestWaveByScene)';
+  return 'ProgressSnapshot(completedSceneIds: $completedSceneIds, bestWaveByScene: $bestWaveByScene, totalScore: $totalScore)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $ProgressSnapshotCopyWith<$Res>  {
   factory $ProgressSnapshotCopyWith(ProgressSnapshot value, $Res Function(ProgressSnapshot) _then) = _$ProgressSnapshotCopyWithImpl;
 @useResult
 $Res call({
- Set<String> completedSceneIds, Map<String, int> bestWaveByScene
+ Set<String> completedSceneIds, Map<String, int> bestWaveByScene, int totalScore
 });
 
 
@@ -66,11 +66,12 @@ class _$ProgressSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of ProgressSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? completedSceneIds = null,Object? bestWaveByScene = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? completedSceneIds = null,Object? bestWaveByScene = null,Object? totalScore = null,}) {
   return _then(ProgressSnapshot(
 completedSceneIds: null == completedSceneIds ? _self.completedSceneIds : completedSceneIds // ignore: cast_nullable_to_non_nullable
 as Set<String>,bestWaveByScene: null == bestWaveByScene ? _self.bestWaveByScene : bestWaveByScene // ignore: cast_nullable_to_non_nullable
-as Map<String, int>,
+as Map<String, int>,totalScore: null == totalScore ? _self.totalScore : totalScore // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -155,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Set<String> completedSceneIds,  Map<String, int> bestWaveByScene)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Set<String> completedSceneIds,  Map<String, int> bestWaveByScene,  int totalScore)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProgressSnapshot() when $default != null:
-return $default(_that.completedSceneIds,_that.bestWaveByScene);case _:
+return $default(_that.completedSceneIds,_that.bestWaveByScene,_that.totalScore);case _:
   return orElse();
 
 }
@@ -176,10 +177,10 @@ return $default(_that.completedSceneIds,_that.bestWaveByScene);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Set<String> completedSceneIds,  Map<String, int> bestWaveByScene)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Set<String> completedSceneIds,  Map<String, int> bestWaveByScene,  int totalScore)  $default,) {final _that = this;
 switch (_that) {
 case _ProgressSnapshot():
-return $default(_that.completedSceneIds,_that.bestWaveByScene);case _:
+return $default(_that.completedSceneIds,_that.bestWaveByScene,_that.totalScore);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +197,10 @@ return $default(_that.completedSceneIds,_that.bestWaveByScene);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Set<String> completedSceneIds,  Map<String, int> bestWaveByScene)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Set<String> completedSceneIds,  Map<String, int> bestWaveByScene,  int totalScore)?  $default,) {final _that = this;
 switch (_that) {
 case _ProgressSnapshot() when $default != null:
-return $default(_that.completedSceneIds,_that.bestWaveByScene);case _:
+return $default(_that.completedSceneIds,_that.bestWaveByScene,_that.totalScore);case _:
   return null;
 
 }
@@ -211,7 +212,7 @@ return $default(_that.completedSceneIds,_that.bestWaveByScene);case _:
 @JsonSerializable()
 
 class _ProgressSnapshot extends ProgressSnapshot {
-  const _ProgressSnapshot({ Set<String> completedSceneIds = const <String>{},  Map<String, int> bestWaveByScene = const <String, int>{}}): _completedSceneIds = completedSceneIds,_bestWaveByScene = bestWaveByScene,super._();
+  const _ProgressSnapshot({ Set<String> completedSceneIds = const <String>{},  Map<String, int> bestWaveByScene = const <String, int>{}, this.totalScore = 0}): _completedSceneIds = completedSceneIds,_bestWaveByScene = bestWaveByScene,super._();
   factory _ProgressSnapshot.fromJson(Map<String, dynamic> json) => _$ProgressSnapshotFromJson(json);
 
  final  Set<String> _completedSceneIds;
@@ -228,6 +229,7 @@ class _ProgressSnapshot extends ProgressSnapshot {
   return EqualUnmodifiableMapView(_bestWaveByScene);
 }
 
+@override@JsonKey() final  int totalScore;
 
 /// Create a copy of ProgressSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -242,16 +244,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProgressSnapshot&&const DeepCollectionEquality().equals(other._completedSceneIds, _completedSceneIds)&&const DeepCollectionEquality().equals(other._bestWaveByScene, _bestWaveByScene));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProgressSnapshot&&const DeepCollectionEquality().equals(other._completedSceneIds, _completedSceneIds)&&const DeepCollectionEquality().equals(other._bestWaveByScene, _bestWaveByScene)&&(identical(other.totalScore, totalScore) || other.totalScore == totalScore));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_completedSceneIds),const DeepCollectionEquality().hash(_bestWaveByScene));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_completedSceneIds),const DeepCollectionEquality().hash(_bestWaveByScene),totalScore);
 
 @override
 String toString() {
-  return 'ProgressSnapshot(completedSceneIds: $completedSceneIds, bestWaveByScene: $bestWaveByScene)';
+  return 'ProgressSnapshot(completedSceneIds: $completedSceneIds, bestWaveByScene: $bestWaveByScene, totalScore: $totalScore)';
 }
 
 
@@ -262,7 +264,7 @@ abstract mixin class _$ProgressSnapshotCopyWith<$Res> implements $ProgressSnapsh
   factory _$ProgressSnapshotCopyWith(_ProgressSnapshot value, $Res Function(_ProgressSnapshot) _then) = __$ProgressSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- Set<String> completedSceneIds, Map<String, int> bestWaveByScene
+ Set<String> completedSceneIds, Map<String, int> bestWaveByScene, int totalScore
 });
 
 
@@ -279,11 +281,12 @@ class __$ProgressSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of ProgressSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? completedSceneIds = null,Object? bestWaveByScene = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? completedSceneIds = null,Object? bestWaveByScene = null,Object? totalScore = null,}) {
   return _then(_ProgressSnapshot(
 completedSceneIds: null == completedSceneIds ? _self._completedSceneIds : completedSceneIds // ignore: cast_nullable_to_non_nullable
 as Set<String>,bestWaveByScene: null == bestWaveByScene ? _self._bestWaveByScene : bestWaveByScene // ignore: cast_nullable_to_non_nullable
-as Map<String, int>,
+as Map<String, int>,totalScore: null == totalScore ? _self.totalScore : totalScore // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

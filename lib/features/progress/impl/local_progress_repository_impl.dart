@@ -34,12 +34,14 @@ class LocalProgressRepositoryImpl implements ProgressRepository {
     required String sceneId,
     required int waveReached,
     required bool completed,
+    int score = 0,
   }) async {
     final current = await load();
     final updated = current.withResult(
       sceneId: sceneId,
       waveReached: waveReached,
       completed: completed,
+      score: score,
     );
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, jsonEncode(updated.toJson()));

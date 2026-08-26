@@ -91,12 +91,13 @@ class _TowerButtonState extends State<_TowerButton> {
               duration: const Duration(milliseconds: 140),
               curve: Curves.easeOut,
               width: 84,
-              transform: Matrix4.identity()..scaleByDouble(
-                _hovering ? 1.06 : 1.0,
-                _hovering ? 1.06 : 1.0,
-                1.0,
-                1.0,
-              ),
+              transform: Matrix4.identity()
+                ..scaleByDouble(
+                  _hovering ? 1.06 : 1.0,
+                  _hovering ? 1.06 : 1.0,
+                  1.0,
+                  1.0,
+                ),
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
                 color: const Color(0xFF1A1F26),
@@ -205,7 +206,10 @@ class _TowerButtonState extends State<_TowerButton> {
           stat(Icons.social_distance, blueprint.range.toStringAsFixed(0)),
           stat(Icons.timer, '${blueprint.fireRate.toStringAsFixed(1)}s'),
           if (blueprint.splashRadius > 0)
-            stat(Icons.blur_circular, blueprint.splashRadius.toStringAsFixed(0)),
+            stat(
+              Icons.blur_circular,
+              blueprint.splashRadius.toStringAsFixed(0),
+            ),
         ],
       ),
     );

@@ -2,20 +2,20 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
+import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
-import '../../ai_director/impl/ai_director_repository_impl.dart';
-import '../../audio/impl/audio_repository_impl.dart';
-import '../../enemies/impl/enemy_repository_impl.dart';
+import '../../ai_director/domain/repos/ai_director_repository.dart';
+import '../../audio/domain/repos/audio_repository.dart';
+import '../../enemies/domain/repos/enemy_repository.dart';
 import '../../level_select/presentation/biome_preview.dart';
 import '../../progress/domain/repos/progress_repository.dart';
-import '../../progress/impl/local_progress_repository_impl.dart';
-import '../../terrain/impl/terrain_repository_impl.dart';
-import '../../towers/impl/tower_repository_impl.dart';
-import '../../waves/impl/wave_repository_impl.dart';
+import '../../terrain/domain/repos/terrain_repository.dart';
+import '../../towers/domain/repos/tower_repository.dart';
+import '../../waves/domain/repos/wave_repository.dart';
 import '../domain/models/game_scene.dart';
 import '../domain/models/game_status.dart';
-import '../impl/game_state_repository_impl.dart';
+import '../domain/repos/game_state_repository.dart';
 import 'circuit_defense_game.dart';
 import 'widgets/game_over_overlay.dart';
 import 'widgets/hud_overlay.dart';
@@ -35,8 +35,8 @@ class GamePage extends StatefulWidget {
 
 class _GamePageState extends State<GamePage> {
   late final CircuitDefenseGame _game;
-  late final GameStateRepositoryImpl _gameState;
-  final ProgressRepository _progressRepository = LocalProgressRepositoryImpl();
+  late final GameStateRepository _gameState;
+  final ProgressRepository _progressRepository = getIt<ProgressRepository>();
   bool _recorded = false;
 
   @override
@@ -68,15 +68,22 @@ class _GamePageState extends State<GamePage> {
                       size: 60,
                       sigma: 20,
                       controlPoints: [
-                        ControlPoint(position: 0, type: ControlPointType.visible),
-                        ControlPoint(position: 1, type: ControlPointType.transparent),
+                        ControlPoint(
+                          position: 0,
+                          type: ControlPointType.visible,
+                        ),
+                        ControlPoint(
+                          position: 1,
+                          type: ControlPointType.transparent,
+                        ),
                       ],
                     ),
                   ],
                   child: GameWidget<CircuitDefenseGame>(
                     game: _game,
                     overlayBuilderMap: {
-                      'gameOver': (context, game) => GameOverOverlay(game: game),
+                      'gameOver': (context, game) =>
+                          GameOverOverlay(game: game),
                       'victory': (context, game) => VictoryOverlay(game: game),
                     },
                   ),
@@ -116,15 +123,17 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    _gameState = GameStateRepositoryImpl();
+    _gameState = getIt<GameStateRepository>();
     _game = CircuitDefenseGame(
-      terrainRepository: TerrainRepositoryImpl(),
-      towerRepository: TowerRepositoryImpl(),
-      enemyRepository: EnemyRepositoryImpl(),
-      waveRepository: WaveRepositoryImpl(totalWaves: widget.scene.waveCount),
-      audioRepository: AudioRepositoryImpl(),
+      terrainRepository: getIt<TerrainRepository>(),
+      towerRepository: getIt<TowerRepository>(),
+      enemyRepository: getIt<EnemyRepository>(),
+      waveRepository: getIt<WaveRepository>(
+        param1: widget.scene.waveCount,
+      ),
+      audioRepository: getIt<AudioRepository>(),
       gameState: _gameState,
-      aiDirector: AiDirectorRepositoryImpl(),
+      aiDirector: getIt<AiDirectorRepository>(),
       scene: widget.scene,
     )..onExitToMenu = () => Navigator.of(context).pop();
     _gameState.addListener(_syncOverlays);
@@ -164,10 +173,16 @@ class _GamePageState extends State<GamePage> {
   void _recordProgress() {
     if (_recorded) return;
     _recorded = true;
+    final completed = _gameState.status == GameStatus.victory;
+    final score =
+        _gameState.currentWave * 100 +
+        _gameState.goldEarned +
+        (completed ? 1000 : 0);
     _progressRepository.recordRun(
       sceneId: widget.scene.id,
       waveReached: _gameState.currentWave,
-      completed: _gameState.status == GameStatus.victory,
+      completed: completed,
+      score: score,
     );
   }
 

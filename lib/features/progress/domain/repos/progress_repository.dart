@@ -13,5 +13,6 @@ abstract class ProgressRepository {
     required String sceneId,
     required int waveReached,
     required bool completed,
+    int score = 0,
   });
 }

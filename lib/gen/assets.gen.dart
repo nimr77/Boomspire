@@ -51,6 +51,9 @@ class $AssetsAudioGen {
   /// File path: assets/audio/rocket_launch.wav
   String get rocketLaunch => 'assets/audio/rocket_launch.wav';
 
+  /// File path: assets/audio/soldier_pop.wav
+  String get soldierPop => 'assets/audio/soldier_pop.wav';
+
   /// File path: assets/audio/tower_destroyed.wav
   String get towerDestroyed => 'assets/audio/tower_destroyed.wav';
 
@@ -62,6 +65,12 @@ class $AssetsAudioGen {
 
   /// File path: assets/audio/tower_upgrade.wav
   String get towerUpgrade => 'assets/audio/tower_upgrade.wav';
+
+  /// File path: assets/audio/vehicle_engine.wav
+  String get vehicleEngine => 'assets/audio/vehicle_engine.wav';
+
+  /// File path: assets/audio/vehicle_explosion.wav
+  String get vehicleExplosion => 'assets/audio/vehicle_explosion.wav';
 
   /// File path: assets/audio/victory.wav
   String get victory => 'assets/audio/victory.wav';
@@ -84,10 +93,13 @@ class $AssetsAudioGen {
     laserShot,
     machineGunShot,
     rocketLaunch,
+    soldierPop,
     towerDestroyed,
     towerRepair,
     towerSell,
     towerUpgrade,
+    vehicleEngine,
+    vehicleExplosion,
     victory,
     waveStart,
   ];

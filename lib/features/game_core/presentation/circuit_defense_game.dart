@@ -89,6 +89,16 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
   /// and the in-battle exit button.
   void backToLevelSelect() => onExitToMenu?.call();
 
+  /// Attaches the anti-rocket point-defense module to the currently-selected
+  /// tower, if affordable and not already installed.
+  void buyAntiRocketForSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null || tower.antiRocket) return;
+    if (!gameState.spendGold(kAntiRocketCost)) return;
+    tower.antiRocket = true;
+    audioRepository.play(SfxType.buildPlace, volume: 0.6);
+  }
+
   /// Routes an arena tap to selecting a tower under the tap (for the
   /// repair/upgrade/sell action panel), or - if a tower type is selected -
   /// building on an empty, reachable grid cell.
@@ -124,16 +134,6 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     final tower = selectedTower.value;
     if (tower == null) return;
     _repairTower(tower);
-  }
-
-  /// Attaches the anti-rocket point-defense module to the currently-selected
-  /// tower, if affordable and not already installed.
-  void buyAntiRocketForSelectedTower() {
-    final tower = selectedTower.value;
-    if (tower == null || tower.antiRocket) return;
-    if (!gameState.spendGold(kAntiRocketCost)) return;
-    tower.antiRocket = true;
-    audioRepository.play(SfxType.buildPlace, volume: 0.6);
   }
 
   void restart() {

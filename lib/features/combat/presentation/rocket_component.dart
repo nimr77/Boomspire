@@ -24,6 +24,13 @@ class RocketComponent extends PositionComponent
 
   /// True for enemy-fired shells so splash also damages towers, not enemies.
   final bool affectsTowers;
+
+  /// Whether splash damage (when [affectsTowers] is false) can hit flying
+  /// enemies / ground enemies respectively - mirrors the firing tower's own
+  /// targeting capability so, e.g., a ground-only Rocket Battery splash
+  /// never clips a helicopter/plane just passing overhead.
+  final bool canHitAir;
+  final bool canHitGround;
   double _trailTimer = 0;
   RocketComponent({
     required Vector2 start,
@@ -33,6 +40,8 @@ class RocketComponent extends PositionComponent
     this.bodyColor = const Color(0xFFB0BEC5),
     this.tipColor = const Color(0xFFFF7043),
     this.affectsTowers = false,
+    this.canHitAir = true,
+    this.canHitGround = true,
   }) : super(position: start, size: Vector2(15, 5), anchor: Anchor.center);
 
   @override
@@ -92,6 +101,7 @@ class RocketComponent extends PositionComponent
       }
     } else {
       for (final enemy in List.of(game.world.activeEnemies)) {
+        if (enemy.blueprint.isFlying ? !canHitAir : !canHitGround) continue;
         if (enemy.position.distanceTo(position) <= splashRadius) {
           enemy.takeDamage(damage);
         }

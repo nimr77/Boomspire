@@ -69,7 +69,9 @@ class TerrainPainter {
 
     // Rivers/valleys are drawn as one continuous winding ribbon (instead of
     // independent per-cell tiles) so they read as a real, connected feature
-    // rather than a stack of disjoint blocks.
+    // rather than a stack of disjoint blocks. The river's banks/bed are
+    // baked here (static); the flowing-water shimmer is drawn live on top
+    // every frame instead - see [paintRiverFlow].
     final riverPoints = _obstaclePathPoints(
       grid,
       kinds,
@@ -77,7 +79,7 @@ class TerrainPainter {
       size.height,
     );
     if (riverPoints.length >= 2) {
-      _paintRiverPath(canvas, _smoothPath(riverPoints), grid.cellSize);
+      _paintRiverBed(canvas, _smoothPath(riverPoints), grid.cellSize);
     }
     final valleyPoints = _obstaclePathPoints(
       grid,
@@ -221,12 +223,26 @@ class TerrainPainter {
     final cx = col * grid.cellSize + grid.cellSize / 2;
     final cy = row * grid.cellSize + grid.cellSize / 2;
     final half = grid.cellSize / 2;
+    // Seeded per-cell (not per-frame) so the jitter/texture is stable
+    // across rebuilds instead of re-randomizing every bake.
+    final rnd = Random(col * 92821 + row * 68917 + 1);
+    double j() => (rnd.nextDouble() - 0.5) * half * 0.22;
 
     final path = ui.Path()
-      ..moveTo(cx, cy - half * 1.05)
-      ..lineTo(cx + half * 0.95, cy + half * 0.85)
-      ..lineTo(cx - half * 0.95, cy + half * 0.85)
+      ..moveTo(cx + j(), cy - half * 1.05 + j())
+      ..lineTo(cx + half * 0.95 + j(), cy + half * 0.85 + j())
+      ..lineTo(cx - half * 0.95 + j(), cy + half * 0.85 + j())
       ..close();
+
+    // Soft, wide, blurred underlay so the peak's silhouette melts into the
+    // surrounding ground texture instead of reading as a pasted-on sticker
+    // shape - this is the main "on the terrain, not a shape" fix.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..color = palette.ridgeDark.withValues(alpha: 0.5)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 8),
+    );
 
     canvas.drawShadow(path, const ui.Color(0xFF000000), 3, false);
     canvas.drawPath(
@@ -238,25 +254,46 @@ class TerrainPainter {
           [palette.ridgeLight, palette.ridgeDark],
         ),
     );
+
+    // Rocky texture dabs clipped to the silhouette so the face reads as a
+    // painted rock surface instead of a flat gradient fill.
+    for (var i = 0; i < 12; i++) {
+      final px = cx + (rnd.nextDouble() - 0.5) * half * 1.6;
+      final py = cy - half * 0.7 + rnd.nextDouble() * half * 1.5;
+      if (!path.contains(ui.Offset(px, py))) continue;
+      canvas.drawCircle(
+        ui.Offset(px, py),
+        1.2 + rnd.nextDouble() * 2.2,
+        ui.Paint()
+          ..color = (rnd.nextBool() ? palette.ridgeLight : palette.ridgeDark)
+              .withValues(alpha: 0.24),
+      );
+    }
+
     final snowCap = ui.Path()
-      ..moveTo(cx, cy - half * 1.05)
+      ..moveTo(cx + j(), cy - half * 1.05)
       ..lineTo(cx + half * 0.4, cy - half * 0.2)
       ..lineTo(cx - half * 0.4, cy - half * 0.2)
       ..close();
     canvas.drawPath(
       snowCap,
-      ui.Paint()..color = palette.capColor.withValues(alpha: 0.85),
+      ui.Paint()
+        ..color = palette.capColor.withValues(alpha: 0.78)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 1.2),
     );
     canvas.drawPath(
       path,
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = const ui.Color(0xFF1c2126).withValues(alpha: 0.6),
+        ..strokeWidth = 1.2
+        ..color = const ui.Color(0xFF1c2126).withValues(alpha: 0.4),
     );
   }
 
-  static void _paintRiverPath(ui.Canvas canvas, ui.Path path, double cellSize) {
+  /// Static shore/bed/water-gradient layers only - baked once into the
+  /// cached terrain image. The moving shimmer/ripples are drawn separately
+  /// every frame by [paintRiverFlow] so the river reads as flowing water.
+  static void _paintRiverBed(ui.Canvas canvas, ui.Path path, double cellSize) {
     final bounds = path.getBounds();
     // Sandy shore first, wider than the water itself.
     canvas.drawPath(
@@ -299,46 +336,84 @@ class TerrainPainter {
           const [0.0, 0.25, 0.5, 0.75, 1.0],
         ),
     );
-    // Specular highlight streak, slightly offset so it reads as light
-    // glinting off moving water rather than a flat fill.
-    canvas.drawPath(
-      path.shift(const ui.Offset(-4, -3)),
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeJoin = ui.StrokeJoin.round
-        ..strokeWidth = cellSize * 0.32
-        ..color = const ui.Color(0xFFbfeeff).withValues(alpha: 0.45),
-    );
+  }
 
-    // Small ripple arcs sampled along the path for extra texture.
+  /// Live per-frame animated overlay for a river: a scrolling specular
+  /// dash streak plus ripple arcs that both drift downstream as [phase]
+  /// (elapsed seconds) advances, on top of the static [_paintRiverBed].
+  static void paintRiverFlow(
+    ui.Canvas canvas,
+    ui.Path path,
+    double cellSize,
+    double phase,
+  ) {
     final metric = path.computeMetrics().firstOrNull;
-    if (metric != null) {
-      final rnd = Random(7);
-      final rippleCount = (metric.length / (cellSize * 1.4)).floor();
-      for (var i = 0; i < rippleCount; i++) {
-        final dist = (i + 0.5) * (metric.length / rippleCount);
-        final tangent = metric.getTangentForOffset(dist);
-        if (tangent == null) continue;
-        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
-        final offset = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
-        final center = tangent.position + normal * offset;
-        canvas.drawArc(
-          ui.Rect.fromCenter(
-            center: center,
-            width: cellSize * 0.5,
-            height: cellSize * 0.22,
-          ),
-          0,
-          pi,
-          false,
-          ui.Paint()
-            ..style = ui.PaintingStyle.stroke
-            ..strokeWidth = 1
-            ..color = const ui.Color(0xFFe8fbff).withValues(alpha: 0.3),
-        );
-      }
+    if (metric == null) return;
+    final length = metric.length;
+    if (length <= 0) return;
+
+    const dashLen = 30.0;
+    const gapLen = 26.0;
+    const period = dashLen + gapLen;
+    final flowOffset = (phase * 70) % period;
+    final highlightPaint = ui.Paint()
+      ..style = ui.PaintingStyle.stroke
+      ..strokeCap = ui.StrokeCap.round
+      ..strokeJoin = ui.StrokeJoin.round
+      ..strokeWidth = cellSize * 0.32
+      ..color = const ui.Color(0xFFbfeeff).withValues(alpha: 0.45);
+    for (var dist = -flowOffset; dist < length; dist += period) {
+      final start = dist.clamp(0.0, length);
+      final end = (dist + dashLen).clamp(0.0, length);
+      if (end <= start) continue;
+      final sub = metric
+          .extractPath(start, end)
+          .shift(const ui.Offset(-4, -3));
+      canvas.drawPath(sub, highlightPaint);
     }
+
+    final rippleCount = (length / (cellSize * 1.4)).floor().clamp(0, 200);
+    if (rippleCount == 0) return;
+    final rnd = Random(7);
+    final ripplePaint = ui.Paint()
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = const ui.Color(0xFFe8fbff).withValues(alpha: 0.3);
+    final step = length / rippleCount;
+    for (var i = 0; i < rippleCount; i++) {
+      final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
+      final dist = ((i + 0.5) * step + phase * 40) % length;
+      final tangent = metric.getTangentForOffset(dist);
+      if (tangent == null) continue;
+      final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
+      final center = tangent.position + normal * jitter;
+      canvas.drawArc(
+        ui.Rect.fromCenter(
+          center: center,
+          width: cellSize * 0.5,
+          height: cellSize * 0.22,
+        ),
+        0,
+        pi,
+        false,
+        ripplePaint,
+      );
+    }
+  }
+
+  /// Centerline points for the river obstacle in [terrainMap], smoothed
+  /// into a [ui.Path] - null if this map has no river (e.g. desert biome,
+  /// which uses a dry valley instead). Used both to bake the static bed
+  /// (see [_paintRiverBed]) and to drive the live [paintRiverFlow] overlay.
+  static ui.Path? riverPath(TerrainMap terrainMap, double canvasHeight) {
+    final points = _obstaclePathPoints(
+      terrainMap.grid,
+      terrainMap.obstacleKinds,
+      ObstacleKind.river,
+      canvasHeight,
+    );
+    if (points.length < 2) return null;
+    return _smoothPath(points);
   }
 
   static void _paintTree(
