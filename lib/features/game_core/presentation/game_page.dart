@@ -1,5 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
@@ -60,12 +61,25 @@ class _GamePageState extends State<GamePage> {
           Column(
             children: [
               Expanded(
-                child: GameWidget<CircuitDefenseGame>(
-                  game: _game,
-                  overlayBuilderMap: {
-                    'gameOver': (context, game) => GameOverOverlay(game: game),
-                    'victory': (context, game) => VictoryOverlay(game: game),
-                  },
+                child: SoftEdgeBlur(
+                  edges: [
+                    EdgeBlur(
+                      type: EdgeType.topEdge,
+                      size: 60,
+                      sigma: 20,
+                      controlPoints: [
+                        ControlPoint(position: 0, type: ControlPointType.visible),
+                        ControlPoint(position: 1, type: ControlPointType.transparent),
+                      ],
+                    ),
+                  ],
+                  child: GameWidget<CircuitDefenseGame>(
+                    game: _game,
+                    overlayBuilderMap: {
+                      'gameOver': (context, game) => GameOverOverlay(game: game),
+                      'victory': (context, game) => VictoryOverlay(game: game),
+                    },
+                  ),
                 ),
               ),
               HudOverlay(game: _game),

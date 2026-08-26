@@ -34,10 +34,32 @@ class WaveRepositoryImpl implements WaveRepository {
       );
       spawns.add(
         SpawnEntry(
-          type: EnemyType.air,
+          type: EnemyType.helicopter,
           count: (1 + (n - 2) * 0.8).round(),
           interval: (1.9 - n * 0.05).clamp(0.9, 1.9),
           startDelay: 3,
+        ),
+      );
+    }
+
+    if (n >= 4) {
+      spawns.add(
+        SpawnEntry(
+          type: EnemyType.tank,
+          count: (1 + (n - 4) * 0.5).round(),
+          interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
+          startDelay: 4,
+        ),
+      );
+    }
+
+    if (n >= 5) {
+      spawns.add(
+        SpawnEntry(
+          type: EnemyType.attackPlane,
+          count: (1 + (n - 5) * 0.6).round(),
+          interval: (2.2 - n * 0.05).clamp(1.2, 2.2),
+          startDelay: 5,
         ),
       );
     }

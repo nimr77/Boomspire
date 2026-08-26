@@ -36,6 +36,9 @@ class AudioRepositoryImpl implements AudioRepository {
     SfxType.waveStart: 'wave_start.wav',
     SfxType.victory: 'victory.wav',
     SfxType.defeat: 'defeat.wav',
+    SfxType.vehicleEngine: 'vehicle_engine.wav',
+    SfxType.vehicleExplosion: 'vehicle_explosion.wav',
+    SfxType.soldierPop: 'soldier_pop.wav',
   };
 
   /// How many overlapping instances of each sound might be needed at once -
@@ -51,6 +54,9 @@ class AudioRepositoryImpl implements AudioRepository {
     SfxType.rocketLaunch: 6,
     SfxType.explosion: 6,
     SfxType.enemyDeath: 6,
+    SfxType.vehicleEngine: 4,
+    SfxType.vehicleExplosion: 4,
+    SfxType.soldierPop: 6,
   };
 
   final Map<SfxType, AudioPool> _pools = {};

@@ -126,6 +126,16 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     _repairTower(tower);
   }
 
+  /// Attaches the anti-rocket point-defense module to the currently-selected
+  /// tower, if affordable and not already installed.
+  void buyAntiRocketForSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null || tower.antiRocket) return;
+    if (!gameState.spendGold(kAntiRocketCost)) return;
+    tower.antiRocket = true;
+    audioRepository.play(SfxType.buildPlace, volume: 0.6);
+  }
+
   void restart() {
     gameState.reset();
     terrainMap = terrainRepository.loadTerrain(scene: scene);

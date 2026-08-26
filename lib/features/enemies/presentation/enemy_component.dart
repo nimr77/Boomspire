@@ -9,12 +9,21 @@ import '../../../core/rendering/model_loader.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/bullet_component.dart';
+import '../../combat/presentation/cartoon_poof_component.dart';
+import '../../combat/presentation/explosion_component.dart';
 import '../../combat/presentation/fire_pulse_component.dart';
+import '../../combat/presentation/impact_spark_component.dart';
+import '../../combat/presentation/laser_beam_component.dart';
 import '../../combat/presentation/muzzle_flash_component.dart';
+import '../../combat/presentation/rocket_component.dart';
+import '../../combat/presentation/smoke_trail_component.dart';
+import '../../combat/presentation/vapor_cone_component.dart';
 import '../../game_core/domain/models/game_status.dart';
 import '../../game_core/presentation/circuit_defense_game.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../domain/models/enemy_blueprint.dart';
+import '../domain/models/enemy_movement_style.dart';
+import '../domain/models/enemy_weapon_type.dart';
 import 'enemy_sprites.dart';
 import 'floating_text_component.dart';
 
@@ -36,6 +45,8 @@ abstract class EnemyComponent extends PositionComponent
   double _attackCooldown = 0;
   TowerComponent? _engaging;
   double _bobPhase = Random().nextDouble() * pi * 2;
+  double _vaporTimer = 0;
+  double _preExplosionTimer = 0;
   late final PositionComponent _visual;
   EnemyComponent({required this.blueprint})
     : health = blueprint.maxHealth,
@@ -46,6 +57,10 @@ abstract class EnemyComponent extends PositionComponent
       );
 
   Future<Sprite> buildSprite();
+
+  /// Hook for subclasses to attach extra always-on visuals (spinning rotors,
+  /// blinking lights, etc.) once [_visual] is loaded.
+  Future<void> addExtraVisuals(PositionComponent visual) async {}
 
   @override
   Future<void> onLoad() async {
@@ -70,6 +85,10 @@ abstract class EnemyComponent extends PositionComponent
       ..anchor = Anchor.center
       ..position = size / 2;
     await add(_visual);
+    await addExtraVisuals(_visual);
+    if (blueprint.isVehicle) {
+      game.audioRepository.play(SfxType.vehicleEngine, volume: 0.5);
+    }
   }
 
   @override
@@ -104,6 +123,16 @@ abstract class EnemyComponent extends PositionComponent
     super.update(dt);
     if (game.gameState.status != GameStatus.playing) return;
 
+    if (blueprint.isVehicle && health / blueprint.maxHealth < 0.3) {
+      _preExplosionTimer -= dt;
+      if (_preExplosionTimer <= 0) {
+        _preExplosionTimer = 0.35 + Random().nextDouble() * 0.3;
+        game.world.spawn(
+          SmokeTrailComponent(position: position.clone() + Vector2(0, -6)),
+        );
+      }
+    }
+
     if (_maybeEngageTower(dt)) return;
 
     if (blueprint.isFlying) {
@@ -117,8 +146,21 @@ abstract class EnemyComponent extends PositionComponent
       _followPath(dt);
     }
 
-    _bobPhase += dt * 10;
-    _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 1.5);
+    _bobPhase += dt * (blueprint.movementStyle == EnemyMovementStyle.roll
+        ? 6
+        : 10);
+    switch (blueprint.movementStyle) {
+      case EnemyMovementStyle.walk:
+        _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 1.5);
+      case EnemyMovementStyle.roll:
+        _visual.position = size / 2;
+        _visual.angle += sin(_bobPhase) * 0.05;
+      case EnemyMovementStyle.hover:
+        _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 2.5);
+      case EnemyMovementStyle.swoop:
+        _visual.position = size / 2;
+        _visual.angle += sin(_bobPhase * 0.5) * 0.08;
+    }
   }
 
   void _computePath() {
@@ -136,7 +178,15 @@ abstract class EnemyComponent extends PositionComponent
   void _die() {
     final reward = blueprint.bounty + (game.gameState.currentWave - 1) * 2;
     game.gameState.addGold(reward);
-    game.audioRepository.play(SfxType.enemyDeath, volume: 0.5);
+    if (blueprint.isVehicle) {
+      game.audioRepository.play(SfxType.vehicleExplosion, volume: 0.6);
+      game.world.spawn(
+        ExplosionComponent(position: position.clone(), radius: size.x * 0.9),
+      );
+    } else {
+      game.audioRepository.play(SfxType.soldierPop, volume: 0.5);
+      game.world.spawn(CartoonPoofComponent(position: position.clone()));
+    }
     game.audioRepository.play(SfxType.goldGain, volume: 0.35);
     game.world.spawn(
       FloatingTextComponent(
@@ -188,6 +238,21 @@ abstract class EnemyComponent extends PositionComponent
     final dir = toTarget / dist;
     position += dir * step;
     _visual.angle = atan2(dir.y, dir.x) + pi / 2;
+
+    // Fast fixed-wing units visibly "break the air" behind them as they cut
+    // across the battlefield at speed.
+    if (blueprint.movementStyle == EnemyMovementStyle.swoop) {
+      _vaporTimer -= dt;
+      if (_vaporTimer <= 0) {
+        _vaporTimer = 0.07;
+        game.world.spawn(
+          VaporConeComponent(
+            position: position.clone() - dir * (size.x * 0.5),
+            angle: atan2(dir.y, dir.x),
+          ),
+        );
+      }
+    }
   }
 
   void _followPath(double dt) {
@@ -235,26 +300,72 @@ abstract class EnemyComponent extends PositionComponent
       _attackCooldown = blueprint.attackInterval;
       final spawnPos = position + toTarget.normalized() * (size.x / 2);
       game.shakeCamera(power: blueprint.attackDamage, origin: position.clone());
-      game.world.spawn(
-        BulletComponent(
-          start: spawnPos,
-          target: target,
-          damage: blueprint.attackDamage,
-          fromEnemy: true,
-        ),
-      );
+      final accent = EnemySpriteFactory.accentColor(blueprint.type);
+      switch (blueprint.weaponType) {
+        case EnemyWeaponType.bullet:
+          game.world.spawn(
+            BulletComponent(
+              start: spawnPos,
+              target: target,
+              damage: blueprint.attackDamage,
+              fromEnemy: true,
+            ),
+          );
+          game.audioRepository.play(SfxType.enemyShot, volume: 0.3);
+        case EnemyWeaponType.cannon:
+          game.world.spawn(
+            RocketComponent(
+              start: spawnPos,
+              target: target,
+              damage: blueprint.attackDamage,
+              splashRadius: 44,
+              bodyColor: const Color(0xFF6D4C41),
+              tipColor: const Color(0xFFFFAB40),
+              affectsTowers: true,
+            ),
+          );
+          game.audioRepository.play(SfxType.cannonShot, volume: 0.5);
+        case EnemyWeaponType.rocket:
+          game.world.spawn(
+            RocketComponent(
+              start: spawnPos,
+              target: target,
+              damage: blueprint.attackDamage,
+              splashRadius: 60,
+              bodyColor: const Color(0xFFB0BEC5),
+              tipColor: const Color(0xFFFF5252),
+              affectsTowers: true,
+            ),
+          );
+          game.audioRepository.play(SfxType.rocketLaunch, volume: 0.5);
+        case EnemyWeaponType.laser:
+          target.takeDamage(blueprint.attackDamage);
+          game.world.spawn(
+            LaserBeamComponent(
+              start: spawnPos,
+              end: target.position.clone(),
+              color: accent,
+            ),
+          );
+          game.world.spawn(
+            ImpactSparkComponent(
+              position: target.position.clone(),
+              color: accent,
+            ),
+          );
+          game.audioRepository.play(SfxType.laserShot, volume: 0.4);
+      }
       game.world.spawn(MuzzleFlashComponent(position: spawnPos));
       game.world.spawn(
         FirePulseComponent(
           position: position.clone(),
-          color: EnemySpriteFactory.accentColor(blueprint.type),
+          color: accent,
           maxRadius: FirePulseComponent.radiusFor(
             range: blueprint.attackRange,
             damage: blueprint.attackDamage,
           ),
         ),
       );
-      game.audioRepository.play(SfxType.enemyShot, volume: 0.3);
     }
     return true;
   }

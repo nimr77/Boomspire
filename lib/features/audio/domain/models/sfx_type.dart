@@ -18,4 +18,7 @@ enum SfxType {
   waveStart,
   victory,
   defeat,
+  vehicleEngine,
+  vehicleExplosion,
+  soldierPop,
 }

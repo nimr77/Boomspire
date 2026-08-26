@@ -11,8 +11,10 @@ import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/explosion_component.dart';
 import '../../combat/presentation/fire_pulse_component.dart';
 import '../../combat/presentation/impact_spark_component.dart';
+import '../../combat/presentation/rocket_component.dart';
 import '../../combat/presentation/smoke_trail_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
+import '../../enemies/presentation/floating_text_component.dart';
 import '../../game_core/presentation/circuit_defense_game.dart';
 import '../domain/models/tower_blueprint.dart';
 import 'tower_sprites.dart';
@@ -20,6 +22,15 @@ import 'tower_sprites.dart';
 /// Maximum number of times a tower can be upgraded - each tier boosts
 /// damage/range/HP and brightens its accent ring.
 const int kMaxTowerUpgradeLevel = 3;
+
+/// Gold cost to attach a point-defense module that shoots down incoming
+/// enemy rockets/shells before they land - it goes down with the tower if
+/// the tower itself is ever destroyed.
+const int kAntiRocketCost = 70;
+
+/// How close an enemy rocket/shell must get before an anti-rocket-equipped
+/// tower intercepts it.
+const double _antiRocketRange = 95;
 
 /// Base tower: sits on a build cell, scans for the nearest valid enemy in
 /// range, swivels its turret to face it, and fires on cooldown. Also tracks
@@ -36,6 +47,15 @@ abstract class TowerComponent extends PositionComponent
   int row = 0;
   double _cooldown = 0;
   int upgradeLevel = 0;
+
+  /// Current absorbed-damage shield charge - depletes before [hp] and
+  /// regenerates on its own once the tower stops taking hits for a bit.
+  double shield = 0;
+  double _shieldRegenDelay = 0;
+
+  /// Point-defense module - when true, this tower shoots down any enemy
+  /// rocket/shell that gets within [_antiRocketRange] of it.
+  bool antiRocket = false;
 
   /// Total gold ever invested in this tower (build cost + every upgrade) -
   /// used to compute a fair sell refund.
@@ -59,9 +79,15 @@ abstract class TowerComponent extends PositionComponent
          priority: 5,
        );
 
-  bool get canUpgrade => upgradeLevel < kMaxTowerUpgradeLevel;
+  /// Upgrading is gated behind repair: a damaged tower must be brought back
+  /// to full HP first, THEN it becomes eligible for the next tier.
+  bool get canUpgrade => upgradeLevel < kMaxTowerUpgradeLevel && hp >= maxHp;
 
   bool get destroyed => _destroyed;
+
+  /// Shield capacity for the current tier - 0 until the first upgrade, then
+  /// rises with [upgradeLevel] so "shield power" reads as an upgrade payoff.
+  double get shieldMax => upgradeLevel * 35.0;
 
   double get effectiveDamage => blueprint.damage * _upgradeMultiplier;
 
@@ -115,14 +141,19 @@ abstract class TowerComponent extends PositionComponent
       ..position = size / 2;
     await add(baseSprite);
 
-    turret = PositionComponent(anchor: Anchor.center, position: size / 2)
-      ..add(
-        SpriteComponent(
-          sprite: await TowerSpriteFactory.turret(blueprint.type),
-          size: size * 0.75,
-          anchor: Anchor.center,
-        ),
-      );
+    turret =
+        PositionComponent(
+            anchor: Anchor.center,
+            position: size / 2,
+            scale: Vector2.all(1 + upgradeLevel * 0.12),
+          )
+          ..add(
+            SpriteComponent(
+              sprite: await TowerSpriteFactory.turret(blueprint.type),
+              size: size * 0.75,
+              anchor: Anchor.center,
+            ),
+          );
     await add(turret);
 
     // "Alive" build-in: pop in from nothing instead of just appearing.
@@ -133,10 +164,67 @@ abstract class TowerComponent extends PositionComponent
         EffectController(duration: 0.28, curve: Curves.easeOutBack),
       ),
     );
+
+    game.selectedTower.addListener(_onSelectionChanged);
+  }
+
+  @override
+  void onRemove() {
+    game.selectedTower.removeListener(_onSelectionChanged);
+    super.onRemove();
+  }
+
+  /// One-shot "snap" pop whenever this tower becomes the selected one, on
+  /// top of the continuously-animated star ring drawn in [render].
+  void _onSelectionChanged() {
+    if (game.selectedTower.value != this || _destroyed) return;
+    add(
+      SequenceEffect([
+        ScaleEffect.to(Vector2.all(1.15), EffectController(duration: 0.08)),
+        ScaleEffect.to(Vector2.all(1), EffectController(duration: 0.14)),
+      ]),
+    );
   }
 
   @override
   void render(Canvas canvas) {
+    // Selection indicator - a slowly-spinning, breathing 8-point star ring
+    // in the tower's own accent color, drawn under everything else.
+    if (game.selectedTower.value == this) {
+      final accent = TowerSpriteFactory.accentColor(blueprint.type);
+      final center = Offset(size.x / 2, size.y / 2);
+      final pulse = 0.5 + 0.5 * sin(_idlePhase * 1.6);
+      final outerR = size.x * 0.85 + pulse * 3;
+      final innerR = outerR * 0.55;
+      final rotation = _idlePhase * 0.25;
+      final star = Path();
+      for (var i = 0; i < 16; i++) {
+        final r = i.isEven ? outerR : innerR;
+        final a = rotation + i * pi / 8;
+        final pt = center.translate(cos(a) * r, sin(a) * r);
+        if (i == 0) {
+          star.moveTo(pt.dx, pt.dy);
+        } else {
+          star.lineTo(pt.dx, pt.dy);
+        }
+      }
+      star.close();
+      canvas.drawPath(
+        star,
+        Paint()
+          ..color = accent.withValues(alpha: 0.14 + pulse * 0.06)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawPath(
+        star,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = accent.withValues(alpha: 0.75 + pulse * 0.25)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+    }
+
     // Subtle idle "breathing" glow ring so an undamaged tower still reads
     // as active/crewed hardware rather than a static prop.
     final breath = 0.5 + 0.5 * sin(_idlePhase);
@@ -149,6 +237,43 @@ abstract class TowerComponent extends PositionComponent
         ..color = TowerSpriteFactory.accentColor(blueprint.type)
             .withValues(alpha: 0.12 + breath * 0.1),
     );
+
+    // Tier rank chevrons - a quick, unmistakable "this tower got upgraded"
+    // read, stacked above the HP bar, one per upgrade level.
+    for (var i = 0; i < upgradeLevel; i++) {
+      final cy = -18.0 - i * 6;
+      final chevron = Path()
+        ..moveTo(size.x / 2 - 6, cy + 4)
+        ..lineTo(size.x / 2, cy)
+        ..lineTo(size.x / 2 + 6, cy + 4);
+      canvas.drawPath(
+        chevron,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6
+          ..strokeCap = StrokeCap.round
+          ..color = const Color(0xFFFFD54A),
+      );
+    }
+
+    // Shield bubble - only present once the first upgrade grants one,
+    // opacity/thickness scale with how much charge is currently banked.
+    if (shieldMax > 0) {
+      final shieldRatio = (shield / shieldMax).clamp(0.0, 1.0);
+      if (shieldRatio > 0) {
+        canvas.drawCircle(
+          Offset(size.x / 2, size.y / 2),
+          size.x * 0.56,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2 + shieldRatio * 1.5
+            ..color = const Color(0xFF40C4FF).withValues(
+              alpha: 0.25 + shieldRatio * 0.45,
+            )
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        );
+      }
+    }
 
     if (hp >= maxHp) return;
     final ratio = (hp / maxHp).clamp(0.0, 1.0);
@@ -188,6 +313,13 @@ abstract class TowerComponent extends PositionComponent
   @override
   void takeDamage(double amount) {
     if (_destroyed) return;
+    _shieldRegenDelay = 3.0;
+    if (shield > 0) {
+      final absorbed = min(shield, amount);
+      shield -= absorbed;
+      amount -= absorbed;
+      if (amount <= 0) return;
+    }
     hp = (hp - amount).clamp(0, maxHp);
     if (hp <= 0) _destroy();
   }
@@ -198,6 +330,14 @@ abstract class TowerComponent extends PositionComponent
     if (_destroyed) return;
     _idlePhase += dt * 2.2;
     _cooldown -= dt;
+
+    if (shieldMax > 0 && shield < shieldMax) {
+      if (_shieldRegenDelay > 0) {
+        _shieldRegenDelay -= dt;
+      } else {
+        shield = (shield + shieldMax * 0.15 * dt).clamp(0, shieldMax);
+      }
+    }
 
     final hpRatio = hp / maxHp;
     if (hpRatio < 0.35) {
@@ -213,7 +353,10 @@ abstract class TowerComponent extends PositionComponent
     }
 
     final target = _acquireTarget();
-    if (target == null) return;
+    if (target == null) {
+      _scanAntiRocket();
+      return;
+    }
 
     final toTarget = target.position - position;
     final desiredAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
@@ -234,6 +377,26 @@ abstract class TowerComponent extends PositionComponent
       );
       _cooldown = blueprint.fireRate;
     }
+    _scanAntiRocket();
+  }
+
+  /// If this tower has the anti-rocket module, shoots down the first enemy
+  /// rocket/shell it finds within [_antiRocketRange] before it can land.
+  void _scanAntiRocket() {
+    if (!antiRocket) return;
+    for (final rocket in game.world.children.query<RocketComponent>()) {
+      if (!rocket.affectsTowers || rocket.isRemoving) continue;
+      if (rocket.position.distanceTo(position) > _antiRocketRange) continue;
+      rocket.removeFromParent();
+      game.world.spawn(
+        ImpactSparkComponent(
+          position: rocket.position.clone(),
+          color: const Color(0xFF40C4FF),
+        ),
+      );
+      game.audioRepository.play(SfxType.antiAirShot, volume: 0.4);
+      break;
+    }
   }
 
   /// Spends gold (already deducted by the caller) to raise this tower's
@@ -245,6 +408,8 @@ abstract class TowerComponent extends PositionComponent
     final missing = maxHp - hp;
     maxHp *= 1.25;
     hp = maxHp - missing;
+    shield = shieldMax;
+    turret.scale = Vector2.all(1 + upgradeLevel * 0.12);
     game.audioRepository.play(SfxType.towerUpgrade, volume: 0.7);
     game.world.spawn(
       ImpactSparkComponent(
@@ -284,7 +449,56 @@ abstract class TowerComponent extends PositionComponent
     game.world.spawn(
       ExplosionComponent(position: position.clone(), radius: size.x * 0.9),
     );
+    _reinforceNearestSurvivor();
     game.world.removeTower(this);
+  }
+
+  /// Comeback mechanic: losing a tower to enemy fire automatically routes a
+  /// bonus into the nearest surviving tower - a free upgrade tier if it can
+  /// still take one, otherwise an emergency shield charge.
+  void _reinforceNearestSurvivor() {
+    TowerComponent? nearest;
+    var nearestDist = double.infinity;
+    for (final other in game.world.activeTowers) {
+      if (other == this || other.destroyed) continue;
+      final d = other.position.distanceTo(position);
+      if (d < nearestDist) {
+        nearest = other;
+        nearestDist = d;
+      }
+    }
+    nearest?._grantComebackBonus();
+  }
+
+  /// Applies the actual comeback bonus (see [_reinforceNearestSurvivor])
+  /// plus a floating-text callout so the payoff reads clearly on screen.
+  void _grantComebackBonus() {
+    if (_destroyed) return;
+    if (canUpgrade) {
+      upgrade();
+      game.world.spawn(
+        FloatingTextComponent(
+          text: 'Reinforced!',
+          position: position.clone() + Vector2(0, -size.y / 2 - 4),
+        ),
+      );
+    } else {
+      final bonusShield = max(shieldMax, 50.0);
+      shield = (shield + bonusShield).clamp(0, bonusShield);
+      game.audioRepository.play(SfxType.towerRepair, volume: 0.6);
+      game.world.spawn(
+        ImpactSparkComponent(
+          position: position.clone(),
+          color: const Color(0xFF40C4FF),
+        ),
+      );
+      game.world.spawn(
+        FloatingTextComponent(
+          text: 'Shield Boost!',
+          position: position.clone() + Vector2(0, -size.y / 2 - 4),
+        ),
+      );
+    }
   }
 
   double _turnToward(double current, double target, double maxDelta) {

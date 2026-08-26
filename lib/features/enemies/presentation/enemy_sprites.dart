@@ -11,7 +11,9 @@ class EnemySpriteFactory {
   static Sprite? _soldier;
 
   static Sprite? _heavy;
-  static Sprite? _drone;
+  static Sprite? _helicopter;
+  static Sprite? _tank;
+  static Sprite? _attackPlane;
   EnemySpriteFactory._();
 
   /// The faction color for this enemy type - used for the ground fire-pulse
@@ -19,14 +21,30 @@ class EnemySpriteFactory {
   static Color accentColor(EnemyType type) => switch (type) {
     EnemyType.soldier => const Color(0xFF4C7A2A),
     EnemyType.heavySoldier => const Color(0xFFB71C1C),
-    EnemyType.air => const Color(0xFFE53935),
+    EnemyType.tank => const Color(0xFF6D4C41),
+    EnemyType.helicopter => const Color(0xFFE53935),
+    EnemyType.attackPlane => const Color(0xFF00E5FF),
   };
 
-  static Future<Sprite> airDrone() async {
-    final cached = _drone;
+  static Future<Sprite> attackPlane() async {
+    final cached = _attackPlane;
     if (cached != null) return cached;
-    final image = await renderToImage(46, 46, _paintDrone);
-    return _drone = Sprite(image);
+    final image = await renderToImage(50, 50, _paintAttackPlane);
+    return _attackPlane = Sprite(image);
+  }
+
+  static Future<Sprite> helicopter() async {
+    final cached = _helicopter;
+    if (cached != null) return cached;
+    final image = await renderToImage(46, 46, _paintHelicopter);
+    return _helicopter = Sprite(image);
+  }
+
+  static Future<Sprite> tank() async {
+    final cached = _tank;
+    if (cached != null) return cached;
+    final image = await renderToImage(54, 54, _paintTank);
+    return _tank = Sprite(image);
   }
 
   static Future<Sprite> heavySoldier() async {
@@ -174,7 +192,7 @@ class EnemySpriteFactory {
     );
   }
 
-  static void _paintDrone(Canvas canvas) {
+  static void _paintHelicopter(Canvas canvas) {
     const size = 46.0;
     const center = Offset(size / 2, size / 2);
 
@@ -183,76 +201,238 @@ class EnemySpriteFactory {
       Paint()..color = const Color(0x40000000),
     );
 
-    // Wings.
-    final wingPaint = Paint()
-      ..shader =
-          const LinearGradient(
-            colors: [Color(0xFF616161), Color(0xFF263238)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(
-            Rect.fromCenter(center: center, width: size, height: size),
-          );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center,
-          width: size * 0.92,
-          height: size * 0.16,
-        ),
-        const Radius.circular(6),
-      ),
-      wingPaint,
+    // Tail boom, thinning toward the tail rotor.
+    final boomPath = Path()
+      ..moveTo(center.dx - size * 0.1, center.dy - size * 0.08)
+      ..lineTo(center.dx - size * 0.46, center.dy - size * 0.03)
+      ..lineTo(center.dx - size * 0.46, center.dy + size * 0.05)
+      ..lineTo(center.dx - size * 0.1, center.dy + size * 0.1)
+      ..close();
+    canvas.drawPath(boomPath, Paint()..color = const Color(0xFF37474F));
+
+    // Tail fin + tail-rotor blur disc.
+    canvas.drawCircle(
+      center.translate(-size * 0.46, 0),
+      size * 0.1,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..color = const Color(0x99B0BEC5),
     );
 
-    // Fuselage.
+    // Fuselage body (rounder/bulkier than the old fixed-wing shape).
     final bodyRect = Rect.fromCenter(
-      center: center,
-      width: size * 0.24,
-      height: size * 0.62,
+      center: center.translate(size * 0.06, 0),
+      width: size * 0.5,
+      height: size * 0.34,
     );
     canvas.drawRRect(
-      RRect.fromRectAndRadius(bodyRect, const Radius.circular(10)),
-      Paint()..color = const Color(0xFF37474F),
+      RRect.fromRectAndRadius(bodyRect, const Radius.circular(14)),
+      Paint()
+        ..shader =
+            const LinearGradient(
+              colors: [Color(0xFF616161), Color(0xFF263238)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ).createShader(bodyRect),
     );
 
-    // Cockpit viewhole (red - hostile), with a canopy frame and glass glint
-    // instead of a flat glow dot.
-    final cockpit = center.translate(0, -size * 0.18);
+    // Landing skids.
+    for (final dy in [size * 0.19, size * 0.24]) {
+      canvas.drawLine(
+        center.translate(-size * 0.1, dy),
+        center.translate(size * 0.24, dy),
+        Paint()
+          ..color = const Color(0xFF1a1c20)
+          ..strokeWidth = 1.6,
+      );
+    }
+
+    // Cockpit bubble at the nose (red - hostile), with a canopy frame and
+    // glass glint instead of a flat glow dot.
+    final cockpit = center.translate(size * 0.26, -size * 0.02);
     canvas.drawCircle(
       cockpit,
-      size * 0.11,
+      size * 0.15,
       Paint()..color = const Color(0xFF1a1c20),
     );
     canvas.drawCircle(
       cockpit,
-      size * 0.09,
+      size * 0.12,
       Paint()..color = const Color(0xFFE53935),
     );
     canvas.drawCircle(
       cockpit,
-      size * 0.11,
+      size * 0.15,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
         ..color = const Color(0xFF9E9E9E),
     );
     canvas.drawCircle(
-      cockpit.translate(-size * 0.03, -size * 0.03),
-      size * 0.025,
+      cockpit.translate(-size * 0.04, -size * 0.04),
+      size * 0.03,
       Paint()..color = const Color(0xCCFFFFFF),
     );
 
-    // Rotor blur rings.
-    for (final dx in [-size * 0.42, size * 0.42]) {
+    // Rotor mast stub - the actual spinning blades are a separate live
+    // child component layered on top so they can rotate every frame.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center.translate(0, -size * 0.16),
+          width: size * 0.06,
+          height: size * 0.14,
+        ),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF1a1c20),
+    );
+  }
+
+  static void _paintTank(Canvas canvas) {
+    const size = 54.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.85, height: size * 0.3),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    // Treads - a dark track loop on either side of the hull.
+    for (final dx in [-size * 0.28, size * 0.28]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, size * 0.06),
+            width: size * 0.22,
+            height: size * 0.56,
+          ),
+          const Radius.circular(8),
+        ),
+        Paint()..color = const Color(0xFF1a1c20),
+      );
+    }
+
+    // Hull.
+    final hullRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.58,
+      height: size * 0.4,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(hullRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF6D4C41), Color(0xFF3E2723)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(hullRect),
+    );
+
+    // Turret + barrel, pointed "up" (forward) by default.
+    canvas.drawCircle(
+      center,
+      size * 0.19,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF8D6E63), Color(0xFF3E2723)],
+        ).createShader(Rect.fromCircle(center: center, radius: size * 0.19)),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center.translate(0, -size * 0.28),
+          width: size * 0.09,
+          height: size * 0.34,
+        ),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF2b2f36),
+    );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center.translate(0, size * 0.02),
+          width: size * 0.1,
+          height: size * 0.04,
+        ),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFFE53935),
+    );
+
+    // Headlight - small warm beacon on the hull front, doubles as the
+    // "alive" light other vehicle types also carry.
+    canvas.drawCircle(
+      center.translate(0, size * 0.16),
+      size * 0.045,
+      Paint()..color = const Color(0xFFFFF59D),
+    );
+  }
+
+  static void _paintAttackPlane(Canvas canvas) {
+    const size = 50.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.7, height: size * 0.22),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    // Delta wings - a single sweeping F-35-ish silhouette.
+    final wingPath = Path()
+      ..moveTo(center.dx, center.dy - size * 0.4)
+      ..lineTo(center.dx + size * 0.46, center.dy + size * 0.34)
+      ..lineTo(center.dx + size * 0.1, center.dy + size * 0.2)
+      ..lineTo(center.dx, center.dy + size * 0.4)
+      ..lineTo(center.dx - size * 0.1, center.dy + size * 0.2)
+      ..lineTo(center.dx - size * 0.46, center.dy + size * 0.34)
+      ..close();
+    canvas.drawPath(
+      wingPath,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFFB0BEC5), Color(0xFF37474F)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromCircle(center: center, radius: size * 0.4)),
+    );
+
+    // Canopy.
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center.translate(0, -size * 0.06),
+        width: size * 0.13,
+        height: size * 0.28,
+      ),
+      Paint()..color = const Color(0xFF1a1c20),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center.translate(0, -size * 0.1),
+        width: size * 0.08,
+        height: size * 0.14,
+      ),
+      Paint()..color = const Color(0xCC00E5FF),
+    );
+
+    // Twin engine afterburner glow at the tail - reads as "fast/hostile".
+    for (final dx in [-size * 0.12, size * 0.12]) {
       canvas.drawCircle(
-        center.translate(dx, 0),
-        size * 0.14,
+        center.translate(dx, size * 0.36),
+        size * 0.07,
         Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = const Color(0x99B0BEC5),
+          ..color = const Color(0xFFFF7043)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+      canvas.drawCircle(
+        center.translate(dx, size * 0.36),
+        size * 0.035,
+        Paint()..color = const Color(0xFFFFF3C4),
       );
     }
   }
 }
+

@@ -6,7 +6,9 @@ import '../../ai_director/domain/models/battlefield_snapshot.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../enemies/domain/models/enemy_type.dart';
-import '../../enemies/presentation/air_drone_component.dart';
+import '../../enemies/presentation/attack_plane_component.dart';
+import '../../enemies/presentation/helicopter_component.dart';
+import '../../enemies/presentation/tank_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
 import '../../enemies/presentation/green_soldier_component.dart';
 import '../../enemies/presentation/heavy_soldier_component.dart';
@@ -101,7 +103,9 @@ class WaveDirectorComponent extends Component
     return switch (type) {
       EnemyType.soldier => GreenSoldierComponent(blueprint: blueprint),
       EnemyType.heavySoldier => HeavySoldierComponent(blueprint: blueprint),
-      EnemyType.air => AirDroneComponent(blueprint: blueprint),
+      EnemyType.helicopter => HelicopterComponent(blueprint: blueprint),
+      EnemyType.tank => TankComponent(blueprint: blueprint),
+      EnemyType.attackPlane => AttackPlaneComponent(blueprint: blueprint),
     };
   }
 
