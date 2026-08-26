@@ -126,6 +126,11 @@ abstract class TowerComponent extends PositionComponent
   /// Spawns the appropriate projectile/effect toward [target].
   void fire(EnemyComponent target);
 
+  /// Forcibly destroys this tower outside of normal combat - used when the
+  /// support building that allowed it to be built (see
+  /// `BoomspireGame.enforceSupportedTowerLimits`) is itself destroyed/sold.
+  void destroyBySupportLoss() => _destroy();
+
   @override
   Future<void> onLoad() async {
     final cell = game.terrainMap.grid.worldToCell(position);
@@ -186,6 +191,26 @@ abstract class TowerComponent extends PositionComponent
     if (game.selectedTower.value == this) {
       final accent = TowerSpriteFactory.accentColor(blueprint.type);
       final center = Offset(size.x / 2, size.y / 2);
+
+      // Pulsing range ring - tapping a built tower reveals its coverage,
+      // same as the pre-build ghost preview.
+      if (effectiveRange > 0) {
+        final rangePulse = 0.5 + 0.5 * sin(_idlePhase * 1.6);
+        canvas.drawCircle(
+          center,
+          effectiveRange,
+          Paint()..color = accent.withValues(alpha: 0.04 + rangePulse * 0.04),
+        );
+        canvas.drawCircle(
+          center,
+          effectiveRange,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5 + rangePulse
+            ..color = accent.withValues(alpha: 0.35 + rangePulse * 0.3),
+        );
+      }
+
       final pulse = 0.5 + 0.5 * sin(_idlePhase * 1.6);
       final outerR = size.x * 0.85 + pulse * 3;
       final innerR = outerR * 0.55;
@@ -349,6 +374,7 @@ abstract class TowerComponent extends PositionComponent
       _scanAntiRocket();
       return;
     }
+    target.markTargeted(TowerSpriteFactory.accentColor(blueprint.type));
 
     final toTarget = target.position - position;
     final desiredAngle = atan2(toTarget.y, toTarget.x) + pi / 2;

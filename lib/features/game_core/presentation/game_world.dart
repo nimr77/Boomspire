@@ -4,9 +4,11 @@ import 'package:flame/events.dart';
 import '../../enemies/presentation/enemy_component.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
+import '../../towers/domain/models/tower_type.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../../waves/presentation/wave_director_component.dart';
 import 'boomspire_game.dart';
+import 'ghost_placement_component.dart';
 import 'home_base_component.dart';
 
 /// Root of the game scene graph. Holds the terrain, wave director, active
@@ -36,6 +38,7 @@ class GameWorld extends World
         ),
       ),
     );
+    await add(GhostPlacementComponent());
   }
 
   @override
@@ -51,6 +54,9 @@ class GameWorld extends World
   void removeTower(TowerComponent tower) {
     activeTowers.remove(tower);
     tower.removeFromParent();
+    if (tower.blueprint.type == TowerType.commandPost) {
+      game.enforceSupportedTowerLimits();
+    }
   }
 
   /// Adds any transient visual/audio effect component to the scene.

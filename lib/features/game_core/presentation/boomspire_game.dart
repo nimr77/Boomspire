@@ -18,9 +18,12 @@ import '../../towers/domain/models/tower_blueprint.dart';
 import '../../towers/domain/models/tower_type.dart';
 import '../../towers/domain/repos/tower_repository.dart';
 import '../../towers/presentation/anti_air_tower_component.dart';
+import '../../towers/presentation/artillery_bunker_component.dart';
 import '../../towers/presentation/cannon_tower_component.dart';
+import '../../towers/presentation/command_post_component.dart';
 import '../../towers/presentation/laser_tower_component.dart';
 import '../../towers/presentation/machine_gun_tower_component.dart';
+import '../../towers/presentation/rocket_silo_tower_component.dart';
 import '../../towers/presentation/rocket_tower_component.dart';
 import '../../towers/presentation/tech_lab_component.dart';
 import '../../towers/presentation/tower_component.dart';
@@ -32,6 +35,7 @@ import '../domain/models/game_scene.dart';
 import '../domain/models/game_status.dart';
 import '../domain/repos/game_state_repository.dart';
 import 'game_world.dart';
+import 'ghost_placement_component.dart';
 import 'home_base_component.dart';
 
 /// Composition root: wires the domain repositories into a running Flame
@@ -59,6 +63,12 @@ class BoomspireGame extends FlameGame<GameWorld> {
   final ValueNotifier<TowerType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
   final ValueNotifier<String> commanderNote = ValueNotifier('');
+
+  /// A build cell awaiting confirmation - set by the first arena tap while a
+  /// tower type is selected (shows a ghost footprint + pulsing range ring,
+  /// see [GhostPlacementComponent]) and spends no gold. Tapping the same
+  /// cell again commits the build; tapping elsewhere moves the preview.
+  final ValueNotifier<Point<int>?> pendingPlacement = ValueNotifier(null);
 
   /// Set by [GamePage] - lets a Flame overlay (which has no [BuildContext])
   /// ask the host page to leave battle and return to level select.
@@ -120,15 +130,25 @@ class BoomspireGame extends FlameGame<GameWorld> {
   int towerCountFor(TowerType type) =>
       world.activeTowers.where((t) => t.blueprint.type == type).length;
 
+  /// How many active Command Posts are standing - each one supports one
+  /// Artillery Bunker (see [buildLimitFor]).
+  int get activeCommandPostCount => towerCountFor(TowerType.commandPost);
+
   /// Max simultaneous count allowed for [type] at the current difficulty,
   /// or null if unlimited.
-  int? buildLimitFor(TowerType type) =>
-      type == TowerType.laser ? difficulty.laserTowerLimit : null;
+  int? buildLimitFor(TowerType type) => switch (type) {
+    TowerType.laser => difficulty.laserTowerLimit,
+    TowerType.artilleryBunker => activeCommandPostCount,
+    _ => null,
+  };
 
   /// Why [type] can't be built right now, or null if it's buildable (gold
   /// permitting) - shown in the build menu's lock overlay/tooltip.
   String? buildBlockReason(TowerType type) {
     if (type == TowerType.laser && !hasTechLab) return 'Requires Tech Lab';
+    if (type == TowerType.artilleryBunker && activeCommandPostCount == 0) {
+      return 'Requires Command Post';
+    }
     final limit = buildLimitFor(type);
     if (limit != null && towerCountFor(type) >= limit) {
       return 'Max $limit built';
@@ -138,9 +158,26 @@ class BoomspireGame extends FlameGame<GameWorld> {
 
   bool canBuildTower(TowerType type) => buildBlockReason(type) == null;
 
+  /// Called whenever a Command Post is destroyed or sold - any Artillery
+  /// Bunker built beyond what the remaining Command Posts can still support
+  /// is torn down too (most-recently-built first), rather than left
+  /// orphaned above the new cap.
+  void enforceSupportedTowerLimits() {
+    final limit = buildLimitFor(TowerType.artilleryBunker) ?? 0;
+    final bunkers = world.activeTowers
+        .where((t) => t.blueprint.type == TowerType.artilleryBunker)
+        .toList();
+    final excess = bunkers.length - limit;
+    for (var i = 0; i < excess; i++) {
+      bunkers[bunkers.length - 1 - i].destroyBySupportLoss();
+    }
+  }
+
   /// Routes an arena tap to selecting a tower under the tap (for the
   /// repair/upgrade/sell action panel), or - if a tower type is selected -
-  /// building on an empty, reachable grid cell.
+  /// previewing/building on an empty, reachable grid cell. The first tap on
+  /// a valid cell only shows the range preview (see [pendingPlacement]); a
+  /// second tap on that same cell actually commits the build.
   void handleArenaTap(Vector2 point) {
     if (gameState.status != GameStatus.playing) return;
 
@@ -149,13 +186,29 @@ class BoomspireGame extends FlameGame<GameWorld> {
       selectedTower.value = selectedTower.value == tappedTower
           ? null
           : tappedTower;
+      pendingPlacement.value = null;
       return;
     }
     selectedTower.value = null;
 
     final type = selectedTowerType.value;
-    if (type == null) return;
-    _buildTower(type, point);
+    if (type == null) {
+      pendingPlacement.value = null;
+      return;
+    }
+
+    final cell = terrainMap.grid.worldToCell(point);
+    if (!_isBuildableCell(cell)) {
+      pendingPlacement.value = null;
+      return;
+    }
+
+    if (pendingPlacement.value == cell) {
+      _buildTower(type, point);
+      pendingPlacement.value = null;
+    } else {
+      pendingPlacement.value = cell;
+    }
   }
 
   @override
@@ -195,10 +248,12 @@ class BoomspireGame extends FlameGame<GameWorld> {
         position: Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
       ),
     );
+    world.add(GhostPlacementComponent());
     enemyFocusHint = FocusHint.nearestTower;
     commanderNote.value = '';
     selectedTowerType.value = null;
     selectedTower.value = null;
+    pendingPlacement.value = null;
     hasTechLab = false;
     _shakeEventCount = 0;
     _shakeEventWindow = 0;
@@ -206,6 +261,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
 
   void selectTowerType(TowerType? type) {
     selectedTowerType.value = selectedTowerType.value == type ? null : type;
+    pendingPlacement.value = null;
   }
 
   /// Sells the currently-selected tower for a partial gold refund and frees
@@ -287,15 +343,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
   void _buildTower(TowerType type, Vector2 point) {
     final grid = terrainMap.grid;
     final cell = grid.worldToCell(point);
-    if (grid.isBlocked(cell.x, cell.y)) return;
-
-    final spawnCells = terrainMap.spawnPoints
-        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
-        .toSet();
-    final baseCell = grid.worldToCell(
-      Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
-    );
-    if (spawnCells.contains(cell) || cell == baseCell) return;
+    if (!_isBuildableCell(cell)) return;
 
     final blueprint = towerRepository.blueprintFor(type);
     if (gameState.gold < blueprint.cost) return;
@@ -304,6 +352,12 @@ class BoomspireGame extends FlameGame<GameWorld> {
     // Provisionally occupy the cell and make sure ground enemies can still
     // reach the base before actually charging gold - never allow a fully
     // sealed maze.
+    final spawnCells = terrainMap.spawnPoints
+        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
+        .toSet();
+    final baseCell = grid.worldToCell(
+      Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
+    );
     grid.setTowerOccupied(cell.x, cell.y, true);
     if (!spawnCells.every((sc) => grid.isReachable(sc, baseCell))) {
       grid.setTowerOccupied(cell.x, cell.y, false);
@@ -359,6 +413,21 @@ class BoomspireGame extends FlameGame<GameWorld> {
         cellSize: cellSize,
         blueprint: blueprint,
       ),
+      TowerType.rocketSilo => RocketSiloTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.commandPost => CommandPostComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.artilleryBunker => ArtilleryBunkerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
     };
   }
 
@@ -368,6 +437,21 @@ class BoomspireGame extends FlameGame<GameWorld> {
     if (!gameState.spendGold(cost)) return;
     tower.repair(tower.maxHp);
     audioRepository.play(SfxType.towerRepair, volume: 0.7);
+  }
+
+  /// Whether [cell] is empty ground that isn't a spawn point or the home
+  /// base - used both for the tap-to-preview ghost and the actual build.
+  bool _isBuildableCell(Point<int> cell) {
+    final grid = terrainMap.grid;
+    if (grid.isBlocked(cell.x, cell.y)) return false;
+
+    final spawnCells = terrainMap.spawnPoints
+        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
+        .toSet();
+    final baseCell = grid.worldToCell(
+      Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
+    );
+    return !spawnCells.contains(cell) && cell != baseCell;
   }
 
   TowerComponent? _towerAt(Vector2 point) {

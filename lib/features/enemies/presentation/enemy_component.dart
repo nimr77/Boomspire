@@ -53,6 +53,7 @@ abstract class EnemyComponent extends PositionComponent
   double _vaporTimer = 0;
   double _preExplosionTimer = 0;
   late final PositionComponent _visual;
+  late final _TargetHighlightComponent _targetHighlight;
   EnemyComponent({required this.blueprint})
     : health = blueprint.maxHealth,
       super(
@@ -91,10 +92,21 @@ abstract class EnemyComponent extends PositionComponent
       ..position = size / 2;
     await add(_visual);
     await addExtraVisuals(_visual);
+    _targetHighlight = _TargetHighlightComponent()
+      ..size = size
+      ..position = Vector2.zero();
+    await add(_targetHighlight);
     if (blueprint.isVehicle) {
       game.audioRepository.play(SfxType.vehicleEngine, volume: 0.5);
     }
   }
+
+  /// Called by a tower every frame it has this enemy locked as its current
+  /// target - lights this enemy up fully in the tower's accent color for a
+  /// brief moment so the player can always tell what's being shot at right
+  /// now. Retriggered continuously while targeted, so it stays lit and only
+  /// fades once no tower is aiming at it anymore.
+  void markTargeted(Color color) => _targetHighlight.trigger(color);
 
   @override
   void render(Canvas canvas) {
@@ -396,5 +408,40 @@ abstract class EnemyComponent extends PositionComponent
     if (separation.isZero()) return dir;
     final blended = dir + separation.normalized() * 0.5;
     return blended.isZero() ? dir : blended.normalized();
+  }
+}
+
+/// Drawn as the last child of an [EnemyComponent] so it renders on top of
+/// the sprite - fills the enemy's own silhouette (via [BlendMode.srcATop])
+/// with the targeting tower's accent color, so "who's currently being shot
+/// at" reads instantly from across the battlefield.
+class _TargetHighlightComponent extends PositionComponent {
+  static const _fadeDuration = 0.35;
+
+  Color _color = const Color(0x00000000);
+  double _timer = 0;
+
+  void trigger(Color color) {
+    _color = color;
+    _timer = _fadeDuration;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_timer > 0) _timer = (_timer - dt).clamp(0, _fadeDuration);
+  }
+
+  @override
+  void render(Canvas canvas) {
+    if (_timer <= 0) return;
+    final ratio = _timer / _fadeDuration;
+    canvas.drawCircle(
+      Offset(size.x / 2, size.y / 2),
+      size.x * 0.55,
+      Paint()
+        ..color = _color.withValues(alpha: 0.7 * ratio)
+        ..blendMode = BlendMode.srcATop,
+    );
   }
 }

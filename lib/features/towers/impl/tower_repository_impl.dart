@@ -66,6 +66,35 @@ class TowerRepositoryImpl implements TowerRepository {
       fireRate: 1,
       maxHp: 70,
     ),
+    TowerType.rocketSilo: TowerBlueprint(
+      type: TowerType.rocketSilo,
+      name: 'Rocket Silo',
+      cost: 220,
+      range: 340,
+      damage: 90,
+      fireRate: 3.2,
+      splashRadius: 90,
+      maxHp: 150,
+    ),
+    TowerType.commandPost: TowerBlueprint(
+      type: TowerType.commandPost,
+      name: 'Command Post',
+      cost: 130,
+      range: 0,
+      damage: 0,
+      fireRate: 1,
+      maxHp: 110,
+    ),
+    TowerType.artilleryBunker: TowerBlueprint(
+      type: TowerType.artilleryBunker,
+      name: 'Artillery Bunker',
+      cost: 200,
+      range: 240,
+      damage: 70,
+      fireRate: 1.4,
+      splashRadius: 40,
+      maxHp: 160,
+    ),
   };
 
   @override

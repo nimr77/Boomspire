@@ -23,6 +23,9 @@ class TowerSpriteFactory {
     TowerType.machineGun => const Color(0xFF4FC3F7),
     TowerType.laser => const Color(0xFFFF3D9A),
     TowerType.techLab => const Color(0xFF1DE9B6),
+    TowerType.rocketSilo => const Color(0xFFFF8A00),
+    TowerType.commandPost => const Color(0xFFFFD54A),
+    TowerType.artilleryBunker => const Color(0xFF8D6E63),
   };
 
   static Future<Sprite> base(TowerType type) async {
@@ -356,6 +359,140 @@ class TowerSpriteFactory {
     _paintViewhole(canvas, center.translate(0, 7));
   }
 
+  static void _paintRocketSiloTurret(Canvas canvas, Offset center) {
+    // A boxy multi-tube launcher angled skyward - reads as long-range
+    // artillery built to reach big/armored targets rather than a nimble gun.
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(-0.15);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: const Offset(0, -10), width: 22, height: 26),
+        const Radius.circular(3),
+      ),
+      Paint()..color = const Color(0xFF4a3a28),
+    );
+    for (final dx in [-6.0, 0.0, 6.0]) {
+      canvas.drawCircle(
+        Offset(dx, -18),
+        3.2,
+        Paint()..color = const Color(0xFF1c1712),
+      );
+      canvas.drawCircle(
+        Offset(dx, -18),
+        3.2,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = const Color(0xFFFF8A00),
+      );
+    }
+    canvas.restore();
+    canvas.drawCircle(
+      center,
+      13,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF8a5a2a), Color(0xFF2b2f36)],
+        ).createShader(Rect.fromCircle(center: center, radius: 13)),
+    );
+    canvas.drawCircle(
+      center,
+      13,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFFFF8A00),
+    );
+    _paintViewhole(canvas, center.translate(0, 8));
+  }
+
+  static void _paintCommandPostTurret(Canvas canvas, Offset center) {
+    // A rotating comms antenna array with a beacon light - reads as a
+    // command/support structure that coordinates rather than fires.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center.translate(0, -8), width: 4, height: 20),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF3a3220),
+    );
+    for (final side in [-1.0, 1.0]) {
+      canvas.drawLine(
+        center.translate(0, -18),
+        center.translate(side * 8, -12),
+        Paint()
+          ..color = const Color(0xFFFFD54A)
+          ..strokeWidth = 1.5,
+      );
+    }
+    canvas.drawCircle(
+      center.translate(0, -19),
+      2.4,
+      Paint()..color = const Color(0xFFFFF176),
+    );
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFFb89a4a), Color(0xFF2b2f36)],
+        ).createShader(Rect.fromCircle(center: center, radius: 12)),
+    );
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFFFFD54A),
+    );
+    _paintViewhole(canvas, center.translate(0, 7));
+  }
+
+  static void _paintArtilleryBunkerTurret(Canvas canvas, Offset center) {
+    // A short, wide reinforced barrel on a squat mount - heavier and more
+    // armored-looking than the Siege Cannon, built to endure return fire.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center.translate(0, -6), width: 20, height: 20),
+        const Radius.circular(3),
+      ),
+      Paint()..color = const Color(0xFF4e4038),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center.translate(0, -18), width: 12, height: 20),
+        const Radius.circular(4),
+      ),
+      Paint()..color = const Color(0xFF6d5a4e),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center.translate(0, -28), width: 14, height: 6),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF2b2318),
+    );
+    canvas.drawCircle(
+      center,
+      13,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF8D6E63), Color(0xFF2b2f36)],
+        ).createShader(Rect.fromCircle(center: center, radius: 13)),
+    );
+    canvas.drawCircle(
+      center,
+      13,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFF8D6E63),
+    );
+    _paintViewhole(canvas, center.translate(-7, 6));
+  }
+
   static void _paintTurret(Canvas canvas, TowerType type) {
     const center = Offset(24, 24);
     switch (type) {
@@ -371,6 +508,12 @@ class TowerSpriteFactory {
         _paintLaserTurret(canvas, center);
       case TowerType.techLab:
         _paintTechLabTurret(canvas, center);
+      case TowerType.rocketSilo:
+        _paintRocketSiloTurret(canvas, center);
+      case TowerType.commandPost:
+        _paintCommandPostTurret(canvas, center);
+      case TowerType.artilleryBunker:
+        _paintArtilleryBunkerTurret(canvas, center);
     }
   }
 

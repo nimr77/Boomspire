@@ -36,7 +36,13 @@ void main() {
           final startingGold = game.gameState.gold;
 
           game.selectTowerType(TowerType.machineGun);
-          game.handleArenaTap(game.terrainMap.grid.cellCenter(openCell));
+          final cellCenter = game.terrainMap.grid.cellCenter(openCell);
+          // First tap only previews the range/footprint; the same cell must
+          // be tapped again to actually commit the build (see
+          // BoomspireGame.pendingPlacement).
+          game.handleArenaTap(cellCenter);
+          expect(game.pendingPlacement.value, openCell);
+          game.handleArenaTap(cellCenter);
 
           expect(
             game.gameState.gold,
