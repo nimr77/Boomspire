@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import '../../../../generated/l10n.dart';
 import '../../../towers/presentation/tower_component.dart';
 import '../../../towers/presentation/tower_sprites.dart';
-import '../circuit_defense_game.dart';
+import '../boomspire_game.dart';
 
 /// Floating action card shown above the command bar whenever a tower is
 /// selected on the battlefield - lets the player repair, upgrade, or sell it.
 class TowerActionPanel extends StatefulWidget {
-  final CircuitDefenseGame game;
+  final BoomspireGame game;
 
   const TowerActionPanel({super.key, required this.game});
 

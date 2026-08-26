@@ -54,6 +54,54 @@ class GameScenes {
       homeLayout: HomeLayout.southWestCorner,
       spawnLayout: SpawnLayout.surround,
     ),
+    GameScene(
+      id: 'ruined-downtown',
+      name: 'Ruined Downtown',
+      briefing:
+          'A collapsed skyline hems in your outpost - the enemy pushes '
+          'in from two shattered avenues at once.',
+      biome: Biome.cityRuins,
+      waveCount: 7,
+      aggressionBias: 0.1,
+      homeLayout: HomeLayout.center,
+      spawnLayout: SpawnLayout.twoSided,
+    ),
+    GameScene(
+      id: 'savanna-crossing',
+      name: 'Savanna Crossing',
+      briefing:
+          'Wide open grassland with nowhere to hide - a single dusty '
+          'trail carries every assault straight for the base.',
+      biome: Biome.savanna,
+      waveCount: 6,
+      aggressionBias: 0.05,
+      homeLayout: HomeLayout.eastEdge,
+      spawnLayout: SpawnLayout.single,
+    ),
+    GameScene(
+      id: 'frozen-summit',
+      name: 'Frozen Summit',
+      briefing:
+          'A dug-in summit outpost above the ice line, besieged from '
+          'every ridge line around it.',
+      biome: Biome.frozenPeaks,
+      waveCount: 8,
+      aggressionBias: 0.12,
+      homeLayout: HomeLayout.northEastCorner,
+      spawnLayout: SpawnLayout.surround,
+    ),
+    GameScene(
+      id: 'coastal-blockade',
+      name: 'Coastal Blockade',
+      briefing:
+          'A sea platform under blockade - gunboats shell the base from '
+          'both open flanks across the water.',
+      biome: Biome.sea,
+      waveCount: 8,
+      aggressionBias: 0.1,
+      homeLayout: HomeLayout.center,
+      spawnLayout: SpawnLayout.twoSided,
+    ),
   ];
 
   const GameScenes._();

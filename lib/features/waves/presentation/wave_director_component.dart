@@ -9,11 +9,12 @@ import '../../enemies/domain/models/enemy_type.dart';
 import '../../enemies/presentation/attack_plane_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
 import '../../enemies/presentation/green_soldier_component.dart';
+import '../../enemies/presentation/gunboat_component.dart';
 import '../../enemies/presentation/heavy_soldier_component.dart';
 import '../../enemies/presentation/helicopter_component.dart';
 import '../../enemies/presentation/tank_component.dart';
 import '../../game_core/domain/models/game_status.dart';
-import '../../game_core/presentation/circuit_defense_game.dart';
+import '../../game_core/presentation/boomspire_game.dart';
 
 /// Drives round progression: schedules enemy spawns for the current wave,
 /// detects when a wave is cleared, and hands out the wave-clear gold bonus
@@ -22,7 +23,7 @@ import '../../game_core/presentation/circuit_defense_game.dart';
 /// hard/what shape the *next* wave should be, and what enemies should
 /// prioritize attacking.
 class WaveDirectorComponent extends Component
-    with HasGameReference<CircuitDefenseGame> {
+    with HasGameReference<BoomspireGame> {
   int _nextWaveNumber = 1;
   bool _waveActive = false;
   double _preWaveTimer = 3;
@@ -106,6 +107,7 @@ class WaveDirectorComponent extends Component
       EnemyType.helicopter => HelicopterComponent(blueprint: blueprint),
       EnemyType.tank => TankComponent(blueprint: blueprint),
       EnemyType.attackPlane => AttackPlaneComponent(blueprint: blueprint),
+      EnemyType.gunboat => GunboatComponent(blueprint: blueprint),
     };
   }
 

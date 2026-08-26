@@ -19,7 +19,7 @@ import '../../combat/presentation/rocket_component.dart';
 import '../../combat/presentation/smoke_trail_component.dart';
 import '../../combat/presentation/vapor_cone_component.dart';
 import '../../game_core/domain/models/game_status.dart';
-import '../../game_core/presentation/circuit_defense_game.dart';
+import '../../game_core/presentation/boomspire_game.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../domain/models/enemy_blueprint.dart';
 import '../domain/models/enemy_movement_style.dart';
@@ -33,7 +33,7 @@ import 'floating_text_component.dart';
 /// its way. Resolves death/escape (gold reward or player damage) once it
 /// reaches its goal or is destroyed.
 abstract class EnemyComponent extends PositionComponent
-    with HasGameReference<CircuitDefenseGame>
+    with HasGameReference<BoomspireGame>
     implements Targetable {
   /// Enemies within this squared distance of each other push apart a bit
   /// (see [_steer]) instead of overlapping/stacking while converging on the
@@ -164,6 +164,9 @@ abstract class EnemyComponent extends PositionComponent
       case EnemyMovementStyle.swoop:
         _visual.position = size / 2;
         _visual.angle += sin(_bobPhase * 0.5) * 0.08;
+      case EnemyMovementStyle.sail:
+        _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 2);
+        _visual.angle = sin(_bobPhase * 0.5) * 0.06;
     }
   }
 

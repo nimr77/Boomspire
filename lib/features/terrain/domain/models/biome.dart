@@ -5,7 +5,16 @@ import 'obstacle_kind.dart';
 /// A selectable map theme. Drives ground color palette, which high-ground
 /// obstacle shape is used, whether a river or dry valley cuts the map, and
 /// whether decorative trees are scattered.
-enum Biome { grassPlains, snowTundra, desertDunes, mountainForest }
+enum Biome {
+  grassPlains,
+  snowTundra,
+  desertDunes,
+  mountainForest,
+  cityRuins,
+  savanna,
+  frozenPeaks,
+  sea,
+}
 
 class BiomePalette {
   const BiomePalette({
@@ -41,6 +50,10 @@ extension BiomeX on Biome {
     Biome.snowTundra => 'Snow Tundra',
     Biome.desertDunes => 'Desert Dunes',
     Biome.mountainForest => 'Mountain Forest',
+    Biome.cityRuins => 'City Ruins',
+    Biome.savanna => 'Savanna',
+    Biome.frozenPeaks => 'Frozen Peaks',
+    Biome.sea => 'Open Sea',
   };
 
   String get description => switch (this) {
@@ -48,6 +61,10 @@ extension BiomeX on Biome {
     Biome.snowTundra => 'Frozen ground, snow-capped peaks, an icy river.',
     Biome.desertDunes => 'Sun-scorched dunes carved by a dry canyon.',
     Biome.mountainForest => 'Dense pine-covered peaks and a rushing river.',
+    Biome.cityRuins => 'Collapsed towers and rubble-choked streets.',
+    Biome.savanna => 'Golden grassland, acacia stands, a dry river.',
+    Biome.frozenPeaks => 'Sheer ice-clad summits above a frozen crevasse.',
+    Biome.sea => 'Open water studded with reefs - the fleet closes in.',
   };
 
   BiomePalette get palette => switch (this) {
@@ -94,6 +111,58 @@ extension BiomeX on Biome {
       highGround: ObstacleKind.mountain,
       crossing: ObstacleKind.river,
       hasTrees: true,
+    ),
+    Biome.cityRuins => const BiomePalette(
+      groundTop: Color(0xFF4a4d52),
+      groundMid: Color(0xFF3a3d42),
+      groundBottom: Color(0xFF25272b),
+      ridgeLight: Color(0xFF8a8d92),
+      ridgeDark: Color(0xFF35373b),
+      capColor: Color(0xFFb8bcc2),
+      // Collapsed high-rise rubble uses the mountain shape/paint routine.
+      highGround: ObstacleKind.mountain,
+      // A bombed-out trench cutting through the streets.
+      crossing: ObstacleKind.valley,
+      hasTrees: false,
+    ),
+    Biome.savanna => const BiomePalette(
+      groundTop: Color(0xFFc9a63d),
+      groundMid: Color(0xFFb3922f),
+      groundBottom: Color(0xFF8f7124),
+      ridgeLight: Color(0xFFd8c07a),
+      ridgeDark: Color(0xFF7a5f28),
+      capColor: Color(0xFFe8d69a),
+      // Rocky termite-mound outcrops use the dune shape/paint routine.
+      highGround: ObstacleKind.dune,
+      // A dry, seasonal river cutting across the grassland.
+      crossing: ObstacleKind.river,
+      hasTrees: true,
+    ),
+    Biome.frozenPeaks => const BiomePalette(
+      groundTop: Color(0xFFcfe6f2),
+      groundMid: Color(0xFFa9cddf),
+      groundBottom: Color(0xFF7ea6bc),
+      ridgeLight: Color(0xFFffffff),
+      ridgeDark: Color(0xFF4d7690),
+      capColor: Color(0xFFFFFFFF),
+      highGround: ObstacleKind.mountain,
+      // A frozen crevasse, rendered with the same winding-ribbon routine.
+      crossing: ObstacleKind.river,
+      hasTrees: false,
+    ),
+    Biome.sea => const BiomePalette(
+      groundTop: Color(0xFF1f6f8a),
+      groundMid: Color(0xFF155a75),
+      groundBottom: Color(0xFF0b3d52),
+      ridgeLight: Color(0xFF6fcbd9),
+      ridgeDark: Color(0xFF0d3040),
+      // Reefs/islets poking above the waterline, tinted sandy-green instead
+      // of snow-capped.
+      capColor: Color(0xFFcbd98a),
+      highGround: ObstacleKind.mountain,
+      // A strong current/channel, rendered with the winding-ribbon routine.
+      crossing: ObstacleKind.river,
+      hasTrees: false,
     ),
   };
 }

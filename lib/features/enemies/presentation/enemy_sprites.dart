@@ -14,6 +14,7 @@ class EnemySpriteFactory {
   static Sprite? _helicopter;
   static Sprite? _tank;
   static Sprite? _attackPlane;
+  static Sprite? _gunboat;
   EnemySpriteFactory._();
 
   /// The faction color for this enemy type - used for the ground fire-pulse
@@ -24,7 +25,15 @@ class EnemySpriteFactory {
     EnemyType.tank => const Color(0xFF6D4C41),
     EnemyType.helicopter => const Color(0xFFE53935),
     EnemyType.attackPlane => const Color(0xFF00E5FF),
+    EnemyType.gunboat => const Color(0xFF2E7D8C),
   };
+
+  static Future<Sprite> gunboat() async {
+    final cached = _gunboat;
+    if (cached != null) return cached;
+    final image = await renderToImage(70, 70, _paintGunboat);
+    return _gunboat = Sprite(image);
+  }
 
   static Future<Sprite> attackPlane() async {
     final cached = _attackPlane;
@@ -431,6 +440,98 @@ class EnemySpriteFactory {
       center.translate(0, size * 0.16),
       size * 0.045,
       Paint()..color = const Color(0xFFFFF59D),
+    );
+  }
+
+  static void _paintGunboat(Canvas canvas) {
+    const size = 70.0;
+    const center = Offset(size / 2, size / 2);
+
+    // Wake shadow beneath the hull.
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.95, height: size * 0.4),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    // Hull - a wide boat-shaped silhouette (pointed bow, flat stern).
+    final hull = Path()
+      ..moveTo(center.dx, center.dy - size * 0.46)
+      ..lineTo(center.dx + size * 0.28, center.dy + size * 0.3)
+      ..lineTo(center.dx + size * 0.24, center.dy + size * 0.42)
+      ..lineTo(center.dx - size * 0.24, center.dy + size * 0.42)
+      ..lineTo(center.dx - size * 0.28, center.dy + size * 0.3)
+      ..close();
+    canvas.drawPath(
+      hull,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF546E7A), Color(0xFF263238)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromCircle(center: center, radius: size * 0.46)),
+    );
+    canvas.drawPath(
+      hull,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFF2E7D8C),
+    );
+
+    // Waterline stripe.
+    canvas.drawLine(
+      center.translate(-size * 0.26, size * 0.22),
+      center.translate(size * 0.26, size * 0.22),
+      Paint()
+        ..color = const Color(0xFF2E7D8C)
+        ..strokeWidth = 2,
+    );
+
+    // Deckhouse.
+    final deckhouse = Rect.fromCenter(
+      center: center.translate(0, size * 0.02),
+      width: size * 0.24,
+      height: size * 0.3,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(deckhouse, const Radius.circular(4)),
+      Paint()..color = const Color(0xFF37474F),
+    );
+
+    // Forward deck cannon - the weapon this unit fires at towers.
+    final cannonCenter = center.translate(0, -size * 0.16);
+    canvas.drawCircle(
+      cannonCenter,
+      size * 0.13,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF8d8060), Color(0xFF2b2f36)],
+        ).createShader(Rect.fromCircle(center: cannonCenter, radius: size * 0.13)),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center.translate(0, -size * 0.32),
+          width: size * 0.08,
+          height: size * 0.26,
+        ),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF23262b),
+    );
+
+    // Radar mast + warning light, so it reads as a crewed hostile vessel.
+    canvas.drawLine(
+      center.translate(0, -size * 0.02),
+      center.translate(0, -size * 0.24),
+      Paint()
+        ..color = const Color(0xFF1a1c20)
+        ..strokeWidth = 1.6,
+    );
+    canvas.drawCircle(
+      center.translate(0, size * 0.02),
+      size * 0.03,
+      Paint()..color = const Color(0xFFE53935),
     );
   }
 }

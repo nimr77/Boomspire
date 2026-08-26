@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
-import '../circuit_defense_game.dart';
+import '../boomspire_game.dart';
 import 'build_menu.dart';
 
 /// Bottom-docked command bar (health/gold/wave + construction menu), C&C
@@ -11,7 +11,7 @@ import 'build_menu.dart';
 /// renders underneath it and the home base (which can be placed anywhere)
 /// stays fully visible.
 class HudOverlay extends StatelessWidget {
-  final CircuitDefenseGame game;
+  final BoomspireGame game;
 
   const HudOverlay({super.key, required this.game});
 
@@ -52,6 +52,11 @@ class HudOverlay extends StatelessWidget {
                                 icon: Icons.monetization_on,
                                 color: Colors.amberAccent,
                                 label: '${game.gameState.gold}',
+                              ),
+                              _StatChip(
+                                icon: Icons.military_tech,
+                                color: Colors.cyanAccent,
+                                label: '${game.gameState.currentScore}',
                               ),
                             ],
                           );

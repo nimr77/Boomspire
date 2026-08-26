@@ -15,7 +15,7 @@ import '../../combat/presentation/rocket_component.dart';
 import '../../combat/presentation/smoke_trail_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
 import '../../enemies/presentation/floating_text_component.dart';
-import '../../game_core/presentation/circuit_defense_game.dart';
+import '../../game_core/presentation/boomspire_game.dart';
 import '../domain/models/tower_blueprint.dart';
 import 'tower_sprites.dart';
 
@@ -37,7 +37,7 @@ const double _antiRocketRange = 95;
 /// structural HP - enemies can shoot towers down, and the player can repair,
 /// upgrade, or sell them for gold.
 abstract class TowerComponent extends PositionComponent
-    with HasGameReference<CircuitDefenseGame>
+    with HasGameReference<BoomspireGame>
     implements Targetable {
   final TowerBlueprint blueprint;
 

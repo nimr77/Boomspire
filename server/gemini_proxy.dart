@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:circuit_defense/features/ai_director/domain/models/strategy_directive.dart';
+import 'package:boomspire/features/ai_director/domain/models/strategy_directive.dart';
 
 Future<void> main() async {
   final apiKey =

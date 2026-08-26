@@ -15,4 +15,8 @@ enum EnemyMovementStyle {
   /// Fixed-wing aircraft: a lazy banking wobble as it "cuts through the
   /// air" at speed.
   swoop,
+
+  /// Naval vessels: a slow side-to-side roll plus a gentle rise/fall, like
+  /// a hull riding swells.
+  sail,
 }

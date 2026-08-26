@@ -8,18 +8,18 @@
 // the component tree mounted so tap handling and pathfinding work.
 import 'dart:math';
 
-import 'package:circuit_defense/features/ai_director/impl/ai_director_repository_impl.dart';
-import 'package:circuit_defense/features/audio/domain/models/sfx_type.dart';
-import 'package:circuit_defense/features/audio/domain/repos/audio_repository.dart';
-import 'package:circuit_defense/features/enemies/impl/enemy_repository_impl.dart';
-import 'package:circuit_defense/features/game_core/domain/models/game_scene.dart';
-import 'package:circuit_defense/features/game_core/domain/models/game_scenes.dart';
-import 'package:circuit_defense/features/game_core/impl/game_state_repository_impl.dart';
-import 'package:circuit_defense/features/game_core/presentation/circuit_defense_game.dart';
-import 'package:circuit_defense/features/terrain/impl/terrain_repository_impl.dart';
-import 'package:circuit_defense/features/towers/domain/models/tower_type.dart';
-import 'package:circuit_defense/features/towers/impl/tower_repository_impl.dart';
-import 'package:circuit_defense/features/waves/impl/wave_repository_impl.dart';
+import 'package:boomspire/features/ai_director/impl/ai_director_repository_impl.dart';
+import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
+import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
+import 'package:boomspire/features/enemies/impl/enemy_repository_impl.dart';
+import 'package:boomspire/features/game_core/domain/models/game_scene.dart';
+import 'package:boomspire/features/game_core/domain/models/game_scenes.dart';
+import 'package:boomspire/features/game_core/impl/game_state_repository_impl.dart';
+import 'package:boomspire/features/game_core/presentation/boomspire_game.dart';
+import 'package:boomspire/features/terrain/impl/terrain_repository_impl.dart';
+import 'package:boomspire/features/towers/domain/models/tower_type.dart';
+import 'package:boomspire/features/towers/impl/tower_repository_impl.dart';
+import 'package:boomspire/features/waves/impl/wave_repository_impl.dart';
 import 'package:flame/game.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -96,7 +96,7 @@ void main() {
 }
 
 /// Boots a game without pumping a full Flutter widget tree (much faster).
-Future<CircuitDefenseGame> _bootGame(GameScene scene) async {
+Future<BoomspireGame> _bootGame(GameScene scene) async {
   final game = _newGame(scene);
   game.onGameResize(Vector2(1280, 720));
   // ignore: invalid_use_of_internal_member
@@ -109,7 +109,7 @@ Future<CircuitDefenseGame> _bootGame(GameScene scene) async {
 
 /// Finds an open, buildable cell (not blocked, not spawn/base) so tests
 /// don't depend on any particular random terrain layout.
-Point<int> _findOpenCell(CircuitDefenseGame game) {
+Point<int> _findOpenCell(BoomspireGame game) {
   final grid = game.terrainMap.grid;
   final spawnCells = game.terrainMap.spawnPoints
       .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
@@ -130,7 +130,7 @@ Point<int> _findOpenCell(CircuitDefenseGame game) {
   throw StateError('no open cell found');
 }
 
-CircuitDefenseGame _newGame(GameScene scene) => CircuitDefenseGame(
+BoomspireGame _newGame(GameScene scene) => BoomspireGame(
   terrainRepository: TerrainRepositoryImpl(),
   towerRepository: TowerRepositoryImpl(),
   enemyRepository: EnemyRepositoryImpl(),

@@ -44,7 +44,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "accountWelcomeTitle": MessageLookupByLibrary.simpleMessage(
       "Welcome, Commander",
     ),
-    "appTitle": MessageLookupByLibrary.simpleMessage("Circuit Defense"),
+    "appTitle": MessageLookupByLibrary.simpleMessage("Boomspire"),
     "baseOverrunSubtitle": MessageLookupByLibrary.simpleMessage(
       "The circuit has been breached.",
     ),
@@ -70,7 +70,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "levelSelectSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose a campaign",
     ),
-    "levelSelectTitle": MessageLookupByLibrary.simpleMessage("CIRCUIT DEFENSE"),
+    "levelSelectTitle": MessageLookupByLibrary.simpleMessage("BOOMSPIRE"),
     "playAgain": MessageLookupByLibrary.simpleMessage("PLAY AGAIN"),
     "sceneCompleted": MessageLookupByLibrary.simpleMessage("COMPLETED"),
     "towerMax": MessageLookupByLibrary.simpleMessage("MAX"),

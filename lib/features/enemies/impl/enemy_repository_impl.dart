@@ -67,11 +67,32 @@ class EnemyRepositoryImpl implements EnemyRepository {
       size: 40,
       isFlying: true,
       isVehicle: true,
-      attackDamage: 9,
+      // Fires an actual traveling rocket (not an instant beam) so its
+      // splash can one-shot a fragile Laser Lance - and so it can be shot
+      // down in flight by an anti-rocket-equipped tower.
+      attackDamage: 45,
       attackRange: 180,
       attackInterval: 0.7,
       movementStyle: EnemyMovementStyle.swoop,
-      weaponType: EnemyWeaponType.laser,
+      weaponType: EnemyWeaponType.rocket,
+    ),
+    EnemyType.gunboat: EnemyBlueprint(
+      type: EnemyType.gunboat,
+      name: 'Gunboat',
+      // A "big unit" - high HP/bounty, slow, shells towers from well
+      // outside most short-range towers' reach. Intended target for the
+      // long-range Rocket Silo's damage bonus vs isVehicle/isNaval units.
+      maxHealth: 340,
+      speed: 30,
+      bounty: 55,
+      size: 58,
+      isVehicle: true,
+      isNaval: true,
+      attackDamage: 18,
+      attackRange: 210,
+      attackInterval: 1.8,
+      movementStyle: EnemyMovementStyle.sail,
+      weaponType: EnemyWeaponType.cannon,
     ),
   };
 

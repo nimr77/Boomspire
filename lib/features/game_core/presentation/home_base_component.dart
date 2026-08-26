@@ -4,13 +4,13 @@ import 'package:flame/components.dart';
 
 import '../../../core/rendering/procedural_image.dart';
 import '../domain/models/game_config.dart';
-import 'circuit_defense_game.dart';
+import 'boomspire_game.dart';
 
 /// The player's home base at the terrain's end point: a defended structure
 /// (instead of a plain marker circle) that shows its remaining health and
 /// flashes/pulses red whenever the player takes damage.
 class HomeBaseComponent extends PositionComponent
-    with HasGameReference<CircuitDefenseGame> {
+    with HasGameReference<BoomspireGame> {
   static ui.Image? _cachedSprite;
 
   late final SpriteComponent _visual;

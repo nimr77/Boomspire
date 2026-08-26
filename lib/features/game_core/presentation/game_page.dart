@@ -13,10 +13,11 @@ import '../../progress/domain/repos/progress_repository.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../towers/domain/repos/tower_repository.dart';
 import '../../waves/domain/repos/wave_repository.dart';
+import '../domain/models/game_difficulty.dart';
 import '../domain/models/game_scene.dart';
 import '../domain/models/game_status.dart';
 import '../domain/repos/game_state_repository.dart';
-import 'circuit_defense_game.dart';
+import 'boomspire_game.dart';
 import 'widgets/game_over_overlay.dart';
 import 'widgets/hud_overlay.dart';
 import 'widgets/tower_action_panel.dart';
@@ -26,15 +27,20 @@ import 'widgets/victory_overlay.dart';
 /// victory) in sync with the game's [GameStatus].
 class GamePage extends StatefulWidget {
   final GameScene scene;
+  final GameDifficulty difficulty;
 
-  const GamePage({super.key, required this.scene});
+  const GamePage({
+    super.key,
+    required this.scene,
+    this.difficulty = GameDifficulty.normal,
+  });
 
   @override
   State<GamePage> createState() => _GamePageState();
 }
 
 class _GamePageState extends State<GamePage> {
-  late final CircuitDefenseGame _game;
+  late final BoomspireGame _game;
   late final GameStateRepository _gameState;
   final ProgressRepository _progressRepository = getIt<ProgressRepository>();
   bool _recorded = false;
@@ -79,7 +85,7 @@ class _GamePageState extends State<GamePage> {
                       ],
                     ),
                   ],
-                  child: GameWidget<CircuitDefenseGame>(
+                  child: GameWidget<BoomspireGame>(
                     game: _game,
                     overlayBuilderMap: {
                       'gameOver': (context, game) =>
@@ -124,7 +130,7 @@ class _GamePageState extends State<GamePage> {
   void initState() {
     super.initState();
     _gameState = getIt<GameStateRepository>();
-    _game = CircuitDefenseGame(
+    _game = BoomspireGame(
       terrainRepository: getIt<TerrainRepository>(),
       towerRepository: getIt<TowerRepository>(),
       enemyRepository: getIt<EnemyRepository>(),
@@ -133,6 +139,7 @@ class _GamePageState extends State<GamePage> {
       gameState: _gameState,
       aiDirector: getIt<AiDirectorRepository>(),
       scene: widget.scene,
+      difficulty: widget.difficulty,
     )..onExitToMenu = () => Navigator.of(context).pop();
     _gameState.addListener(_syncOverlays);
   }
@@ -172,10 +179,7 @@ class _GamePageState extends State<GamePage> {
     if (_recorded) return;
     _recorded = true;
     final completed = _gameState.status == GameStatus.victory;
-    final score =
-        _gameState.currentWave * 100 +
-        _gameState.goldEarned +
-        (completed ? 1000 : 0);
+    final score = _gameState.currentScore + (completed ? 1000 : 0);
     _progressRepository.recordRun(
       sceneId: widget.scene.id,
       waveReached: _gameState.currentWave,

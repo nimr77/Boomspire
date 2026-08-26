@@ -5,6 +5,9 @@ import 'package:glassmorphism/glassmorphism.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
+import '../../account/domain/models/account.dart';
+import '../../account/domain/repos/account_repository.dart';
+import '../../game_core/domain/models/game_difficulty.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../game_core/domain/models/game_scenes.dart';
 import '../../game_core/presentation/game_page.dart';
@@ -24,6 +27,8 @@ class LevelSelectPage extends StatefulWidget {
 
 class _LevelSelectPageState extends State<LevelSelectPage> {
   final ProgressRepository _progressRepository = getIt<ProgressRepository>();
+  final AccountRepository _accountRepository = getIt<AccountRepository>();
+  GameDifficulty _difficulty = GameDifficulty.normal;
 
   @override
   Widget build(BuildContext context) {
@@ -64,32 +69,96 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                           .fadeIn(duration: 400.ms, delay: 80.ms)
                           .slideY(begin: -0.2, end: 0),
                       const SizedBox(height: 28),
-                      FutureBuilder<ProgressSnapshot>(
-                        future: _progressRepository.load(),
-                        builder: (context, snapshot) {
-                          final progress =
-                              snapshot.data ?? ProgressSnapshot.empty;
-                          return GridView.count(
-                            shrinkWrap: true,
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: 1.4,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: [
-                              for (final (index, scene)
-                                  in GameScenes.all.indexed)
-                                _SceneCard(scene: scene, progress: progress)
-                                    .animate()
-                                    .fadeIn(
-                                      duration: 380.ms,
-                                      delay: (120 + index * 90).ms,
-                                    )
-                                    .scale(
-                                      begin: const Offset(0.92, 0.92),
-                                      curve: Curves.easeOutCubic,
+                      FutureBuilder<Account?>(
+                        future: _accountRepository.currentAccount(),
+                        builder: (context, accountSnapshot) {
+                          return FutureBuilder<ProgressSnapshot>(
+                            future: _progressRepository.load(),
+                            builder: (context, progressSnapshot) {
+                              final progress =
+                                  progressSnapshot.data ??
+                                  ProgressSnapshot.empty;
+                              final account = accountSnapshot.data;
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (account != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 18,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.account_circle,
+                                            color: Colors.white54,
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            account.name,
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          const Icon(
+                                            Icons.military_tech,
+                                            color: Colors.cyanAccent,
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '${progress.totalScore}',
+                                            style: const TextStyle(
+                                              color: Colors.cyanAccent,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                            ],
+                                  _DifficultySelector(
+                                    value: _difficulty,
+                                    onChanged: (value) =>
+                                        setState(() => _difficulty = value),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  GridView.count(
+                                    shrinkWrap: true,
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing: 16,
+                                    childAspectRatio: 1.4,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    children: [
+                                      for (final (index, scene)
+                                          in GameScenes.all.indexed)
+                                        _SceneCard(
+                                              scene: scene,
+                                              progress: progress,
+                                              difficulty: _difficulty,
+                                            )
+                                            .animate()
+                                            .fadeIn(
+                                              duration: 380.ms,
+                                              delay: (120 + index * 90).ms,
+                                            )
+                                            .scale(
+                                              begin: const Offset(0.92, 0.92),
+                                              curve: Curves.easeOutCubic,
+                                            ),
+                                    ],
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
                       ),
@@ -113,8 +182,13 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
 class _SceneCard extends StatelessWidget {
   final GameScene scene;
   final ProgressSnapshot progress;
+  final GameDifficulty difficulty;
 
-  const _SceneCard({required this.scene, required this.progress});
+  const _SceneCard({
+    required this.scene,
+    required this.progress,
+    required this.difficulty,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -126,8 +200,11 @@ class _SceneCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => GamePage(scene: scene)));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => GamePage(scene: scene, difficulty: difficulty),
+            ),
+          );
         },
         child: ClipRRect(
           borderRadius: BorderRadius.circular(14),
@@ -240,6 +317,44 @@ class _SceneCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Segmented easy/normal/hard picker - scales AI aggression and rations the
+/// Laser Lance build limit for the run about to start.
+class _DifficultySelector extends StatelessWidget {
+  final GameDifficulty value;
+  final ValueChanged<GameDifficulty> onChanged;
+
+  const _DifficultySelector({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (final difficulty in GameDifficulty.values)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ChoiceChip(
+              label: Text(difficulty.label),
+              selected: value == difficulty,
+              onSelected: (_) => onChanged(difficulty),
+              labelStyle: TextStyle(
+                color: value == difficulty ? Colors.black : Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+              selectedColor: Colors.cyanAccent,
+              backgroundColor: const Color(0xFF1A1F26),
+              side: BorderSide(
+                color: value == difficulty
+                    ? Colors.cyanAccent
+                    : Colors.white24,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -11,7 +11,7 @@ import '../domain/repos/account_repository.dart';
 /// `FirebaseAccountRepositoryImpl` implementing [AccountRepository] can
 /// replace this once real accounts exist, without touching UI code.
 class LocalAccountRepositoryImpl implements AccountRepository {
-  static const _key = 'circuit_defense.account.v1';
+  static const _key = 'boomspire.account.v1';
 
   @override
   Future<Account> createAccount({required String name}) async {

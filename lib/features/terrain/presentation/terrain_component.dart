@@ -4,7 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show Colors;
 
 import '../../../core/rendering/procedural_image.dart';
-import '../../game_core/presentation/circuit_defense_game.dart';
+import '../../game_core/presentation/boomspire_game.dart';
 import '../domain/models/terrain_map.dart';
 import 'terrain_painter.dart';
 
@@ -16,7 +16,7 @@ import 'terrain_painter.dart';
 /// overlay (see [_riverPath]/[_riverPhase]) drawn live on top of the cached
 /// image so the water visibly flows instead of looking like a static ribbon.
 class TerrainComponent extends PositionComponent
-    with HasGameReference<CircuitDefenseGame> {
+    with HasGameReference<BoomspireGame> {
   final TerrainMap terrainMap;
 
   late final ui.Image _baseImage;

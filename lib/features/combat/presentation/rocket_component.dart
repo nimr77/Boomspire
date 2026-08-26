@@ -5,7 +5,7 @@ import 'package:flame/components.dart';
 
 import '../../../core/combat/targetable.dart';
 import '../../audio/domain/models/sfx_type.dart';
-import '../../game_core/presentation/circuit_defense_game.dart';
+import '../../game_core/presentation/boomspire_game.dart';
 import 'explosion_component.dart';
 import 'smoke_trail_component.dart';
 
@@ -13,7 +13,7 @@ import 'smoke_trail_component.dart';
 /// splash-damage explosion on arrival. Shared by the rocket battery and the
 /// siege cannon (with different colors/impact damage).
 class RocketComponent extends PositionComponent
-    with HasGameReference<CircuitDefenseGame> {
+    with HasGameReference<BoomspireGame> {
   static const _speed = 340.0;
 
   final Targetable target;

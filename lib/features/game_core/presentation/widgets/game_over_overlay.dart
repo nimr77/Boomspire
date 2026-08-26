@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
-import '../circuit_defense_game.dart';
+import '../boomspire_game.dart';
 import 'end_screen.dart';
 
 class GameOverOverlay extends StatelessWidget {
-  final CircuitDefenseGame game;
+  final BoomspireGame game;
 
   const GameOverOverlay({super.key, required this.game});
 

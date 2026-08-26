@@ -40,6 +40,12 @@ class EnemyBlueprint {
   /// Which projectile/effect this unit fires back at a tower it's engaging.
   final EnemyWeaponType weaponType;
 
+  /// Naval vessels - a "big unit" that only appears on sea maps, immune to
+  /// the terrain's land obstacles/mountains (it sails the open water tiles
+  /// instead) and the intended target of the long-range Rocket Silo's
+  /// damage bonus (see `RocketSiloTowerComponent`).
+  final bool isNaval;
+
   const EnemyBlueprint({
     required this.type,
     required this.name,
@@ -54,5 +60,6 @@ class EnemyBlueprint {
     this.movementStyle = EnemyMovementStyle.walk,
     this.isVehicle = false,
     this.weaponType = EnemyWeaponType.bullet,
+    this.isNaval = false,
   });
 }

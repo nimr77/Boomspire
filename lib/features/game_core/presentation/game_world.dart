@@ -6,15 +6,14 @@ import '../../terrain/presentation/cloud_layer_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../../waves/presentation/wave_director_component.dart';
-import 'circuit_defense_game.dart';
+import 'boomspire_game.dart';
 import 'home_base_component.dart';
-import 'spawn_indicator_component.dart';
 
 /// Root of the game scene graph. Holds the terrain, wave director, active
 /// towers/enemies, and routes arena taps back to the game for tower
 /// placement.
 class GameWorld extends World
-    with TapCallbacks, HasGameReference<CircuitDefenseGame> {
+    with TapCallbacks, HasGameReference<BoomspireGame> {
   final List<EnemyComponent> activeEnemies = [];
   final List<TowerComponent> activeTowers = [];
 
@@ -29,11 +28,6 @@ class GameWorld extends World
         ),
       ),
     );
-    for (final spawn in game.terrainMap.spawnPoints) {
-      await add(
-        SpawnIndicatorComponent(position: Vector2(spawn.x, spawn.y - 34)),
-      );
-    }
     await add(
       HomeBaseComponent(
         position: Vector2(

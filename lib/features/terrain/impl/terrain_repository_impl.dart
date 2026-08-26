@@ -32,7 +32,7 @@ class TerrainRepositoryImpl implements TerrainRepository {
     );
 
     final baseCell = _baseCell(scene.homeLayout, cols, rows);
-    final spawnCells = _spawnCells(scene.spawnLayout, baseCell, cols, rows);
+    final spawnCells = _spawnCells(baseCell, cols, rows);
     final protectedCells = [baseCell, ...spawnCells];
     final palette = scene.biome.palette;
     final seed =
@@ -184,28 +184,25 @@ class TerrainRepositoryImpl implements TerrainRepository {
     }
   }
 
-  /// Candidate perimeter approach points (west/east/north/south edge
-  /// midpoints), farthest from the base first, excluding the base itself.
-  List<Point<int>> _spawnCells(
-    SpawnLayout layout,
-    Point<int> base,
-    int cols,
-    int rows,
-  ) {
+  /// Perimeter approach points all the way around the arena (edges +
+  /// corners), excluding the base itself. The AI director spawns from a
+  /// random one of these per enemy (see `EnemyComponent.onLoad`) - attacks
+  /// are never telegraphed from a single fixed "incoming direction", they
+  /// can come from anywhere around the map regardless of [layout].
+  List<Point<int>> _spawnCells(Point<int> base, int cols, int rows) {
     final candidates = <Point<int>>[
       Point(0, rows ~/ 2), // west
       Point(cols - 1, rows ~/ 2), // east
       Point(cols ~/ 2, 0), // north
       Point(cols ~/ 2, rows - 1), // south
+      Point(0, 0), // northwest
+      Point(cols - 1, 0), // northeast
+      Point(0, rows - 1), // southwest
+      Point(cols - 1, rows - 1), // southeast
     ]..removeWhere((p) => p == base);
 
     candidates.sort((a, b) => _distSq(b, base).compareTo(_distSq(a, base)));
-
-    return switch (layout) {
-      SpawnLayout.single => [candidates.first],
-      SpawnLayout.twoSided => candidates.take(2).toList(),
-      SpawnLayout.surround => candidates,
-    };
+    return candidates;
   }
 
   bool _withinRadius(int x, int y, List<Point<int>> centers, int radius) {

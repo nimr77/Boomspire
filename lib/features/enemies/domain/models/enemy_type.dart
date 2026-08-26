@@ -1,1 +1,1 @@
-enum EnemyType { soldier, heavySoldier, tank, helicopter, attackPlane }
+enum EnemyType { soldier, heavySoldier, tank, helicopter, attackPlane, gunboat }

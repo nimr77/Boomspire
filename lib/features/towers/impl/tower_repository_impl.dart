@@ -51,9 +51,20 @@ class TowerRepositoryImpl implements TowerRepository {
       range: 210,
       damage: 14,
       fireRate: 0.08,
-      maxHp: 110,
+      // Glass cannon: hits everything at a blistering rate but is fragile
+      // enough that a single well-placed enemy rocket can take it out.
+      maxHp: 35,
       canTargetGround: true,
       canTargetAir: true,
+    ),
+    TowerType.techLab: TowerBlueprint(
+      type: TowerType.techLab,
+      name: 'Tech Lab',
+      cost: 60,
+      range: 0,
+      damage: 0,
+      fireRate: 1,
+      maxHp: 70,
     ),
   };
 

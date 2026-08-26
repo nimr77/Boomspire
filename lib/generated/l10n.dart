@@ -55,20 +55,15 @@ class S {
     return Localizations.of<S>(context, S);
   }
 
-  /// `Circuit Defense`
+  /// `Boomspire`
   String get appTitle {
-    return Intl.message(
-      'Circuit Defense',
-      name: 'appTitle',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Boomspire', name: 'appTitle', desc: '', args: []);
   }
 
-  /// `CIRCUIT DEFENSE`
+  /// `BOOMSPIRE`
   String get levelSelectTitle {
     return Intl.message(
-      'CIRCUIT DEFENSE',
+      'BOOMSPIRE',
       name: 'levelSelectTitle',
       desc: '',
       args: [],

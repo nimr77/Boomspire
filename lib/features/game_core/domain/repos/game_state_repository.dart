@@ -14,6 +14,11 @@ abstract class GameStateRepository extends ChangeNotifier {
   GameStatus get status;
   int get totalWaves;
 
+  /// Live in-run score shown on the HUD and level-select header - waves
+  /// cleared weighted heavily plus all gold ever earned. `GamePage` adds a
+  /// separate victory bonus on top of this when recording final progress.
+  int get currentScore => currentWave * 100 + goldEarned;
+
   void addGold(int amount);
   void damagePlayer(int amount);
   void reset();

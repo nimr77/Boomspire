@@ -20,17 +20,17 @@ Future<void> main() async {
           defaultTargetPlatform == TargetPlatform.linux)) {
     await windowManager.ensureInitialized();
   }
-  runApp(const CircuitDefenseApp());
+  runApp(const BoomspireApp());
 }
 
-class CircuitDefenseApp extends StatefulWidget {
-  const CircuitDefenseApp({super.key});
+class BoomspireApp extends StatefulWidget {
+  const BoomspireApp({super.key});
 
   @override
-  State<CircuitDefenseApp> createState() => _CircuitDefenseAppState();
+  State<BoomspireApp> createState() => _BoomspireAppState();
 }
 
-class _CircuitDefenseAppState extends State<CircuitDefenseApp> {
+class _BoomspireAppState extends State<BoomspireApp> {
   final AccountRepository _accountRepository = getIt<AccountRepository>();
   final _navigatorKey = GlobalKey<NavigatorState>();
   bool _prompted = false;

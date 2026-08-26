@@ -4,14 +4,14 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 
 import '../../../core/combat/targetable.dart';
-import '../../game_core/presentation/circuit_defense_game.dart';
+import '../../game_core/presentation/boomspire_game.dart';
 import 'impact_spark_component.dart';
 
 /// Fast tracer round - flies straight to its target and applies direct
 /// damage on impact. Used by both towers (yellow tracer) and enemies (red
 /// tracer) via [fromEnemy].
 class BulletComponent extends PositionComponent
-    with HasGameReference<CircuitDefenseGame> {
+    with HasGameReference<BoomspireGame> {
   static const _speed = 640.0;
 
   final Targetable target;

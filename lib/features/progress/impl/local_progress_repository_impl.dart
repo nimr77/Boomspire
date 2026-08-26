@@ -14,7 +14,7 @@ import '../domain/repos/progress_repository.dart';
 /// [ProgressRepository] interface can replace/wrap this once accounts exist,
 /// without touching any UI code.
 class LocalProgressRepositoryImpl implements ProgressRepository {
-  static const _key = 'circuit_defense.progress.v1';
+  static const _key = 'boomspire.progress.v1';
 
   @override
   Future<ProgressSnapshot> load() async {

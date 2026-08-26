@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
-import '../circuit_defense_game.dart';
+import '../boomspire_game.dart';
 import 'end_screen.dart';
 
 class VictoryOverlay extends StatelessWidget {
-  final CircuitDefenseGame game;
+  final BoomspireGame game;
 
   const VictoryOverlay({super.key, required this.game});
 
