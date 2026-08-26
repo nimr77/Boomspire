@@ -1,83 +1,86 @@
 import 'dart:math';
 
+import '../../../core/pathfinding/grid.dart';
 import '../../game_core/domain/models/game_config.dart';
-import '../domain/models/build_slot.dart';
 import '../domain/models/terrain_map.dart';
 import '../domain/repos/terrain_repository.dart';
 
-/// Builds the mountain-pass map: a zig-zagging path carved through the peaks,
-/// with build pads procedurally placed alongside each path segment.
+/// Builds the mountain terrain: a grid of impassable peaks scattered across
+/// the arena (with a guaranteed-clear route between spawn and base), leaving
+/// every other cell open for the player to build on.
 class TerrainRepositoryImpl implements TerrainRepository {
   static const arenaWidth = GameConfig.arenaWidth;
   static const arenaHeight = GameConfig.arenaHeight;
-
-  static const List<PathPoint> _waypoints = [
-    PathPoint(-60, 620),
-    PathPoint(260, 620),
-    PathPoint(260, 420),
-    PathPoint(620, 420),
-    PathPoint(620, 180),
-    PathPoint(980, 180),
-    PathPoint(980, 560),
-    PathPoint(1340, 560),
-  ];
+  static const cellSize = 40.0;
 
   @override
   TerrainMap loadTerrain() {
+    final cols = (arenaWidth / cellSize).round();
+    final rows = (arenaHeight / cellSize).round();
+    final grid = Grid(cols: cols, rows: rows, cellSize: cellSize);
+
+    final spawnCell = Point(0, rows ~/ 2);
+    final baseCell = Point(cols - 1, rows ~/ 2);
+
+    _scatterMountains(grid, spawnCell, baseCell);
+    _ensureReachable(grid, spawnCell, baseCell);
+
     return TerrainMap(
       arenaWidth: arenaWidth,
       arenaHeight: arenaHeight,
-      waypoints: _waypoints,
-      buildSlots: _computeBuildSlots(),
+      grid: grid,
+      spawnPoint: PathPoint(
+        grid.cellCenter(spawnCell).x,
+        grid.cellCenter(spawnCell).y,
+      ),
+      basePoint: PathPoint(
+        grid.cellCenter(baseCell).x,
+        grid.cellCenter(baseCell).y,
+      ),
     );
   }
 
-  List<BuildSlot> _computeBuildSlots() {
-    const slotSize = 64.0;
-    const offset = 130.0;
-    const margin = 50.0;
-    const minSeparation = 100.0;
+  void _scatterMountains(Grid grid, Point<int> spawnCell, Point<int> baseCell) {
+    final rnd = Random(1337);
+    const clusterCount = 16;
+    const protectedRadius = 2;
 
-    final centers = <Point<double>>[];
-    var id = 0;
-    final slots = <BuildSlot>[];
+    for (var c = 0; c < clusterCount; c++) {
+      final cx = rnd.nextInt(grid.cols);
+      final cy = rnd.nextInt(grid.rows);
+      final blobRadius = 1 + rnd.nextInt(3);
 
-    for (var i = 0; i < _waypoints.length - 1; i++) {
-      final a = _waypoints[i];
-      final b = _waypoints[i + 1];
-      final dx = b.x - a.x;
-      final dy = b.y - a.y;
-      final length = sqrt(dx * dx + dy * dy);
-      if (length < 40) continue;
+      for (var dy = -blobRadius; dy <= blobRadius; dy++) {
+        for (var dx = -blobRadius; dx <= blobRadius; dx++) {
+          if (dx * dx + dy * dy > blobRadius * blobRadius) continue;
+          final x = cx + dx;
+          final y = cy + dy;
+          if (!grid.inBounds(x, y)) continue;
 
-      final dirX = dx / length;
-      final dirY = dy / length;
-      // Perpendicular direction.
-      final perpX = -dirY;
-      final perpY = dirX;
-
-      final midX = a.x + dirX * (length / 2);
-      final midY = a.y + dirY * (length / 2);
-
-      for (final side in [-1.0, 1.0]) {
-        final cx = midX + perpX * offset * side;
-        final cy = midY + perpY * offset * side;
-
-        final withinArena = cx >= margin &&
-            cx <= arenaWidth - margin &&
-            cy >= margin &&
-            cy <= arenaHeight - margin;
-        if (!withinArena) continue;
-
-        final tooClose = centers.any(
-          (p) => sqrt(pow(p.x - cx, 2) + pow(p.y - cy, 2)) < minSeparation,
-        );
-        if (tooClose) continue;
-
-        centers.add(Point(cx, cy));
-        slots.add(BuildSlot(id: id++, x: cx, y: cy, size: slotSize));
+          if (_withinRadius(x, y, spawnCell, protectedRadius) ||
+              _withinRadius(x, y, baseCell, protectedRadius)) {
+            continue;
+          }
+          if (rnd.nextDouble() < 0.8) grid.setMountain(x, y, true);
+        }
       }
     }
-    return slots;
+  }
+
+  bool _withinRadius(int x, int y, Point<int> center, int radius) {
+    final dx = x - center.x;
+    final dy = y - center.y;
+    return dx * dx + dy * dy <= radius * radius;
+  }
+
+  /// Guarantees a path exists by carving a straight horizontal corridor
+  /// through the spawn row if the random scatter sealed it off.
+  void _ensureReachable(Grid grid, Point<int> spawnCell, Point<int> baseCell) {
+    if (grid.isReachable(spawnCell, baseCell)) return;
+    final row = spawnCell.y;
+    for (var col = 0; col < grid.cols; col++) {
+      grid.setMountain(col, row, false);
+    }
   }
 }
+
