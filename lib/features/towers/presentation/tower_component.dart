@@ -123,13 +123,13 @@ abstract class TowerComponent extends PositionComponent
   /// through [effectiveDamage]/[effectiveRange] instead of the raw blueprint.
   double get _upgradeMultiplier => pow(1.25, upgradeLevel).toDouble();
 
-  /// Spawns the appropriate projectile/effect toward [target].
-  void fire(EnemyComponent target);
-
   /// Forcibly destroys this tower outside of normal combat - used when the
   /// support building that allowed it to be built (see
   /// `BoomspireGame.enforceSupportedTowerLimits`) is itself destroyed/sold.
   void destroyBySupportLoss() => _destroy();
+
+  /// Spawns the appropriate projectile/effect toward [target].
+  void fire(EnemyComponent target);
 
   @override
   Future<void> onLoad() async {

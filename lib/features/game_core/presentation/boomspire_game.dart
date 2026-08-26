@@ -42,8 +42,13 @@ import 'home_base_component.dart';
 /// game, owns the shared "build mode" selection, and mediates tower
 /// placement/repair taps coming from [GameWorld].
 class BoomspireGame extends FlameGame<GameWorld> {
-  final TerrainRepository terrainRepository;
+  /// Caps how many independent shake *impulses* can land in quick
+  /// succession (see [shakeCamera]) - once the cap is hit within
+  /// [_shakeEventWindow], further triggers just extend/strengthen the
+  /// current shake instead of layering another one on top.
+  static const _maxConcurrentShakeEvents = 3;
 
+  final TerrainRepository terrainRepository;
   final TowerRepository towerRepository;
   final EnemyRepository enemyRepository;
   final WaveRepository waveRepository;
@@ -52,6 +57,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
   final AiDirectorRepository aiDirector;
   final GameScene scene;
   final GameDifficulty difficulty;
+
   late TerrainMap terrainMap;
 
   /// Whether the Tech Lab has been built at least once this run - required
@@ -59,9 +65,9 @@ class BoomspireGame extends FlameGame<GameWorld> {
   /// even if the lab is later destroyed/sold, so already-built lasers never
   /// get retroactively locked out.
   bool hasTechLab = false;
-
   final ValueNotifier<TowerType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
+
   final ValueNotifier<String> commanderNote = ValueNotifier('');
 
   /// A build cell awaiting confirmation - set by the first arena tap while a
@@ -76,17 +82,11 @@ class BoomspireGame extends FlameGame<GameWorld> {
 
   /// What the enemy AI director wants enemies to prioritize this wave.
   FocusHint enemyFocusHint = FocusHint.nearestTower;
-
   final Random _shakeRandom = Random();
   double _shakeDuration = 0;
   double _shakeMaxDuration = 0;
-  double _shakePower = 0;
 
-  /// Caps how many independent shake *impulses* can land in quick
-  /// succession (see [shakeCamera]) - once the cap is hit within
-  /// [_shakeEventWindow], further triggers just extend/strengthen the
-  /// current shake instead of layering another one on top.
-  static const _maxConcurrentShakeEvents = 3;
+  double _shakePower = 0;
   int _shakeEventCount = 0;
   double _shakeEventWindow = 0;
 
@@ -108,6 +108,10 @@ class BoomspireGame extends FlameGame<GameWorld> {
          ),
        );
 
+  /// How many active Command Posts are standing - each one supports one
+  /// Artillery Bunker (see [buildLimitFor]).
+  int get activeCommandPostCount => towerCountFor(TowerType.commandPost);
+
   @override
   Color backgroundColor() => const Color(0xFF14181d);
 
@@ -115,32 +119,6 @@ class BoomspireGame extends FlameGame<GameWorld> {
   /// [onExitToMenu]) - used by the game-over/victory "change map" actions
   /// and the in-battle exit button.
   void backToLevelSelect() => onExitToMenu?.call();
-
-  /// Attaches the anti-rocket point-defense module to the currently-selected
-  /// tower, if affordable and not already installed.
-  void buyAntiRocketForSelectedTower() {
-    final tower = selectedTower.value;
-    if (tower == null || tower.antiRocket) return;
-    if (!gameState.spendGold(kAntiRocketCost)) return;
-    tower.antiRocket = true;
-    audioRepository.play(SfxType.buildPlace, volume: 0.6);
-  }
-
-  /// How many of [type] are currently standing on the battlefield.
-  int towerCountFor(TowerType type) =>
-      world.activeTowers.where((t) => t.blueprint.type == type).length;
-
-  /// How many active Command Posts are standing - each one supports one
-  /// Artillery Bunker (see [buildLimitFor]).
-  int get activeCommandPostCount => towerCountFor(TowerType.commandPost);
-
-  /// Max simultaneous count allowed for [type] at the current difficulty,
-  /// or null if unlimited.
-  int? buildLimitFor(TowerType type) => switch (type) {
-    TowerType.laser => difficulty.laserTowerLimit,
-    TowerType.artilleryBunker => activeCommandPostCount,
-    _ => null,
-  };
 
   /// Why [type] can't be built right now, or null if it's buildable (gold
   /// permitting) - shown in the build menu's lock overlay/tooltip.
@@ -154,6 +132,24 @@ class BoomspireGame extends FlameGame<GameWorld> {
       return 'Max $limit built';
     }
     return null;
+  }
+
+  /// Max simultaneous count allowed for [type] at the current difficulty,
+  /// or null if unlimited.
+  int? buildLimitFor(TowerType type) => switch (type) {
+    TowerType.laser => difficulty.laserTowerLimit,
+    TowerType.artilleryBunker => activeCommandPostCount,
+    _ => null,
+  };
+
+  /// Attaches the anti-rocket point-defense module to the currently-selected
+  /// tower, if affordable and not already installed.
+  void buyAntiRocketForSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null || tower.antiRocket) return;
+    if (!gameState.spendGold(kAntiRocketCost)) return;
+    tower.antiRocket = true;
+    audioRepository.play(SfxType.buildPlace, volume: 0.6);
   }
 
   bool canBuildTower(TowerType type) => buildBlockReason(type) == null;
@@ -308,6 +304,10 @@ class BoomspireGame extends FlameGame<GameWorld> {
     _shakeEventWindow = 0.6;
   }
 
+  /// How many of [type] are currently standing on the battlefield.
+  int towerCountFor(TowerType type) =>
+      world.activeTowers.where((t) => t.blueprint.type == type).length;
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -431,14 +431,6 @@ class BoomspireGame extends FlameGame<GameWorld> {
     };
   }
 
-  void _repairTower(TowerComponent tower) {
-    final cost = tower.repairCost;
-    if (cost <= 0) return;
-    if (!gameState.spendGold(cost)) return;
-    tower.repair(tower.maxHp);
-    audioRepository.play(SfxType.towerRepair, volume: 0.7);
-  }
-
   /// Whether [cell] is empty ground that isn't a spawn point or the home
   /// base - used both for the tap-to-preview ghost and the actual build.
   bool _isBuildableCell(Point<int> cell) {
@@ -452,6 +444,14 @@ class BoomspireGame extends FlameGame<GameWorld> {
       Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
     );
     return !spawnCells.contains(cell) && cell != baseCell;
+  }
+
+  void _repairTower(TowerComponent tower) {
+    final cost = tower.repairCost;
+    if (cost <= 0) return;
+    if (!gameState.spendGold(cost)) return;
+    tower.repair(tower.maxHp);
+    audioRepository.play(SfxType.towerRepair, volume: 0.7);
   }
 
   TowerComponent? _towerAt(Vector2 point) {

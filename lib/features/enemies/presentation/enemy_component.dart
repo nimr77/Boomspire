@@ -68,6 +68,13 @@ abstract class EnemyComponent extends PositionComponent
 
   Future<Sprite> buildSprite();
 
+  /// Called by a tower every frame it has this enemy locked as its current
+  /// target - lights this enemy up fully in the tower's accent color for a
+  /// brief moment so the player can always tell what's being shot at right
+  /// now. Retriggered continuously while targeted, so it stays lit and only
+  /// fades once no tower is aiming at it anymore.
+  void markTargeted(Color color) => _targetHighlight.trigger(color);
+
   @override
   Future<void> onLoad() async {
     final spawnPoints = game.terrainMap.spawnPoints;
@@ -100,13 +107,6 @@ abstract class EnemyComponent extends PositionComponent
       game.audioRepository.play(SfxType.vehicleEngine, volume: 0.5);
     }
   }
-
-  /// Called by a tower every frame it has this enemy locked as its current
-  /// target - lights this enemy up fully in the tower's accent color for a
-  /// brief moment so the player can always tell what's being shot at right
-  /// now. Retriggered continuously while targeted, so it stays lit and only
-  /// fades once no tower is aiming at it anymore.
-  void markTargeted(Color color) => _targetHighlight.trigger(color);
 
   @override
   void render(Canvas canvas) {
@@ -421,17 +421,6 @@ class _TargetHighlightComponent extends PositionComponent {
   Color _color = const Color(0x00000000);
   double _timer = 0;
 
-  void trigger(Color color) {
-    _color = color;
-    _timer = _fadeDuration;
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    if (_timer > 0) _timer = (_timer - dt).clamp(0, _fadeDuration);
-  }
-
   @override
   void render(Canvas canvas) {
     if (_timer <= 0) return;
@@ -443,5 +432,16 @@ class _TargetHighlightComponent extends PositionComponent {
         ..color = _color.withValues(alpha: 0.7 * ratio)
         ..blendMode = BlendMode.srcATop,
     );
+  }
+
+  void trigger(Color color) {
+    _color = color;
+    _timer = _fadeDuration;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_timer > 0) _timer = (_timer - dt).clamp(0, _fadeDuration);
   }
 }

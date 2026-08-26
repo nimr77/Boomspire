@@ -37,15 +37,6 @@ class GhostPlacementComponent extends PositionComponent
   }
 
   @override
-  void update(double dt) {
-    super.update(dt);
-    _pulsePhase += dt * 3;
-    final cell = game.pendingPlacement.value;
-    final visible = cell != null && game.selectedTowerType.value != null;
-    _hint.text = visible ? 'Tap again to build' : '';
-  }
-
-  @override
   void render(Canvas canvas) {
     final type = game.selectedTowerType.value;
     final cell = game.pendingPlacement.value;
@@ -96,5 +87,14 @@ class GhostPlacementComponent extends PositionComponent
         ..strokeWidth = 1.5 + pulse
         ..color = accent.withValues(alpha: 0.4 + pulse * 0.3),
     );
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _pulsePhase += dt * 3;
+    final cell = game.pendingPlacement.value;
+    final visible = cell != null && game.selectedTowerType.value != null;
+    _hint.text = visible ? 'Tap again to build' : '';
   }
 }
