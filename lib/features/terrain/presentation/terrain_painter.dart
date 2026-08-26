@@ -131,6 +131,82 @@ class TerrainPainter {
     }
   }
 
+  /// Live per-frame animated overlay for a river: a scrolling specular
+  /// dash streak plus ripple arcs that both drift downstream as [phase]
+  /// (elapsed seconds) advances, on top of the static [_paintRiverBed].
+  static void paintRiverFlow(
+    ui.Canvas canvas,
+    ui.Path path,
+    double cellSize,
+    double phase,
+  ) {
+    final metric = path.computeMetrics().firstOrNull;
+    if (metric == null) return;
+    final length = metric.length;
+    if (length <= 0) return;
+
+    const dashLen = 30.0;
+    const gapLen = 26.0;
+    const period = dashLen + gapLen;
+    final flowOffset = (phase * 70) % period;
+    final highlightPaint = ui.Paint()
+      ..style = ui.PaintingStyle.stroke
+      ..strokeCap = ui.StrokeCap.round
+      ..strokeJoin = ui.StrokeJoin.round
+      ..strokeWidth = cellSize * 0.32
+      ..color = const ui.Color(0xFFbfeeff).withValues(alpha: 0.45);
+    for (var dist = -flowOffset; dist < length; dist += period) {
+      final start = dist.clamp(0.0, length);
+      final end = (dist + dashLen).clamp(0.0, length);
+      if (end <= start) continue;
+      final sub = metric.extractPath(start, end).shift(const ui.Offset(-4, -3));
+      canvas.drawPath(sub, highlightPaint);
+    }
+
+    final rippleCount = (length / (cellSize * 1.4)).floor().clamp(0, 200);
+    if (rippleCount == 0) return;
+    final rnd = Random(7);
+    final ripplePaint = ui.Paint()
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = const ui.Color(0xFFe8fbff).withValues(alpha: 0.3);
+    final step = length / rippleCount;
+    for (var i = 0; i < rippleCount; i++) {
+      final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
+      final dist = ((i + 0.5) * step + phase * 40) % length;
+      final tangent = metric.getTangentForOffset(dist);
+      if (tangent == null) continue;
+      final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
+      final center = tangent.position + normal * jitter;
+      canvas.drawArc(
+        ui.Rect.fromCenter(
+          center: center,
+          width: cellSize * 0.5,
+          height: cellSize * 0.22,
+        ),
+        0,
+        pi,
+        false,
+        ripplePaint,
+      );
+    }
+  }
+
+  /// Centerline points for the river obstacle in [terrainMap], smoothed
+  /// into a [ui.Path] - null if this map has no river (e.g. desert biome,
+  /// which uses a dry valley instead). Used both to bake the static bed
+  /// (see [_paintRiverBed]) and to drive the live [paintRiverFlow] overlay.
+  static ui.Path? riverPath(TerrainMap terrainMap, double canvasHeight) {
+    final points = _obstaclePathPoints(
+      terrainMap.grid,
+      terrainMap.obstacleKinds,
+      ObstacleKind.river,
+      canvasHeight,
+    );
+    if (points.length < 2) return null;
+    return _smoothPath(points);
+  }
+
   /// One centerline point per row that contains [kind] cells (averaging
   /// their column if a row has more than one, e.g. a 2-wide crossing), plus
   /// synthetic points extending straight to the top/bottom canvas edges so
@@ -336,84 +412,6 @@ class TerrainPainter {
           const [0.0, 0.25, 0.5, 0.75, 1.0],
         ),
     );
-  }
-
-  /// Live per-frame animated overlay for a river: a scrolling specular
-  /// dash streak plus ripple arcs that both drift downstream as [phase]
-  /// (elapsed seconds) advances, on top of the static [_paintRiverBed].
-  static void paintRiverFlow(
-    ui.Canvas canvas,
-    ui.Path path,
-    double cellSize,
-    double phase,
-  ) {
-    final metric = path.computeMetrics().firstOrNull;
-    if (metric == null) return;
-    final length = metric.length;
-    if (length <= 0) return;
-
-    const dashLen = 30.0;
-    const gapLen = 26.0;
-    const period = dashLen + gapLen;
-    final flowOffset = (phase * 70) % period;
-    final highlightPaint = ui.Paint()
-      ..style = ui.PaintingStyle.stroke
-      ..strokeCap = ui.StrokeCap.round
-      ..strokeJoin = ui.StrokeJoin.round
-      ..strokeWidth = cellSize * 0.32
-      ..color = const ui.Color(0xFFbfeeff).withValues(alpha: 0.45);
-    for (var dist = -flowOffset; dist < length; dist += period) {
-      final start = dist.clamp(0.0, length);
-      final end = (dist + dashLen).clamp(0.0, length);
-      if (end <= start) continue;
-      final sub = metric
-          .extractPath(start, end)
-          .shift(const ui.Offset(-4, -3));
-      canvas.drawPath(sub, highlightPaint);
-    }
-
-    final rippleCount = (length / (cellSize * 1.4)).floor().clamp(0, 200);
-    if (rippleCount == 0) return;
-    final rnd = Random(7);
-    final ripplePaint = ui.Paint()
-      ..style = ui.PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = const ui.Color(0xFFe8fbff).withValues(alpha: 0.3);
-    final step = length / rippleCount;
-    for (var i = 0; i < rippleCount; i++) {
-      final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
-      final dist = ((i + 0.5) * step + phase * 40) % length;
-      final tangent = metric.getTangentForOffset(dist);
-      if (tangent == null) continue;
-      final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
-      final center = tangent.position + normal * jitter;
-      canvas.drawArc(
-        ui.Rect.fromCenter(
-          center: center,
-          width: cellSize * 0.5,
-          height: cellSize * 0.22,
-        ),
-        0,
-        pi,
-        false,
-        ripplePaint,
-      );
-    }
-  }
-
-  /// Centerline points for the river obstacle in [terrainMap], smoothed
-  /// into a [ui.Path] - null if this map has no river (e.g. desert biome,
-  /// which uses a dry valley instead). Used both to bake the static bed
-  /// (see [_paintRiverBed]) and to drive the live [paintRiverFlow] overlay.
-  static ui.Path? riverPath(TerrainMap terrainMap, double canvasHeight) {
-    final points = _obstaclePathPoints(
-      terrainMap.grid,
-      terrainMap.obstacleKinds,
-      ObstacleKind.river,
-      canvasHeight,
-    );
-    if (points.length < 2) return null;
-    return _smoothPath(points);
   }
 
   static void _paintTree(

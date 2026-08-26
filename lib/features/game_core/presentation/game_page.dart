@@ -128,9 +128,7 @@ class _GamePageState extends State<GamePage> {
       terrainRepository: getIt<TerrainRepository>(),
       towerRepository: getIt<TowerRepository>(),
       enemyRepository: getIt<EnemyRepository>(),
-      waveRepository: getIt<WaveRepository>(
-        param1: widget.scene.waveCount,
-      ),
+      waveRepository: getIt<WaveRepository>(param1: widget.scene.waveCount),
       audioRepository: getIt<AudioRepository>(),
       gameState: _gameState,
       aiDirector: getIt<AiDirectorRepository>(),

@@ -35,12 +35,12 @@ import 'floating_text_component.dart';
 abstract class EnemyComponent extends PositionComponent
     with HasGameReference<CircuitDefenseGame>
     implements Targetable {
-  final EnemyBlueprint blueprint;
-
   /// Enemies within this squared distance of each other push apart a bit
   /// (see [_steer]) instead of overlapping/stacking while converging on the
   /// same path or base.
   static const _separationRadiusSq = 26.0 * 26.0;
+
+  final EnemyBlueprint blueprint;
 
   double health;
   List<Vector2> _path = [];
@@ -280,27 +280,6 @@ abstract class EnemyComponent extends PositionComponent
     }
   }
 
-  /// Blends the raw path/beeline direction with a short-range separation
-  /// push away from nearby enemies of the same domain (ground vs air don't
-  /// need to avoid each other) - without this, enemies converging on the
-  /// same waypoint/base pile up directly on top of one another instead of
-  /// flowing around each other like a real crowd would.
-  Vector2 _steer(Vector2 dir) {
-    final separation = Vector2.zero();
-    for (final other in game.world.activeEnemies) {
-      if (identical(other, this)) continue;
-      if (other.blueprint.isFlying != blueprint.isFlying) continue;
-      final delta = position - other.position;
-      final distSq = delta.length2;
-      if (distSq > 0 && distSq < _separationRadiusSq) {
-        separation.add(delta / distSq);
-      }
-    }
-    if (separation.isZero()) return dir;
-    final blended = dir + separation.normalized() * 0.5;
-    return blended.isZero() ? dir : blended.normalized();
-  }
-
   bool _maybeEngageTower(double dt) {
     if (blueprint.attackDamage <= 0) return false;
     // When the director orders a base rush, this unit ignores defenses
@@ -393,5 +372,26 @@ abstract class EnemyComponent extends PositionComponent
       );
     }
     return true;
+  }
+
+  /// Blends the raw path/beeline direction with a short-range separation
+  /// push away from nearby enemies of the same domain (ground vs air don't
+  /// need to avoid each other) - without this, enemies converging on the
+  /// same waypoint/base pile up directly on top of one another instead of
+  /// flowing around each other like a real crowd would.
+  Vector2 _steer(Vector2 dir) {
+    final separation = Vector2.zero();
+    for (final other in game.world.activeEnemies) {
+      if (identical(other, this)) continue;
+      if (other.blueprint.isFlying != blueprint.isFlying) continue;
+      final delta = position - other.position;
+      final distSq = delta.length2;
+      if (distSq > 0 && distSq < _separationRadiusSq) {
+        separation.add(delta / distSq);
+      }
+    }
+    if (separation.isZero()) return dir;
+    final blended = dir + separation.normalized() * 0.5;
+    return blended.isZero() ? dir : blended.normalized();
   }
 }
