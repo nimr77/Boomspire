@@ -74,42 +74,13 @@ class TerrainRepositoryImpl implements TerrainRepository {
     );
   }
 
-  Point<int> _baseCell(HomeLayout layout, int cols, int rows) => switch (layout) {
-    HomeLayout.eastEdge => Point(cols - 1, rows ~/ 2),
-    HomeLayout.center => Point(cols ~/ 2, rows ~/ 2),
-    HomeLayout.northEastCorner => Point(cols - 2, 1),
-    HomeLayout.southWestCorner => Point(1, rows - 2),
-  };
-
-  /// Candidate perimeter approach points (west/east/north/south edge
-  /// midpoints), farthest from the base first, excluding the base itself.
-  List<Point<int>> _spawnCells(
-    SpawnLayout layout,
-    Point<int> base,
-    int cols,
-    int rows,
-  ) {
-    final candidates = <Point<int>>[
-      Point(0, rows ~/ 2), // west
-      Point(cols - 1, rows ~/ 2), // east
-      Point(cols ~/ 2, 0), // north
-      Point(cols ~/ 2, rows - 1), // south
-    ]..removeWhere((p) => p == base);
-
-    candidates.sort((a, b) => _distSq(b, base).compareTo(_distSq(a, base)));
-
-    return switch (layout) {
-      SpawnLayout.single => [candidates.first],
-      SpawnLayout.twoSided => candidates.take(2).toList(),
-      SpawnLayout.surround => candidates,
-    };
-  }
-
-  int _distSq(Point<int> a, Point<int> b) {
-    final dx = a.x - b.x;
-    final dy = a.y - b.y;
-    return dx * dx + dy * dy;
-  }
+  Point<int> _baseCell(HomeLayout layout, int cols, int rows) =>
+      switch (layout) {
+        HomeLayout.eastEdge => Point(cols - 1, rows ~/ 2),
+        HomeLayout.center => Point(cols ~/ 2, rows ~/ 2),
+        HomeLayout.northEastCorner => Point(cols - 2, 1),
+        HomeLayout.southWestCorner => Point(1, rows - 2),
+      };
 
   /// Carves a winding impassable river/valley from the top edge to the
   /// bottom edge, forcing the player to route towers around a natural
@@ -136,6 +107,12 @@ class TerrainRepositoryImpl implements TerrainRepository {
       }
       col = (col + rnd.nextInt(3) - 1).clamp(2, grid.cols - 3);
     }
+  }
+
+  int _distSq(Point<int> a, Point<int> b) {
+    final dx = a.x - b.x;
+    final dy = a.y - b.y;
+    return dx * dx + dy * dy;
   }
 
   /// Guarantees a path exists from every spawn point to the base, carving a
@@ -205,6 +182,30 @@ class TerrainRepositoryImpl implements TerrainRepository {
         }
       }
     }
+  }
+
+  /// Candidate perimeter approach points (west/east/north/south edge
+  /// midpoints), farthest from the base first, excluding the base itself.
+  List<Point<int>> _spawnCells(
+    SpawnLayout layout,
+    Point<int> base,
+    int cols,
+    int rows,
+  ) {
+    final candidates = <Point<int>>[
+      Point(0, rows ~/ 2), // west
+      Point(cols - 1, rows ~/ 2), // east
+      Point(cols ~/ 2, 0), // north
+      Point(cols ~/ 2, rows - 1), // south
+    ]..removeWhere((p) => p == base);
+
+    candidates.sort((a, b) => _distSq(b, base).compareTo(_distSq(a, base)));
+
+    return switch (layout) {
+      SpawnLayout.single => [candidates.first],
+      SpawnLayout.twoSided => candidates.take(2).toList(),
+      SpawnLayout.surround => candidates,
+    };
   }
 
   bool _withinRadius(int x, int y, List<Point<int>> centers, int radius) {

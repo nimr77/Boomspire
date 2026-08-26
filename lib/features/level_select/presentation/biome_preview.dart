@@ -10,11 +10,11 @@ import '../../terrain/presentation/terrain_painter.dart';
 /// Live small-scale render of a scene's actual terrain generation (not a
 /// static image) - the same procedural painting used in-game, scaled down.
 class BiomePreview extends StatelessWidget {
+  final GameScene scene;
+
+  final TerrainMap terrainMap;
   BiomePreview({super.key, required this.scene})
     : terrainMap = TerrainRepositoryImpl().loadTerrain(scene: scene);
-
-  final GameScene scene;
-  final TerrainMap terrainMap;
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +23,9 @@ class BiomePreview extends StatelessWidget {
 }
 
 class _BiomeThumbPainter extends CustomPainter {
-  const _BiomeThumbPainter(this.terrainMap);
-
   final TerrainMap terrainMap;
+
+  const _BiomeThumbPainter(this.terrainMap);
 
   @override
   void paint(ui.Canvas canvas, ui.Size size) {

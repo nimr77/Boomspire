@@ -5,8 +5,6 @@ import 'game_scene.dart';
 /// pairs a biome with its own wave count, opening strategy bias, and base
 /// placement/attack-direction layout.
 class GameScenes {
-  const GameScenes._();
-
   static const List<GameScene> all = [
     GameScene(
       id: 'green-line',
@@ -57,4 +55,6 @@ class GameScenes {
       spawnLayout: SpawnLayout.surround,
     ),
   ];
+
+  const GameScenes._();
 }

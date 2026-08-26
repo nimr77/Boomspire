@@ -3,18 +3,6 @@ import 'dart:io';
 
 import 'package:circuit_defense/features/ai_director/domain/models/strategy_directive.dart';
 
-/// Local proxy that lets the game ask Gemini how the enemy AI should command
-/// the next wave, without ever putting the API key in the Flutter client.
-///
-/// Run with:
-///   GEMINI_API_KEY=your-key dart run server/gemini_proxy.dart
-///
-/// If GEMINI_API_KEY is unset, or the Gemini call fails/times out, this
-/// serves a deterministic heuristic directive instead - the game is fully
-/// playable either way.
-const _defaultPort = 8787;
-const _model = 'gemini-2.0-flash';
-
 Future<void> main() async {
   final apiKey =
       Platform.environment['GEMINI_API_KEY'] ?? _loadDotEnv()['GEMINI_API_KEY'];
@@ -29,6 +17,76 @@ Future<void> main() async {
   );
 
   server.listen((request) => _handle(request, apiKey));
+}
+
+/// Local proxy that lets the game ask Gemini how the enemy AI should command
+/// the next wave, without ever putting the API key in the Flutter client.
+///
+/// Run with:
+///   GEMINI_API_KEY=your-key dart run server/gemini_proxy.dart
+///
+/// If GEMINI_API_KEY is unset, or the Gemini call fails/times out, this
+/// serves a deterministic heuristic directive instead - the game is fully
+/// playable either way.
+const _defaultPort = 8787;
+
+const _model = 'gemini-2.0-flash';
+
+Future<StrategyDirective> _askGemini(
+  String apiKey,
+  Map<String, dynamic> snapshot,
+  int waveNumber,
+) async {
+  final prompt =
+      '''
+You are the enemy commander AI in a tower-defense game. Battlefield snapshot (JSON):
+${jsonEncode(snapshot)}
+
+Decide the strategy for wave $waveNumber. Respond with ONLY a JSON object of this exact shape:
+{"aggression": <0..1 float>, "focusHint": "nearestTower"|"weakestTower"|"rushBase", "compositionBias": {"soldier": <float>, "heavySoldier": <float>, "air": <float>}, "commanderNote": "<one short in-character sentence, max 12 words>"}
+
+aggression scales how many enemies spawn and how fast. compositionBias multiplies each enemy type's planned count (1.0 = unchanged, >1 = more of that type). focusHint tells enemies what to prioritize: nearestTower, weakestTower (lowest HP%), or rushBase (mostly ignore towers and run for the base).
+''';
+
+  final uri = Uri.parse(
+    'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent?key=$apiKey',
+  );
+  final client = HttpClient();
+  try {
+    final request = await client
+        .postUrl(uri)
+        .timeout(const Duration(seconds: 8));
+    request.headers.contentType = ContentType.json;
+    request.write(
+      jsonEncode({
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt},
+            ],
+          },
+        ],
+        'generationConfig': {'responseMimeType': 'application/json'},
+      }),
+    );
+    final response = await request.close().timeout(const Duration(seconds: 8));
+    final body = await response.transform(utf8.decoder).join();
+
+    if (response.statusCode != 200) {
+      throw Exception('Gemini HTTP ${response.statusCode}: $body');
+    }
+
+    final data = jsonDecode(body) as Map<String, dynamic>;
+    final candidates = data['candidates'] as List;
+    final text =
+        (candidates.first
+                as Map<String, dynamic>)['content']['parts'][0]['text']
+            as String;
+    final json = jsonDecode(_stripCodeFence(text)) as Map<String, dynamic>;
+    return StrategyDirective.fromJson(json);
+  } finally {
+    client.close();
+  }
 }
 
 Future<void> _handle(HttpRequest request, String? apiKey) async {
@@ -74,70 +132,6 @@ Future<void> _handle(HttpRequest request, String? apiKey) async {
   }
 }
 
-Future<StrategyDirective> _askGemini(
-  String apiKey,
-  Map<String, dynamic> snapshot,
-  int waveNumber,
-) async {
-  final prompt =
-      '''
-You are the enemy commander AI in a tower-defense game. Battlefield snapshot (JSON):
-${jsonEncode(snapshot)}
-
-Decide the strategy for wave $waveNumber. Respond with ONLY a JSON object of this exact shape:
-{"aggression": <0..1 float>, "focusHint": "nearestTower"|"weakestTower"|"rushBase", "compositionBias": {"soldier": <float>, "heavySoldier": <float>, "air": <float>}, "commanderNote": "<one short in-character sentence, max 12 words>"}
-
-aggression scales how many enemies spawn and how fast. compositionBias multiplies each enemy type's planned count (1.0 = unchanged, >1 = more of that type). focusHint tells enemies what to prioritize: nearestTower, weakestTower (lowest HP%), or rushBase (mostly ignore towers and run for the base).
-''';
-
-  final uri = Uri.parse(
-    'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent?key=$apiKey',
-  );
-  final client = HttpClient();
-  try {
-    final request = await client.postUrl(uri).timeout(const Duration(seconds: 8));
-    request.headers.contentType = ContentType.json;
-    request.write(
-      jsonEncode({
-        'contents': [
-          {
-            'parts': [
-              {'text': prompt},
-            ],
-          },
-        ],
-        'generationConfig': {'responseMimeType': 'application/json'},
-      }),
-    );
-    final response = await request.close().timeout(const Duration(seconds: 8));
-    final body = await response.transform(utf8.decoder).join();
-
-    if (response.statusCode != 200) {
-      throw Exception('Gemini HTTP ${response.statusCode}: $body');
-    }
-
-    final data = jsonDecode(body) as Map<String, dynamic>;
-    final candidates = data['candidates'] as List;
-    final text =
-        (candidates.first
-                as Map<String, dynamic>)['content']['parts'][0]['text']
-            as String;
-    final json = jsonDecode(_stripCodeFence(text)) as Map<String, dynamic>;
-    return StrategyDirective.fromJson(json);
-  } finally {
-    client.close();
-  }
-}
-
-String _stripCodeFence(String text) {
-  final trimmed = text.trim();
-  if (!trimmed.startsWith('```')) return trimmed;
-  return trimmed
-      .replaceFirst(RegExp(r'^```[a-zA-Z]*\n?'), '')
-      .replaceFirst(RegExp(r'```$'), '')
-      .trim();
-}
-
 /// Minimal KEY=VALUE parser for `server/.env`, resolved relative to this
 /// script so it works no matter what directory `dart run` is invoked from.
 Map<String, String> _loadDotEnv() {
@@ -160,4 +154,13 @@ Map<String, String> _loadDotEnv() {
     values[trimmed.substring(0, eq).trim()] = value;
   }
   return values;
+}
+
+String _stripCodeFence(String text) {
+  final trimmed = text.trim();
+  if (!trimmed.startsWith('```')) return trimmed;
+  return trimmed
+      .replaceFirst(RegExp(r'^```[a-zA-Z]*\n?'), '')
+      .replaceFirst(RegExp(r'```$'), '')
+      .trim();
 }

@@ -31,9 +31,7 @@ class GameWorld extends World
     );
     for (final spawn in game.terrainMap.spawnPoints) {
       await add(
-        SpawnIndicatorComponent(
-          position: Vector2(spawn.x, spawn.y - 34),
-        ),
+        SpawnIndicatorComponent(position: Vector2(spawn.x, spawn.y - 34)),
       );
     }
     await add(

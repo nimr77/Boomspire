@@ -11,6 +11,9 @@ import '../domain/repos/ai_director_repository.dart';
 /// this falls back to [StrategyDirective.fallback] so the game is always
 /// fully playable without any AI backend.
 class AiDirectorRepositoryImpl implements AiDirectorRepository {
+  final String _proxyUrl;
+
+  final Dio _dio;
   AiDirectorRepositoryImpl({String? proxyUrl, Dio? dio})
     : _proxyUrl =
           proxyUrl ??
@@ -27,9 +30,6 @@ class AiDirectorRepositoryImpl implements AiDirectorRepository {
               receiveTimeout: const Duration(seconds: 3),
             ),
           );
-
-  final String _proxyUrl;
-  final Dio _dio;
 
   @override
   Future<StrategyDirective> planNextWave(BattlefieldSnapshot snapshot) async {
@@ -48,4 +48,3 @@ class AiDirectorRepositoryImpl implements AiDirectorRepository {
     return StrategyDirective.fallback(snapshot.waveNumber);
   }
 }
-

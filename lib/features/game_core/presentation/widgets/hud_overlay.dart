@@ -27,10 +27,7 @@ class HudOverlay extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: ListenableBuilder(
                 listenable: game.gameState,
                 builder: (context, _) {
@@ -85,7 +82,11 @@ class _StatChip extends StatelessWidget {
 
   final Color color;
   final String label;
-  const _StatChip({required this.icon, required this.color, required this.label});
+  const _StatChip({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -114,4 +115,3 @@ class _StatChip extends StatelessWidget {
     );
   }
 }
-

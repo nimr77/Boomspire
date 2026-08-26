@@ -6,11 +6,11 @@ import '../domain/repos/wave_repository.dart';
 /// [totalWaves] the current scene calls for, instead of a fixed hardcoded
 /// round count - so every scene can define its own campaign length.
 class WaveRepositoryImpl implements WaveRepository {
-  WaveRepositoryImpl({required int totalWaves})
-    : totalWaves = totalWaves.clamp(3, 30);
-
   @override
   final int totalWaves;
+
+  WaveRepositoryImpl({required int totalWaves})
+    : totalWaves = totalWaves.clamp(3, 30);
 
   @override
   WaveDefinition waveDefinition(int waveNumber) {

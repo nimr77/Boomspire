@@ -63,8 +63,10 @@ class WaveDirectorComponent extends Component
     final directive = _directive ?? StrategyDirective.fallback(waveNumber);
     // Each scene can add its own opening-strategy pressure on top of
     // whatever the AI director (or its fallback) computed.
-    final aggression = (directive.aggression + game.scene.aggressionBias)
-        .clamp(0.0, 1.0);
+    final aggression = (directive.aggression + game.scene.aggressionBias).clamp(
+      0.0,
+      1.0,
+    );
     game.gameState.setWave(
       waveNumber,
       totalWaves: game.waveRepository.totalWaves,

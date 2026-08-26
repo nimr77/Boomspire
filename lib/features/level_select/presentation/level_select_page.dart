@@ -60,9 +60,9 @@ class LevelSelectPage extends StatelessWidget {
 }
 
 class _SceneCard extends StatelessWidget {
-  const _SceneCard({required this.scene});
-
   final GameScene scene;
+
+  const _SceneCard({required this.scene});
 
   @override
   Widget build(BuildContext context) {
@@ -72,9 +72,8 @@ class _SceneCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => GamePage(scene: scene)),
-          );
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => GamePage(scene: scene)));
         },
         child: Container(
           decoration: BoxDecoration(

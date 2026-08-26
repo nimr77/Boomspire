@@ -23,26 +23,77 @@ import 'package:circuit_defense/features/waves/impl/wave_repository_impl.dart';
 import 'package:flame/game.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// No-op audio - the real impl needs real audio plugins that aren't
-/// available under `flutter test`.
-class _FakeAudioRepository implements AudioRepository {
-  @override
-  void play(SfxType type, {double volume = 1}) {}
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-  @override
-  Future<void> preload() async {}
+  group('build pipeline', () {
+    for (final scene in GameScenes.all) {
+      test(
+        'selecting + tapping an open cell places a tower (${scene.id})',
+        () async {
+          final game = await _bootGame(scene);
+          final openCell = _findOpenCell(game);
+          final startingGold = game.gameState.gold;
+
+          game.selectTowerType(TowerType.machineGun);
+          game.handleArenaTap(game.terrainMap.grid.cellCenter(openCell));
+
+          expect(
+            game.gameState.gold,
+            lessThan(startingGold),
+            reason: 'gold should be spent after a successful build',
+          );
+          expect(game.world.activeTowers, hasLength(1));
+        },
+      );
+    }
+
+    test(
+      'tapping a blocked (mountain/river) cell does not spend gold',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        Point<int>? blockedCell;
+        outer:
+        for (var row = 0; row < grid.rows; row++) {
+          for (var col = 0; col < grid.cols; col++) {
+            if (grid.isBlocked(col, row)) {
+              blockedCell = Point(col, row);
+              break outer;
+            }
+          }
+        }
+        expect(blockedCell, isNotNull);
+
+        final startingGold = game.gameState.gold;
+        game.selectTowerType(TowerType.machineGun);
+        game.handleArenaTap(grid.cellCenter(blockedCell!));
+
+        expect(game.gameState.gold, startingGold);
+        expect(game.world.activeTowers, isEmpty);
+      },
+    );
+  });
+
+  test('every scene generates a terrain where every spawn can reach base', () {
+    for (final scene in GameScenes.all) {
+      final terrain = TerrainRepositoryImpl().loadTerrain(scene: scene);
+      final grid = terrain.grid;
+      final baseCell = grid.worldToCell(
+        Vector2(terrain.basePoint.x, terrain.basePoint.y),
+      );
+      for (final spawnPoint in terrain.spawnPoints) {
+        final spawnCell = grid.worldToCell(Vector2(spawnPoint.x, spawnPoint.y));
+        expect(
+          grid.isReachable(spawnCell, baseCell),
+          isTrue,
+          reason:
+              '${scene.id} terrain must not fully wall off a spawn from base',
+        );
+      }
+    }
+  });
 }
-
-CircuitDefenseGame _newGame(GameScene scene) => CircuitDefenseGame(
-  terrainRepository: TerrainRepositoryImpl(),
-  towerRepository: TowerRepositoryImpl(),
-  enemyRepository: EnemyRepositoryImpl(),
-  waveRepository: WaveRepositoryImpl(totalWaves: scene.waveCount),
-  audioRepository: _FakeAudioRepository(),
-  gameState: GameStateRepositoryImpl(),
-  aiDirector: AiDirectorRepositoryImpl(),
-  scene: scene,
-);
 
 /// Boots a game without pumping a full Flutter widget tree (much faster).
 Future<CircuitDefenseGame> _bootGame(GameScene scene) async {
@@ -79,70 +130,23 @@ Point<int> _findOpenCell(CircuitDefenseGame game) {
   throw StateError('no open cell found');
 }
 
-void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+CircuitDefenseGame _newGame(GameScene scene) => CircuitDefenseGame(
+  terrainRepository: TerrainRepositoryImpl(),
+  towerRepository: TowerRepositoryImpl(),
+  enemyRepository: EnemyRepositoryImpl(),
+  waveRepository: WaveRepositoryImpl(totalWaves: scene.waveCount),
+  audioRepository: _FakeAudioRepository(),
+  gameState: GameStateRepositoryImpl(),
+  aiDirector: AiDirectorRepositoryImpl(),
+  scene: scene,
+);
 
-  group('build pipeline', () {
-    for (final scene in GameScenes.all) {
-      test('selecting + tapping an open cell places a tower (${scene.id})', () async {
-        final game = await _bootGame(scene);
-        final openCell = _findOpenCell(game);
-        final startingGold = game.gameState.gold;
+/// No-op audio - the real impl needs real audio plugins that aren't
+/// available under `flutter test`.
+class _FakeAudioRepository implements AudioRepository {
+  @override
+  void play(SfxType type, {double volume = 1}) {}
 
-        game.selectTowerType(TowerType.machineGun);
-        game.handleArenaTap(game.terrainMap.grid.cellCenter(openCell));
-
-        expect(
-          game.gameState.gold,
-          lessThan(startingGold),
-          reason: 'gold should be spent after a successful build',
-        );
-        expect(game.world.activeTowers, hasLength(1));
-      });
-    }
-
-    test('tapping a blocked (mountain/river) cell does not spend gold', () async {
-      final game = await _bootGame(GameScenes.all.first);
-      final grid = game.terrainMap.grid;
-      Point<int>? blockedCell;
-      outer:
-      for (var row = 0; row < grid.rows; row++) {
-        for (var col = 0; col < grid.cols; col++) {
-          if (grid.isBlocked(col, row)) {
-            blockedCell = Point(col, row);
-            break outer;
-          }
-        }
-      }
-      expect(blockedCell, isNotNull);
-
-      final startingGold = game.gameState.gold;
-      game.selectTowerType(TowerType.machineGun);
-      game.handleArenaTap(grid.cellCenter(blockedCell!));
-
-      expect(game.gameState.gold, startingGold);
-      expect(game.world.activeTowers, isEmpty);
-    });
-  });
-
-  test('every scene generates a terrain where every spawn can reach base', () {
-    for (final scene in GameScenes.all) {
-      final terrain = TerrainRepositoryImpl().loadTerrain(scene: scene);
-      final grid = terrain.grid;
-      final baseCell = grid.worldToCell(
-        Vector2(terrain.basePoint.x, terrain.basePoint.y),
-      );
-      for (final spawnPoint in terrain.spawnPoints) {
-        final spawnCell = grid.worldToCell(
-          Vector2(spawnPoint.x, spawnPoint.y),
-        );
-        expect(
-          grid.isReachable(spawnCell, baseCell),
-          isTrue,
-          reason:
-              '${scene.id} terrain must not fully wall off a spawn from base',
-        );
-      }
-    }
-  });
+  @override
+  Future<void> preload() async {}
 }

@@ -1,26 +1,20 @@
-/// Which towers enemies should prioritize this wave, as decided by the AI
-/// director (or the local fallback heuristic).
-enum FocusHint { nearestTower, weakestTower, rushBase }
-
 FocusHint focusHintFromName(String? name) => switch (name) {
   'weakestTower' => FocusHint.weakestTower,
   'rushBase' => FocusHint.rushBase,
   _ => FocusHint.nearestTower,
 };
 
+/// Which towers enemies should prioritize this wave, as decided by the AI
+/// director (or the local fallback heuristic).
+enum FocusHint { nearestTower, weakestTower, rushBase }
+
 /// High-level strategy for the upcoming wave: how aggressive/large the
 /// spawn should be, which enemy types to lean into, and what enemies should
 /// prioritize attacking.
 class StrategyDirective {
-  const StrategyDirective({
-    required this.aggression,
-    required this.focusHint,
-    required this.compositionBias,
-    this.commanderNote = '',
-  });
-
   /// 0 (passive/trickle) to 1 (maximum pressure).
   final double aggression;
+
   final FocusHint focusHint;
 
   /// Per-EnemyType-name spawn count multiplier, e.g. {"air": 1.5}.
@@ -28,6 +22,13 @@ class StrategyDirective {
 
   /// Optional flavor text from the AI commander, shown in the HUD.
   final String commanderNote;
+
+  const StrategyDirective({
+    required this.aggression,
+    required this.focusHint,
+    required this.compositionBias,
+    this.commanderNote = '',
+  });
 
   /// Local heuristic used when Gemini is unreachable/unconfigured, so the
   /// game is always fully playable offline.
