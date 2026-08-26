@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import '../../ai_director/impl/ai_director_repository_impl.dart';
 import '../../audio/impl/audio_repository_impl.dart';
 import '../../enemies/impl/enemy_repository_impl.dart';
-import '../../terrain/domain/models/biome.dart';
 import '../../terrain/impl/terrain_repository_impl.dart';
 import '../../towers/impl/tower_repository_impl.dart';
 import '../../waves/impl/wave_repository_impl.dart';
+import '../domain/models/game_scene.dart';
 import '../domain/models/game_status.dart';
 import '../impl/game_state_repository_impl.dart';
 import 'circuit_defense_game.dart';
@@ -18,9 +18,9 @@ import 'widgets/victory_overlay.dart';
 /// Hosts the [GameWidget] and keeps its Flutter overlays (HUD / game-over /
 /// victory) in sync with the game's [GameStatus].
 class GamePage extends StatefulWidget {
-  final Biome biome;
+  final GameScene scene;
 
-  const GamePage({super.key, required this.biome});
+  const GamePage({super.key, required this.scene});
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -34,14 +34,24 @@ class _GamePageState extends State<GamePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E14),
-      body: GameWidget<CircuitDefenseGame>(
-        game: _game,
-        overlayBuilderMap: {
-          'hud': (context, game) => HudOverlay(game: game),
-          'gameOver': (context, game) => GameOverOverlay(game: game),
-          'victory': (context, game) => VictoryOverlay(game: game),
-        },
-        initialActiveOverlays: const ['hud'],
+      // The command bar is a normal sibling widget (not a Flame overlay) so
+      // the GameWidget above it is only ever given the remaining screen
+      // space - the arena is letterboxed inside that shrunk area, so
+      // nothing in it (including the home base, which can be placed
+      // anywhere) ever ends up rendered underneath the bar.
+      body: Column(
+        children: [
+          Expanded(
+            child: GameWidget<CircuitDefenseGame>(
+              game: _game,
+              overlayBuilderMap: {
+                'gameOver': (context, game) => GameOverOverlay(game: game),
+                'victory': (context, game) => VictoryOverlay(game: game),
+              },
+            ),
+          ),
+          HudOverlay(game: _game),
+        ],
       ),
     );
   }
@@ -60,11 +70,11 @@ class _GamePageState extends State<GamePage> {
       terrainRepository: TerrainRepositoryImpl(),
       towerRepository: TowerRepositoryImpl(),
       enemyRepository: EnemyRepositoryImpl(),
-      waveRepository: WaveRepositoryImpl(),
+      waveRepository: WaveRepositoryImpl(totalWaves: widget.scene.waveCount),
       audioRepository: AudioRepositoryImpl(),
       gameState: _gameState,
       aiDirector: AiDirectorRepositoryImpl(),
-      biome: widget.biome,
+      scene: widget.scene,
     );
     _gameState.addListener(_syncOverlays);
   }

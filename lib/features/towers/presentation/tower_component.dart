@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 
 import '../../../core/combat/targetable.dart';
+import '../../../core/rendering/model_loader.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/fire_pulse_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
@@ -57,12 +58,19 @@ abstract class TowerComponent extends PositionComponent
     col = cell.x;
     row = cell.y;
 
-    final baseSprite = SpriteComponent(
-      sprite: await TowerSpriteFactory.base(blueprint.type),
+    final baseSprite = await ModelLoader.loadOrFallback(
+      key: 'tower_${blueprint.type.name}',
       size: size,
-      anchor: Anchor.center,
-      position: size / 2,
+      fallback: () async => SpriteComponent(
+        sprite: await TowerSpriteFactory.base(blueprint.type),
+        size: size,
+        anchor: Anchor.center,
+        position: size / 2,
+      ),
     );
+    baseSprite
+      ..anchor = Anchor.center
+      ..position = size / 2;
     await add(baseSprite);
 
     turret = PositionComponent(anchor: Anchor.center, position: size / 2)

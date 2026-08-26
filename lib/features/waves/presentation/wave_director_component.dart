@@ -61,6 +61,10 @@ class WaveDirectorComponent extends Component
   void _beginWave(int waveNumber) {
     final def = game.waveRepository.waveDefinition(waveNumber);
     final directive = _directive ?? StrategyDirective.fallback(waveNumber);
+    // Each scene can add its own opening-strategy pressure on top of
+    // whatever the AI director (or its fallback) computed.
+    final aggression = (directive.aggression + game.scene.aggressionBias)
+        .clamp(0.0, 1.0);
     game.gameState.setWave(
       waveNumber,
       totalWaves: game.waveRepository.totalWaves,
@@ -73,14 +77,13 @@ class WaveDirectorComponent extends Component
       ..addAll(
         def.spawns.map((e) {
           final bias = directive.compositionBias[e.type.name] ?? 1.0;
-          final scaledCount =
-              (e.count * (1 + directive.aggression * 0.35) * bias)
-                  .round()
-                  .clamp(1, 60);
+          final scaledCount = (e.count * (1 + aggression * 0.35) * bias)
+              .round()
+              .clamp(1, 60);
           return _ScheduledSpawn(
             type: e.type,
             remaining: scaledCount,
-            interval: e.interval / (1 + directive.aggression * 0.2),
+            interval: e.interval / (1 + aggression * 0.2),
             timer: e.startDelay,
           );
         }),

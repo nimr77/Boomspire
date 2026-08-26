@@ -12,9 +12,10 @@ import 'package:circuit_defense/features/ai_director/impl/ai_director_repository
 import 'package:circuit_defense/features/audio/domain/models/sfx_type.dart';
 import 'package:circuit_defense/features/audio/domain/repos/audio_repository.dart';
 import 'package:circuit_defense/features/enemies/impl/enemy_repository_impl.dart';
+import 'package:circuit_defense/features/game_core/domain/models/game_scene.dart';
+import 'package:circuit_defense/features/game_core/domain/models/game_scenes.dart';
 import 'package:circuit_defense/features/game_core/impl/game_state_repository_impl.dart';
 import 'package:circuit_defense/features/game_core/presentation/circuit_defense_game.dart';
-import 'package:circuit_defense/features/terrain/domain/models/biome.dart';
 import 'package:circuit_defense/features/terrain/impl/terrain_repository_impl.dart';
 import 'package:circuit_defense/features/towers/domain/models/tower_type.dart';
 import 'package:circuit_defense/features/towers/impl/tower_repository_impl.dart';
@@ -32,20 +33,20 @@ class _FakeAudioRepository implements AudioRepository {
   Future<void> preload() async {}
 }
 
-CircuitDefenseGame _newGame(Biome biome) => CircuitDefenseGame(
+CircuitDefenseGame _newGame(GameScene scene) => CircuitDefenseGame(
   terrainRepository: TerrainRepositoryImpl(),
   towerRepository: TowerRepositoryImpl(),
   enemyRepository: EnemyRepositoryImpl(),
-  waveRepository: WaveRepositoryImpl(),
+  waveRepository: WaveRepositoryImpl(totalWaves: scene.waveCount),
   audioRepository: _FakeAudioRepository(),
   gameState: GameStateRepositoryImpl(),
   aiDirector: AiDirectorRepositoryImpl(),
-  biome: biome,
+  scene: scene,
 );
 
 /// Boots a game without pumping a full Flutter widget tree (much faster).
-Future<CircuitDefenseGame> _bootGame(Biome biome) async {
-  final game = _newGame(biome);
+Future<CircuitDefenseGame> _bootGame(GameScene scene) async {
+  final game = _newGame(scene);
   game.onGameResize(Vector2(1280, 720));
   // ignore: invalid_use_of_internal_member
   await game.load();
@@ -59,16 +60,18 @@ Future<CircuitDefenseGame> _bootGame(Biome biome) async {
 /// don't depend on any particular random terrain layout.
 Point<int> _findOpenCell(CircuitDefenseGame game) {
   final grid = game.terrainMap.grid;
-  final spawnCell = grid.worldToCell(
-    Vector2(game.terrainMap.spawnPoint.x, game.terrainMap.spawnPoint.y),
-  );
+  final spawnCells = game.terrainMap.spawnPoints
+      .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
+      .toSet();
   final baseCell = grid.worldToCell(
     Vector2(game.terrainMap.basePoint.x, game.terrainMap.basePoint.y),
   );
   for (var row = 0; row < grid.rows; row++) {
     for (var col = 0; col < grid.cols; col++) {
       final cell = Point(col, row);
-      if (!grid.isBlocked(col, row) && cell != spawnCell && cell != baseCell) {
+      if (!grid.isBlocked(col, row) &&
+          !spawnCells.contains(cell) &&
+          cell != baseCell) {
         return cell;
       }
     }
@@ -80,9 +83,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('build pipeline', () {
-    for (final biome in Biome.values) {
-      test('selecting + tapping an open cell places a tower (${biome.name})', () async {
-        final game = await _bootGame(biome);
+    for (final scene in GameScenes.all) {
+      test('selecting + tapping an open cell places a tower (${scene.id})', () async {
+        final game = await _bootGame(scene);
         final openCell = _findOpenCell(game);
         final startingGold = game.gameState.gold;
 
@@ -99,7 +102,7 @@ void main() {
     }
 
     test('tapping a blocked (mountain/river) cell does not spend gold', () async {
-      final game = await _bootGame(Biome.grassPlains);
+      final game = await _bootGame(GameScenes.all.first);
       final grid = game.terrainMap.grid;
       Point<int>? blockedCell;
       outer:
@@ -122,21 +125,24 @@ void main() {
     });
   });
 
-  test('every biome generates a terrain where spawn can reach base', () {
-    for (final biome in Biome.values) {
-      final terrain = TerrainRepositoryImpl().loadTerrain(biome: biome);
+  test('every scene generates a terrain where every spawn can reach base', () {
+    for (final scene in GameScenes.all) {
+      final terrain = TerrainRepositoryImpl().loadTerrain(scene: scene);
       final grid = terrain.grid;
-      final spawnCell = grid.worldToCell(
-        Vector2(terrain.spawnPoint.x, terrain.spawnPoint.y),
-      );
       final baseCell = grid.worldToCell(
         Vector2(terrain.basePoint.x, terrain.basePoint.y),
       );
-      expect(
-        grid.isReachable(spawnCell, baseCell),
-        isTrue,
-        reason: '${biome.name} terrain must not fully wall off spawn from base',
-      );
+      for (final spawnPoint in terrain.spawnPoints) {
+        final spawnCell = grid.worldToCell(
+          Vector2(spawnPoint.x, spawnPoint.y),
+        );
+        expect(
+          grid.isReachable(spawnCell, baseCell),
+          isTrue,
+          reason:
+              '${scene.id} terrain must not fully wall off a spawn from base',
+        );
+      }
     }
   });
 }

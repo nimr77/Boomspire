@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 
 import '../../../core/combat/targetable.dart';
 import '../../../core/pathfinding/astar.dart';
+import '../../../core/rendering/model_loader.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/bullet_component.dart';
@@ -35,7 +36,7 @@ abstract class EnemyComponent extends PositionComponent
   double _attackCooldown = 0;
   TowerComponent? _engaging;
   double _bobPhase = Random().nextDouble() * pi * 2;
-  late final SpriteComponent _visual;
+  late final PositionComponent _visual;
   EnemyComponent({required this.blueprint})
     : health = blueprint.maxHealth,
       super(
@@ -48,18 +49,26 @@ abstract class EnemyComponent extends PositionComponent
 
   @override
   Future<void> onLoad() async {
-    final sp = game.terrainMap.spawnPoint;
+    final spawnPoints = game.terrainMap.spawnPoints;
+    final sp = spawnPoints[Random().nextInt(spawnPoints.length)];
     final jitter = (Random().nextDouble() - 0.5) * 60;
     position = Vector2(sp.x, sp.y + jitter);
 
     if (!blueprint.isFlying) _computePath();
 
-    _visual = SpriteComponent(
-      sprite: await buildSprite(),
+    _visual = await ModelLoader.loadOrFallback(
+      key: 'enemy_${blueprint.type.name}',
       size: size,
-      anchor: Anchor.center,
-      position: size / 2,
+      fallback: () async => SpriteComponent(
+        sprite: await buildSprite(),
+        size: size,
+        anchor: Anchor.center,
+        position: size / 2,
+      ),
     );
+    _visual
+      ..anchor = Anchor.center
+      ..position = size / 2;
     await add(_visual);
   }
 

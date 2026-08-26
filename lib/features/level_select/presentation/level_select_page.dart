@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../game_core/domain/models/game_scene.dart';
+import '../../game_core/domain/models/game_scenes.dart';
 import '../../game_core/presentation/game_page.dart';
 import '../../terrain/domain/models/biome.dart';
 
-/// Pre-game scene picker: choose a biome map before the battle begins.
+/// Pre-game scene picker: choose a campaign (terrain + wave count +
+/// strategy) before the battle begins.
 class LevelSelectPage extends StatelessWidget {
   const LevelSelectPage({super.key});
 
@@ -31,7 +34,7 @@ class LevelSelectPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Choose a battlefield',
+                    'Choose a campaign',
                     style: TextStyle(color: Colors.white54, fontSize: 16),
                   ),
                   const SizedBox(height: 28),
@@ -40,10 +43,10 @@ class LevelSelectPage extends StatelessWidget {
                     crossAxisCount: 2,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 1.6,
+                    childAspectRatio: 1.4,
                     physics: const NeverScrollableScrollPhysics(),
-                    children: Biome.values
-                        .map((b) => _BiomeCard(biome: b))
+                    children: GameScenes.all
+                        .map((s) => _SceneCard(scene: s))
                         .toList(),
                   ),
                 ],
@@ -56,21 +59,21 @@ class LevelSelectPage extends StatelessWidget {
   }
 }
 
-class _BiomeCard extends StatelessWidget {
-  const _BiomeCard({required this.biome});
+class _SceneCard extends StatelessWidget {
+  const _SceneCard({required this.scene});
 
-  final Biome biome;
+  final GameScene scene;
 
   @override
   Widget build(BuildContext context) {
-    final palette = biome.palette;
+    final palette = scene.biome.palette;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => GamePage(biome: biome)),
+            MaterialPageRoute(builder: (_) => GamePage(scene: scene)),
           );
         },
         child: Container(
@@ -92,7 +95,7 @@ class _BiomeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                biome.displayName,
+                scene.name,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -101,8 +104,18 @@ class _BiomeCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                biome.description,
+                scene.briefing,
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${scene.waveCount} WAVES',
+                style: TextStyle(
+                  color: palette.ridgeLight,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
             ],
           ),

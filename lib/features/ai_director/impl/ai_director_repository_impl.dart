@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
 import '../domain/models/battlefield_snapshot.dart';
 import '../domain/models/strategy_directive.dart';
@@ -13,29 +11,36 @@ import '../domain/repos/ai_director_repository.dart';
 /// this falls back to [StrategyDirective.fallback] so the game is always
 /// fully playable without any AI backend.
 class AiDirectorRepositoryImpl implements AiDirectorRepository {
-  AiDirectorRepositoryImpl({String? proxyUrl})
+  AiDirectorRepositoryImpl({String? proxyUrl, Dio? dio})
     : _proxyUrl =
           proxyUrl ??
           const String.fromEnvironment(
             'AI_PROXY_URL',
             defaultValue: 'http://localhost:8787',
+          ),
+      _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 3),
+              sendTimeout: const Duration(seconds: 3),
+              receiveTimeout: const Duration(seconds: 3),
+            ),
           );
 
   final String _proxyUrl;
+  final Dio _dio;
 
   @override
   Future<StrategyDirective> planNextWave(BattlefieldSnapshot snapshot) async {
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_proxyUrl/strategy'),
-            headers: const {'Content-Type': 'application/json'},
-            body: jsonEncode(snapshot.toJson()),
-          )
-          .timeout(const Duration(seconds: 3));
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return StrategyDirective.fromJson(json);
+      final response = await _dio.post<Map<String, dynamic>>(
+        '$_proxyUrl/strategy',
+        data: snapshot.toJson(),
+        options: Options(contentType: Headers.jsonContentType),
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        return StrategyDirective.fromJson(response.data!);
       }
     } catch (_) {
       // Proxy down / no key / network hiccup - silently use the fallback.
@@ -43,3 +48,4 @@ class AiDirectorRepositoryImpl implements AiDirectorRepository {
     return StrategyDirective.fallback(snapshot.waveNumber);
   }
 }
+

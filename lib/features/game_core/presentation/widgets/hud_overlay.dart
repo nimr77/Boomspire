@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import '../circuit_defense_game.dart';
 import 'build_menu.dart';
 
-/// Top status bar (health/wave/gold) plus the bottom tower build menu.
+/// Bottom-docked command bar (health/gold/wave + construction menu), C&C
+/// Generals-style. Placed as a normal sibling below the [GameWidget] (see
+/// [GamePage]) - not a floating overlay on top of it - so the arena never
+/// renders underneath it and the home base (which can be placed anywhere)
+/// stays fully visible.
 class HudOverlay extends StatelessWidget {
   final CircuitDefenseGame game;
 
@@ -12,22 +16,49 @@ class HudOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: ListenableBuilder(
-              listenable: game.gameState,
-              builder: (context, _) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _StatChip(
-                      icon: Icons.favorite,
-                      color: Colors.redAccent,
-                      label: '${game.gameState.health}',
-                    ),
-                    Text(
+      top: false,
+      child: Container(
+        height: 112,
+        decoration: const BoxDecoration(
+          color: Color(0xE60F1216),
+          border: Border(top: BorderSide(color: Color(0xFF2A323C), width: 2)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              child: ListenableBuilder(
+                listenable: game.gameState,
+                builder: (context, _) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _StatChip(
+                        icon: Icons.favorite,
+                        color: Colors.redAccent,
+                        label: '${game.gameState.health}',
+                      ),
+                      _StatChip(
+                        icon: Icons.monetization_on,
+                        color: Colors.amberAccent,
+                        label: '${game.gameState.gold}',
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: ListenableBuilder(
+                  listenable: game.gameState,
+                  builder: (context, _) {
+                    return Text(
                       'WAVE ${game.gameState.currentWave} / ${game.gameState.totalWaves}',
                       style: const TextStyle(
                         color: Colors.white,
@@ -36,67 +67,14 @@ class HudOverlay extends StatelessWidget {
                         letterSpacing: 1,
                         shadows: [Shadow(blurRadius: 4, color: Colors.black)],
                       ),
-                    ),
-                    _StatChip(
-                      icon: Icons.monetization_on,
-                      color: Colors.amberAccent,
-                      label: '${game.gameState.gold}',
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          const Spacer(),
-          ValueListenableBuilder<String>(
-            valueListenable: game.commanderNote,
-            builder: (context, note, _) {
-              if (note.isEmpty) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xB31A1F26),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Colors.purpleAccent.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.smart_toy,
-                          color: Colors.purpleAccent,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          note,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: BuildMenu(game: game),
-          ),
-        ],
+              ),
+            ),
+            BuildMenu(game: game),
+          ],
+        ),
       ),
     );
   }
@@ -112,7 +90,7 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: const Color(0xB31A1F26),
         borderRadius: BorderRadius.circular(20),
@@ -121,13 +99,13 @@ class _StatChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 18),
+          Icon(icon, color: color, size: 16),
           const SizedBox(width: 6),
           Text(
             label,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -136,3 +114,4 @@ class _StatChip extends StatelessWidget {
     );
   }
 }
+

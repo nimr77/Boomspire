@@ -2,18 +2,18 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../../terrain/domain/models/biome.dart';
+import '../../game_core/domain/models/game_scene.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/impl/terrain_repository_impl.dart';
 import '../../terrain/presentation/terrain_painter.dart';
 
-/// Live small-scale render of a biome's actual terrain generation (not a
+/// Live small-scale render of a scene's actual terrain generation (not a
 /// static image) - the same procedural painting used in-game, scaled down.
 class BiomePreview extends StatelessWidget {
-  BiomePreview({super.key, required this.biome})
-    : terrainMap = TerrainRepositoryImpl().loadTerrain(biome: biome);
+  BiomePreview({super.key, required this.scene})
+    : terrainMap = TerrainRepositoryImpl().loadTerrain(scene: scene);
 
-  final Biome biome;
+  final GameScene scene;
   final TerrainMap terrainMap;
 
   @override

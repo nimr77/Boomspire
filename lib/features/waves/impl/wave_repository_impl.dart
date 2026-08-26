@@ -2,106 +2,46 @@ import '../../enemies/domain/models/enemy_type.dart';
 import '../domain/models/wave_definition.dart';
 import '../domain/repos/wave_repository.dart';
 
-/// Six escalating rounds - the run ends (victory) once wave 6 is cleared.
+/// Procedurally scales an escalating spawn composition up to whatever
+/// [totalWaves] the current scene calls for, instead of a fixed hardcoded
+/// round count - so every scene can define its own campaign length.
 class WaveRepositoryImpl implements WaveRepository {
+  WaveRepositoryImpl({required int totalWaves})
+    : totalWaves = totalWaves.clamp(3, 30);
+
   @override
-  int get totalWaves => 6;
+  final int totalWaves;
 
   @override
   WaveDefinition waveDefinition(int waveNumber) {
-    switch (waveNumber) {
-      case 1:
-        return const WaveDefinition(
-          waveNumber: 1,
-          spawns: [
-            SpawnEntry(type: EnemyType.soldier, count: 6, interval: 0.9),
-          ],
-        );
-      case 2:
-        return const WaveDefinition(
-          waveNumber: 2,
-          spawns: [
-            SpawnEntry(type: EnemyType.soldier, count: 9, interval: 0.7),
-          ],
-        );
-      case 3:
-        return const WaveDefinition(
-          waveNumber: 3,
-          spawns: [
-            SpawnEntry(type: EnemyType.soldier, count: 8, interval: 0.7),
-            SpawnEntry(
-              type: EnemyType.heavySoldier,
-              count: 2,
-              interval: 1.4,
-              startDelay: 2,
-            ),
-            SpawnEntry(
-              type: EnemyType.air,
-              count: 2,
-              interval: 1.8,
-              startDelay: 3,
-            ),
-          ],
-        );
-      case 4:
-        return const WaveDefinition(
-          waveNumber: 4,
-          spawns: [
-            SpawnEntry(type: EnemyType.soldier, count: 10, interval: 0.55),
-            SpawnEntry(
-              type: EnemyType.heavySoldier,
-              count: 4,
-              interval: 1.2,
-              startDelay: 1.5,
-            ),
-            SpawnEntry(
-              type: EnemyType.air,
-              count: 3,
-              interval: 1.5,
-              startDelay: 2,
-            ),
-          ],
-        );
-      case 5:
-        return const WaveDefinition(
-          waveNumber: 5,
-          spawns: [
-            SpawnEntry(type: EnemyType.soldier, count: 12, interval: 0.5),
-            SpawnEntry(
-              type: EnemyType.heavySoldier,
-              count: 5,
-              interval: 1.0,
-              startDelay: 1,
-            ),
-            SpawnEntry(
-              type: EnemyType.air,
-              count: 4,
-              interval: 1.3,
-              startDelay: 1.5,
-            ),
-          ],
-        );
-      case 6:
-        return const WaveDefinition(
-          waveNumber: 6,
-          spawns: [
-            SpawnEntry(type: EnemyType.soldier, count: 14, interval: 0.4),
-            SpawnEntry(
-              type: EnemyType.heavySoldier,
-              count: 8,
-              interval: 0.8,
-              startDelay: 1,
-            ),
-            SpawnEntry(
-              type: EnemyType.air,
-              count: 6,
-              interval: 1.0,
-              startDelay: 1,
-            ),
-          ],
-        );
-      default:
-        throw ArgumentError('No wave defined for $waveNumber');
+    final n = waveNumber.clamp(1, totalWaves);
+    final spawns = <SpawnEntry>[
+      SpawnEntry(
+        type: EnemyType.soldier,
+        count: (5 + n * 1.6).round(),
+        interval: (0.95 - n * 0.05).clamp(0.3, 0.95),
+      ),
+    ];
+
+    if (n >= 3) {
+      spawns.add(
+        SpawnEntry(
+          type: EnemyType.heavySoldier,
+          count: (1 + (n - 2) * 0.9).round(),
+          interval: (1.5 - n * 0.05).clamp(0.7, 1.5),
+          startDelay: 2,
+        ),
+      );
+      spawns.add(
+        SpawnEntry(
+          type: EnemyType.air,
+          count: (1 + (n - 2) * 0.8).round(),
+          interval: (1.9 - n * 0.05).clamp(0.9, 1.9),
+          startDelay: 3,
+        ),
+      );
     }
+
+    return WaveDefinition(waveNumber: n, spawns: spawns);
   }
 }

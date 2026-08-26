@@ -23,7 +23,9 @@ class TerrainMap {
   /// Per-cell obstacle flavor (null = open ground), same shape as [grid].
   final List<List<ObstacleKind?>> obstacleKinds;
 
-  final PathPoint spawnPoint;
+  /// Every point enemies may spawn from - a scene can define more than one
+  /// so attacks come from multiple directions (or even every edge).
+  final List<PathPoint> spawnPoints;
   final PathPoint basePoint;
   const TerrainMap({
     required this.arenaWidth,
@@ -31,7 +33,7 @@ class TerrainMap {
     required this.grid,
     required this.biome,
     required this.obstacleKinds,
-    required this.spawnPoint,
+    required this.spawnPoints,
     required this.basePoint,
   });
 }

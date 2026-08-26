@@ -29,14 +29,13 @@ class GameWorld extends World
         ),
       ),
     );
-    await add(
-      SpawnIndicatorComponent(
-        position: Vector2(
-          game.terrainMap.spawnPoint.x,
-          game.terrainMap.spawnPoint.y - 34,
+    for (final spawn in game.terrainMap.spawnPoints) {
+      await add(
+        SpawnIndicatorComponent(
+          position: Vector2(spawn.x, spawn.y - 34),
         ),
-      ),
-    );
+      );
+    }
     await add(
       HomeBaseComponent(
         position: Vector2(

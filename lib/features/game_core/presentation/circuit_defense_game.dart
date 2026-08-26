@@ -10,7 +10,6 @@ import '../../ai_director/domain/repos/ai_director_repository.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../audio/domain/repos/audio_repository.dart';
 import '../../enemies/domain/repos/enemy_repository.dart';
-import '../../terrain/domain/models/biome.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
@@ -26,6 +25,7 @@ import '../../towers/presentation/tower_component.dart';
 import '../../waves/domain/repos/wave_repository.dart';
 import '../../waves/presentation/wave_director_component.dart';
 import '../domain/models/game_config.dart';
+import '../domain/models/game_scene.dart';
 import '../domain/models/game_status.dart';
 import '../domain/repos/game_state_repository.dart';
 import 'game_world.dart';
@@ -44,7 +44,7 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
   final AudioRepository audioRepository;
   final GameStateRepository gameState;
   final AiDirectorRepository aiDirector;
-  final Biome biome;
+  final GameScene scene;
   late TerrainMap terrainMap;
 
   final ValueNotifier<TowerType?> selectedTowerType = ValueNotifier(null);
@@ -66,7 +66,7 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     required this.audioRepository,
     required this.gameState,
     required this.aiDirector,
-    required this.biome,
+    required this.scene,
   }) : super(
          world: GameWorld(),
          camera: CameraComponent.withFixedResolution(
@@ -97,7 +97,7 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
 
   @override
   Future<void> onLoad() async {
-    terrainMap = terrainRepository.loadTerrain(biome: biome);
+    terrainMap = terrainRepository.loadTerrain(scene: scene);
     camera.viewfinder.anchor = Anchor.topLeft;
     camera.viewfinder.position = Vector2.zero();
     await audioRepository.preload();
@@ -106,7 +106,7 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
 
   void restart() {
     gameState.reset();
-    terrainMap = terrainRepository.loadTerrain(biome: biome);
+    terrainMap = terrainRepository.loadTerrain(scene: scene);
     world.activeEnemies.clear();
     world.activeTowers.clear();
     for (final child in world.children.toList()) {
@@ -119,14 +119,11 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
         arenaSize: Vector2(terrainMap.arenaWidth, terrainMap.arenaHeight),
       ),
     );
-    world.add(
-      SpawnIndicatorComponent(
-        position: Vector2(
-          terrainMap.spawnPoint.x,
-          terrainMap.spawnPoint.y - 34,
-        ),
-      ),
-    );
+    for (final spawn in terrainMap.spawnPoints) {
+      world.add(
+        SpawnIndicatorComponent(position: Vector2(spawn.x, spawn.y - 34)),
+      );
+    }
     world.add(
       HomeBaseComponent(
         position: Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
@@ -184,13 +181,13 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     final cell = grid.worldToCell(point);
     if (grid.isBlocked(cell.x, cell.y)) return;
 
-    final spawnCell = grid.worldToCell(
-      Vector2(terrainMap.spawnPoint.x, terrainMap.spawnPoint.y),
-    );
+    final spawnCells = terrainMap.spawnPoints
+        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
+        .toSet();
     final baseCell = grid.worldToCell(
       Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
     );
-    if (cell == spawnCell || cell == baseCell) return;
+    if (spawnCells.contains(cell) || cell == baseCell) return;
 
     final blueprint = towerRepository.blueprintFor(type);
     if (gameState.gold < blueprint.cost) return;
@@ -199,7 +196,7 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     // reach the base before actually charging gold - never allow a fully
     // sealed maze.
     grid.setTowerOccupied(cell.x, cell.y, true);
-    if (!grid.isReachable(spawnCell, baseCell)) {
+    if (!spawnCells.every((sc) => grid.isReachable(sc, baseCell))) {
       grid.setTowerOccupied(cell.x, cell.y, false);
       return;
     }

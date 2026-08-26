@@ -39,7 +39,6 @@ class StrategyDirective {
           ? FocusHint.weakestTower
           : FocusHint.nearestTower,
       compositionBias: waveNumber >= 3 ? const {'air': 1.2} : const {},
-      commanderNote: 'Standing orders: escalate pressure.',
     );
   }
 

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:circuit_defense/features/ai_director/domain/models/strategy_directive.dart';
-import 'package:http/http.dart' as http;
 
 /// Local proxy that lets the game ask Gemini how the enemy AI should command
 /// the next wave, without ever putting the API key in the Flutter client.
@@ -94,34 +93,40 @@ aggression scales how many enemies spawn and how fast. compositionBias multiplie
   final uri = Uri.parse(
     'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent?key=$apiKey',
   );
-  final response = await http
-      .post(
-        uri,
-        headers: const {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {'text': prompt},
-              ],
-            },
-          ],
-          'generationConfig': {'responseMimeType': 'application/json'},
-        }),
-      )
-      .timeout(const Duration(seconds: 8));
+  final client = HttpClient();
+  try {
+    final request = await client.postUrl(uri).timeout(const Duration(seconds: 8));
+    request.headers.contentType = ContentType.json;
+    request.write(
+      jsonEncode({
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt},
+            ],
+          },
+        ],
+        'generationConfig': {'responseMimeType': 'application/json'},
+      }),
+    );
+    final response = await request.close().timeout(const Duration(seconds: 8));
+    final body = await response.transform(utf8.decoder).join();
 
-  if (response.statusCode != 200) {
-    throw Exception('Gemini HTTP ${response.statusCode}: ${response.body}');
+    if (response.statusCode != 200) {
+      throw Exception('Gemini HTTP ${response.statusCode}: $body');
+    }
+
+    final data = jsonDecode(body) as Map<String, dynamic>;
+    final candidates = data['candidates'] as List;
+    final text =
+        (candidates.first
+                as Map<String, dynamic>)['content']['parts'][0]['text']
+            as String;
+    final json = jsonDecode(_stripCodeFence(text)) as Map<String, dynamic>;
+    return StrategyDirective.fromJson(json);
+  } finally {
+    client.close();
   }
-
-  final data = jsonDecode(response.body) as Map<String, dynamic>;
-  final candidates = data['candidates'] as List;
-  final text =
-      (candidates.first as Map<String, dynamic>)['content']['parts'][0]['text']
-          as String;
-  final json = jsonDecode(_stripCodeFence(text)) as Map<String, dynamic>;
-  return StrategyDirective.fromJson(json);
 }
 
 String _stripCodeFence(String text) {

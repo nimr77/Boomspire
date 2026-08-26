@@ -11,5 +11,12 @@ class MainFlutterWindow: NSWindow {
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     super.awakeFromNib()
+
+    // Launch straight into native fullscreen - this is a desktop game, not
+    // a windowed utility app.
+    self.collectionBehavior.insert(.fullScreenPrimary)
+    DispatchQueue.main.async { [weak self] in
+      self?.toggleFullScreen(nil)
+    }
   }
 }
