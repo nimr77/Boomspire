@@ -219,8 +219,16 @@ class EnemySpriteFactory {
     // Cockpit viewhole (red - hostile), with a canopy frame and glass glint
     // instead of a flat glow dot.
     final cockpit = center.translate(0, -size * 0.18);
-    canvas.drawCircle(cockpit, size * 0.11, Paint()..color = const Color(0xFF1a1c20));
-    canvas.drawCircle(cockpit, size * 0.09, Paint()..color = const Color(0xFFE53935));
+    canvas.drawCircle(
+      cockpit,
+      size * 0.11,
+      Paint()..color = const Color(0xFF1a1c20),
+    );
+    canvas.drawCircle(
+      cockpit,
+      size * 0.09,
+      Paint()..color = const Color(0xFFE53935),
+    );
     canvas.drawCircle(
       cockpit,
       size * 0.11,

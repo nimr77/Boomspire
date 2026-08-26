@@ -104,41 +104,6 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     await world.initialize();
   }
 
-  @override
-  void update(double dt) {
-    super.update(dt);
-    if (_shakeDuration <= 0) return;
-    _shakeDuration = (_shakeDuration - dt).clamp(0.0, _shakeMaxDuration);
-    if (_shakeDuration <= 0) {
-      camera.viewfinder.position = Vector2.zero();
-      _shakePower = 0;
-      return;
-    }
-    final falloff = _shakeDuration / _shakeMaxDuration;
-    camera.viewfinder.position =
-        Vector2(
-          _shakeRandom.nextDouble() * 2 - 1,
-          _shakeRandom.nextDouble() * 2 - 1,
-        ) *
-        (_shakePower * falloff);
-  }
-
-  /// Nudges the camera briefly whenever something fires - stronger weapons
-  /// and shots closer to the camera's focal point (the arena's center)
-  /// shake harder, like a real camera would.
-  void shakeCamera({required double power, required Vector2 origin}) {
-    final focus = Vector2(GameConfig.arenaWidth / 2, GameConfig.arenaHeight / 2);
-    final maxDistance = focus.length;
-    final proximity = (1 - origin.distanceTo(focus) / maxDistance).clamp(
-      0.2,
-      1.0,
-    );
-    final effectivePower = (power * 0.18 * proximity).clamp(0.0, 14.0);
-    if (effectivePower < _shakePower) return;
-    _shakePower = effectivePower;
-    _shakeMaxDuration = _shakeDuration = 0.1 + effectivePower * 0.01;
-  }
-
   void restart() {
     gameState.reset();
     terrainMap = terrainRepository.loadTerrain(biome: biome);
@@ -156,7 +121,10 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
     );
     world.add(
       SpawnIndicatorComponent(
-        position: Vector2(terrainMap.spawnPoint.x, terrainMap.spawnPoint.y - 34),
+        position: Vector2(
+          terrainMap.spawnPoint.x,
+          terrainMap.spawnPoint.y - 34,
+        ),
       ),
     );
     world.add(
@@ -171,6 +139,44 @@ class CircuitDefenseGame extends FlameGame<GameWorld> {
 
   void selectTowerType(TowerType? type) {
     selectedTowerType.value = selectedTowerType.value == type ? null : type;
+  }
+
+  /// Nudges the camera briefly whenever something fires - stronger weapons
+  /// and shots closer to the camera's focal point (the arena's center)
+  /// shake harder, like a real camera would.
+  void shakeCamera({required double power, required Vector2 origin}) {
+    final focus = Vector2(
+      GameConfig.arenaWidth / 2,
+      GameConfig.arenaHeight / 2,
+    );
+    final maxDistance = focus.length;
+    final proximity = (1 - origin.distanceTo(focus) / maxDistance).clamp(
+      0.2,
+      1.0,
+    );
+    final effectivePower = (power * 0.18 * proximity).clamp(0.0, 14.0);
+    if (effectivePower < _shakePower) return;
+    _shakePower = effectivePower;
+    _shakeMaxDuration = _shakeDuration = 0.1 + effectivePower * 0.01;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_shakeDuration <= 0) return;
+    _shakeDuration = (_shakeDuration - dt).clamp(0.0, _shakeMaxDuration);
+    if (_shakeDuration <= 0) {
+      camera.viewfinder.position = Vector2.zero();
+      _shakePower = 0;
+      return;
+    }
+    final falloff = _shakeDuration / _shakeMaxDuration;
+    camera.viewfinder.position =
+        Vector2(
+          _shakeRandom.nextDouble() * 2 - 1,
+          _shakeRandom.nextDouble() * 2 - 1,
+        ) *
+        (_shakePower * falloff);
   }
 
   void _buildTower(TowerType type, Vector2 point) {

@@ -2,8 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 
-import '../domain/models/game_config.dart';
 import '../../../core/rendering/procedural_image.dart';
+import '../domain/models/game_config.dart';
 import 'circuit_defense_game.dart';
 
 /// The player's home base at the terrain's end point: a defended structure
@@ -39,15 +39,6 @@ class HomeBaseComponent extends PositionComponent
   }
 
   @override
-  void update(double dt) {
-    super.update(dt);
-    final health = game.gameState.health;
-    if (health < _lastHealth) _pulse = 1;
-    _lastHealth = health;
-    if (_pulse > 0) _pulse = (_pulse - dt * 1.6).clamp(0, 1);
-  }
-
-  @override
   void render(ui.Canvas canvas) {
     if (_pulse > 0) {
       final radius = size.x * (0.55 + (1 - _pulse) * 0.55);
@@ -57,9 +48,7 @@ class HomeBaseComponent extends PositionComponent
         ui.Paint()
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 4
-          ..color = const ui.Color(
-            0xFFE53935,
-          ).withValues(alpha: _pulse * 0.85),
+          ..color = const ui.Color(0xFFE53935).withValues(alpha: _pulse * 0.85),
       );
     }
 
@@ -87,6 +76,15 @@ class HomeBaseComponent extends PositionComponent
             ? const ui.Color(0xFF00E5FF)
             : const ui.Color(0xFFE53935),
     );
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    final health = game.gameState.health;
+    if (health < _lastHealth) _pulse = 1;
+    _lastHealth = health;
+    if (_pulse > 0) _pulse = (_pulse - dt * 1.6).clamp(0, 1);
   }
 
   static void _paintHome(ui.Canvas canvas) {
@@ -160,6 +158,10 @@ class HomeBaseComponent extends PositionComponent
         ..color = const ui.Color(0xFF00E5FF)
         ..strokeWidth = 2,
     );
-    canvas.drawCircle(antennaTop, 3, ui.Paint()..color = const ui.Color(0xFF00E5FF));
+    canvas.drawCircle(
+      antennaTop,
+      3,
+      ui.Paint()..color = const ui.Color(0xFF00E5FF),
+    );
   }
 }

@@ -23,16 +23,6 @@ class SpawnIndicatorComponent extends PositionComponent
       );
 
   @override
-  void update(double dt) {
-    super.update(dt);
-    final wave = game.gameState.currentWave;
-    if (wave == _cachedWave) return;
-    _cachedWave = wave;
-    final def = game.waveRepository.waveDefinition(wave);
-    _types = def.spawns.map((s) => s.type).toSet().toList();
-  }
-
-  @override
   void render(ui.Canvas canvas) {
     if (_types.isEmpty) return;
 
@@ -68,5 +58,15 @@ class SpawnIndicatorComponent extends PositionComponent
         ..strokeCap = ui.StrokeCap.round
         ..color = const ui.Color(0xFFE53935).withValues(alpha: 0.75),
     );
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    final wave = game.gameState.currentWave;
+    if (wave == _cachedWave) return;
+    _cachedWave = wave;
+    final def = game.waveRepository.waveDefinition(wave);
+    _types = def.spawns.map((s) => s.type).toSet().toList();
   }
 }

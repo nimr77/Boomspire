@@ -86,27 +86,6 @@ class TowerSpriteFactory {
     _paintViewhole(canvas, center.translate(-6, -1));
   }
 
-  /// A small crew vision-slit with a glass glint, reused by every turret so
-  /// each unit reads as crewed/piloted hardware rather than a bare emitter.
-  static void _paintViewhole(Canvas canvas, Offset center) {
-    final slit = Rect.fromCenter(center: center, width: 6, height: 3);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(slit, const Radius.circular(1.2)),
-      Paint()..color = const Color(0xFF0d2b33),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: slit.center.translate(-1.2, -0.6),
-          width: 2.2,
-          height: 1.2,
-        ),
-        const Radius.circular(0.6),
-      ),
-      Paint()..color = const Color(0xCCBEEFFF),
-    );
-  }
-
   static void _paintBase(Canvas canvas, TowerType type) {
     const center = Offset(32, 32);
     final accent = accentColor(type);
@@ -163,7 +142,11 @@ class TowerSpriteFactory {
     for (final dy in [-24.0, -20.0]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromCenter(center: center.translate(0, dy), width: 21, height: 3),
+          Rect.fromCenter(
+            center: center.translate(0, dy),
+            width: 21,
+            height: 3,
+          ),
           const Radius.circular(1.5),
         ),
         Paint()..color = const Color(0xFF23262b),
@@ -200,7 +183,11 @@ class TowerSpriteFactory {
     for (final dx in [-6.0, 0.0, 6.0]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromCenter(center: center.translate(dx, -9), width: 4.5, height: 25),
+          Rect.fromCenter(
+            center: center.translate(dx, -9),
+            width: 4.5,
+            height: 25,
+          ),
           const Radius.circular(2),
         ),
         Paint()..color = const Color(0xFF2b2f36),
@@ -285,5 +272,26 @@ class TowerSpriteFactory {
       case TowerType.antiAir:
         _paintAntiAirTurret(canvas, center);
     }
+  }
+
+  /// A small crew vision-slit with a glass glint, reused by every turret so
+  /// each unit reads as crewed/piloted hardware rather than a bare emitter.
+  static void _paintViewhole(Canvas canvas, Offset center) {
+    final slit = Rect.fromCenter(center: center, width: 6, height: 3);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(slit, const Radius.circular(1.2)),
+      Paint()..color = const Color(0xFF0d2b33),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: slit.center.translate(-1.2, -0.6),
+          width: 2.2,
+          height: 1.2,
+        ),
+        const Radius.circular(0.6),
+      ),
+      Paint()..color = const Color(0xCCBEEFFF),
+    );
   }
 }

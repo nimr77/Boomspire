@@ -34,11 +34,7 @@ class MuzzleFlashComponent extends PositionComponent {
     );
 
     final sparkPaint = Paint()
-      ..color = Color.lerp(
-        const Color(0xFFFFE082),
-        const Color(0x00FFB703),
-        t,
-      )!
+      ..color = Color.lerp(const Color(0xFFFFE082), const Color(0x00FFB703), t)!
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round;
     final sparkLength = 12 * (1 - t);

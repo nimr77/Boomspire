@@ -127,7 +127,6 @@ class TerrainPainter {
         }
       }
     }
-
   }
 
   /// One centerline point per row that contains [kind] cells (averaging
@@ -165,219 +164,6 @@ class TerrainPainter {
       ...points,
       ui.Offset(points.last.dx, canvasHeight),
     ];
-  }
-
-  /// Smooths a polyline into a curved [ui.Path] by quadratic-bezier-ing
-  /// through the midpoint of every consecutive pair - a cheap way to avoid
-  /// sharp zig-zag joints between per-row samples.
-  static ui.Path _smoothPath(List<ui.Offset> points) {
-    final path = ui.Path()..moveTo(points.first.dx, points.first.dy);
-    for (var i = 0; i < points.length - 1; i++) {
-      final p0 = points[i];
-      final p1 = points[i + 1];
-      final mid = ui.Offset((p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
-      path.quadraticBezierTo(p0.dx, p0.dy, mid.dx, mid.dy);
-    }
-    path.lineTo(points.last.dx, points.last.dy);
-    return path;
-  }
-
-  static void _paintRiverPath(ui.Canvas canvas, ui.Path path, double cellSize) {
-    final bounds = path.getBounds();
-    // Sandy shore first, wider than the water itself.
-    canvas.drawPath(
-      path,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeJoin = ui.StrokeJoin.round
-        ..strokeWidth = cellSize * 2.0
-        ..color = const ui.Color(0xFFd8c48a).withValues(alpha: 0.55),
-    );
-    // Wet, darker sand right at the waterline.
-    canvas.drawPath(
-      path,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeJoin = ui.StrokeJoin.round
-        ..strokeWidth = cellSize * 1.5
-        ..color = const ui.Color(0xFF9c8256).withValues(alpha: 0.6),
-    );
-    // Water body with a deep-to-mid gradient across its width.
-    canvas.drawPath(
-      path,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeJoin = ui.StrokeJoin.round
-        ..strokeWidth = cellSize * 1.3
-        ..shader = ui.Gradient.linear(bounds.topCenter, bounds.bottomCenter, const [
-          ui.Color(0xFF0a3450),
-          ui.Color(0xFF1f7fa8),
-          ui.Color(0xFF0a3450),
-          ui.Color(0xFF1f7fa8),
-          ui.Color(0xFF0a3450),
-        ], const [0.0, 0.25, 0.5, 0.75, 1.0]),
-    );
-    // Specular highlight streak, slightly offset so it reads as light
-    // glinting off moving water rather than a flat fill.
-    canvas.drawPath(
-      path.shift(const ui.Offset(-4, -3)),
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeJoin = ui.StrokeJoin.round
-        ..strokeWidth = cellSize * 0.32
-        ..color = const ui.Color(0xFFbfeeff).withValues(alpha: 0.45),
-    );
-
-    // Small ripple arcs sampled along the path for extra texture.
-    final metric = path.computeMetrics().firstOrNull;
-    if (metric != null) {
-      final rnd = Random(7);
-      final rippleCount = (metric.length / (cellSize * 1.4)).floor();
-      for (var i = 0; i < rippleCount; i++) {
-        final dist = (i + 0.5) * (metric.length / rippleCount);
-        final tangent = metric.getTangentForOffset(dist);
-        if (tangent == null) continue;
-        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
-        final offset = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
-        final center = tangent.position + normal * offset;
-        canvas.drawArc(
-          ui.Rect.fromCenter(
-            center: center,
-            width: cellSize * 0.5,
-            height: cellSize * 0.22,
-          ),
-          0,
-          pi,
-          false,
-          ui.Paint()
-            ..style = ui.PaintingStyle.stroke
-            ..strokeWidth = 1
-            ..color = const ui.Color(0xFFe8fbff).withValues(alpha: 0.3),
-        );
-      }
-    }
-  }
-
-  static void _paintValleyPath(ui.Canvas canvas, ui.Path path, double cellSize) {
-    final bounds = path.getBounds();
-    // Sunlit cliff rim, wider than the canyon floor.
-    canvas.drawPath(
-      path,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeJoin = ui.StrokeJoin.round
-        ..strokeWidth = cellSize * 2.0
-        ..color = const ui.Color(0xFFcf9a5c).withValues(alpha: 0.55),
-    );
-    // Canyon floor with a subtle vertical gradient for depth.
-    canvas.drawPath(
-      path,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeJoin = ui.StrokeJoin.round
-        ..strokeWidth = cellSize * 1.4
-        ..shader = ui.Gradient.linear(bounds.topCenter, bounds.bottomCenter, const [
-          ui.Color(0xFF4a3016),
-          ui.Color(0xFF241608),
-          ui.Color(0xFF4a3016),
-        ], const [0.0, 0.5, 1.0]),
-    );
-    // Dark crack/erosion detail streak down the middle.
-    canvas.drawPath(
-      path,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeWidth = cellSize * 0.25
-        ..color = const ui.Color(0xFF120a04).withValues(alpha: 0.5),
-    );
-
-    final metric = path.computeMetrics().firstOrNull;
-    if (metric != null) {
-      final rnd = Random(11);
-      final rockCount = (metric.length / (cellSize * 1.1)).floor();
-      for (var i = 0; i < rockCount; i++) {
-        final dist = (i + 0.5) * (metric.length / rockCount);
-        final tangent = metric.getTangentForOffset(dist);
-        if (tangent == null) continue;
-        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
-        final offset = (rnd.nextDouble() - 0.5) * cellSize * 0.7;
-        final center = tangent.position + normal * offset;
-        canvas.drawCircle(
-          center,
-          2 + rnd.nextDouble() * 2.5,
-          ui.Paint()..color = const ui.Color(0xFF6b4321).withValues(alpha: 0.5),
-        );
-      }
-    }
-  }
-
-  static void _paintTree(
-    ui.Canvas canvas,
-    Grid grid,
-    int col,
-    int row,
-    Random rnd,
-  ) {
-    final cx =
-        col * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
-    final cy =
-        row * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
-    final scale = 0.7 + rnd.nextDouble() * 0.5;
-
-    // Ground shadow first, so the canopy reads as sitting above the tile.
-    canvas.drawOval(
-      ui.Rect.fromCenter(
-        center: ui.Offset(cx + 3, cy + 9 * scale),
-        width: 20 * scale,
-        height: 8 * scale,
-      ),
-      ui.Paint()
-        ..color = const ui.Color(0xFF000000).withValues(alpha: 0.22)
-        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 3),
-    );
-    canvas.drawRect(
-      ui.Rect.fromCenter(
-        center: ui.Offset(cx, cy + 8 * scale),
-        width: 3 * scale,
-        height: 8 * scale,
-      ),
-      ui.Paint()..color = const ui.Color(0xFF4a3421),
-    );
-
-    // Rounded, overlapping foliage blobs instead of flat pine tiers - a
-    // cluster of clumps reads as a top-down tree canopy, RA2-style.
-    const lobes = [
-      (dx: 0.0, dy: -2.0, scale: 1.0),
-      (dx: -6.0, dy: 2.0, scale: 0.75),
-      (dx: 6.0, dy: 2.0, scale: 0.8),
-      (dx: 0.0, dy: 5.0, scale: 0.85),
-    ];
-    for (final lobe in lobes) {
-      final lobeCenter = ui.Offset(
-        cx + lobe.dx * scale,
-        cy + lobe.dy * scale - 4 * scale,
-      );
-      final radius = 9 * scale * lobe.scale;
-      canvas.drawCircle(
-        lobeCenter,
-        radius,
-        ui.Paint()..color = const ui.Color(0xFF1f3d22).withValues(alpha: 0.92),
-      );
-    }
-    // Single highlight blob (fake sun from top-left) so the canopy isn't
-    // one flat silhouette.
-    canvas.drawCircle(
-      ui.Offset(cx - 5 * scale, cy - 8 * scale),
-      6 * scale,
-      ui.Paint()..color = const ui.Color(0xFF3f6b3f).withValues(alpha: 0.6),
-    );
   }
 
   static void _paintDune(
@@ -468,5 +254,232 @@ class TerrainPainter {
         ..strokeWidth = 1.5
         ..color = const ui.Color(0xFF1c2126).withValues(alpha: 0.6),
     );
+  }
+
+  static void _paintRiverPath(ui.Canvas canvas, ui.Path path, double cellSize) {
+    final bounds = path.getBounds();
+    // Sandy shore first, wider than the water itself.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 2.0
+        ..color = const ui.Color(0xFFd8c48a).withValues(alpha: 0.55),
+    );
+    // Wet, darker sand right at the waterline.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 1.5
+        ..color = const ui.Color(0xFF9c8256).withValues(alpha: 0.6),
+    );
+    // Water body with a deep-to-mid gradient across its width.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 1.3
+        ..shader = ui.Gradient.linear(
+          bounds.topCenter,
+          bounds.bottomCenter,
+          const [
+            ui.Color(0xFF0a3450),
+            ui.Color(0xFF1f7fa8),
+            ui.Color(0xFF0a3450),
+            ui.Color(0xFF1f7fa8),
+            ui.Color(0xFF0a3450),
+          ],
+          const [0.0, 0.25, 0.5, 0.75, 1.0],
+        ),
+    );
+    // Specular highlight streak, slightly offset so it reads as light
+    // glinting off moving water rather than a flat fill.
+    canvas.drawPath(
+      path.shift(const ui.Offset(-4, -3)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 0.32
+        ..color = const ui.Color(0xFFbfeeff).withValues(alpha: 0.45),
+    );
+
+    // Small ripple arcs sampled along the path for extra texture.
+    final metric = path.computeMetrics().firstOrNull;
+    if (metric != null) {
+      final rnd = Random(7);
+      final rippleCount = (metric.length / (cellSize * 1.4)).floor();
+      for (var i = 0; i < rippleCount; i++) {
+        final dist = (i + 0.5) * (metric.length / rippleCount);
+        final tangent = metric.getTangentForOffset(dist);
+        if (tangent == null) continue;
+        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
+        final offset = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
+        final center = tangent.position + normal * offset;
+        canvas.drawArc(
+          ui.Rect.fromCenter(
+            center: center,
+            width: cellSize * 0.5,
+            height: cellSize * 0.22,
+          ),
+          0,
+          pi,
+          false,
+          ui.Paint()
+            ..style = ui.PaintingStyle.stroke
+            ..strokeWidth = 1
+            ..color = const ui.Color(0xFFe8fbff).withValues(alpha: 0.3),
+        );
+      }
+    }
+  }
+
+  static void _paintTree(
+    ui.Canvas canvas,
+    Grid grid,
+    int col,
+    int row,
+    Random rnd,
+  ) {
+    final cx =
+        col * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
+    final cy =
+        row * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
+    final scale = 0.7 + rnd.nextDouble() * 0.5;
+
+    // Ground shadow first, so the canopy reads as sitting above the tile.
+    canvas.drawOval(
+      ui.Rect.fromCenter(
+        center: ui.Offset(cx + 3, cy + 9 * scale),
+        width: 20 * scale,
+        height: 8 * scale,
+      ),
+      ui.Paint()
+        ..color = const ui.Color(0xFF000000).withValues(alpha: 0.22)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 3),
+    );
+    canvas.drawRect(
+      ui.Rect.fromCenter(
+        center: ui.Offset(cx, cy + 8 * scale),
+        width: 3 * scale,
+        height: 8 * scale,
+      ),
+      ui.Paint()..color = const ui.Color(0xFF4a3421),
+    );
+
+    // Rounded, overlapping foliage blobs instead of flat pine tiers - a
+    // cluster of clumps reads as a top-down tree canopy, RA2-style.
+    const lobes = [
+      (dx: 0.0, dy: -2.0, scale: 1.0),
+      (dx: -6.0, dy: 2.0, scale: 0.75),
+      (dx: 6.0, dy: 2.0, scale: 0.8),
+      (dx: 0.0, dy: 5.0, scale: 0.85),
+    ];
+    for (final lobe in lobes) {
+      final lobeCenter = ui.Offset(
+        cx + lobe.dx * scale,
+        cy + lobe.dy * scale - 4 * scale,
+      );
+      final radius = 9 * scale * lobe.scale;
+      canvas.drawCircle(
+        lobeCenter,
+        radius,
+        ui.Paint()..color = const ui.Color(0xFF1f3d22).withValues(alpha: 0.92),
+      );
+    }
+    // Single highlight blob (fake sun from top-left) so the canopy isn't
+    // one flat silhouette.
+    canvas.drawCircle(
+      ui.Offset(cx - 5 * scale, cy - 8 * scale),
+      6 * scale,
+      ui.Paint()..color = const ui.Color(0xFF3f6b3f).withValues(alpha: 0.6),
+    );
+  }
+
+  static void _paintValleyPath(
+    ui.Canvas canvas,
+    ui.Path path,
+    double cellSize,
+  ) {
+    final bounds = path.getBounds();
+    // Sunlit cliff rim, wider than the canyon floor.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 2.0
+        ..color = const ui.Color(0xFFcf9a5c).withValues(alpha: 0.55),
+    );
+    // Canyon floor with a subtle vertical gradient for depth.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 1.4
+        ..shader = ui.Gradient.linear(
+          bounds.topCenter,
+          bounds.bottomCenter,
+          const [
+            ui.Color(0xFF4a3016),
+            ui.Color(0xFF241608),
+            ui.Color(0xFF4a3016),
+          ],
+          const [0.0, 0.5, 1.0],
+        ),
+    );
+    // Dark crack/erosion detail streak down the middle.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeWidth = cellSize * 0.25
+        ..color = const ui.Color(0xFF120a04).withValues(alpha: 0.5),
+    );
+
+    final metric = path.computeMetrics().firstOrNull;
+    if (metric != null) {
+      final rnd = Random(11);
+      final rockCount = (metric.length / (cellSize * 1.1)).floor();
+      for (var i = 0; i < rockCount; i++) {
+        final dist = (i + 0.5) * (metric.length / rockCount);
+        final tangent = metric.getTangentForOffset(dist);
+        if (tangent == null) continue;
+        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
+        final offset = (rnd.nextDouble() - 0.5) * cellSize * 0.7;
+        final center = tangent.position + normal * offset;
+        canvas.drawCircle(
+          center,
+          2 + rnd.nextDouble() * 2.5,
+          ui.Paint()..color = const ui.Color(0xFF6b4321).withValues(alpha: 0.5),
+        );
+      }
+    }
+  }
+
+  /// Smooths a polyline into a curved [ui.Path] by quadratic-bezier-ing
+  /// through the midpoint of every consecutive pair - a cheap way to avoid
+  /// sharp zig-zag joints between per-row samples.
+  static ui.Path _smoothPath(List<ui.Offset> points) {
+    final path = ui.Path()..moveTo(points.first.dx, points.first.dy);
+    for (var i = 0; i < points.length - 1; i++) {
+      final p0 = points[i];
+      final p1 = points[i + 1];
+      final mid = ui.Offset((p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
+      path.quadraticBezierTo(p0.dx, p0.dy, mid.dx, mid.dy);
+    }
+    path.lineTo(points.last.dx, points.last.dy);
+    return path;
   }
 }
