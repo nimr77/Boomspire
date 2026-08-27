@@ -7,11 +7,11 @@ import '../models/map_draft.dart';
 /// `LocalMapDraftRepositoryImpl`); a future cloud-synced implementation can
 /// satisfy this same interface without touching editor UI code.
 abstract class MapDraftRepository {
+  Future<void> deleteDraft(String id);
+
   Future<List<MapDraft>> listDrafts();
 
   Future<MapDraft?> loadDraft(String id);
 
   Future<void> saveDraft(MapDraft draft);
-
-  Future<void> deleteDraft(String id);
 }

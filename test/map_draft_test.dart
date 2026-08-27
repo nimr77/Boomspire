@@ -1,10 +1,10 @@
 // Proves the map editor's data model (JSON round-trip, weather timeline
 // interpolation), its on-device storage, and the draft-to-preview terrain
 // rasterizer (painted cells + freehand river/lake paths -> obstacle grid).
+import 'package:boomspire/features/map_editor/domain/models/editor_point.dart';
 import 'package:boomspire/features/map_editor/domain/models/environment_settings.dart';
 import 'package:boomspire/features/map_editor/domain/models/map_draft.dart';
 import 'package:boomspire/features/map_editor/domain/models/painted_cell.dart';
-import 'package:boomspire/features/map_editor/domain/models/editor_point.dart';
 import 'package:boomspire/features/map_editor/domain/models/water_path.dart';
 import 'package:boomspire/features/map_editor/domain/models/weather_keyframe.dart';
 import 'package:boomspire/features/map_editor/impl/editor_terrain_generator.dart';

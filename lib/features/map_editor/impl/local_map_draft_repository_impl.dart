@@ -15,6 +15,13 @@ class LocalMapDraftRepositoryImpl implements MapDraftRepository {
   static const _key = 'boomspire.map_editor.drafts.v1';
 
   @override
+  Future<void> deleteDraft(String id) async {
+    final drafts = await listDrafts();
+    drafts.removeWhere((d) => d.id == id);
+    await _persist(drafts);
+  }
+
+  @override
   Future<List<MapDraft>> listDrafts() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key);
@@ -48,13 +55,6 @@ class LocalMapDraftRepositoryImpl implements MapDraftRepository {
     } else {
       drafts.add(draft);
     }
-    await _persist(drafts);
-  }
-
-  @override
-  Future<void> deleteDraft(String id) async {
-    final drafts = await listDrafts();
-    drafts.removeWhere((d) => d.id == id);
     await _persist(drafts);
   }
 

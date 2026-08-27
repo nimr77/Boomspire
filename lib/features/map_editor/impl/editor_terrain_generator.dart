@@ -9,12 +9,14 @@ import '../domain/models/water_path.dart';
 
 const _cellSize = 40.0;
 
-/// Rasterizes a hand-drawn [MapDraft] into an [EditorTerrainPreview]. The
-/// grid/geometry work runs off the UI thread via [compute] (a background
-/// isolate) so painting a large map never janks the editor canvas.
-class EditorTerrainGenerator {
-  Future<EditorTerrainPreview> generate(MapDraft draft) =>
-      compute(_generatePreview, draft);
+double _distanceToSegment(Vector2 p, Vector2 a, Vector2 b) {
+  final ab = b - a;
+  final lengthSquared = ab.length2;
+  final t = lengthSquared == 0
+      ? 0.0
+      : (((p - a).dot(ab)) / lengthSquared).clamp(0.0, 1.0);
+  final closest = a + ab * t;
+  return p.distanceTo(closest);
 }
 
 EditorTerrainPreview _generatePreview(MapDraft draft) {
@@ -45,6 +47,19 @@ EditorTerrainPreview _generatePreview(MapDraft draft) {
     obstacleKinds: obstacleKinds,
     biome: draft.biome,
   );
+}
+
+bool _pointInPolygon(Vector2 p, List<Vector2> polygon) {
+  var inside = false;
+  for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    final vi = polygon[i];
+    final vj = polygon[j];
+    final crosses = (vi.y > p.y) != (vj.y > p.y);
+    if (crosses && p.x < (vj.x - vi.x) * (p.y - vi.y) / (vj.y - vi.y) + vi.x) {
+      inside = !inside;
+    }
+  }
+  return inside;
 }
 
 void _rasterizeWaterPath(
@@ -91,26 +106,10 @@ void _rasterizeWaterPath(
   }
 }
 
-double _distanceToSegment(Vector2 p, Vector2 a, Vector2 b) {
-  final ab = b - a;
-  final lengthSquared = ab.length2;
-  final t = lengthSquared == 0
-      ? 0.0
-      : (((p - a).dot(ab)) / lengthSquared).clamp(0.0, 1.0);
-  final closest = a + ab * t;
-  return p.distanceTo(closest);
-}
-
-bool _pointInPolygon(Vector2 p, List<Vector2> polygon) {
-  var inside = false;
-  for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    final vi = polygon[i];
-    final vj = polygon[j];
-    final crosses = (vi.y > p.y) != (vj.y > p.y);
-    if (crosses &&
-        p.x < (vj.x - vi.x) * (p.y - vi.y) / (vj.y - vi.y) + vi.x) {
-      inside = !inside;
-    }
-  }
-  return inside;
+/// Rasterizes a hand-drawn [MapDraft] into an [EditorTerrainPreview]. The
+/// grid/geometry work runs off the UI thread via [compute] (a background
+/// isolate) so painting a large map never janks the editor canvas.
+class EditorTerrainGenerator {
+  Future<EditorTerrainPreview> generate(MapDraft draft) =>
+      compute(_generatePreview, draft);
 }
