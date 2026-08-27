@@ -5,7 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart' show Curves;
 
-import '../../../core/combat/targetable.dart';
+import '../../../core/combat/attackable.dart';
 import '../../../core/rendering/model_loader.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/explosion_component.dart';
@@ -39,7 +39,7 @@ const double _antiRocketRange = 95;
 /// upgrade, or sell them for gold.
 abstract class TowerComponent extends PositionComponent
     with HasGameReference<BoomspireGame>
-    implements Targetable {
+    implements Attackable {
   /// Seconds between shield charges regenerating once regen kicks in.
   static const double _shieldRechargeInterval = 6.0;
 
@@ -99,6 +99,9 @@ abstract class TowerComponent extends PositionComponent
   bool get destroyed => _destroyed;
 
   double get effectiveDamage => blueprint.damage * _upgradeMultiplier;
+
+  @override
+  double get healthRatio => (hp / maxHp).clamp(0.0, 1.0);
 
   double get effectiveRange => blueprint.range * (1 + upgradeLevel * 0.08);
 

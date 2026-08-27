@@ -8,4 +8,5 @@ enum TowerType {
   rocketSilo,
   commandPost,
   artilleryBunker,
+  sam,
 }

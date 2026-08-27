@@ -25,6 +25,7 @@ import '../../towers/presentation/laser_tower_component.dart';
 import '../../towers/presentation/machine_gun_tower_component.dart';
 import '../../towers/presentation/rocket_silo_tower_component.dart';
 import '../../towers/presentation/rocket_tower_component.dart';
+import '../../towers/presentation/sam_tower_component.dart';
 import '../../towers/presentation/tech_lab_component.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../../waves/domain/repos/wave_repository.dart';
@@ -65,6 +66,11 @@ class BoomspireGame extends FlameGame<GameWorld> {
   /// even if the lab is later destroyed/sold, so already-built lasers never
   /// get retroactively locked out.
   bool hasTechLab = false;
+
+  /// Whether a Command Post has been built at least once this run - required
+  /// (together with [hasTechLab]) before the SAM Site can be built. Stays
+  /// true even if every Command Post is later destroyed/sold.
+  bool hasCommandPost = false;
   final ValueNotifier<TowerType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
 
@@ -127,6 +133,9 @@ class BoomspireGame extends FlameGame<GameWorld> {
     if (type == TowerType.artilleryBunker && activeCommandPostCount == 0) {
       return 'Requires Command Post';
     }
+    if (type == TowerType.sam && !(hasTechLab && hasCommandPost)) {
+      return 'Requires Tech Lab & Command Post';
+    }
     final limit = buildLimitFor(type);
     if (limit != null && towerCountFor(type) >= limit) {
       return 'Max $limit built';
@@ -134,11 +143,16 @@ class BoomspireGame extends FlameGame<GameWorld> {
     return null;
   }
 
-  /// Max simultaneous count allowed for [type] at the current difficulty,
-  /// or null if unlimited.
+  /// Max simultaneous count allowed for [type], or null if unlimited. The
+  /// Tech Lab, Command Post and Laser Lance only ever need one; Artillery
+  /// Bunker rides along with however many Command Posts are standing (so it
+  /// too tops out at one); the SAM Site is capped at two.
   int? buildLimitFor(TowerType type) => switch (type) {
-    TowerType.laser => difficulty.laserTowerLimit,
+    TowerType.laser => 1,
+    TowerType.techLab => 1,
+    TowerType.commandPost => 1,
     TowerType.artilleryBunker => activeCommandPostCount,
+    TowerType.sam => 2,
     _ => null,
   };
 
@@ -251,6 +265,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
     selectedTower.value = null;
     pendingPlacement.value = null;
     hasTechLab = false;
+    hasCommandPost = false;
     _shakeEventCount = 0;
     _shakeEventWindow = 0;
   }
@@ -372,6 +387,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
       _createTower(type, grid.cellCenter(cell), grid.cellSize, blueprint),
     );
     if (type == TowerType.techLab) hasTechLab = true;
+    if (type == TowerType.commandPost) hasCommandPost = true;
     audioRepository.play(SfxType.buildPlace, volume: 0.7);
     selectedTowerType.value = null;
   }
@@ -424,6 +440,11 @@ class BoomspireGame extends FlameGame<GameWorld> {
         blueprint: blueprint,
       ),
       TowerType.artilleryBunker => ArtilleryBunkerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.sam => SamTowerComponent(
         position: position,
         cellSize: cellSize,
         blueprint: blueprint,

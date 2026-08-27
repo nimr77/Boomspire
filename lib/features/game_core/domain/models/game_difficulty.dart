@@ -1,6 +1,7 @@
 /// Player-selected challenge level, chosen at level select and threaded
-/// through to the AI director's aggression and to per-tower-type build
-/// limits (see `BoomspireGame.buildLimitFor`).
+/// through to the AI director's aggression (see `BoomspireGame.buildLimitFor`
+/// for the per-tower-type build limits, which are now flat rather than
+/// difficulty-scaled).
 enum GameDifficulty { easy, normal, hard }
 
 extension GameDifficultyX on GameDifficulty {
@@ -17,14 +18,5 @@ extension GameDifficultyX on GameDifficulty {
     GameDifficulty.easy => 0.7,
     GameDifficulty.normal => 1.0,
     GameDifficulty.hard => 1.4,
-  };
-
-  /// Max simultaneous Laser Lances the player may have standing at once -
-  /// it hits every domain at a very high fire rate, so it's rationed, and
-  /// harder difficulties ration it further.
-  int get laserTowerLimit => switch (this) {
-    GameDifficulty.easy => 3,
-    GameDifficulty.normal => 2,
-    GameDifficulty.hard => 1,
   };
 }

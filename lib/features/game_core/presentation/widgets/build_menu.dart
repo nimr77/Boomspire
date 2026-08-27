@@ -392,6 +392,7 @@ class _TowerButtonState extends State<_TowerButton> {
                             TowerType.rocketSilo => Icons.rocket_launch,
                             TowerType.commandPost => Icons.cell_tower,
                             TowerType.artilleryBunker => Icons.fort,
+                            TowerType.sam => Icons.satellite_alt,
                           },
                           color: accent,
                           size: 22,

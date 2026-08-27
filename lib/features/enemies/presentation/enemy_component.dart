@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 
+import '../../../core/combat/attackable.dart';
 import '../../../core/combat/targetable.dart';
 import '../../../core/pathfinding/astar.dart';
 import '../../../core/rendering/model_loader.dart';
@@ -20,7 +21,6 @@ import '../../combat/presentation/smoke_trail_component.dart';
 import '../../combat/presentation/vapor_cone_component.dart';
 import '../../game_core/domain/models/game_status.dart';
 import '../../game_core/presentation/boomspire_game.dart';
-import '../../towers/presentation/tower_component.dart';
 import '../domain/models/enemy_blueprint.dart';
 import '../domain/models/enemy_movement_style.dart';
 import '../domain/models/enemy_weapon_type.dart';
@@ -48,7 +48,7 @@ abstract class EnemyComponent extends PositionComponent
   int _pathIndex = 0;
   double _repathTimer = 0;
   double _attackCooldown = 0;
-  TowerComponent? _engaging;
+  Attackable? _engaging;
   double _bobPhase = Random().nextDouble() * pi * 2;
   double _vaporTimer = 0;
   double _preExplosionTimer = 0;
@@ -222,24 +222,30 @@ abstract class EnemyComponent extends PositionComponent
     game.world.removeEnemy(this);
   }
 
-  TowerComponent? _findTowerInRange() {
+  /// Finds the closest in-range thing this enemy can stop and shoot at -
+  /// either a tower blocking its way or a friendly ally unit hunting it
+  /// down (see `AllyUnitComponent`), whichever scores better.
+  Attackable? _findTowerInRange() {
     final hint = game.enemyFocusHint;
     final maxDist = hint == FocusHint.rushBase
         ? blueprint.attackRange * 0.5
         : blueprint.attackRange;
 
-    TowerComponent? best;
+    Attackable? best;
     var bestScore = double.infinity;
-    for (final tower in game.world.activeTowers) {
-      if (tower.destroyed) continue;
-      final d = tower.position.distanceTo(position);
+    for (final candidate in <Attackable>[
+      ...game.world.activeTowers,
+      ...game.world.activeAllies,
+    ]) {
+      if (candidate.destroyed) continue;
+      final d = candidate.position.distanceTo(position);
       if (d > maxDist) continue;
-      // "Score" is what we minimize: distance for nearest-tower/rush-base
+      // "Score" is what we minimize: distance for nearest-target/rush-base
       // targeting, remaining HP ratio (scaled small so ties break on
-      // distance) when the director wants weak towers focused down first.
-      final score = hint == FocusHint.weakestTower ? tower.hp / tower.maxHp : d;
+      // distance) when the director wants weak targets focused down first.
+      final score = hint == FocusHint.weakestTower ? candidate.healthRatio : d;
       if (score < bestScore) {
-        best = tower;
+        best = candidate;
         bestScore = score;
       }
     }

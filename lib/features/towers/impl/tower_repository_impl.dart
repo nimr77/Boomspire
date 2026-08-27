@@ -75,6 +75,10 @@ class TowerRepositoryImpl implements TowerRepository {
       fireRate: 3.2,
       splashRadius: 90,
       maxHp: 150,
+      // Long-range siege weapon against ground and naval vehicles only -
+      // no anti-air capability (see SAM Site for that job).
+      canTargetGround: true,
+      canTargetAir: false,
     ),
     TowerType.commandPost: TowerBlueprint(
       type: TowerType.commandPost,
@@ -94,6 +98,21 @@ class TowerRepositoryImpl implements TowerRepository {
       fireRate: 1.4,
       splashRadius: 40,
       maxHp: 160,
+    ),
+    TowerType.sam: TowerBlueprint(
+      type: TowerType.sam,
+      name: 'SAM Site',
+      cost: 160,
+      // Longest anti-air range in the game - it's meant to snipe flyers
+      // from far away, since it can't survive them getting close.
+      range: 380,
+      damage: 48,
+      fireRate: 1.3,
+      splashRadius: 20,
+      // Very fragile - a couple of hits and it's gone.
+      maxHp: 40,
+      canTargetGround: false,
+      canTargetAir: true,
     ),
   };
 
