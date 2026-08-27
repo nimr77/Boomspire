@@ -53,17 +53,17 @@ class LocalAccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<void> signOut() async {
-    final db = await AppDatabase.instance;
-    await db.removeValue(_key);
-  }
-
-  @override
   Future<AccountProfile?> loadProfile() async {
     final account = await currentAccount();
     if (account == null) return null;
     final progress = await _progressRepository.load();
     return AccountProfile(account: account, totalScore: progress.totalScore);
+  }
+
+  @override
+  Future<void> signOut() async {
+    final db = await AppDatabase.instance;
+    await db.removeValue(_key);
   }
 
   String _generateId() {

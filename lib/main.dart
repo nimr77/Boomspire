@@ -33,8 +33,7 @@ class BoomspireApp extends StatefulWidget {
 
 class _BoomspireAppState extends State<BoomspireApp> {
   final AccountRepository _accountRepository = getIt<AccountRepository>();
-  final AccountProfileState _accountProfileState =
-      getIt<AccountProfileState>();
+  final AccountProfileState _accountProfileState = getIt<AccountProfileState>();
   bool _prompted = false;
 
   @override

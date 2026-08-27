@@ -742,76 +742,6 @@ class BoomspireGame extends FlameGame<GameWorld>
     selectedTowerType.value = null;
   }
 
-  /// Whether [cell] is empty ground that isn't a spawn point or the home
-  /// base - used both for the tap-to-preview ghost and the actual build.
-  bool _isBuildableCell(Point<int> cell) {
-    final grid = terrainMap.grid;
-    if (grid.isBlocked(cell.x, cell.y)) return false;
-
-    final spawnCells = terrainMap.spawnPoints
-        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
-        .toSet();
-    final baseCell = grid.worldToCell(
-      Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
-    );
-    return !spawnCells.contains(cell) && cell != baseCell;
-  }
-
-  void _repairTower(TowerComponent tower) {
-    final cost = tower.repairCost;
-    if (cost <= 0) return;
-    if (!gameState.spendGold(cost)) return;
-    tower.repair(tower.maxHp);
-    audioRepository.play(SfxType.towerRepair, volume: 0.7);
-  }
-
-  ResourceNodeComponent? _resourceNodeAt(Vector2 point) {
-    for (final node in world.activeResourceNodes) {
-      if (point.distanceTo(node.position) <= node.size.x / 2) return node;
-    }
-    return null;
-  }
-
-  /// Sets/clears [aiTeam]/[aiEconomy] for the current [scene] - called from
-  /// both [onLoad] and [restart] so a rematch re-derives the same skirmish
-  /// state instead of carrying over a stale one.
-  void _setupSkirmishState() {
-    if (scene.mode == GameMode.skirmish) {
-      aiTeam = Team.aiOpponent;
-      aiEconomy = AiEconomy(
-        gold: _resolvedStartingGold,
-        health: GameConfig.startingHealth,
-        maxHealth: GameConfig.startingHealth,
-      );
-    } else {
-      aiTeam = null;
-      aiEconomy = null;
-    }
-  }
-
-  TowerComponent? _towerAt(Vector2 point) {
-    for (final tower in world.activeTowers) {
-      final half = tower.size.x / 2;
-      if ((point.x - tower.position.x).abs() <= half &&
-          (point.y - tower.position.y).abs() <= half) {
-        return tower;
-      }
-    }
-    return null;
-  }
-
-  MobileUnitComponent? _unitAt(Vector2 point) {
-    for (final unit in world.activeUnits) {
-      if (unit.destroyed) continue;
-      final half = unit.size.x / 2;
-      if ((point.x - unit.position.x).abs() <= half &&
-          (point.y - unit.position.y).abs() <= half) {
-        return unit;
-      }
-    }
-    return null;
-  }
-
   /// The enemy home base (from [controlled]'s side), if [point] landed on
   /// it - lets a controlled unit be ordered to attack the base directly,
   /// the same way it can be ordered onto an enemy tower/unit.
@@ -863,6 +793,53 @@ class BoomspireGame extends FlameGame<GameWorld>
     controlled.issueMoveOrder(point);
   }
 
+  /// Whether [cell] is empty ground that isn't a spawn point or the home
+  /// base - used both for the tap-to-preview ghost and the actual build.
+  bool _isBuildableCell(Point<int> cell) {
+    final grid = terrainMap.grid;
+    if (grid.isBlocked(cell.x, cell.y)) return false;
+
+    final spawnCells = terrainMap.spawnPoints
+        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
+        .toSet();
+    final baseCell = grid.worldToCell(
+      Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
+    );
+    return !spawnCells.contains(cell) && cell != baseCell;
+  }
+
+  void _repairTower(TowerComponent tower) {
+    final cost = tower.repairCost;
+    if (cost <= 0) return;
+    if (!gameState.spendGold(cost)) return;
+    tower.repair(tower.maxHp);
+    audioRepository.play(SfxType.towerRepair, volume: 0.7);
+  }
+
+  ResourceNodeComponent? _resourceNodeAt(Vector2 point) {
+    for (final node in world.activeResourceNodes) {
+      if (point.distanceTo(node.position) <= node.size.x / 2) return node;
+    }
+    return null;
+  }
+
+  /// Sets/clears [aiTeam]/[aiEconomy] for the current [scene] - called from
+  /// both [onLoad] and [restart] so a rematch re-derives the same skirmish
+  /// state instead of carrying over a stale one.
+  void _setupSkirmishState() {
+    if (scene.mode == GameMode.skirmish) {
+      aiTeam = Team.aiOpponent;
+      aiEconomy = AiEconomy(
+        gold: _resolvedStartingGold,
+        health: GameConfig.startingHealth,
+        maxHealth: GameConfig.startingHealth,
+      );
+    } else {
+      aiTeam = null;
+      aiEconomy = null;
+    }
+  }
+
   /// Keeps the pulsing move-order pin (see [MoveOrderMarkerComponent]) in
   /// sync with [selectedUnit]'s live [MobileUnitComponent.moveOrderTarget]
   /// every frame - added, moved and removed reactively rather than only at
@@ -890,6 +867,29 @@ class BoomspireGame extends FlameGame<GameWorld>
       color: unit!.team.color,
     );
     world.add(_moveOrderMarker!);
+  }
+
+  TowerComponent? _towerAt(Vector2 point) {
+    for (final tower in world.activeTowers) {
+      final half = tower.size.x / 2;
+      if ((point.x - tower.position.x).abs() <= half &&
+          (point.y - tower.position.y).abs() <= half) {
+        return tower;
+      }
+    }
+    return null;
+  }
+
+  MobileUnitComponent? _unitAt(Vector2 point) {
+    for (final unit in world.activeUnits) {
+      if (unit.destroyed) continue;
+      final half = unit.size.x / 2;
+      if ((point.x - unit.position.x).abs() <= half &&
+          (point.y - unit.position.y).abs() <= half) {
+        return unit;
+      }
+    }
+    return null;
   }
 
   /// Static twin of [_resolvedStartingGold] - lets `GamePage` seed its

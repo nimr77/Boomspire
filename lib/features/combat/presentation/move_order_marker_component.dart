@@ -8,17 +8,11 @@ import 'package:flame/components.dart';
 /// for as long as that unit is selected and still traveling there, and
 /// disappears once it arrives or gets a new order.
 class MoveOrderMarkerComponent extends PositionComponent {
+  final Color color;
+
+  double _phase = 0;
   MoveOrderMarkerComponent({required super.position, required this.color})
     : super(anchor: Anchor.center, priority: 20);
-
-  final Color color;
-  double _phase = 0;
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _phase += dt * 4;
-  }
 
   @override
   void render(Canvas canvas) {
@@ -38,5 +32,11 @@ class MoveOrderMarkerComponent extends PositionComponent {
       ..lineTo(0, -20)
       ..close();
     canvas.drawPath(tail, Paint()..color = color);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _phase += dt * 4;
   }
 }

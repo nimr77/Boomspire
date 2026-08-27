@@ -26,8 +26,15 @@ void main() {
 
 class _FakeAccountRepository implements AccountRepository {
   @override
-  Future<Account> createAccount({required String name, String? avatarUrl}) async =>
-      Account(id: 'test', name: name, createdAt: DateTime.now(), avatarUrl: avatarUrl);
+  Future<Account> createAccount({
+    required String name,
+    String? avatarUrl,
+  }) async => Account(
+    id: 'test',
+    name: name,
+    createdAt: DateTime.now(),
+    avatarUrl: avatarUrl,
+  );
 
   @override
   Future<Account?> currentAccount() async => null;

@@ -63,8 +63,7 @@ class _GamePageState extends State<GamePage> {
   late final BoomspireGame _game;
   late final GameStateRepository _gameState;
   final ProgressRepository _progressRepository = getIt<ProgressRepository>();
-  final AccountProfileState _accountProfileState =
-      getIt<AccountProfileState>();
+  final AccountProfileState _accountProfileState = getIt<AccountProfileState>();
   bool _recorded = false;
 
   @override

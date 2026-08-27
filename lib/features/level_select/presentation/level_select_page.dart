@@ -105,8 +105,7 @@ class _DifficultySelector extends StatelessWidget {
 
 class _LevelSelectPageState extends State<LevelSelectPage> {
   final ProgressRepository _progressRepository = getIt<ProgressRepository>();
-  final AccountProfileState _accountProfileState =
-      getIt<AccountProfileState>();
+  final AccountProfileState _accountProfileState = getIt<AccountProfileState>();
   GameDifficulty _difficulty = GameDifficulty.normal;
 
   @override

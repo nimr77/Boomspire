@@ -234,15 +234,16 @@ class MobileUnitComponent extends PositionComponent
     };
   }
 
-  /// Orders this unit to walk to [point] and hold there once it arrives -
-  /// puts it under permanent [underManualControl] (it won't auto-resume
-  /// its spawn [objective] afterward), though it still auto-fights
-  /// anything that wanders within [MobileUnitBlueprint.attackRange] while
-  /// holding (see [_maybeEngage]).
-  void issueMoveOrder(Vector2 point) {
-    underManualControl = true;
-    forcedTarget = null;
-    moveOrderTarget = point.clone();
+  /// Forces this unit onto a specific starting position before its first
+  /// path is computed - base-rushers spawn at a random terrain spawn
+  /// point; null means "keep whatever position it was constructed with"
+  /// (hunters are placed at their producing building).
+  Vector2? initialPosition() {
+    if (objective != UnitObjective.rushBase) return null;
+    final spawnPoints = game.terrainMap.spawnPoints;
+    final sp = spawnPoints[Random().nextInt(spawnPoints.length)];
+    final jitter = (Random().nextDouble() - 0.5) * 60;
+    return Vector2(sp.x, sp.y + jitter);
   }
 
   /// Orders this unit to chase down and attack [enemy], overriding whatever
@@ -254,16 +255,15 @@ class MobileUnitComponent extends PositionComponent
     forcedTarget = enemy;
   }
 
-  /// Forces this unit onto a specific starting position before its first
-  /// path is computed - base-rushers spawn at a random terrain spawn
-  /// point; null means "keep whatever position it was constructed with"
-  /// (hunters are placed at their producing building).
-  Vector2? initialPosition() {
-    if (objective != UnitObjective.rushBase) return null;
-    final spawnPoints = game.terrainMap.spawnPoints;
-    final sp = spawnPoints[Random().nextInt(spawnPoints.length)];
-    final jitter = (Random().nextDouble() - 0.5) * 60;
-    return Vector2(sp.x, sp.y + jitter);
+  /// Orders this unit to walk to [point] and hold there once it arrives -
+  /// puts it under permanent [underManualControl] (it won't auto-resume
+  /// its spawn [objective] afterward), though it still auto-fights
+  /// anything that wanders within [MobileUnitBlueprint.attackRange] while
+  /// holding (see [_maybeEngage]).
+  void issueMoveOrder(Vector2 point) {
+    underManualControl = true;
+    forcedTarget = null;
+    moveOrderTarget = point.clone();
   }
 
   /// Called by a tower every frame it has this unit locked as its current
