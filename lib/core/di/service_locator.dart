@@ -43,12 +43,8 @@ void setupServiceLocator() {
     )
     ..registerLazySingleton<TerrainRepository>(() => TerrainRepositoryImpl())
     ..registerLazySingleton<TowerRepository>(() => TowerRepositoryImpl())
-    ..registerLazySingleton<BuildingRepository>(
-      () => BuildingRepositoryImpl(),
-    )
-    ..registerLazySingleton<AllyUnitRepository>(
-      () => AllyUnitRepositoryImpl(),
-    )
+    ..registerLazySingleton<BuildingRepository>(() => BuildingRepositoryImpl())
+    ..registerLazySingleton<AllyUnitRepository>(() => AllyUnitRepositoryImpl())
     ..registerLazySingleton<EnemyRepository>(() => EnemyRepositoryImpl())
     ..registerLazySingleton<AudioRepository>(() => AudioRepositoryImpl())
     ..registerLazySingleton<AiDirectorRepository>(

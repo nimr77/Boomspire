@@ -28,9 +28,7 @@ class TrainingCenterComponent extends TowerComponent {
       _spawnTimer = GameConfig.trainingCenterSpawnInterval;
       game.world.spawnAlly(
         AllySoldierComponent(
-          blueprint: game.allyUnitRepository.blueprintFor(
-            AllyUnitType.soldier,
-          ),
+          blueprint: game.allyUnitRepository.blueprintFor(AllyUnitType.soldier),
           position: position.clone(),
         ),
       );

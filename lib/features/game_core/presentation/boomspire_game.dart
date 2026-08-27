@@ -136,6 +136,12 @@ class BoomspireGame extends FlameGame<GameWorld> {
   /// and the in-battle exit button.
   void backToLevelSelect() => onExitToMenu?.call();
 
+  /// Looks up [type]'s stats from whichever repository actually owns it -
+  /// the combat tower catalog or the support building catalog.
+  UnitBlueprint blueprintFor(UnitType type) => type is BuildingType
+      ? buildingRepository.blueprintFor(type)
+      : towerRepository.blueprintFor(type as TowerType);
+
   /// Why [type] can't be built right now, or null if it's buildable (gold
   /// permitting) - shown in the build menu's lock overlay/tooltip.
   String? buildBlockReason(UnitType type) {
@@ -404,12 +410,6 @@ class BoomspireGame extends FlameGame<GameWorld> {
     audioRepository.play(SfxType.buildPlace, volume: 0.7);
     selectedTowerType.value = null;
   }
-
-  /// Looks up [type]'s stats from whichever repository actually owns it -
-  /// the combat tower catalog or the support building catalog.
-  UnitBlueprint blueprintFor(UnitType type) => type is BuildingType
-      ? buildingRepository.blueprintFor(type)
-      : towerRepository.blueprintFor(type as TowerType);
 
   TowerComponent _createTower(
     UnitType type,

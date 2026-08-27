@@ -67,10 +67,16 @@ class _BuildMenuState extends State<BuildMenu> {
                 return ValueListenableBuilder<UnitType?>(
                   valueListenable: game.selectedTowerType,
                   builder: (context, selected, _) {
-                    final entries = [
-                      ...game.towerRepository.all,
-                      ...game.buildingRepository.all,
-                    ].where((bp) => (bp.type is BuildingType) == _showBuildings).toList();
+                    final entries =
+                        [
+                              ...game.towerRepository.all,
+                              ...game.buildingRepository.all,
+                            ]
+                            .where(
+                              (bp) =>
+                                  (bp.type is BuildingType) == _showBuildings,
+                            )
+                            .toList();
                     return AnimatedSwitcher(
                       duration: const Duration(milliseconds: 220),
                       switchInCurve: Curves.easeOut,

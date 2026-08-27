@@ -108,32 +108,29 @@ void main() {
       },
     );
 
-    test(
-      'Training Center periodically produces an Ally Soldier',
-      () async {
-        final game = await _bootGame(GameScenes.all.first);
-        final grid = game.terrainMap.grid;
-        game.gameState.addGold(1000);
+    test('Training Center periodically produces an Ally Soldier', () async {
+      final game = await _bootGame(GameScenes.all.first);
+      final grid = game.terrainMap.grid;
+      game.gameState.addGold(1000);
 
-        final cell = _findOpenCell(game);
-        game.selectTowerType(BuildingType.trainingCenter);
-        game.handleArenaTap(grid.cellCenter(cell));
-        game.handleArenaTap(grid.cellCenter(cell));
+      final cell = _findOpenCell(game);
+      game.selectTowerType(BuildingType.trainingCenter);
+      game.handleArenaTap(grid.cellCenter(cell));
+      game.handleArenaTap(grid.cellCenter(cell));
 
-        expect(game.towerCountFor(BuildingType.trainingCenter), 1);
-        expect(game.world.activeAllies, isEmpty);
+      expect(game.towerCountFor(BuildingType.trainingCenter), 1);
+      expect(game.world.activeAllies, isEmpty);
 
-        // Advance time in a few chunks past the spawn interval so the
-        // Training Center's internal timer fires - yielding to the event
-        // loop between ticks lets its async sprite-load finish mounting it.
-        for (var i = 0; i < 20; i++) {
-          await Future<void>.delayed(Duration.zero);
-          game.update(1.0);
-        }
+      // Advance time in a few chunks past the spawn interval so the
+      // Training Center's internal timer fires - yielding to the event
+      // loop between ticks lets its async sprite-load finish mounting it.
+      for (var i = 0; i < 20; i++) {
+        await Future<void>.delayed(Duration.zero);
+        game.update(1.0);
+      }
 
-        expect(game.world.activeAllies, isNotEmpty);
-      },
-    );
+      expect(game.world.activeAllies, isNotEmpty);
+    });
 
     test(
       'War Factory periodically produces an Ally vehicle/aircraft',
