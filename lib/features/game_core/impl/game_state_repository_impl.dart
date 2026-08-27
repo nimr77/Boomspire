@@ -13,13 +13,13 @@ class GameStateRepositoryImpl extends GameStateRepository {
   GameStatus _status = GameStatus.playing;
 
   @override
+  int get crystals => _crystals;
+  @override
   int get currentWave => _currentWave;
   @override
   int get gold => _gold;
   @override
   int get goldEarned => _goldEarned;
-  @override
-  int get crystals => _crystals;
   @override
   int get health => _health;
   @override
@@ -30,15 +30,15 @@ class GameStateRepositoryImpl extends GameStateRepository {
   int get totalWaves => _totalWaves;
 
   @override
-  void addGold(int amount) {
-    _gold += amount;
-    _goldEarned += amount;
+  void addCrystals(int amount) {
+    _crystals += amount;
     notifyListeners();
   }
 
   @override
-  void addCrystals(int amount) {
-    _crystals += amount;
+  void addGold(int amount) {
+    _gold += amount;
+    _goldEarned += amount;
     notifyListeners();
   }
 

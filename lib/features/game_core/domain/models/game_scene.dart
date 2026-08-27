@@ -138,18 +138,6 @@ class HomeSite {
 /// seat (and, for now, a scripted opponent to every `ai` seat).
 enum HomeSiteOwner { player, ai }
 
-/// How many directions enemies attack from, relative to the base.
-enum SpawnLayout {
-  /// A single approach, opposite the base.
-  single,
-
-  /// Two opposing approaches.
-  twoSided,
-
-  /// Every open edge around the base.
-  surround,
-}
-
 /// A capturable resource node's placement on a scene's map, as a fraction of
 /// the arena size (0,0 = top-left, 1,1 = bottom-right) so the same scene
 /// definition still makes sense at any arena size.
@@ -166,4 +154,16 @@ class ResourceNodeSite {
       );
 
   Map<String, dynamic> toJson() => {'dx': dx, 'dy': dy};
+}
+
+/// How many directions enemies attack from, relative to the base.
+enum SpawnLayout {
+  /// A single approach, opposite the base.
+  single,
+
+  /// Two opposing approaches.
+  twoSided,
+
+  /// Every open edge around the base.
+  surround,
 }

@@ -5,6 +5,7 @@ import '../../../../generated/l10n.dart';
 import '../../domain/models/game_scene.dart';
 import '../boomspire_game.dart';
 import 'build_menu.dart';
+import 'minimap_widget.dart';
 
 /// Bottom-docked command bar (health/gold/wave + construction menu), C&C
 /// Generals-style. Placed as a normal sibling below the [GameWidget] (see
@@ -65,6 +66,10 @@ class HudOverlay extends StatelessWidget {
                           );
                         },
                       ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: MinimapWidget(game: game),
                     ),
                     Expanded(
                       child: Center(

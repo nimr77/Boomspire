@@ -104,7 +104,10 @@ class _MarkerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final (index, fraction) in sites.indexed) {
-      final center = Offset(fraction.dx * size.width, fraction.dy * size.height);
+      final center = Offset(
+        fraction.dx * size.width,
+        fraction.dy * size.height,
+      );
       paintHomeSiteMarker(
         canvas,
         center,
@@ -200,8 +203,8 @@ class _SeatChip extends StatelessWidget {
 }
 
 class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
-  late final Future<EditorTerrainPreview>? _draftPreviewFuture = widget.draft ==
-          null
+  late final Future<EditorTerrainPreview>? _draftPreviewFuture =
+      widget.draft == null
       ? null
       : EditorTerrainGenerator().generate(widget.draft!);
 
@@ -270,10 +273,12 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                       }
                                       return _PlacementSurface(
                                         sites: widget.draft!.homeSites
-                                            .map((p) => Offset(
-                                                  p.x / widget.draft!.arenaWidth,
-                                                  p.y / widget.draft!.arenaHeight,
-                                                ))
+                                            .map(
+                                              (p) => Offset(
+                                                p.x / widget.draft!.arenaWidth,
+                                                p.y / widget.draft!.arenaHeight,
+                                              ),
+                                            )
                                             .toList(),
                                         selectedSlot: _selectedSlot,
                                         onTapSlot: _selectSlot,
@@ -287,7 +292,9 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                   )
                                 : _PlacementSurface(
                                     sites: widget.scene!.homeSites
-                                        .map((s) => _fractionForLayout(s.layout))
+                                        .map(
+                                          (s) => _fractionForLayout(s.layout),
+                                        )
                                         .toList(),
                                     selectedSlot: _selectedSlot,
                                     onTapSlot: _selectSlot,
@@ -307,10 +314,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                         alignment: WrapAlignment.center,
                         children: [
                           for (var i = 0; i < _siteCount; i++)
-                            _SeatChip(
-                              index: i,
-                              isYou: _selectedSlot == i,
-                            ),
+                            _SeatChip(index: i, isYou: _selectedSlot == i),
                         ],
                       ),
                     const SizedBox(height: 20),
@@ -347,11 +351,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                 ),
               ),
             ),
-            Positioned(
-              top: 12,
-              right: 12,
-              child: const WindowControls(),
-            ),
+            Positioned(top: 12, right: 12, child: const WindowControls()),
             Positioned(
               top: 12,
               left: 12,
@@ -444,7 +444,9 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
     if (aiSite == null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Testing as single-base - add another home site for a full skirmish.'),
+          content: Text(
+            'Testing as single-base - add another home site for a full skirmish.',
+          ),
         ),
       );
     }

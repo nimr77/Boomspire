@@ -50,7 +50,6 @@ import 'ai_skirmish_controller_component.dart';
 import 'game_world.dart';
 import 'ghost_placement_component.dart';
 import 'home_base_component.dart';
-import 'minimap_component.dart';
 import 'resource_node_component.dart';
 
 /// Composition root: wires the domain repositories into a running Flame
@@ -144,16 +143,6 @@ class BoomspireGame extends FlameGame<GameWorld>
          ),
        );
 
-  /// How many active Command Posts [owner] has standing - each one supports
-  /// one Artillery Bunker for that same owner (see [buildLimitFor]).
-  int commandPostCountFor(Team owner) =>
-      towerCountFor(BuildingType.commandPost, owner: owner);
-
-  bool hasTechLabFor(Team owner) => _hasTechLabByTeam[owner.id] ?? false;
-
-  bool hasCommandPostFor(Team owner) =>
-      _hasCommandPostByTeam[owner.id] ?? false;
-
   /// Sum of every standing Gold Mine's kill-gold bonus (see
   /// `GoldMineComponent.killGoldBonus`) - added on top of the normal
   /// escalating streak bonus for every kill (see
@@ -161,6 +150,16 @@ class BoomspireGame extends FlameGame<GameWorld>
   double get goldMineKillGoldBonus => world.activeTowers
       .whereType<GoldMineComponent>()
       .fold(0.0, (sum, mine) => sum + mine.killGoldBonus);
+
+  /// Starting gold for this match - the scene's own override if set,
+  /// otherwise the mode-appropriate default (a skirmish base-building war
+  /// needs far more up-front capital than the drip-fed wave-defense mode).
+  /// Shared by both the player's `gameState` and the AI's `aiEconomy`.
+  int get _resolvedStartingGold =>
+      scene.startingGold ??
+      (scene.mode == GameMode.skirmish
+          ? GameConfig.startingSkirmishGold
+          : GameConfig.startingGold);
 
   @override
   Color backgroundColor() => const Color(0xFF14181d);
@@ -247,31 +246,6 @@ class BoomspireGame extends FlameGame<GameWorld>
     _ => null,
   };
 
-  /// Attaches the anti-rocket point-defense module to the currently-selected
-  /// tower, if affordable and not already installed.
-  void buyAntiRocketForSelectedTower() {
-    final tower = selectedTower.value;
-    if (tower == null || tower.antiRocket) return;
-    if (!gameState.spendGold(kAntiRocketCost)) return;
-    tower.antiRocket = true;
-    audioRepository.play(SfxType.buildPlace, volume: 0.6);
-  }
-
-  bool canBuildTower(UnitType type, {Team? owner}) =>
-      buildBlockReason(type, owner: owner) == null;
-
-  /// How much gold [owner] currently has - the player's `gameState` wallet,
-  /// or the AI's `aiEconomy` wallet (0 if there is none, e.g. outside
-  /// skirmish mode).
-  int goldFor(Team owner) =>
-      owner.id == playerTeam.id ? gameState.gold : (aiEconomy?.gold ?? 0);
-
-  /// Spends [amount] from whichever wallet [owner] draws from (see
-  /// [goldFor]) - returns whether it actually happened.
-  bool spendGoldFor(Team owner, int amount) => owner.id == playerTeam.id
-      ? gameState.spendGold(amount)
-      : (aiEconomy?.spendGold(amount) ?? false);
-
   /// Attempts to build [type] at [point] for [owner] - the single shared
   /// path used by both the player's own build menu (via `_buildTower`) and
   /// [AiSkirmishControllerComponent], so both sides are bound by identical
@@ -319,6 +293,24 @@ class BoomspireGame extends FlameGame<GameWorld>
     }
     return tower;
   }
+
+  /// Attaches the anti-rocket point-defense module to the currently-selected
+  /// tower, if affordable and not already installed.
+  void buyAntiRocketForSelectedTower() {
+    final tower = selectedTower.value;
+    if (tower == null || tower.antiRocket) return;
+    if (!gameState.spendGold(kAntiRocketCost)) return;
+    tower.antiRocket = true;
+    audioRepository.play(SfxType.buildPlace, volume: 0.6);
+  }
+
+  bool canBuildTower(UnitType type, {Team? owner}) =>
+      buildBlockReason(type, owner: owner) == null;
+
+  /// How many active Command Posts [owner] has standing - each one supports
+  /// one Artillery Bunker for that same owner (see [buildLimitFor]).
+  int commandPostCountFor(Team owner) =>
+      towerCountFor(BuildingType.commandPost, owner: owner);
 
   /// Builds a [TowerComponent] of [type] - shared by the player's own build
   /// menu and [AiSkirmishControllerComponent]. Ownership defaults to the
@@ -430,7 +422,10 @@ class BoomspireGame extends FlameGame<GameWorld>
     }
     for (final bunkers in bunkersByOwner.values) {
       final limit =
-          buildLimitFor(TowerType.artilleryBunker, owner: bunkers.first.owner) ??
+          buildLimitFor(
+            TowerType.artilleryBunker,
+            owner: bunkers.first.owner,
+          ) ??
           0;
       final excess = bunkers.length - limit;
       for (var i = 0; i < excess; i++) {
@@ -438,6 +433,12 @@ class BoomspireGame extends FlameGame<GameWorld>
       }
     }
   }
+
+  /// How much gold [owner] currently has - the player's `gameState` wallet,
+  /// or the AI's `aiEconomy` wallet (0 if there is none, e.g. outside
+  /// skirmish mode).
+  int goldFor(Team owner) =>
+      owner.id == playerTeam.id ? gameState.gold : (aiEconomy?.gold ?? 0);
 
   /// Routes an arena tap to selecting a tower under the tap (for the
   /// repair/upgrade/sell action panel), or - if a tower type is selected -
@@ -483,6 +484,11 @@ class BoomspireGame extends FlameGame<GameWorld>
     }
   }
 
+  bool hasCommandPostFor(Team owner) =>
+      _hasCommandPostByTeam[owner.id] ?? false;
+
+  bool hasTechLabFor(Team owner) => _hasTechLabByTeam[owner.id] ?? false;
+
   @override
   Future<void> onLoad() async {
     terrainMap = terrainRepository.loadTerrain(scene: scene);
@@ -490,7 +496,6 @@ class BoomspireGame extends FlameGame<GameWorld>
     gameState.reset(startingGold: _resolvedStartingGold);
     camera.viewfinder.anchor = Anchor.topLeft;
     camera.viewfinder.position = Vector2.zero();
-    await camera.viewport.add(MinimapComponent());
     await audioRepository.preload();
     await world.initialize();
   }
@@ -602,6 +607,12 @@ class BoomspireGame extends FlameGame<GameWorld>
     _shakeEventWindow = 0.6;
   }
 
+  /// Spends [amount] from whichever wallet [owner] draws from (see
+  /// [goldFor]) - returns whether it actually happened.
+  bool spendGoldFor(Team owner, int amount) => owner.id == playerTeam.id
+      ? gameState.spendGold(amount)
+      : (aiEconomy?.spendGold(amount) ?? false);
+
   /// How many of [type] [owner] (defaults to the human player) currently
   /// has standing on the battlefield.
   int towerCountFor(UnitType type, {Team? owner}) {
@@ -694,16 +705,6 @@ class BoomspireGame extends FlameGame<GameWorld>
       aiEconomy = null;
     }
   }
-
-  /// Starting gold for this match - the scene's own override if set,
-  /// otherwise the mode-appropriate default (a skirmish base-building war
-  /// needs far more up-front capital than the drip-fed wave-defense mode).
-  /// Shared by both the player's `gameState` and the AI's `aiEconomy`.
-  int get _resolvedStartingGold =>
-      scene.startingGold ??
-      (scene.mode == GameMode.skirmish
-          ? GameConfig.startingSkirmishGold
-          : GameConfig.startingGold);
 
   TowerComponent? _towerAt(Vector2 point) {
     for (final tower in world.activeTowers) {
