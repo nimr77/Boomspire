@@ -15,6 +15,7 @@ import '../../combat/presentation/rocket_component.dart';
 import '../../combat/presentation/smoke_trail_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
 import '../../enemies/presentation/floating_text_component.dart';
+import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 import '../domain/models/tower_blueprint.dart';
 import 'tower_sprites.dart';
@@ -122,9 +123,16 @@ abstract class TowerComponent extends PositionComponent
   int get shieldMax => upgradeLevel + _bonusShieldCharges;
 
   /// Gold cost for the next upgrade tier - rises steeply so upgrades stay a
-  /// meaningful late-game gold sink.
-  int get upgradeCost =>
-      (blueprint.cost * 0.75 * pow(1.6, upgradeLevel + 1)).ceil();
+  /// meaningful late-game gold sink, and rises further as the run goes on
+  /// (see `GameConfig.upgradeCostWaveScaling`) since kills also pay out more
+  /// gold as the streak bonus builds up (see
+  /// `GameStateRepository.addKillGold`).
+  int get upgradeCost {
+    final waveScaling =
+        1 + game.gameState.currentWave * GameConfig.upgradeCostWaveScaling;
+    return (blueprint.cost * 0.75 * pow(1.6, upgradeLevel + 1) * waveScaling)
+        .ceil();
+  }
 
   /// Multiplier applied to [blueprint.damage]/[blueprint.range] based on
   /// [upgradeLevel] - subclasses' `fire()` should read effective stats

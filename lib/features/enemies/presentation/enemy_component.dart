@@ -195,8 +195,8 @@ abstract class EnemyComponent extends PositionComponent
   }
 
   void _die() {
-    final reward = blueprint.bounty + (game.gameState.currentWave - 1) * 2;
-    game.gameState.addGold(reward);
+    final baseReward = blueprint.bounty + (game.gameState.currentWave - 1) * 2;
+    final reward = game.gameState.addKillGold(baseReward);
     if (blueprint.isVehicle) {
       game.audioRepository.play(SfxType.vehicleExplosion, volume: 0.6);
       game.world.spawn(

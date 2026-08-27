@@ -8,6 +8,7 @@ class GameStateRepositoryImpl extends GameStateRepository {
   int _goldEarned = 0;
   int _currentWave = 1;
   int _totalWaves = 1;
+  int _killCount = 0;
   GameStatus _status = GameStatus.playing;
 
   @override
@@ -19,6 +20,8 @@ class GameStateRepositoryImpl extends GameStateRepository {
   @override
   int get health => _health;
   @override
+  int get killCount => _killCount;
+  @override
   GameStatus get status => _status;
   @override
   int get totalWaves => _totalWaves;
@@ -28,6 +31,16 @@ class GameStateRepositoryImpl extends GameStateRepository {
     _gold += amount;
     _goldEarned += amount;
     notifyListeners();
+  }
+
+  @override
+  int addKillGold(int baseAmount) {
+    final tiers = GameConfig.killGoldBonusTiers;
+    final bonus = tiers[_killCount.clamp(0, tiers.length - 1)];
+    _killCount++;
+    final amount = (baseAmount * (1 + bonus)).round();
+    addGold(amount);
+    return amount;
   }
 
   @override
@@ -47,6 +60,7 @@ class GameStateRepositoryImpl extends GameStateRepository {
     _gold = GameConfig.startingGold;
     _goldEarned = 0;
     _currentWave = 1;
+    _killCount = 0;
     _status = GameStatus.playing;
     notifyListeners();
   }

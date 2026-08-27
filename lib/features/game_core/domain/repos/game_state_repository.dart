@@ -19,7 +19,17 @@ abstract class GameStateRepository extends ChangeNotifier {
 
   int get totalWaves;
 
+  /// How many enemies have been killed this run - drives the escalating
+  /// bonus in [addKillGold].
+  int get killCount;
+
   void addGold(int amount);
+
+  /// Awards gold for a kill, boosted by an escalating streak bonus (+5%,
+  /// +10%, +20%, +40%, +80%, then capped at +100% for every kill after) -
+  /// see `GameConfig.killGoldBonusTiers`. Returns the actual amount added
+  /// (base + bonus) so callers can show it in floating text.
+  int addKillGold(int baseAmount);
   void damagePlayer(int amount);
   void reset();
   void setStatus(GameStatus status);
