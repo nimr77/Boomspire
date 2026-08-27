@@ -329,6 +329,121 @@ class S {
       args: [],
     );
   }
+
+  /// `Gatling Turret`
+  String get towerNameMachineGun {
+    return Intl.message(
+      'Gatling Turret',
+      name: 'towerNameMachineGun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rocket Battery`
+  String get towerNameRocket {
+    return Intl.message(
+      'Rocket Battery',
+      name: 'towerNameRocket',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Siege Cannon`
+  String get towerNameCannon {
+    return Intl.message(
+      'Siege Cannon',
+      name: 'towerNameCannon',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Flak Battery`
+  String get towerNameAntiAir {
+    return Intl.message(
+      'Flak Battery',
+      name: 'towerNameAntiAir',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Laser Lance`
+  String get towerNameLaser {
+    return Intl.message(
+      'Laser Lance',
+      name: 'towerNameLaser',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rocket Silo`
+  String get towerNameRocketSilo {
+    return Intl.message(
+      'Rocket Silo',
+      name: 'towerNameRocketSilo',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Artillery Bunker`
+  String get towerNameArtilleryBunker {
+    return Intl.message(
+      'Artillery Bunker',
+      name: 'towerNameArtilleryBunker',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `SAM Site`
+  String get towerNameSam {
+    return Intl.message('SAM Site', name: 'towerNameSam', desc: '', args: []);
+  }
+
+  /// `Tech Lab`
+  String get buildingNameTechLab {
+    return Intl.message(
+      'Tech Lab',
+      name: 'buildingNameTechLab',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Command Post`
+  String get buildingNameCommandPost {
+    return Intl.message(
+      'Command Post',
+      name: 'buildingNameCommandPost',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Training Center`
+  String get buildingNameTrainingCenter {
+    return Intl.message(
+      'Training Center',
+      name: 'buildingNameTrainingCenter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `War Factory`
+  String get buildingNameWarFactory {
+    return Intl.message(
+      'War Factory',
+      name: 'buildingNameWarFactory',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

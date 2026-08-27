@@ -18,7 +18,7 @@ class RocketSiloTowerComponent extends TowerComponent {
 
   @override
   void fire(EnemyComponent target) {
-    final isBigTarget = target.blueprint.isVehicle || target.blueprint.isNaval;
+    final isBigTarget = target.blueprint.isVehicle || target.blueprint.isSeaUnit;
     final dir = (target.position - position).normalized();
     final spawnPos = position + dir * (size.x / 2);
     game.world.spawn(
@@ -29,8 +29,7 @@ class RocketSiloTowerComponent extends TowerComponent {
             ? effectiveDamage * _kBigTargetDamageMultiplier
             : effectiveDamage,
         splashRadius: blueprint.splashRadius,
-        canHitAir: blueprint.canTargetAir,
-        canHitGround: blueprint.canTargetGround,
+        attackDomains: blueprint.attackDomains,
       ),
     );
     game.audioRepository.play(SfxType.rocketLaunch, volume: 0.7);

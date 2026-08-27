@@ -7,6 +7,7 @@ class AllyLightVehicleComponent extends AllyUnitComponent {
   AllyLightVehicleComponent({
     required super.blueprint,
     required super.position,
+    super.level,
   });
 
   @override

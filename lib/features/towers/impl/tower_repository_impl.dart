@@ -1,12 +1,14 @@
+import '../../../generated/l10n.dart';
+import '../../../core/combat/unit.dart';
 import '../domain/models/tower_type.dart';
 import '../domain/models/unit_blueprint.dart';
 import '../domain/repos/tower_repository.dart';
 
 class TowerRepositoryImpl implements TowerRepository {
-  static const _blueprints = <TowerType, UnitBlueprint>{
+  Map<TowerType, UnitBlueprint> get _blueprints => <TowerType, UnitBlueprint>{
     TowerType.machineGun: UnitBlueprint(
       type: TowerType.machineGun,
-      name: 'Gatling Turret',
+      name: S.current.towerNameMachineGun,
       cost: 40,
       range: 150,
       damage: 7,
@@ -15,7 +17,7 @@ class TowerRepositoryImpl implements TowerRepository {
     ),
     TowerType.rocket: UnitBlueprint(
       type: TowerType.rocket,
-      name: 'Rocket Battery',
+      name: S.current.towerNameRocket,
       cost: 90,
       range: 230,
       damage: 60,
@@ -25,7 +27,7 @@ class TowerRepositoryImpl implements TowerRepository {
     ),
     TowerType.cannon: UnitBlueprint(
       type: TowerType.cannon,
-      name: 'Siege Cannon',
+      name: S.current.towerNameCannon,
       cost: 140,
       range: 190,
       damage: 95,
@@ -35,18 +37,17 @@ class TowerRepositoryImpl implements TowerRepository {
     ),
     TowerType.antiAir: UnitBlueprint(
       type: TowerType.antiAir,
-      name: 'Flak Battery',
+      name: S.current.towerNameAntiAir,
       cost: 110,
       range: 260,
       damage: 26,
       fireRate: 0.5,
       maxHp: 100,
-      canTargetGround: false,
-      canTargetAir: true,
+      attackDomains: const {UnitDomain.air},
     ),
     TowerType.laser: UnitBlueprint(
       type: TowerType.laser,
-      name: 'Laser Lance',
+      name: S.current.towerNameLaser,
       cost: 170,
       range: 210,
       damage: 14,
@@ -54,26 +55,30 @@ class TowerRepositoryImpl implements TowerRepository {
       // Glass cannon: hits everything at a blistering rate but is fragile
       // enough that a single well-placed enemy rocket can take it out.
       maxHp: 35,
-      canTargetGround: true,
-      canTargetAir: true,
+      attackDomains: const {UnitDomain.ground, UnitDomain.air, UnitDomain.sea},
     ),
     TowerType.rocketSilo: UnitBlueprint(
       type: TowerType.rocketSilo,
-      name: 'Rocket Silo',
+      name: S.current.towerNameRocketSilo,
       cost: 220,
       range: 340,
+      // Long-range-only siege weapon: anything that gets inside this radius
+      // is under its minimum arc and can't be engaged at all - it relies on
+      // other towers to screen it from close-range attackers.
+      minRange: 130,
       damage: 90,
-      fireRate: 3.2,
+      // Slow reload to match its long-range-only role - it isn't meant to
+      // duel anything up close, only pound targets from afar.
+      fireRate: 4.5,
       splashRadius: 90,
       maxHp: 150,
       // Long-range siege weapon against ground and naval vehicles only -
       // no anti-air capability (see SAM Site for that job).
-      canTargetGround: true,
-      canTargetAir: false,
+      attackDomains: const {UnitDomain.ground, UnitDomain.sea},
     ),
     TowerType.artilleryBunker: UnitBlueprint(
       type: TowerType.artilleryBunker,
-      name: 'Artillery Bunker',
+      name: S.current.towerNameArtilleryBunker,
       cost: 200,
       range: 240,
       damage: 70,
@@ -83,8 +88,7 @@ class TowerRepositoryImpl implements TowerRepository {
     ),
     TowerType.sam: UnitBlueprint(
       type: TowerType.sam,
-      name: 'SAM Site',
-      cost: 160,
+      name: S.current.towerNameSam,
       // Longest anti-air range in the game - it's meant to snipe flyers
       // from far away, since it can't survive them getting close.
       range: 380,
@@ -93,8 +97,8 @@ class TowerRepositoryImpl implements TowerRepository {
       splashRadius: 20,
       // Very fragile - a couple of hits and it's gone.
       maxHp: 40,
-      canTargetGround: false,
-      canTargetAir: true,
+      cost: 160,
+      attackDomains: const {UnitDomain.air},
     ),
   };
 
@@ -104,3 +108,4 @@ class TowerRepositoryImpl implements TowerRepository {
   @override
   UnitBlueprint blueprintFor(TowerType type) => _blueprints[type]!;
 }
+

@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 
 import '../../../core/combat/targetable.dart';
+import '../../../core/combat/unit.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 import 'explosion_component.dart';
@@ -25,12 +26,11 @@ class RocketComponent extends PositionComponent
   /// True for enemy-fired shells so splash also damages towers, not enemies.
   final bool affectsTowers;
 
-  /// Whether splash damage (when [affectsTowers] is false) can hit flying
-  /// enemies / ground enemies respectively - mirrors the firing tower's own
-  /// targeting capability so, e.g., a ground-only Rocket Battery splash
-  /// never clips a helicopter/plane just passing overhead.
-  final bool canHitAir;
-  final bool canHitGround;
+  /// Which domains splash damage (when [affectsTowers] is false) can hit -
+  /// mirrors the firing tower's own [Unit.attackDomains] so, e.g., a
+  /// ground-only Rocket Battery splash never clips a helicopter/plane just
+  /// passing overhead.
+  final Set<UnitDomain> attackDomains;
   double _trailTimer = 0;
   RocketComponent({
     required Vector2 start,
@@ -40,8 +40,11 @@ class RocketComponent extends PositionComponent
     this.bodyColor = const Color(0xFFB0BEC5),
     this.tipColor = const Color(0xFFFF7043),
     this.affectsTowers = false,
-    this.canHitAir = true,
-    this.canHitGround = true,
+    this.attackDomains = const {
+      UnitDomain.ground,
+      UnitDomain.air,
+      UnitDomain.sea,
+    },
   }) : super(position: start, size: Vector2(15, 5), anchor: Anchor.center);
 
   @override
@@ -101,7 +104,7 @@ class RocketComponent extends PositionComponent
       }
     } else {
       for (final enemy in List.of(game.world.activeEnemies)) {
-        if (enemy.blueprint.isFlying ? !canHitAir : !canHitGround) continue;
+        if (!attackDomains.contains(enemy.domain)) continue;
         if (enemy.position.distanceTo(position) <= splashRadius) {
           enemy.takeDamage(damage);
         }

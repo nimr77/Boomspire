@@ -4,7 +4,11 @@ import 'ally_sprites.dart';
 import 'ally_unit_component.dart';
 
 class AllyTankComponent extends AllyUnitComponent {
-  AllyTankComponent({required super.blueprint, required super.position});
+  AllyTankComponent({
+    required super.blueprint,
+    required super.position,
+    super.level,
+  });
 
   @override
   Future<Sprite> buildSprite() => AllySpriteFactory.tank();

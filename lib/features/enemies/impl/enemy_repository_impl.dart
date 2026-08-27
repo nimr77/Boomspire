@@ -1,3 +1,4 @@
+import '../../../core/combat/unit.dart';
 import '../domain/models/enemy_blueprint.dart';
 import '../domain/models/enemy_movement_style.dart';
 import '../domain/models/enemy_type.dart';
@@ -36,7 +37,8 @@ class EnemyRepositoryImpl implements EnemyRepository {
       speed: 95,
       bounty: 22,
       size: 38,
-      isFlying: true,
+      domain: UnitDomain.air,
+      attackDomains: {UnitDomain.ground, UnitDomain.air},
       isVehicle: true,
       attackDamage: 6,
       attackRange: 160,
@@ -65,7 +67,8 @@ class EnemyRepositoryImpl implements EnemyRepository {
       speed: 230,
       bounty: 40,
       size: 40,
-      isFlying: true,
+      domain: UnitDomain.air,
+      attackDomains: {UnitDomain.ground, UnitDomain.air},
       isVehicle: true,
       // Fires an actual traveling rocket (not an instant beam) so its
       // splash can one-shot a fragile Laser Lance - and so it can be shot
@@ -81,13 +84,14 @@ class EnemyRepositoryImpl implements EnemyRepository {
       name: 'Gunboat',
       // A "big unit" - high HP/bounty, slow, shells towers from well
       // outside most short-range towers' reach. Intended target for the
-      // long-range Rocket Silo's damage bonus vs isVehicle/isNaval units.
+      // long-range Rocket Silo's damage bonus vs isVehicle/sea-domain units.
       maxHealth: 340,
       speed: 30,
       bounty: 55,
       size: 58,
+      domain: UnitDomain.sea,
+      attackDomains: {UnitDomain.ground, UnitDomain.sea},
       isVehicle: true,
-      isNaval: true,
       attackDamage: 18,
       attackRange: 210,
       attackInterval: 1.8,

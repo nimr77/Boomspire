@@ -25,8 +25,7 @@ class CannonTowerComponent extends TowerComponent {
         splashRadius: blueprint.splashRadius,
         bodyColor: const Color(0xFF616161),
         tipColor: const Color(0xFFFFC107),
-        canHitAir: blueprint.canTargetAir,
-        canHitGround: blueprint.canTargetGround,
+        attackDomains: blueprint.attackDomains,
       ),
     );
     game.audioRepository.play(SfxType.cannonShot, volume: 0.8);

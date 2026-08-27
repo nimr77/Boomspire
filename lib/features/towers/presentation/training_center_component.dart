@@ -37,6 +37,7 @@ class TrainingCenterComponent extends TowerComponent {
       AllySoldierComponent(
         blueprint: game.allyUnitRepository.blueprintFor(AllyUnitType.soldier),
         position: position.clone(),
+        level: upgradeLevel,
       ),
     );
     return true;

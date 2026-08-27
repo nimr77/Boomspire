@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 
 import '../../../core/combat/attackable.dart';
 import '../../../core/combat/targetable.dart';
+import '../../../core/combat/unit.dart';
 import '../../../core/pathfinding/astar.dart';
 import '../../../core/rendering/model_loader.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
@@ -33,7 +34,7 @@ import 'floating_text_component.dart';
 /// its way. Resolves death/escape (gold reward or player damage) once it
 /// reaches its goal or is destroyed.
 abstract class EnemyComponent extends PositionComponent
-    with HasGameReference<BoomspireGame>
+    with HasGameReference<BoomspireGame>, Unit
     implements Targetable {
   /// Enemies within this squared distance of each other push apart a bit
   /// (see [_steer]) instead of overlapping/stacking while converging on the
@@ -41,6 +42,12 @@ abstract class EnemyComponent extends PositionComponent
   static const _separationRadiusSq = 26.0 * 26.0;
 
   final EnemyBlueprint blueprint;
+
+  @override
+  UnitDomain get domain => blueprint.domain;
+
+  @override
+  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
 
   double health;
   List<Vector2> _path = [];
@@ -82,7 +89,7 @@ abstract class EnemyComponent extends PositionComponent
     final jitter = (Random().nextDouble() - 0.5) * 60;
     position = Vector2(sp.x, sp.y + jitter);
 
-    if (!blueprint.isFlying) _computePath();
+    if (!isAirUnit) _computePath();
 
     _visual = await ModelLoader.loadOrFallback(
       key: 'enemy_${blueprint.type.name}',
@@ -152,7 +159,7 @@ abstract class EnemyComponent extends PositionComponent
 
     if (_maybeEngageTower(dt)) return;
 
-    if (blueprint.isFlying) {
+    if (isAirUnit) {
       _flyToward(
         Vector2(game.terrainMap.basePoint.x, game.terrainMap.basePoint.y),
         dt,
@@ -238,6 +245,7 @@ abstract class EnemyComponent extends PositionComponent
       ...game.world.activeAllies,
     ]) {
       if (candidate.destroyed) continue;
+      if (!canAttack(candidate.domain)) continue;
       final d = candidate.position.distanceTo(position);
       if (d > maxDist) continue;
       // "Score" is what we minimize: distance for nearest-target/rush-base
@@ -404,7 +412,7 @@ abstract class EnemyComponent extends PositionComponent
     final separation = Vector2.zero();
     for (final other in game.world.activeEnemies) {
       if (identical(other, this)) continue;
-      if (other.blueprint.isFlying != blueprint.isFlying) continue;
+      if (other.isAirUnit != isAirUnit) continue;
       final delta = position - other.position;
       final distSq = delta.length2;
       if (distSq > 0 && distSq < _separationRadiusSq) {

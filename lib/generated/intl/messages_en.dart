@@ -52,6 +52,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "bestWaveReached": m0,
     "buildMenuBuildingsTab": MessageLookupByLibrary.simpleMessage("Buildings"),
     "buildMenuTowersTab": MessageLookupByLibrary.simpleMessage("Towers"),
+    "buildingNameCommandPost": MessageLookupByLibrary.simpleMessage(
+      "Command Post",
+    ),
+    "buildingNameTechLab": MessageLookupByLibrary.simpleMessage("Tech Lab"),
+    "buildingNameTrainingCenter": MessageLookupByLibrary.simpleMessage(
+      "Training Center",
+    ),
+    "buildingNameWarFactory": MessageLookupByLibrary.simpleMessage(
+      "War Factory",
+    ),
     "changeMap": MessageLookupByLibrary.simpleMessage("CHANGE MAP"),
     "defenseHoldsSubtitle": m1,
     "defenseHoldsTitle": MessageLookupByLibrary.simpleMessage("DEFENSE HOLDS"),
@@ -76,6 +86,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "playAgain": MessageLookupByLibrary.simpleMessage("PLAY AGAIN"),
     "sceneCompleted": MessageLookupByLibrary.simpleMessage("COMPLETED"),
     "towerMax": MessageLookupByLibrary.simpleMessage("MAX"),
+    "towerNameAntiAir": MessageLookupByLibrary.simpleMessage("Flak Battery"),
+    "towerNameArtilleryBunker": MessageLookupByLibrary.simpleMessage(
+      "Artillery Bunker",
+    ),
+    "towerNameCannon": MessageLookupByLibrary.simpleMessage("Siege Cannon"),
+    "towerNameLaser": MessageLookupByLibrary.simpleMessage("Laser Lance"),
+    "towerNameMachineGun": MessageLookupByLibrary.simpleMessage(
+      "Gatling Turret",
+    ),
+    "towerNameRocket": MessageLookupByLibrary.simpleMessage("Rocket Battery"),
+    "towerNameRocketSilo": MessageLookupByLibrary.simpleMessage("Rocket Silo"),
+    "towerNameSam": MessageLookupByLibrary.simpleMessage("SAM Site"),
     "towerTier": m3,
     "wavesCount": m4,
   };

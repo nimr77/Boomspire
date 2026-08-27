@@ -57,14 +57,17 @@ class WarFactoryComponent extends TowerComponent {
       AllyUnitType.tank => AllyTankComponent(
         blueprint: blueprint,
         position: position.clone(),
+        level: upgradeLevel,
       ),
       AllyUnitType.lightVehicle => AllyLightVehicleComponent(
         blueprint: blueprint,
         position: position.clone(),
+        level: upgradeLevel,
       ),
       AllyUnitType.aircraft => AllyAircraftComponent(
         blueprint: blueprint,
         position: position.clone(),
+        level: upgradeLevel,
       ),
       AllyUnitType.soldier => throw StateError(
         'War Factory does not build soldiers',

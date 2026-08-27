@@ -1,9 +1,10 @@
+import '../../../../core/combat/unit.dart';
 import 'enemy_movement_style.dart';
 import 'enemy_type.dart';
 import 'enemy_weapon_type.dart';
 
 /// Static stats for an enemy type.
-class EnemyBlueprint {
+class EnemyBlueprint with Unit {
   final EnemyType type;
 
   final String name;
@@ -17,8 +18,18 @@ class EnemyBlueprint {
 
   final double size;
 
-  /// Flying enemies ignore terrain/tower obstacles and fly straight to base.
-  final bool isFlying;
+  /// The physical domain this enemy occupies - ground troops/vehicles path
+  /// around terrain, [UnitDomain.air] flyers ignore it and beeline for the
+  /// base, [UnitDomain.sea] vessels sail the water tiles.
+  @override
+  final UnitDomain domain;
+
+  /// Which domains this enemy's weapon can hit while engaging a tower or
+  /// ally unit blocking its way - e.g. a ground-domain tank with
+  /// `{UnitDomain.ground}` can't shoot down a friendly aircraft passing
+  /// overhead.
+  @override
+  final Set<UnitDomain> attackDomains;
 
   /// Damage dealt per shot when engaging a tower blocking its way.
   final double attackDamage;
@@ -40,12 +51,6 @@ class EnemyBlueprint {
   /// Which projectile/effect this unit fires back at a tower it's engaging.
   final EnemyWeaponType weaponType;
 
-  /// Naval vessels - a "big unit" that only appears on sea maps, immune to
-  /// the terrain's land obstacles/mountains (it sails the open water tiles
-  /// instead) and the intended target of the long-range Rocket Silo's
-  /// damage bonus (see `RocketSiloTowerComponent`).
-  final bool isNaval;
-
   const EnemyBlueprint({
     required this.type,
     required this.name,
@@ -53,13 +58,13 @@ class EnemyBlueprint {
     required this.speed,
     required this.bounty,
     required this.size,
-    this.isFlying = false,
+    this.domain = UnitDomain.ground,
+    this.attackDomains = const {UnitDomain.ground},
     this.attackDamage = 0,
     this.attackRange = 0,
     this.attackInterval = 1,
     this.movementStyle = EnemyMovementStyle.walk,
     this.isVehicle = false,
     this.weaponType = EnemyWeaponType.bullet,
-    this.isNaval = false,
   });
 }

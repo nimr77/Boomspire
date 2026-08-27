@@ -6,6 +6,7 @@ import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart' show Curves;
 
 import '../../../core/combat/attackable.dart';
+import '../../../core/combat/unit.dart';
 import '../../../core/rendering/model_loader.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/explosion_component.dart';
@@ -43,12 +44,19 @@ const double _antiRocketRange = 50;
 /// structural HP - enemies can shoot towers down, and the player can repair,
 /// upgrade, or sell them for gold.
 abstract class TowerComponent extends PositionComponent
-    with HasGameReference<BoomspireGame>
+    with HasGameReference<BoomspireGame>, Unit
     implements Attackable {
   /// Seconds between shield charges regenerating once regen kicks in.
   static const double _shieldRechargeInterval = 6.0;
 
   final UnitBlueprint blueprint;
+
+  @override
+  UnitDomain get domain => blueprint.domain;
+
+  @override
+  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
+
   double hp;
   double maxHp;
   int col = 0;
@@ -234,6 +242,25 @@ abstract class TowerComponent extends PositionComponent
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.5 + rangePulse
             ..color = accent.withValues(alpha: 0.35 + rangePulse * 0.3),
+        );
+      }
+
+      // Dead-zone ring - a hatched red disc marking the minimum engagement
+      // radius for long-range-only weapons (e.g. the Rocket Silo), so it
+      // reads clearly as "can't fire in here" rather than just less range.
+      if (blueprint.minRange > 0) {
+        canvas.drawCircle(
+          center,
+          blueprint.minRange,
+          Paint()..color = const Color(0xFFE53935).withValues(alpha: 0.18),
+        );
+        canvas.drawCircle(
+          center,
+          blueprint.minRange,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5
+            ..color = const Color(0xFFE53935).withValues(alpha: 0.6),
         );
       }
 
@@ -463,9 +490,9 @@ abstract class TowerComponent extends PositionComponent
     EnemyComponent? closest;
     var closestDist = effectiveRange;
     for (final enemy in game.world.activeEnemies) {
-      if (enemy.blueprint.isFlying && !blueprint.canTargetAir) continue;
-      if (!enemy.blueprint.isFlying && !blueprint.canTargetGround) continue;
+      if (!canAttack(enemy.domain)) continue;
       final d = enemy.position.distanceTo(position);
+      if (d < blueprint.minRange) continue;
       if (d <= closestDist) {
         closest = enemy;
         closestDist = d;

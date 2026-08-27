@@ -27,8 +27,7 @@ class ArtilleryBunkerComponent extends TowerComponent {
         splashRadius: blueprint.splashRadius,
         bodyColor: const Color(0xFF6d5a4e),
         tipColor: const Color(0xFF8D6E63),
-        canHitAir: blueprint.canTargetAir,
-        canHitGround: blueprint.canTargetGround,
+        attackDomains: blueprint.attackDomains,
       ),
     );
     game.audioRepository.play(SfxType.cannonShot, volume: 0.75);

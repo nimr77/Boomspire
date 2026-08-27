@@ -87,6 +87,25 @@ class GhostPlacementComponent extends PositionComponent
         ..strokeWidth = 1.5 + pulse
         ..color = accent.withValues(alpha: 0.4 + pulse * 0.3),
     );
+
+    // Dead-zone preview - mirrors the in-game ring drawn once built (see
+    // `TowerComponent.render`) so the min-range limitation is visible
+    // before the player commits to a build.
+    if (blueprint.minRange > 0) {
+      canvas.drawCircle(
+        offset,
+        blueprint.minRange,
+        Paint()..color = const Color(0xFFE53935).withValues(alpha: 0.18),
+      );
+      canvas.drawCircle(
+        offset,
+        blueprint.minRange,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5
+          ..color = const Color(0xFFE53935).withValues(alpha: 0.6),
+      );
+    }
   }
 
   @override

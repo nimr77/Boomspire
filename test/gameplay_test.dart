@@ -13,7 +13,10 @@ import 'package:boomspire/features/allies/domain/models/ally_unit_type.dart';
 import 'package:boomspire/features/allies/impl/ally_unit_repository_impl.dart';
 import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
 import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
+import 'package:boomspire/features/enemies/domain/models/enemy_blueprint.dart';
+import 'package:boomspire/features/enemies/domain/models/enemy_type.dart';
 import 'package:boomspire/features/enemies/impl/enemy_repository_impl.dart';
+import 'package:boomspire/features/enemies/presentation/green_soldier_component.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scene.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scenes.dart';
 import 'package:boomspire/features/game_core/impl/game_state_repository_impl.dart';
@@ -23,14 +26,21 @@ import 'package:boomspire/features/towers/domain/models/building_type.dart';
 import 'package:boomspire/features/towers/domain/models/tower_type.dart';
 import 'package:boomspire/features/towers/impl/building_repository_impl.dart';
 import 'package:boomspire/features/towers/impl/tower_repository_impl.dart';
+import 'package:boomspire/features/towers/presentation/rocket_silo_tower_component.dart';
 import 'package:boomspire/features/towers/presentation/training_center_component.dart';
 import 'package:boomspire/features/towers/presentation/war_factory_component.dart';
 import 'package:boomspire/features/waves/impl/wave_repository_impl.dart';
+import 'package:boomspire/generated/l10n.dart';
 import 'package:flame/game.dart';
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    await S.load(const Locale('en'));
+  });
 
   group('build pipeline', () {
     for (final scene in GameScenes.all) {
@@ -172,6 +182,68 @@ void main() {
         );
         // Busy producing - a second request is refused until it cools down.
         expect(warFactory.produceUnit(AllyUnitType.aircraft), isFalse);
+      },
+    );
+
+    test(
+      'Rocket Silo ignores enemies inside its minimum range',
+      () async {
+        final scene = GameScenes.all.first;
+        final game = await _bootGame(scene);
+        game.gameState.addGold(1000);
+        final cell = _findOpenCell(game);
+        final grid = game.terrainMap.grid;
+
+        game.selectTowerType(TowerType.rocketSilo);
+        game.handleArenaTap(grid.cellCenter(cell));
+        game.handleArenaTap(grid.cellCenter(cell));
+        final silo = game.world.activeTowers
+            .whereType<RocketSiloTowerComponent>()
+            .first;
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+
+        final blueprint = TowerRepositoryImpl().blueprintFor(
+          TowerType.rocketSilo,
+        );
+        expect(blueprint.minRange, greaterThan(0));
+
+        // Stationary (speed 0) so it can't just wander out of the tower's
+        // reach before the tower has a chance to (not) engage it.
+        const stationarySoldier = EnemyBlueprint(
+          type: EnemyType.soldier,
+          name: 'Test Soldier',
+          maxHealth: 1000,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+
+        // Enemy well inside the dead zone: should never take damage.
+        // Position is set only after mounting, since EnemyComponent.onLoad
+        // overwrites `position` to a random spawn point.
+        final closeEnemy = GreenSoldierComponent(blueprint: stationarySoldier);
+        game.world.spawnEnemy(closeEnemy);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        closeEnemy.position = silo.position + Vector2(blueprint.minRange / 2, 0);
+        for (var i = 0; i < 40; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.2);
+        }
+        expect(closeEnemy.health, closeEnemy.blueprint.maxHealth);
+
+        // Enemy just outside the dead zone but still in range: gets hit.
+        final farEnemy = GreenSoldierComponent(blueprint: stationarySoldier);
+        game.world.spawnEnemy(farEnemy);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        farEnemy.position = silo.position + Vector2(blueprint.minRange + 20, 0);
+        for (var i = 0; i < 40; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.2);
+        }
+        expect(farEnemy.health, lessThan(farEnemy.blueprint.maxHealth));
       },
     );
   });

@@ -6,6 +6,7 @@ import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart' show Curves;
 
 import '../../../core/combat/attackable.dart';
+import '../../../core/combat/unit.dart';
 import '../../../core/pathfinding/astar.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/bullet_component.dart';
@@ -29,9 +30,21 @@ const Color kHomeAccentColor = Color(0xFF00E5FF);
 /// nearest enemy on the map, engaging it in a direct firefight, mirroring
 /// how `EnemyComponent` engages towers.
 abstract class AllyUnitComponent extends PositionComponent
-    with HasGameReference<BoomspireGame>
+    with HasGameReference<BoomspireGame>, Unit
     implements Attackable {
   final AllyUnitBlueprint blueprint;
+
+  @override
+  UnitDomain get domain => blueprint.domain;
+
+  @override
+  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
+
+  /// Upgrade tier (0-based) of the Training Center/War Factory that
+  /// mustered this unit - its stats scale with that building's level so
+  /// player investment in the producer, not a flat spawn, is what makes
+  /// ally units stronger.
+  final int level;
 
   double health;
   List<Vector2> _path = [];
@@ -43,20 +56,29 @@ abstract class AllyUnitComponent extends PositionComponent
   bool _destroyed = false;
   late final PositionComponent _visual;
 
-  AllyUnitComponent({required this.blueprint, required Vector2 position})
-    : health = blueprint.maxHealth,
-      super(
-        position: position,
-        size: Vector2.all(blueprint.size),
-        anchor: Anchor.center,
-        priority: 9,
-      );
+  AllyUnitComponent({
+    required this.blueprint,
+    required Vector2 position,
+    this.level = 0,
+  }) : health = blueprint.maxHealth * pow(1.25, level),
+       super(
+         position: position,
+         size: Vector2.all(blueprint.size),
+         anchor: Anchor.center,
+         priority: 9,
+       );
+
+  double get _levelMultiplier => pow(1.25, level).toDouble();
+
+  double get effectiveMaxHealth => blueprint.maxHealth * _levelMultiplier;
+
+  double get effectiveAttackDamage => blueprint.attackDamage * _levelMultiplier;
 
   @override
   bool get destroyed => _destroyed;
 
   @override
-  double get healthRatio => (health / blueprint.maxHealth).clamp(0.0, 1.0);
+  double get healthRatio => (health / effectiveMaxHealth).clamp(0.0, 1.0);
 
   Future<Sprite> buildSprite();
 
@@ -85,7 +107,7 @@ abstract class AllyUnitComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    if (health >= blueprint.maxHealth) return;
+    if (health >= effectiveMaxHealth) return;
     final ratio = healthRatio;
     final barWidth = size.x * 0.8;
     final barX = (size.x - barWidth) / 2;
@@ -121,7 +143,7 @@ abstract class AllyUnitComponent extends PositionComponent
     final seek = _nearestEnemy();
     if (seek == null) return;
 
-    if (blueprint.isFlying) {
+    if (isAirUnit) {
       _flyToward(seek.position, dt);
     } else {
       _repathTimer -= dt;
@@ -175,6 +197,7 @@ abstract class AllyUnitComponent extends PositionComponent
     var bestDist = blueprint.attackRange;
     for (final enemy in game.world.activeEnemies) {
       if (enemy.isRemoving) continue;
+      if (!canAttack(enemy.domain)) continue;
       final d = enemy.position.distanceTo(position);
       if (d <= bestDist) {
         best = enemy;
@@ -234,7 +257,7 @@ abstract class AllyUnitComponent extends PositionComponent
           RocketComponent(
             start: spawnPos,
             target: target,
-            damage: blueprint.attackDamage,
+            damage: effectiveAttackDamage,
             splashRadius: 40,
             bodyColor: const Color(0xFF37474F),
             tipColor: kHomeAccentColor,
@@ -246,7 +269,7 @@ abstract class AllyUnitComponent extends PositionComponent
           BulletComponent(
             start: spawnPos,
             target: target,
-            damage: blueprint.attackDamage,
+            damage: effectiveAttackDamage,
           ),
         );
         game.audioRepository.play(SfxType.machineGunShot, volume: 0.3);
@@ -266,6 +289,7 @@ abstract class AllyUnitComponent extends PositionComponent
     var bestDist = double.infinity;
     for (final enemy in game.world.activeEnemies) {
       if (enemy.isRemoving) continue;
+      if (!canAttack(enemy.domain)) continue;
       final d = enemy.position.distanceTo(position);
       if (d < bestDist) {
         best = enemy;
