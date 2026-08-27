@@ -17,7 +17,15 @@ class EnemySpriteFactory {
   static Sprite? _gunboat;
   static Sprite? _artilleryBarrage;
   static Sprite? _rocketBarrage;
+  static Sprite? _antiAirVehicle;
   EnemySpriteFactory._();
+
+  static Future<Sprite> antiAirVehicle() async {
+    final cached = _antiAirVehicle;
+    if (cached != null) return cached;
+    final image = await renderToImage(52, 52, _paintAntiAirVehicle);
+    return _antiAirVehicle = Sprite(image);
+  }
 
   static Future<Sprite> artilleryBarrage() async {
     final cached = _artilleryBarrage;
@@ -77,6 +85,7 @@ class EnemySpriteFactory {
     UnitKind.gunboat => gunboat(),
     UnitKind.artilleryBarrage => artilleryBarrage(),
     UnitKind.rocketBarrage => rocketBarrage(),
+    UnitKind.antiAirVehicle => antiAirVehicle(),
     _ => throw ArgumentError('No enemy sprite for $kind'),
   };
 
@@ -91,7 +100,8 @@ class EnemySpriteFactory {
     UnitKind.attackPlane ||
     UnitKind.gunboat ||
     UnitKind.artilleryBarrage ||
-    UnitKind.rocketBarrage => true,
+    UnitKind.rocketBarrage ||
+    UnitKind.antiAirVehicle => true,
     _ => false,
   };
 
@@ -673,6 +683,82 @@ class EnemySpriteFactory {
 
     // Headlight - small warm beacon on the hull front, doubles as the
     // "alive" light other vehicle types also carry.
+    canvas.drawCircle(
+      center.translate(0, size * 0.16),
+      size * 0.045,
+      Paint()..color = const Color(0xFFFFF59D),
+    );
+  }
+
+  static void _paintAntiAirVehicle(Canvas canvas) {
+    const size = 52.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.85, height: size * 0.3),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    // Treads.
+    for (final dx in [-size * 0.28, size * 0.28]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, size * 0.06),
+            width: size * 0.22,
+            height: size * 0.56,
+          ),
+          const Radius.circular(8),
+        ),
+        Paint()..color = const Color(0xFF1a1c20),
+      );
+    }
+
+    // Hull.
+    final hullRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.58,
+      height: size * 0.4,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(hullRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF78909C), Color(0xFF263238)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(hullRect),
+    );
+
+    // Twin flak barrels, angled skyward instead of a tank's single
+    // forward-pointed barrel - the visual cue that this vehicle shoots air
+    // targets too.
+    for (final dx in [-size * 0.08, size * 0.08]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, -size * 0.3),
+            width: size * 0.07,
+            height: size * 0.32,
+          ),
+          const Radius.circular(2),
+        ),
+        Paint()..color = const Color(0xFF2b2f36),
+      );
+    }
+
+    // Radar dish on the deck.
+    canvas.drawCircle(
+      center.translate(0, -size * 0.02),
+      size * 0.13,
+      Paint()..color = const Color(0xFF37474F),
+    );
+    canvas.drawCircle(
+      center.translate(0, -size * 0.02),
+      size * 0.08,
+      Paint()..color = const Color(0xFFFFCA28).withValues(alpha: 0.85),
+    );
+
     canvas.drawCircle(
       center.translate(0, size * 0.16),
       size * 0.045,

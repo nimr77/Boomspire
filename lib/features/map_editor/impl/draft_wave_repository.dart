@@ -18,6 +18,7 @@ const Map<UnitKind, double> _intervalFor = {
   UnitKind.aircraft: 1.9,
   UnitKind.artilleryBarrage: 2.6,
   UnitKind.rocketBarrage: 2.4,
+  UnitKind.antiAirVehicle: 2.4,
 };
 
 /// A [WaveRepository] backed by a map draft's author-controlled

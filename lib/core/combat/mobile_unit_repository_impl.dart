@@ -134,8 +134,26 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       movementStyle: MovementStyle.roll,
       weaponType: WeaponType.rocket,
     ),
+    // New: a flak/SPAAG-style vehicle whose `attackDomains` cover both
+    // ground and air, so it threatens ally aircraft/helicopters as well as
+    // ground allies in the same volley.
+    UnitKind.antiAirVehicle: MobileUnitBlueprint(
+      kind: UnitKind.antiAirVehicle,
+      name: 'Anti-Air Vehicle',
+      maxHealth: 160,
+      speed: 45,
+      bounty: 48,
+      size: 46,
+      attackDomains: {UnitDomain.ground, UnitDomain.air},
+      isVehicle: true,
+      attackDamage: 9,
+      projectileCount: 2,
+      attackRange: 210,
+      attackInterval: 1.0,
+      movementStyle: MovementStyle.roll,
+      weaponType: WeaponType.cannon,
+    ),
   };
-
   // Note: these are the stats a fresh, un-upgraded Training Center/War
   // Factory produces - `AllyUnitComponent` scales health/damage up with the
   // producing building's `upgradeLevel`, so stronger ally units require

@@ -30,4 +30,9 @@ enum UnitKind {
   /// plain [soldier] its `attackDomains` include air, so it can shoot down
   /// helicopters/planes.
   antiAirSoldier,
+
+  /// Enemy-only vehicle (a wave-defense invader) - a ground vehicle whose
+  /// `attackDomains` include air, so it can shoot down player helicopters/
+  /// aircraft as well as ground allies, not just one or the other.
+  antiAirVehicle,
 }

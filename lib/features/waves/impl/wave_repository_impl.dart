@@ -75,6 +75,17 @@ class WaveRepositoryImpl implements WaveRepository {
       );
     }
 
+    if (n >= 6) {
+      spawns.add(
+        SpawnEntry(
+          type: UnitKind.antiAirVehicle,
+          count: (1 + (n - 6) * 0.5).round(),
+          interval: (2.4 - n * 0.05).clamp(1.4, 2.4),
+          startDelay: 5,
+        ),
+      );
+    }
+
     if (n >= 7) {
       spawns.add(
         SpawnEntry(
