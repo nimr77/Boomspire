@@ -117,37 +117,35 @@ void main() {
       expect(
         game.buildBlockReason(BuildingType.techLab),
         'Max 1 built',
-        reason: 'Tech Lab should report a lock reason once its 1-build cap '
+        reason:
+            'Tech Lab should report a lock reason once its 1-build cap '
             'is hit',
       );
     });
 
-    test(
-      'Command Post and War Factory have no build cap - more than one can '
-      'be built',
-      () async {
-        for (final type in [BuildingType.commandPost, BuildingType.warFactory]) {
-          final game = await _bootGame(GameScenes.all.first);
-          final grid = game.terrainMap.grid;
-          game.gameState.addGold(5000);
+    test('Command Post and War Factory have no build cap - more than one can '
+        'be built', () async {
+      for (final type in [BuildingType.commandPost, BuildingType.warFactory]) {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        game.gameState.addGold(5000);
 
-          for (var i = 0; i < 3; i++) {
-            expect(game.buildBlockReason(type), isNull);
-            final cell = _findOpenCell(game);
-            game.selectTowerType(type);
-            game.handleArenaTap(grid.cellCenter(cell));
-            game.handleArenaTap(grid.cellCenter(cell));
-          }
-
-          expect(game.towerCountFor(type), 3);
-          expect(
-            game.buildBlockReason(type),
-            isNull,
-            reason: '$type should never report a build-limit lock',
-          );
+        for (var i = 0; i < 3; i++) {
+          expect(game.buildBlockReason(type), isNull);
+          final cell = _findOpenCell(game);
+          game.selectTowerType(type);
+          game.handleArenaTap(grid.cellCenter(cell));
+          game.handleArenaTap(grid.cellCenter(cell));
         }
-      },
-    );
+
+        expect(game.towerCountFor(type), 3);
+        expect(
+          game.buildBlockReason(type),
+          isNull,
+          reason: '$type should never report a build-limit lock',
+        );
+      }
+    });
 
     test(
       'Training Center builds an Ally Soldier on demand from its menu',
@@ -665,39 +663,38 @@ void main() {
       },
     );
 
+    test('selecting a tower type to build deselects the previously-selected '
+        'unit', () async {
+      final game = await _bootGame(GameScenes.all.first);
+      const blueprint = MobileUnitBlueprint(
+        kind: UnitKind.soldier,
+        name: 'Test Ally',
+        maxHealth: 40,
+        speed: 0,
+        bounty: 0,
+        size: 34,
+      );
+      final ally = MobileUnitComponent(
+        blueprint: blueprint,
+        team: game.playerTeam,
+        objective: UnitObjective.huntHostiles,
+      );
+      game.world.spawnUnit(ally);
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+      ally.position = Vector2(300, 300);
+
+      game.handleArenaTap(ally.position);
+      expect(game.selectedUnit.value, ally);
+
+      game.selectTowerType(TowerType.machineGun);
+      expect(game.selectedUnit.value, isNull);
+      expect(game.selectedTowerType.value, TowerType.machineGun);
+    });
+
     test(
-      'selecting a tower type to build deselects the previously-selected '
-      'unit',
+      'deselectAll clears unit/tower/build selections and inspect state',
       () async {
-        final game = await _bootGame(GameScenes.all.first);
-        const blueprint = MobileUnitBlueprint(
-          kind: UnitKind.soldier,
-          name: 'Test Ally',
-          maxHealth: 40,
-          speed: 0,
-          bounty: 0,
-          size: 34,
-        );
-        final ally = MobileUnitComponent(
-          blueprint: blueprint,
-          team: game.playerTeam,
-          objective: UnitObjective.huntHostiles,
-        );
-        game.world.spawnUnit(ally);
-        await Future<void>.delayed(Duration.zero);
-        game.update(0);
-        ally.position = Vector2(300, 300);
-
-        game.handleArenaTap(ally.position);
-        expect(game.selectedUnit.value, ally);
-
-        game.selectTowerType(TowerType.machineGun);
-        expect(game.selectedUnit.value, isNull);
-        expect(game.selectedTowerType.value, TowerType.machineGun);
-      },
-    );
-
-    test('deselectAll clears unit/tower/build selections and inspect state', () async {
         final game = await _bootGame(GameScenes.all.first);
         const blueprint = MobileUnitBlueprint(
           kind: UnitKind.soldier,

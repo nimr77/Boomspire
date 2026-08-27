@@ -32,8 +32,10 @@ class GameWorld extends World
   /// target.
   static const _panSpeed = 640.0;
 
+  static const double _targetComputeInterval = 0.2;
   final List<MobileUnitComponent> activeUnits = [];
   final List<TowerComponent> activeTowers = [];
+
   final List<ResourceNodeComponent> activeResourceNodes = [];
 
   /// How many of each team's towers currently have a given target (a
@@ -58,8 +60,6 @@ class GameWorld extends World
   /// Same as [_unitsById] but for towers/buildings, since a background
   /// suggestion can now point at either kind of target.
   Map<int, TowerComponent> _towersById = {};
-
-  static const double _targetComputeInterval = 0.2;
   double _targetComputeTimer = 0;
   bool _targetComputeInFlight = false;
 
@@ -192,30 +192,6 @@ class GameWorld extends World
     add(unit);
   }
 
-  /// Every live mobile unit whose [Team] is allied with (same side as)
-  /// [team] - includes [team]'s own units, since a team is always "allied"
-  /// with itself.
-  Iterable<MobileUnitComponent> unitsAlliedWith(Team team) => activeUnits.where(
-    (u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.ally,
-  );
-
-  /// Every live mobile unit whose [Team] is hostile to [team] - this is
-  /// what a unit or tower belonging to [team] should be scanning for
-  /// targets.
-  Iterable<MobileUnitComponent> unitsHostileTo(Team team) => activeUnits.where(
-    (u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.enemy,
-  );
-
-  /// Every live tower/building whose [TowerComponent.owner] is hostile to
-  /// [team] - towers/buildings are valid targets too, scored exactly like a
-  /// stationary ground unit (see [computeTargetAssignments]); a tower's own
-  /// [TowerComponent.attackDomains] is what actually decides whether it's
-  /// allowed to hit one (e.g. an anti-air/SAM site only attacks
-  /// [UnitDomain.air] and so never targets a ground-domain tower).
-  Iterable<TowerComponent> towersHostileTo(Team team) => activeTowers.where(
-    (t) => !t.destroyed && team.relationTo(t.owner) == TeamRelation.enemy,
-  );
-
   /// The target [tower] should shoot next, per the last completed
   /// background focus-fire scan (see [_refreshTargetAssignments]) - `null`
   /// if nothing has been computed yet, the suggestion has since
@@ -229,6 +205,30 @@ class GameWorld extends World
     if (other == null || other.destroyed || !other.isMounted) return null;
     return other;
   }
+
+  /// Every live tower/building whose [TowerComponent.owner] is hostile to
+  /// [team] - towers/buildings are valid targets too, scored exactly like a
+  /// stationary ground unit (see [computeTargetAssignments]); a tower's own
+  /// [TowerComponent.attackDomains] is what actually decides whether it's
+  /// allowed to hit one (e.g. an anti-air/SAM site only attacks
+  /// [UnitDomain.air] and so never targets a ground-domain tower).
+  Iterable<TowerComponent> towersHostileTo(Team team) => activeTowers.where(
+    (t) => !t.destroyed && team.relationTo(t.owner) == TeamRelation.enemy,
+  );
+
+  /// Every live mobile unit whose [Team] is allied with (same side as)
+  /// [team] - includes [team]'s own units, since a team is always "allied"
+  /// with itself.
+  Iterable<MobileUnitComponent> unitsAlliedWith(Team team) => activeUnits.where(
+    (u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.ally,
+  );
+
+  /// Every live mobile unit whose [Team] is hostile to [team] - this is
+  /// what a unit or tower belonging to [team] should be scanning for
+  /// targets.
+  Iterable<MobileUnitComponent> unitsHostileTo(Team team) => activeUnits.where(
+    (u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.enemy,
+  );
 
   @override
   void update(double dt) {
@@ -293,23 +293,6 @@ class GameWorld extends World
     );
   }
 
-  /// Rebuilds [targeterCounts] from each tower's [TowerComponent.currentTarget]
-  /// as of the end of the previous frame - a single O(towers) pass run once
-  /// at the top of this frame's [update], before any tower re-evaluates its
-  /// own target, so the "how contested is this candidate" check every
-  /// tower's `_acquireTarget` does stays O(1) instead of every tower
-  /// independently rescanning every other tower (which would be
-  /// O(towers²) per frame).
-  void _refreshTargeterCounts() {
-    targeterCounts.clear();
-    for (final tower in activeTowers) {
-      final target = tower.currentTarget;
-      if (target != null) {
-        targeterCounts[target] = (targeterCounts[target] ?? 0) + 1;
-      }
-    }
-  }
-
   /// Runs [computeTargetAssignments] on a background isolate via `compute()`
   /// - the actual O(towers × enemies) focus-fire scan, taken off the main
   /// isolate so it never competes with rendering/input on a big battlefield.
@@ -372,6 +355,23 @@ class GameWorld extends World
         ..addAll(result);
     } finally {
       _targetComputeInFlight = false;
+    }
+  }
+
+  /// Rebuilds [targeterCounts] from each tower's [TowerComponent.currentTarget]
+  /// as of the end of the previous frame - a single O(towers) pass run once
+  /// at the top of this frame's [update], before any tower re-evaluates its
+  /// own target, so the "how contested is this candidate" check every
+  /// tower's `_acquireTarget` does stays O(1) instead of every tower
+  /// independently rescanning every other tower (which would be
+  /// O(towers²) per frame).
+  void _refreshTargeterCounts() {
+    targeterCounts.clear();
+    for (final tower in activeTowers) {
+      final target = tower.currentTarget;
+      if (target != null) {
+        targeterCounts[target] = (targeterCounts[target] ?? 0) + 1;
+      }
     }
   }
 }

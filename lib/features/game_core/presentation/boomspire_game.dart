@@ -428,6 +428,17 @@ class BoomspireGame extends FlameGame<GameWorld>
     return tower;
   }
 
+  /// Clears every selection/in-progress-placement state at once - the
+  /// right-click "cancel" gesture (see `GamePage`'s `Listener`), a quicker
+  /// way to back out than tapping empty ground.
+  void deselectAll() {
+    selectedTowerType.value = null;
+    selectedTower.value = null;
+    selectedUnit.value = null;
+    inspected.value = null;
+    pendingPlacement.value = null;
+  }
+
   /// The opposing side's destructible home base, as an [Attackable] a
   /// [team] unit's weapon can engage - null outside skirmish mode, or once
   /// that base is already gone.
@@ -685,17 +696,6 @@ class BoomspireGame extends FlameGame<GameWorld>
     // mutually exclusive, same as `handleArenaTap` already keeps
     // `selectedTower`/`selectedUnit` from overlapping.
     selectedUnit.value = null;
-  }
-
-  /// Clears every selection/in-progress-placement state at once - the
-  /// right-click "cancel" gesture (see `GamePage`'s `Listener`), a quicker
-  /// way to back out than tapping empty ground.
-  void deselectAll() {
-    selectedTowerType.value = null;
-    selectedTower.value = null;
-    selectedUnit.value = null;
-    inspected.value = null;
-    pendingPlacement.value = null;
   }
 
   /// Sells the currently-selected tower for a partial gold refund and frees

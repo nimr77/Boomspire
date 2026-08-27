@@ -2,71 +2,11 @@ import 'dart:math';
 
 import '../../../../core/combat/unit_domain.dart';
 
-/// Plain-data snapshot of one tower, safe to send across an isolate boundary
-/// via `compute()` (see [computeTargetAssignments]) - mirrors just the
-/// fields `TowerComponent._acquireTarget`/`_isGoodFocusFireTarget`/
-/// `_hasFasterFinisherAssigned` need to score candidate targets.
-class TowerSnapshot {
-  final int id;
-  final double x;
-  final double y;
-  final double minRange;
-  final double range;
-  final double damage;
-  final int ownerId;
-  final int? currentTargetId;
-  final Set<UnitDomain> attackDomains;
-
-  const TowerSnapshot({
-    required this.id,
-    required this.x,
-    required this.y,
-    required this.minRange,
-    required this.range,
-    required this.damage,
-    required this.ownerId,
-    required this.currentTargetId,
-    required this.attackDomains,
-  });
-}
-
-/// Plain-data snapshot of one potential target - a mobile unit or an enemy
-/// tower/building (buildings score exactly like a stationary ground unit;
-/// only [TowerSnapshot.attackDomains]/domain filtering decides who can hit
-/// them) - see [TowerSnapshot].
-class TargetSnapshot {
-  final int id;
-  final double x;
-  final double y;
-  final double health;
-  final double healthRatio;
-  final int teamId;
-  final UnitDomain domain;
-
-  const TargetSnapshot({
-    required this.id,
-    required this.x,
-    required this.y,
-    required this.health,
-    required this.healthRatio,
-    required this.teamId,
-    required this.domain,
-  });
-}
-
-/// Everything [computeTargetAssignments] needs for one battlefield-wide
-/// targeting pass - plain data only, so the whole thing can cross an
-/// isolate boundary via `compute()`.
-class TargetingSnapshot {
-  final List<TowerSnapshot> towers;
-  final List<TargetSnapshot> targets;
-
-  const TargetingSnapshot({required this.towers, required this.targets});
-}
+const int _finishingBlowShots = 5;
 
 const int _maxSharedTargeters = 3;
+
 const double _nearDeathHealthRatio = 0.3;
-const int _finishingBlowShots = 5;
 
 /// Pure, side-effect-free re-implementation of `TowerComponent`'s
 /// focus-fire scoring (same `_maxSharedTargeters`/`_nearDeathHealthRatio`/
@@ -138,4 +78,66 @@ bool _isGoodFocusFireTarget(
       .where((t) => t.currentTargetId == unit.id)
       .length;
   return targeters < _maxSharedTargeters;
+}
+
+/// Everything [computeTargetAssignments] needs for one battlefield-wide
+/// targeting pass - plain data only, so the whole thing can cross an
+/// isolate boundary via `compute()`.
+class TargetingSnapshot {
+  final List<TowerSnapshot> towers;
+  final List<TargetSnapshot> targets;
+
+  const TargetingSnapshot({required this.towers, required this.targets});
+}
+
+/// Plain-data snapshot of one potential target - a mobile unit or an enemy
+/// tower/building (buildings score exactly like a stationary ground unit;
+/// only [TowerSnapshot.attackDomains]/domain filtering decides who can hit
+/// them) - see [TowerSnapshot].
+class TargetSnapshot {
+  final int id;
+  final double x;
+  final double y;
+  final double health;
+  final double healthRatio;
+  final int teamId;
+  final UnitDomain domain;
+
+  const TargetSnapshot({
+    required this.id,
+    required this.x,
+    required this.y,
+    required this.health,
+    required this.healthRatio,
+    required this.teamId,
+    required this.domain,
+  });
+}
+
+/// Plain-data snapshot of one tower, safe to send across an isolate boundary
+/// via `compute()` (see [computeTargetAssignments]) - mirrors just the
+/// fields `TowerComponent._acquireTarget`/`_isGoodFocusFireTarget`/
+/// `_hasFasterFinisherAssigned` need to score candidate targets.
+class TowerSnapshot {
+  final int id;
+  final double x;
+  final double y;
+  final double minRange;
+  final double range;
+  final double damage;
+  final int ownerId;
+  final int? currentTargetId;
+  final Set<UnitDomain> attackDomains;
+
+  const TowerSnapshot({
+    required this.id,
+    required this.x,
+    required this.y,
+    required this.minRange,
+    required this.range,
+    required this.damage,
+    required this.ownerId,
+    required this.currentTargetId,
+    required this.attackDomains,
+  });
 }
