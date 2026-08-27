@@ -7,6 +7,7 @@ class AllyAircraftComponent extends AllyUnitComponent {
   AllyAircraftComponent({
     required super.blueprint,
     required super.position,
+    required super.team,
     super.level,
   });
 

@@ -7,6 +7,7 @@ class AllySoldierComponent extends AllyUnitComponent {
   AllySoldierComponent({
     required super.blueprint,
     required super.position,
+    required super.team,
     super.level,
   });
 

@@ -6,9 +6,8 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
-import '../../allies/domain/repos/ally_unit_repository.dart';
+import '../../../core/combat/mobile_unit_repository.dart';
 import '../../audio/domain/repos/audio_repository.dart';
-import '../../enemies/domain/repos/enemy_repository.dart';
 import '../../level_select/presentation/biome_preview.dart';
 import '../../progress/domain/repos/progress_repository.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
@@ -136,8 +135,7 @@ class _GamePageState extends State<GamePage> {
       terrainRepository: getIt<TerrainRepository>(),
       towerRepository: getIt<TowerRepository>(),
       buildingRepository: getIt<BuildingRepository>(),
-      allyUnitRepository: getIt<AllyUnitRepository>(),
-      enemyRepository: getIt<EnemyRepository>(),
+      unitRepository: getIt<MobileUnitRepository>(),
       waveRepository: getIt<WaveRepository>(
         param1: widget.scene.waveCount,
         param2: widget.scene.biome,

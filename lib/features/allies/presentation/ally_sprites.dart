@@ -12,6 +12,7 @@ class AllySpriteFactory {
   static Sprite? _tank;
   static Sprite? _lightVehicle;
   static Sprite? _aircraft;
+  static Sprite? _rocketBarrage;
   static const _hull = Color(0xFF2B3A42);
 
   static const _hullDark = Color(0xFF172126);
@@ -30,6 +31,13 @@ class AllySpriteFactory {
     if (cached != null) return cached;
     final image = await renderToImage(46, 46, _paintLightVehicle);
     return _lightVehicle = Sprite(image);
+  }
+
+  static Future<Sprite> rocketBarrage() async {
+    final cached = _rocketBarrage;
+    if (cached != null) return cached;
+    final image = await renderToImage(50, 50, _paintRocketBarrage);
+    return _rocketBarrage = Sprite(image);
   }
 
   static Future<Sprite> soldier() async {
@@ -168,6 +176,67 @@ class AllySpriteFactory {
     // Wheels.
     for (final dy in [-size * 0.24, size * 0.24]) {
       for (final dx in [-size * 0.32, size * 0.32]) {
+        canvas.drawCircle(
+          center.translate(dx, dy),
+          size * 0.1,
+          Paint()..color = const Color(0xFF0d0d0d),
+        );
+      }
+    }
+  }
+
+  static void _paintRocketBarrage(Canvas canvas) {
+    const size = 50.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.86, height: size * 0.3),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    final bodyRect = Rect.fromCenter(
+      center: center.translate(0, size * 0.1),
+      width: size * 0.62,
+      height: size * 0.56,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bodyRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [_hull, _hullDark],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(bodyRect),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bodyRect, const Radius.circular(6)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = _accent.withValues(alpha: 0.8),
+    );
+
+    // Rocket-pod cluster mounted on the back.
+    final podRect = Rect.fromCenter(
+      center: center.translate(0, -size * 0.22),
+      width: size * 0.5,
+      height: size * 0.3,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(podRect, const Radius.circular(4)),
+      Paint()..color = const Color(0xFF37474F),
+    );
+    for (final dx in [-size * 0.16, 0.0, size * 0.16]) {
+      canvas.drawCircle(
+        center.translate(dx, -size * 0.22),
+        size * 0.06,
+        Paint()..color = _accent.withValues(alpha: 0.9),
+      );
+    }
+
+    // Wheels.
+    for (final dy in [-size * 0.06, size * 0.32]) {
+      for (final dx in [-size * 0.34, size * 0.34]) {
         canvas.drawCircle(
           center.translate(dx, dy),
           size * 0.1,

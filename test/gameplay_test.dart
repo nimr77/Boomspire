@@ -8,14 +8,12 @@
 // the component tree mounted so tap handling and pathfinding work.
 import 'dart:math';
 
+import 'package:boomspire/core/combat/mobile_unit_blueprint.dart';
+import 'package:boomspire/core/combat/mobile_unit_repository_impl.dart';
+import 'package:boomspire/core/combat/unit_kind.dart';
 import 'package:boomspire/features/ai_director/impl/ai_director_repository_impl.dart';
-import 'package:boomspire/features/allies/domain/models/ally_unit_type.dart';
-import 'package:boomspire/features/allies/impl/ally_unit_repository_impl.dart';
 import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
 import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
-import 'package:boomspire/features/enemies/domain/models/enemy_blueprint.dart';
-import 'package:boomspire/features/enemies/domain/models/enemy_type.dart';
-import 'package:boomspire/features/enemies/impl/enemy_repository_impl.dart';
 import 'package:boomspire/features/enemies/presentation/green_soldier_component.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scene.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scenes.dart';
@@ -171,17 +169,17 @@ void main() {
         final warFactory =
             game.world.activeTowers.whereType<WarFactoryComponent>().first;
         final startingGold = game.gameState.gold;
-        expect(warFactory.produceUnit(AllyUnitType.tank), isTrue);
+        expect(warFactory.produceUnit(UnitKind.tank), isTrue);
         await Future<void>.delayed(Duration.zero);
         game.update(0);
 
         expect(game.world.activeAllies, isNotEmpty);
         expect(
           game.gameState.gold,
-          startingGold - warFactory.costFor(AllyUnitType.tank),
+          startingGold - warFactory.costFor(UnitKind.tank),
         );
         // Busy producing - a second request is refused until it cools down.
-        expect(warFactory.produceUnit(AllyUnitType.aircraft), isFalse);
+        expect(warFactory.produceUnit(UnitKind.aircraft), isFalse);
       },
     );
 
@@ -210,8 +208,8 @@ void main() {
 
         // Stationary (speed 0) so it can't just wander out of the tower's
         // reach before the tower has a chance to (not) engage it.
-        const stationarySoldier = EnemyBlueprint(
-          type: EnemyType.soldier,
+        const stationarySoldier = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
           name: 'Test Soldier',
           maxHealth: 1000,
           speed: 0,
@@ -307,8 +305,7 @@ BoomspireGame _newGame(GameScene scene) => BoomspireGame(
   terrainRepository: TerrainRepositoryImpl(),
   towerRepository: TowerRepositoryImpl(),
   buildingRepository: BuildingRepositoryImpl(),
-  allyUnitRepository: AllyUnitRepositoryImpl(),
-  enemyRepository: EnemyRepositoryImpl(),
+  unitRepository: MobileUnitRepositoryImpl(),
   waveRepository: WaveRepositoryImpl(
     totalWaves: scene.waveCount,
     biome: scene.biome,

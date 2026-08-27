@@ -2,7 +2,6 @@ import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/rendering/procedural_image.dart';
-import '../domain/models/enemy_type.dart';
 
 /// Procedurally paints the green-soldier "2D object models" - a regular
 /// soldier and a bulkier, red-trimmed heavy soldier - cached after first
@@ -15,18 +14,23 @@ class EnemySpriteFactory {
   static Sprite? _tank;
   static Sprite? _attackPlane;
   static Sprite? _gunboat;
+  static Sprite? _artilleryBarrage;
+  static Sprite? _rocketBarrage;
   EnemySpriteFactory._();
 
-  /// The faction color for this enemy type - used for the ground fire-pulse
-  /// effect when it shoots at a tower.
-  static Color accentColor(EnemyType type) => switch (type) {
-    EnemyType.soldier => const Color(0xFF4C7A2A),
-    EnemyType.heavySoldier => const Color(0xFFB71C1C),
-    EnemyType.tank => const Color(0xFF6D4C41),
-    EnemyType.helicopter => const Color(0xFFE53935),
-    EnemyType.attackPlane => const Color(0xFF00E5FF),
-    EnemyType.gunboat => const Color(0xFF2E7D8C),
-  };
+  static Future<Sprite> artilleryBarrage() async {
+    final cached = _artilleryBarrage;
+    if (cached != null) return cached;
+    final image = await renderToImage(52, 52, _paintArtilleryBarrage);
+    return _artilleryBarrage = Sprite(image);
+  }
+
+  static Future<Sprite> rocketBarrage() async {
+    final cached = _rocketBarrage;
+    if (cached != null) return cached;
+    final image = await renderToImage(50, 50, _paintRocketBarrage);
+    return _rocketBarrage = Sprite(image);
+  }
 
   static Future<Sprite> attackPlane() async {
     final cached = _attackPlane;
@@ -535,5 +539,116 @@ class EnemySpriteFactory {
       size * 0.045,
       Paint()..color = const Color(0xFFFFF59D),
     );
+  }
+
+  static void _paintArtilleryBarrage(Canvas canvas) {
+    const size = 52.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.85, height: size * 0.3),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    for (final dx in [-size * 0.28, size * 0.28]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, size * 0.08),
+            width: size * 0.22,
+            height: size * 0.54,
+          ),
+          const Radius.circular(8),
+        ),
+        Paint()..color = const Color(0xFF1a1c20),
+      );
+    }
+
+    final hullRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.6,
+      height: size * 0.4,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(hullRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF5D4037), Color(0xFF2E1A16)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(hullRect),
+    );
+
+    // Three stubby mortar barrels fanned out on the deck.
+    for (final dx in [-size * 0.14, 0.0, size * 0.14]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, -size * 0.26),
+            width: size * 0.1,
+            height: size * 0.3,
+          ),
+          const Radius.circular(2),
+        ),
+        Paint()..color = const Color(0xFF3E2723),
+      );
+    }
+    canvas.drawCircle(
+      center.translate(0, size * 0.02),
+      size * 0.05,
+      Paint()..color = const Color(0xFFE53935),
+    );
+  }
+
+  static void _paintRocketBarrage(Canvas canvas) {
+    const size = 50.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.86, height: size * 0.3),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    final bodyRect = Rect.fromCenter(
+      center: center.translate(0, size * 0.1),
+      width: size * 0.62,
+      height: size * 0.56,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bodyRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF5D4037), Color(0xFF2E1A16)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(bodyRect),
+    );
+
+    final podRect = Rect.fromCenter(
+      center: center.translate(0, -size * 0.22),
+      width: size * 0.5,
+      height: size * 0.3,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(podRect, const Radius.circular(4)),
+      Paint()..color = const Color(0xFF37474F),
+    );
+    for (final dx in [-size * 0.16, 0.0, size * 0.16]) {
+      canvas.drawCircle(
+        center.translate(dx, -size * 0.22),
+        size * 0.06,
+        Paint()..color = const Color(0xFFE53935),
+      );
+    }
+
+    for (final dy in [-size * 0.06, size * 0.32]) {
+      for (final dx in [-size * 0.34, size * 0.34]) {
+        canvas.drawCircle(
+          center.translate(dx, dy),
+          size * 0.1,
+          Paint()..color = const Color(0xFF0d0d0d),
+        );
+      }
+    }
   }
 }

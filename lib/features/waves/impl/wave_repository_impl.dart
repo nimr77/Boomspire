@@ -1,4 +1,4 @@
-import '../../enemies/domain/models/enemy_type.dart';
+import '../../../core/combat/unit_kind.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../domain/models/wave_definition.dart';
 import '../domain/repos/wave_repository.dart';
@@ -20,7 +20,7 @@ class WaveRepositoryImpl implements WaveRepository {
     final n = waveNumber.clamp(1, totalWaves);
     final spawns = <SpawnEntry>[
       SpawnEntry(
-        type: EnemyType.soldier,
+        type: UnitKind.soldier,
         count: (5 + n * 1.6).round(),
         interval: (0.95 - n * 0.05).clamp(0.3, 0.95),
       ),
@@ -29,7 +29,7 @@ class WaveRepositoryImpl implements WaveRepository {
     if (n >= 3) {
       spawns.add(
         SpawnEntry(
-          type: EnemyType.heavySoldier,
+          type: UnitKind.heavySoldier,
           count: (1 + (n - 2) * 0.9).round(),
           interval: (1.5 - n * 0.05).clamp(0.7, 1.5),
           startDelay: 2,
@@ -37,7 +37,7 @@ class WaveRepositoryImpl implements WaveRepository {
       );
       spawns.add(
         SpawnEntry(
-          type: EnemyType.helicopter,
+          type: UnitKind.helicopter,
           count: (1 + (n - 2) * 0.8).round(),
           interval: (1.9 - n * 0.05).clamp(0.9, 1.9),
           startDelay: 3,
@@ -50,13 +50,13 @@ class WaveRepositoryImpl implements WaveRepository {
       spawns.add(
         biome == Biome.sea
             ? SpawnEntry(
-                type: EnemyType.gunboat,
+                type: UnitKind.gunboat,
                 count: (1 + (n - 4) * 0.5).round(),
                 interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
                 startDelay: 4,
               )
             : SpawnEntry(
-                type: EnemyType.tank,
+                type: UnitKind.tank,
                 count: (1 + (n - 4) * 0.5).round(),
                 interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
                 startDelay: 4,
@@ -67,10 +67,32 @@ class WaveRepositoryImpl implements WaveRepository {
     if (n >= 5) {
       spawns.add(
         SpawnEntry(
-          type: EnemyType.attackPlane,
+          type: UnitKind.attackPlane,
           count: (1 + (n - 5) * 0.6).round(),
           interval: (2.2 - n * 0.05).clamp(1.2, 2.2),
           startDelay: 5,
+        ),
+      );
+    }
+
+    if (n >= 7) {
+      spawns.add(
+        SpawnEntry(
+          type: UnitKind.artilleryBarrage,
+          count: (1 + (n - 7) * 0.4).round(),
+          interval: (3.0 - n * 0.05).clamp(1.8, 3.0),
+          startDelay: 6,
+        ),
+      );
+    }
+
+    if (n >= 9) {
+      spawns.add(
+        SpawnEntry(
+          type: UnitKind.rocketBarrage,
+          count: (1 + (n - 9) * 0.4).round(),
+          interval: (2.8 - n * 0.05).clamp(1.6, 2.8),
+          startDelay: 7,
         ),
       );
     }

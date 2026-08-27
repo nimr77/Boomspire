@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
-import '../../../allies/domain/models/ally_unit_type.dart';
+import '../../../../core/combat/unit_kind.dart';
 import '../../../towers/presentation/tower_component.dart';
 import '../../../towers/presentation/tower_sprites.dart';
 import '../../../towers/presentation/training_center_component.dart';
@@ -275,9 +275,10 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (final type in const [
-            AllyUnitType.tank,
-            AllyUnitType.lightVehicle,
-            AllyUnitType.aircraft,
+            UnitKind.tank,
+            UnitKind.lightVehicle,
+            UnitKind.aircraft,
+            UnitKind.rocketBarrage,
           ]) ...[
             _ActionButton(
               icon: _unitIcon(type),
@@ -296,10 +297,11 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
     return const SizedBox.shrink();
   }
 
-  IconData _unitIcon(AllyUnitType type) => switch (type) {
-    AllyUnitType.soldier => Icons.directions_walk,
-    AllyUnitType.tank => Icons.local_shipping,
-    AllyUnitType.lightVehicle => Icons.directions_car,
-    AllyUnitType.aircraft => Icons.flight,
+  IconData _unitIcon(UnitKind type) => switch (type) {
+    UnitKind.tank => Icons.local_shipping,
+    UnitKind.lightVehicle => Icons.directions_car,
+    UnitKind.aircraft => Icons.flight,
+    UnitKind.rocketBarrage => Icons.rocket_launch,
+    _ => Icons.directions_walk,
   };
 }

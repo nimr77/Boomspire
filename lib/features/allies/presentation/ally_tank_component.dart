@@ -7,6 +7,7 @@ class AllyTankComponent extends AllyUnitComponent {
   AllyTankComponent({
     required super.blueprint,
     required super.position,
+    required super.team,
     super.level,
   });
 

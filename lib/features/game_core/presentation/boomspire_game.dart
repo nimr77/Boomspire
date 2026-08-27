@@ -7,10 +7,10 @@ import 'package:flutter/material.dart' show Color;
 
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
-import '../../allies/domain/repos/ally_unit_repository.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../audio/domain/repos/audio_repository.dart';
-import '../../enemies/domain/repos/enemy_repository.dart';
+import '../../../core/combat/mobile_unit_repository.dart';
+import '../../../core/combat/team.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
@@ -58,14 +58,19 @@ class BoomspireGame extends FlameGame<GameWorld> {
   final TerrainRepository terrainRepository;
   final TowerRepository towerRepository;
   final BuildingRepository buildingRepository;
-  final AllyUnitRepository allyUnitRepository;
-  final EnemyRepository enemyRepository;
+  final MobileUnitRepository unitRepository;
   final WaveRepository waveRepository;
   final AudioRepository audioRepository;
   final GameStateRepository gameState;
   final AiDirectorRepository aiDirector;
   final GameScene scene;
   final GameDifficulty difficulty;
+
+  /// Which side the human player is playing as - carries the color every
+  /// ally unit/HP bar is tinted with. Defaults to the single-player color;
+  /// a future networked match assigns each connected player their own
+  /// [Team].
+  Team playerTeam = Team.defaultPlayer;
 
   late TerrainMap terrainMap;
 
@@ -108,8 +113,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
     required this.terrainRepository,
     required this.towerRepository,
     required this.buildingRepository,
-    required this.allyUnitRepository,
-    required this.enemyRepository,
+    required this.unitRepository,
     required this.waveRepository,
     required this.audioRepository,
     required this.gameState,

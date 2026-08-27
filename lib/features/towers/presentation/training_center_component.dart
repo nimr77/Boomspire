@@ -1,4 +1,4 @@
-import '../../allies/domain/models/ally_unit_type.dart';
+import '../../../core/combat/unit_kind.dart';
 import '../../allies/presentation/ally_soldier_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
 import '../../game_core/domain/models/game_config.dart';
@@ -22,7 +22,7 @@ class TrainingCenterComponent extends TowerComponent {
   bool get canProduce => !destroyed && cooldownRemaining <= 0;
 
   int get soldierCost =>
-      game.allyUnitRepository.blueprintFor(AllyUnitType.soldier).cost;
+      game.unitRepository.blueprintFor(game.playerTeam, UnitKind.soldier).cost;
 
   @override
   void fire(EnemyComponent target) {}
@@ -35,8 +35,12 @@ class TrainingCenterComponent extends TowerComponent {
     cooldownRemaining = GameConfig.trainingCenterProductionCooldown;
     game.world.spawnAlly(
       AllySoldierComponent(
-        blueprint: game.allyUnitRepository.blueprintFor(AllyUnitType.soldier),
+        blueprint: game.unitRepository.blueprintFor(
+          game.playerTeam,
+          UnitKind.soldier,
+        ),
         position: position.clone(),
+        team: game.playerTeam,
         level: upgradeLevel,
       ),
     );

@@ -1,7 +1,8 @@
-/// The kind of ordnance an enemy fires back at a tower while engaging it -
-/// drives which projectile/effect [EnemyComponent] spawns in
-/// `_maybeEngageTower()`.
-enum EnemyWeaponType {
+/// The kind of ordnance a mobile unit fires at whatever it's engaging -
+/// drives which projectile/effect `MobileUnitComponent` spawns. Shared by
+/// both enemy and ally units so the same weapon variety is available to
+/// either side.
+enum WeaponType {
   /// Fast straight-line tracer round (infantry rifles).
   bullet,
 

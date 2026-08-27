@@ -1,8 +1,8 @@
-import '../../../enemies/domain/models/enemy_type.dart';
+import '../../../../core/combat/unit_kind.dart';
 
 /// One group of enemies spawned within a wave.
 class SpawnEntry {
-  final EnemyType type;
+  final UnitKind type;
 
   final int count;
 

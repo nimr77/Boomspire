@@ -1,7 +1,9 @@
-/// How an enemy's visual "idles" while it moves, layered on top of the
+/// How a mobile unit's visual "idles" while it moves, layered on top of the
 /// facing angle that pathfinding/flight already sets - keeps ground troops,
-/// tracked vehicles, and aircraft from all sharing the exact same motion.
-enum EnemyMovementStyle {
+/// tracked vehicles, aircraft and naval vessels from all sharing the exact
+/// same motion. Shared by both enemy and ally units (see
+/// `MobileUnitComponent`).
+enum MovementStyle {
   /// Infantry: a gentle vertical bob, like footsteps.
   walk,
 
