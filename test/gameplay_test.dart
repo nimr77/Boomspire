@@ -256,6 +256,137 @@ void main() {
     });
   });
 
+  group('skirmish AI parity', () {
+    test(
+      'both sides start a skirmish with the scene-scoped starting gold',
+      () async {
+        final game = await _bootGame(GameScenes.skirmishes.first);
+        expect(game.gameState.gold, GameScenes.skirmishes.first.startingGold);
+        expect(
+          game.aiEconomy!.gold,
+          GameScenes.skirmishes.first.startingGold,
+        );
+      },
+    );
+
+    test(
+      'the AI is bound by the same per-type build limit and Tech Lab '
+      'prerequisite as the player, independently of the player\'s own state',
+      () async {
+        final game = await _bootGame(GameScenes.skirmishes.first);
+        final aiTeam = game.aiTeam!;
+        final base = game.world.aiHomeBase!;
+
+        // Laser Lance is locked for the AI until its own Tech Lab is up -
+        // the player never builds one in this test, proving the gate is
+        // tracked per-team rather than shared/global.
+        expect(game.canBuildTower(TowerType.laser, owner: aiTeam), isFalse);
+
+        Point<int>? cellFor(Vector2 origin, int ring) {
+          final grid = game.terrainMap.grid;
+          final baseCell = grid.worldToCell(origin);
+          for (var dx = -ring; dx <= ring; dx++) {
+            for (var dy = -ring; dy <= ring; dy++) {
+              final cell = Point(baseCell.x + dx, baseCell.y + dy);
+              if (!grid.inBounds(cell.x, cell.y)) continue;
+              if (grid.isBlocked(cell.x, cell.y)) continue;
+              return cell;
+            }
+          }
+          return null;
+        }
+
+        final firstCell = cellFor(base.position, 2)!;
+        final built = game.buildStructure(
+          aiTeam,
+          BuildingType.techLab,
+          game.terrainMap.grid.cellCenter(firstCell),
+        );
+        expect(built, isNotNull);
+        expect(game.towerCountFor(BuildingType.techLab, owner: aiTeam), 1);
+        expect(game.canBuildTower(TowerType.laser, owner: aiTeam), isTrue);
+
+        // A second Tech Lab is refused - same "max 1 built" cap the player
+        // is bound by.
+        final secondCell = cellFor(base.position, 3)!;
+        final secondBuild = game.buildStructure(
+          aiTeam,
+          BuildingType.techLab,
+          game.terrainMap.grid.cellCenter(secondCell),
+        );
+        expect(secondBuild, isNull);
+        expect(game.towerCountFor(BuildingType.techLab, owner: aiTeam), 1);
+
+        // The player's own prerequisite state is unaffected by the AI's.
+        expect(
+          game.canBuildTower(TowerType.laser, owner: game.playerTeam),
+          isFalse,
+        );
+      },
+    );
+
+    test('buildStructure spends from the given owner\'s own wallet', () async {
+      final game = await _bootGame(GameScenes.skirmishes.first);
+      final aiTeam = game.aiTeam!;
+      final base = game.world.aiHomeBase!;
+      final playerGoldBefore = game.gameState.gold;
+      final aiGoldBefore = game.aiEconomy!.gold;
+      final grid = game.terrainMap.grid;
+      final baseCell = grid.worldToCell(base.position);
+      final cell = Point(baseCell.x + 2, baseCell.y);
+
+      final built = game.buildStructure(
+        aiTeam,
+        TowerType.machineGun,
+        grid.cellCenter(cell),
+      );
+
+      expect(built, isNotNull);
+      expect(game.aiEconomy!.gold, lessThan(aiGoldBefore));
+      expect(game.gameState.gold, playerGoldBefore);
+    });
+
+    test(
+      'killing a player-built skirmish unit pays the AI, and vice versa',
+      () async {
+        final game = await _bootGame(GameScenes.skirmishes.first);
+        final aiTeam = game.aiTeam!;
+        const blueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Soldier',
+          maxHealth: 10,
+          speed: 0,
+          bounty: 25,
+          size: 34,
+        );
+
+        final aiGoldBefore = game.aiEconomy!.gold;
+        final playerUnit = MobileUnitComponent(
+          blueprint: blueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.assaultBase,
+        );
+        game.world.spawnUnit(playerUnit);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        playerUnit.takeDamage(blueprint.maxHealth.toDouble());
+        expect(game.aiEconomy!.gold, aiGoldBefore + blueprint.bounty);
+
+        final playerGoldBefore = game.gameState.gold;
+        final aiUnit = MobileUnitComponent(
+          blueprint: blueprint,
+          team: aiTeam,
+          objective: UnitObjective.assaultBase,
+        );
+        game.world.spawnUnit(aiUnit);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        aiUnit.takeDamage(blueprint.maxHealth.toDouble());
+        expect(game.gameState.gold, greaterThan(playerGoldBefore));
+      },
+    );
+  });
+
   test('every scene generates a terrain where every spawn can reach base', () {
     for (final scene in GameScenes.all) {
       final terrain = TerrainRepositoryImpl().loadTerrain(scene: scene);
