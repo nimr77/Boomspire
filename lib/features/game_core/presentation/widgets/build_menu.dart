@@ -98,47 +98,6 @@ class _BuildMenuState extends State<BuildMenu> {
   }
 }
 
-/// Small pill toggle used to switch between the Towers/Buildings tabs.
-class _MenuTab extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _MenuTab({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white.withValues(alpha: 0.14) : null,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: selected ? Colors.white70 : Colors.white24,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : Colors.white54,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
 /// Frosted-glass hover card: build cost, core stats, and (when relevant)
 /// the build-limit count and unlock requirement for a tower type.
 class _GlassTooltip extends StatelessWidget {
@@ -264,6 +223,44 @@ class _GlassTooltip extends StatelessWidget {
                 ],
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small pill toggle used to switch between the Towers/Buildings tabs.
+class _MenuTab extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _MenuTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white.withValues(alpha: 0.14) : null,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: selected ? Colors.white70 : Colors.white24),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.white54,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
