@@ -91,6 +91,13 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   late TerrainMap terrainMap;
 
+  /// True once [terrainMap] has been assigned - the HUD (built as a plain
+  /// Flutter sibling widget, not gated by Flame's own load lifecycle) can
+  /// render before [onLoad] runs and must check this before touching
+  /// [terrainMap].
+  bool get terrainReady => _terrainReady;
+  bool _terrainReady = false;
+
   /// Whether each team (keyed by `Team.id`) has built a Tech Lab at least
   /// once this run - required before that team can build a Laser Lance (see
   /// [canBuildTower]). Stays true even if the lab is later destroyed/sold,
@@ -563,6 +570,7 @@ class BoomspireGame extends FlameGame<GameWorld>
   @override
   Future<void> onLoad() async {
     terrainMap = terrainRepository.loadTerrain(scene: scene);
+    _terrainReady = true;
     _setupSkirmishState();
     gameState.reset(startingGold: _resolvedStartingGold);
     camera.viewfinder.anchor = Anchor.topLeft;

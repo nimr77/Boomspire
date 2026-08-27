@@ -86,6 +86,14 @@ class _MinimapWidgetState extends State<MinimapWidget>
 
   @override
   Widget build(BuildContext context) {
+    // The HUD is a plain Flutter sibling widget, not gated by Flame's own
+    // load lifecycle, so it can build before `onLoad` sets `terrainMap`.
+    if (!widget.game.terrainReady) {
+      return const SizedBox(
+        width: MinimapWidget.height,
+        height: MinimapWidget.height,
+      );
+    }
     final arenaWidth = widget.game.terrainMap.arenaWidth;
     final arenaHeight = widget.game.terrainMap.arenaHeight;
     final width = MinimapWidget.height * (arenaWidth / arenaHeight);
@@ -128,6 +136,7 @@ class _MinimapWidgetState extends State<MinimapWidget>
   }
 
   void _navigateTo(Offset local, Size size) {
+    if (!widget.game.terrainReady) return;
     final arenaWidth = widget.game.terrainMap.arenaWidth;
     final arenaHeight = widget.game.terrainMap.arenaHeight;
     final dx = local.dx.clamp(0.0, size.width);
