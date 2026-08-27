@@ -146,6 +146,17 @@ class TowerSpriteFactory {
   }
 
   static void _paintBase(Canvas canvas, UnitType type) {
+    // Support buildings get a distinct building silhouette instead of the
+    // round weapon-mount plate every combat tower shares.
+    if (type == BuildingType.trainingCenter) {
+      _paintTrainingCenterBase(canvas);
+      return;
+    }
+    if (type == BuildingType.warFactory) {
+      _paintWarFactoryBase(canvas);
+      return;
+    }
+
     const center = Offset(32, 32);
     final accent = accentColor(type);
 
@@ -187,6 +198,135 @@ class TowerSpriteFactory {
         ..strokeWidth = 1.5
         ..color = accent,
     );
+  }
+
+  /// A low barracks building with a peaked roof, door and windows - reads
+  /// as a muster point rather than a gun emplacement.
+  static void _paintTrainingCenterBase(Canvas canvas) {
+    const accent = Color(0xFF66BB6A);
+    final body = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(10, 28, 44, 28),
+      const Radius.circular(4),
+    );
+    canvas.drawShadow(
+      Path()..addRRect(body),
+      const Color(0xFF000000),
+      4,
+      false,
+    );
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF4c7a4f), Color(0xFF20242a)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(body.outerRect),
+    );
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = accent.withValues(alpha: 0.85),
+    );
+
+    final roof = Path()
+      ..moveTo(6, 28)
+      ..lineTo(32, 9)
+      ..lineTo(58, 28)
+      ..close();
+    canvas.drawPath(roof, Paint()..color = const Color(0xFF2f4a31));
+    canvas.drawPath(
+      roof,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = accent,
+    );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(27, 40, 10, 16),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF11151a),
+    );
+    for (final dx in [-14.0, 14.0]) {
+      final window = Rect.fromCenter(
+        center: Offset(32 + dx, 37),
+        width: 8,
+        height: 8,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(window, const Radius.circular(1.5)),
+        Paint()..color = const Color(0xFF11151a),
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(window, const Radius.circular(1.5)),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = accent,
+      );
+    }
+  }
+
+  /// A wide corrugated workshop with a roll-up bay door - reads as heavy
+  /// industry rather than a gun emplacement.
+  static void _paintWarFactoryBase(Canvas canvas) {
+    const accent = Color(0xFFB0BEC5);
+    final body = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(6, 26, 52, 30),
+      const Radius.circular(3),
+    );
+    canvas.drawShadow(
+      Path()..addRRect(body),
+      const Color(0xFF000000),
+      4,
+      false,
+    );
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF607d8b), Color(0xFF20242a)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(body.outerRect),
+    );
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = accent.withValues(alpha: 0.85),
+    );
+
+    for (var x = 12.0; x <= 52; x += 8) {
+      canvas.drawLine(
+        Offset(x, 26),
+        Offset(x, 19),
+        Paint()
+          ..color = const Color(0xFF37474F)
+          ..strokeWidth = 2,
+      );
+    }
+
+    const door = Rect.fromLTWH(22, 40, 20, 16);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(door, const Radius.circular(2)),
+      Paint()..color = const Color(0xFF11151a),
+    );
+    for (var y = door.top + 3; y < door.bottom; y += 4) {
+      canvas.drawLine(
+        Offset(door.left + 2, y),
+        Offset(door.right - 2, y),
+        Paint()
+          ..color = accent.withValues(alpha: 0.5)
+          ..strokeWidth = 1,
+      );
+    }
   }
 
   static void _paintCannonTurret(Canvas canvas, Offset center) {

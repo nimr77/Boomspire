@@ -30,8 +30,13 @@ const int kAntiRocketCost = 70;
 const int kMaxTowerUpgradeLevel = 3;
 
 /// How close an enemy rocket/shell must get before an anti-rocket-equipped
-/// tower intercepts it.
-const double _antiRocketRange = 95;
+/// tower intercepts it - kept short-range so it reads as point-blank
+/// point-defense rather than sniping rockets out of the sky far away.
+const double _antiRocketRange = 50;
+
+/// Seconds between anti-rocket intercepts - without this it could shoot
+/// down every rocket in range every single frame.
+const double _antiRocketFireRate = 0.6;
 
 /// Base tower: sits on a build cell, scans for the nearest valid enemy in
 /// range, swivels its turret to face it, and fires on cooldown. Also tracks
@@ -69,6 +74,7 @@ abstract class TowerComponent extends PositionComponent
   /// Point-defense module - when true, this tower shoots down any enemy
   /// rocket/shell that gets within [_antiRocketRange] of it.
   bool antiRocket = false;
+  double _antiRocketCooldown = 0;
 
   /// Total gold ever invested in this tower (build cost + every upgrade) -
   /// used to compute a fair sell refund.
@@ -365,6 +371,7 @@ abstract class TowerComponent extends PositionComponent
     if (_destroyed) return;
     _idlePhase += dt * 2.2;
     _cooldown -= dt;
+    _antiRocketCooldown -= dt;
 
     if (shieldMax > 0 && shield < shieldMax) {
       if (_shieldRegenDelay > 0) {
@@ -543,7 +550,7 @@ abstract class TowerComponent extends PositionComponent
   /// If this tower has the anti-rocket module, shoots down the first enemy
   /// rocket/shell it finds within [_antiRocketRange] before it can land.
   void _scanAntiRocket() {
-    if (!antiRocket) return;
+    if (!antiRocket || _antiRocketCooldown > 0) return;
     for (final rocket in game.world.children.query<RocketComponent>()) {
       if (!rocket.affectsTowers || rocket.isRemoving) continue;
       if (rocket.position.distanceTo(position) > _antiRocketRange) continue;
@@ -555,6 +562,7 @@ abstract class TowerComponent extends PositionComponent
         ),
       );
       game.audioRepository.play(SfxType.antiAirShot, volume: 0.4);
+      _antiRocketCooldown = _antiRocketFireRate;
       break;
     }
   }

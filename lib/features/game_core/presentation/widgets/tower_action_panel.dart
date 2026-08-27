@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../allies/domain/models/ally_unit_type.dart';
 import '../../../towers/presentation/tower_component.dart';
 import '../../../towers/presentation/tower_sprites.dart';
+import '../../../towers/presentation/training_center_component.dart';
+import '../../../towers/presentation/war_factory_component.dart';
 import '../boomspire_game.dart';
 
 /// Floating action card shown above the command bar whenever a tower is
@@ -158,74 +161,145 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
           BoxShadow(color: accent.withValues(alpha: 0.25), blurRadius: 12),
         ],
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tower.blueprint.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              _AnimatedLabel(
-                label:
-                    'HP ${tower.hp.ceil()}/${tower.maxHp.ceil()}'
-                    '${tower.upgradeLevel > 0 ? '  •  ${S.current.towerTier(tower.upgradeLevel + 1)}' : ''}',
-                style: const TextStyle(color: Colors.white60, fontSize: 11),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          _ActionButton(
-            icon: Icons.build,
-            label: tower.repairCost > 0 ? '${tower.repairCost}g' : '-',
-            enabled:
-                tower.repairCost > 0 &&
-                widget.game.gameState.gold >= tower.repairCost,
-            onTap: widget.game.repairSelectedTower,
-          ),
-          const SizedBox(width: 6),
-          _ActionButton(
-            icon: Icons.upgrade,
-            label: tower.canUpgrade
-                ? '${tower.upgradeCost}g'
-                : S.current.towerMax,
-            enabled:
-                tower.canUpgrade &&
-                widget.game.gameState.gold >= tower.upgradeCost,
-            onTap: widget.game.upgradeSelectedTower,
-          ),
-          const SizedBox(width: 6),
-          _ActionButton(
-            icon: Icons.gpp_good,
-            label: tower.antiRocket ? 'Active' : '${kAntiRocketCost}g',
-            color: Colors.cyanAccent,
-            enabled:
-                !tower.antiRocket &&
-                widget.game.gameState.gold >= kAntiRocketCost,
-            onTap: widget.game.buyAntiRocketForSelectedTower,
-          ),
-          const SizedBox(width: 6),
-          _ActionButton(
-            icon: Icons.sell,
-            label: '+${tower.sellValue}g',
-            enabled: true,
-            color: Colors.redAccent,
-            onTap: widget.game.sellSelectedTower,
-          ),
-          const SizedBox(width: 6),
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white54, size: 18),
-            onPressed: () => widget.game.selectedTower.value = null,
-          ),
+          _buildStatRow(tower, accent),
+          if (tower is TrainingCenterComponent ||
+              tower is WarFactoryComponent) ...[
+            const SizedBox(height: 8),
+            _buildUnitRow(tower),
+          ],
         ],
       ),
     );
   }
+
+  Widget _buildStatRow(TowerComponent tower, Color accent) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              tower.blueprint.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            _AnimatedLabel(
+              label:
+                  'HP ${tower.hp.ceil()}/${tower.maxHp.ceil()}'
+                  '${tower.upgradeLevel > 0 ? '  •  ${S.current.towerTier(tower.upgradeLevel + 1)}' : ''}',
+              style: const TextStyle(color: Colors.white60, fontSize: 11),
+            ),
+          ],
+        ),
+        const SizedBox(width: 12),
+        _ActionButton(
+          icon: Icons.build,
+          label: tower.repairCost > 0 ? '${tower.repairCost}g' : '-',
+          enabled:
+              tower.repairCost > 0 &&
+              widget.game.gameState.gold >= tower.repairCost,
+          onTap: widget.game.repairSelectedTower,
+        ),
+        const SizedBox(width: 6),
+        _ActionButton(
+          icon: Icons.upgrade,
+          label: tower.canUpgrade
+              ? '${tower.upgradeCost}g'
+              : S.current.towerMax,
+          enabled:
+              tower.canUpgrade &&
+              widget.game.gameState.gold >= tower.upgradeCost,
+          onTap: widget.game.upgradeSelectedTower,
+        ),
+        const SizedBox(width: 6),
+        _ActionButton(
+          icon: Icons.gpp_good,
+          label: tower.antiRocket ? 'Active' : '${kAntiRocketCost}g',
+          color: Colors.cyanAccent,
+          enabled:
+              !tower.antiRocket &&
+              widget.game.gameState.gold >= kAntiRocketCost,
+          onTap: widget.game.buyAntiRocketForSelectedTower,
+        ),
+        const SizedBox(width: 6),
+        _ActionButton(
+          icon: Icons.sell,
+          label: '+${tower.sellValue}g',
+          enabled: true,
+          color: Colors.redAccent,
+          onTap: widget.game.sellSelectedTower,
+        ),
+        const SizedBox(width: 6),
+        IconButton(
+          icon: const Icon(Icons.close, color: Colors.white54, size: 18),
+          onPressed: () => widget.game.selectedTower.value = null,
+        ),
+      ],
+    );
+  }
+
+  /// Second row shown under a Training Center/War Factory's stats - lets
+  /// the player spend gold to muster/roll out a specific ally unit, in
+  /// place of what used to be automatic, timer-driven production.
+  Widget _buildUnitRow(TowerComponent tower) {
+    final gold = widget.game.gameState.gold;
+    if (tower is TrainingCenterComponent) {
+      final ready = tower.canProduce;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ActionButton(
+            icon: Icons.directions_walk,
+            label: ready
+                ? '${tower.soldierCost}g'
+                : '${tower.cooldownRemaining.ceil()}s',
+            color: const Color(0xFF66BB6A),
+            enabled: ready && gold >= tower.soldierCost,
+            onTap: () => tower.produceSoldier(),
+          ),
+        ],
+      );
+    }
+    if (tower is WarFactoryComponent) {
+      final ready = tower.canProduce;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final type in const [
+            AllyUnitType.tank,
+            AllyUnitType.lightVehicle,
+            AllyUnitType.aircraft,
+          ]) ...[
+            _ActionButton(
+              icon: _unitIcon(type),
+              label: ready
+                  ? '${tower.costFor(type)}g'
+                  : '${tower.cooldownRemaining.ceil()}s',
+              color: const Color(0xFFB0BEC5),
+              enabled: ready && gold >= tower.costFor(type),
+              onTap: () => tower.produceUnit(type),
+            ),
+            const SizedBox(width: 6),
+          ],
+        ],
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  IconData _unitIcon(AllyUnitType type) => switch (type) {
+    AllyUnitType.soldier => Icons.directions_walk,
+    AllyUnitType.tank => Icons.local_shipping,
+    AllyUnitType.lightVehicle => Icons.directions_car,
+    AllyUnitType.aircraft => Icons.flight,
+  };
 }

@@ -7,6 +7,9 @@ class AllyUnitBlueprint {
   final AllyUnitType type;
 
   final String name;
+
+  /// Gold cost to muster one of these from its Training Center/War Factory.
+  final int cost;
   final double maxHealth;
 
   /// World pixels per second.
@@ -35,6 +38,7 @@ class AllyUnitBlueprint {
   const AllyUnitBlueprint({
     required this.type,
     required this.name,
+    required this.cost,
     required this.maxHealth,
     required this.speed,
     required this.size,

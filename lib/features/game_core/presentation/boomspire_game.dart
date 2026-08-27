@@ -152,6 +152,14 @@ class BoomspireGame extends FlameGame<GameWorld> {
     if (type == TowerType.sam && !(hasTechLab && hasCommandPost)) {
       return 'Requires Tech Lab & Command Post';
     }
+    if (type == BuildingType.trainingCenter &&
+        gameState.currentScore < GameConfig.trainingCenterUnlockScore) {
+      return 'Requires ${GameConfig.trainingCenterUnlockScore} score';
+    }
+    if (type == BuildingType.warFactory &&
+        gameState.currentScore < GameConfig.warFactoryUnlockScore) {
+      return 'Requires ${GameConfig.warFactoryUnlockScore} score';
+    }
     final limit = buildLimitFor(type);
     if (limit != null && towerCountFor(type) >= limit) {
       return 'Max $limit built';

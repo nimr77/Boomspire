@@ -14,10 +14,17 @@ class GameConfig {
   /// steadily pricier as a run goes on (see `TowerComponent.upgradeCost`).
   static const upgradeCostWaveScaling = 0.03;
 
-  /// Seconds between each Ally Soldier the Training Center sends out.
-  static const trainingCenterSpawnInterval = 14.0;
+  /// Cooldown after mustering an Ally Soldier from the Training Center
+  /// before another can be queued (see `TrainingCenterComponent.produceSoldier`).
+  static const trainingCenterProductionCooldown = 8.0;
 
-  /// Seconds between each Ally vehicle/aircraft the War Factory sends out -
-  /// slower than the Training Center since these units hit much harder.
-  static const warFactorySpawnInterval = 20.0;
+  /// Cooldown after rolling out an Ally vehicle/aircraft from the War
+  /// Factory before another can be queued - longer than the Training
+  /// Center's since these units hit much harder.
+  static const warFactoryProductionCooldown = 12.0;
+
+  /// Minimum `GameStateRepository.currentScore` needed to unlock the
+  /// Training Center / War Factory support buildings in the build menu.
+  static const trainingCenterUnlockScore = 250;
+  static const warFactoryUnlockScore = 500;
 }

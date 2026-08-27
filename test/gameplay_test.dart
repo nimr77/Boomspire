@@ -9,6 +9,7 @@
 import 'dart:math';
 
 import 'package:boomspire/features/ai_director/impl/ai_director_repository_impl.dart';
+import 'package:boomspire/features/allies/domain/models/ally_unit_type.dart';
 import 'package:boomspire/features/allies/impl/ally_unit_repository_impl.dart';
 import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
 import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
@@ -22,6 +23,8 @@ import 'package:boomspire/features/towers/domain/models/building_type.dart';
 import 'package:boomspire/features/towers/domain/models/tower_type.dart';
 import 'package:boomspire/features/towers/impl/building_repository_impl.dart';
 import 'package:boomspire/features/towers/impl/tower_repository_impl.dart';
+import 'package:boomspire/features/towers/presentation/training_center_component.dart';
+import 'package:boomspire/features/towers/presentation/war_factory_component.dart';
 import 'package:boomspire/features/waves/impl/wave_repository_impl.dart';
 import 'package:flame/game.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -108,32 +111,40 @@ void main() {
       },
     );
 
-    test('Training Center periodically produces an Ally Soldier', () async {
-      final game = await _bootGame(GameScenes.all.first);
-      final grid = game.terrainMap.grid;
-      game.gameState.addGold(1000);
+    test(
+      'Training Center builds an Ally Soldier on demand from its menu',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        game.gameState.addGold(1000);
 
-      final cell = _findOpenCell(game);
-      game.selectTowerType(BuildingType.trainingCenter);
-      game.handleArenaTap(grid.cellCenter(cell));
-      game.handleArenaTap(grid.cellCenter(cell));
+        final cell = _findOpenCell(game);
+        game.selectTowerType(BuildingType.trainingCenter);
+        game.handleArenaTap(grid.cellCenter(cell));
+        game.handleArenaTap(grid.cellCenter(cell));
 
-      expect(game.towerCountFor(BuildingType.trainingCenter), 1);
-      expect(game.world.activeAllies, isEmpty);
+        expect(game.towerCountFor(BuildingType.trainingCenter), 1);
+        expect(game.world.activeAllies, isEmpty);
 
-      // Advance time in a few chunks past the spawn interval so the
-      // Training Center's internal timer fires - yielding to the event
-      // loop between ticks lets its async sprite-load finish mounting it.
-      for (var i = 0; i < 20; i++) {
+        final trainingCenter =
+            game.world.activeTowers.whereType<TrainingCenterComponent>().first;
+        final startingGold = game.gameState.gold;
+        expect(trainingCenter.canProduce, isTrue);
+        expect(trainingCenter.produceSoldier(), isTrue);
+        // Yield once so the ally's async sprite-load finishes mounting it.
         await Future<void>.delayed(Duration.zero);
-        game.update(1.0);
-      }
+        game.update(0);
 
-      expect(game.world.activeAllies, isNotEmpty);
-    });
+        expect(game.world.activeAllies, isNotEmpty);
+        expect(game.gameState.gold, startingGold - trainingCenter.soldierCost);
+        // A fresh production request is refused until the cooldown elapses.
+        expect(trainingCenter.canProduce, isFalse);
+        expect(trainingCenter.produceSoldier(), isFalse);
+      },
+    );
 
     test(
-      'War Factory periodically produces an Ally vehicle/aircraft',
+      'War Factory builds an Ally vehicle/aircraft on demand from its menu',
       () async {
         final game = await _bootGame(GameScenes.all.first);
         final grid = game.terrainMap.grid;
@@ -147,12 +158,20 @@ void main() {
         expect(game.towerCountFor(BuildingType.warFactory), 1);
         expect(game.world.activeAllies, isEmpty);
 
-        for (var i = 0; i < 25; i++) {
-          await Future<void>.delayed(Duration.zero);
-          game.update(1.0);
-        }
+        final warFactory =
+            game.world.activeTowers.whereType<WarFactoryComponent>().first;
+        final startingGold = game.gameState.gold;
+        expect(warFactory.produceUnit(AllyUnitType.tank), isTrue);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
 
         expect(game.world.activeAllies, isNotEmpty);
+        expect(
+          game.gameState.gold,
+          startingGold - warFactory.costFor(AllyUnitType.tank),
+        );
+        // Busy producing - a second request is refused until it cools down.
+        expect(warFactory.produceUnit(AllyUnitType.aircraft), isFalse);
       },
     );
   });

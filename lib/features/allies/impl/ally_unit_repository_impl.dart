@@ -8,6 +8,7 @@ class AllyUnitRepositoryImpl implements AllyUnitRepository {
     AllyUnitType.soldier: AllyUnitBlueprint(
       type: AllyUnitType.soldier,
       name: 'Ally Soldier',
+      cost: 40,
       maxHealth: 60,
       speed: 78,
       size: 34,
@@ -18,6 +19,7 @@ class AllyUnitRepositoryImpl implements AllyUnitRepository {
     AllyUnitType.tank: AllyUnitBlueprint(
       type: AllyUnitType.tank,
       name: 'Ally Tank',
+      cost: 150,
       maxHealth: 260,
       speed: 34,
       size: 50,
@@ -30,6 +32,7 @@ class AllyUnitRepositoryImpl implements AllyUnitRepository {
     AllyUnitType.lightVehicle: AllyUnitBlueprint(
       type: AllyUnitType.lightVehicle,
       name: 'Ally Light Vehicle',
+      cost: 90,
       maxHealth: 120,
       speed: 96,
       size: 38,
@@ -42,6 +45,7 @@ class AllyUnitRepositoryImpl implements AllyUnitRepository {
     AllyUnitType.aircraft: AllyUnitBlueprint(
       type: AllyUnitType.aircraft,
       name: 'Ally Aircraft',
+      cost: 120,
       maxHealth: 90,
       speed: 130,
       size: 40,
