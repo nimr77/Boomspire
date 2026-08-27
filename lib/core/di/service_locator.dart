@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../features/account/domain/repos/account_repository.dart';
 import '../../features/account/impl/local_account_repository_impl.dart';
+import '../../features/account/presentation/account_profile_state.dart';
 import '../../features/ai_director/domain/repos/ai_director_repository.dart';
 import '../../features/ai_director/impl/ai_director_repository_impl.dart';
 import '../../features/audio/domain/repos/audio_repository.dart';
@@ -35,11 +36,16 @@ void setupServiceLocator() {
 
   // Stateless/shared services - one instance for the whole app lifetime.
   getIt
-    ..registerLazySingleton<AccountRepository>(
-      () => LocalAccountRepositoryImpl(),
-    )
     ..registerLazySingleton<ProgressRepository>(
       () => LocalProgressRepositoryImpl(),
+    )
+    ..registerLazySingleton<AccountRepository>(
+      () => LocalAccountRepositoryImpl(
+        progressRepository: getIt<ProgressRepository>(),
+      ),
+    )
+    ..registerLazySingleton<AccountProfileState>(
+      () => AccountProfileState(getIt<AccountRepository>()),
     )
     ..registerLazySingleton<MapDraftRepository>(
       () => LocalMapDraftRepositoryImpl(),

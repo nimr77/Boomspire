@@ -71,6 +71,20 @@ class MobileUnitComponent extends PositionComponent
 
   double health;
 
+  /// True once the player has directly ordered this unit (see
+  /// [issueMoveOrder]/[issueAttackOrder]) - from then on [goalPosition]
+  /// only ever returns a player-chosen destination (or null, to hold
+  /// position) instead of resuming the automatic [objective]-driven goal.
+  bool underManualControl = false;
+
+  /// Player-issued "walk here and hold" order - see [issueMoveOrder].
+  Vector2? moveOrderTarget;
+
+  /// Player-issued "chase this down and attack it" order - overrides
+  /// normal auto-target-acquisition until the target dies/despawns - see
+  /// [issueAttackOrder].
+  Attackable? forcedTarget;
+
   List<Vector2> _path = [];
   int _pathIndex = 0;
   double _repathTimer = 0;
@@ -194,18 +208,51 @@ class MobileUnitComponent extends PositionComponent
         : fallbackSprite(kind);
   }
 
-  /// Where this unit should head toward right now - the player's base for
-  /// a base-rush, the opposing base for a skirmish assault, the nearest
-  /// live hostile target for a hunt. Null means "hold position".
-  Vector2? goalPosition() => switch (objective) {
-    UnitObjective.rushBase => Vector2(
-      game.terrainMap.basePoint.x,
-      game.terrainMap.basePoint.y,
-    ),
-    UnitObjective.assaultBase => game.baseTargetFor(team),
-    UnitObjective.huntHostiles => _acquireHuntTarget()?.position,
-    UnitObjective.captureNode => captureTarget,
-  };
+  /// Where this unit should head toward right now - a player-issued attack
+  /// order beats everything else (chase the target down), then a
+  /// player-issued move order; past that, [underManualControl] means "hold
+  /// wherever it currently is" rather than resuming the automatic
+  /// objective below - the player's base for a base-rush, the opposing
+  /// base for a skirmish assault, the nearest live hostile target for a
+  /// hunt. Null means "hold position".
+  Vector2? goalPosition() {
+    if (forcedTarget != null) {
+      if (!forcedTarget!.destroyed && forcedTarget!.isMounted) {
+        return forcedTarget!.position;
+      }
+      forcedTarget = null;
+    }
+    if (underManualControl) return moveOrderTarget;
+    return switch (objective) {
+      UnitObjective.rushBase => Vector2(
+        game.terrainMap.basePoint.x,
+        game.terrainMap.basePoint.y,
+      ),
+      UnitObjective.assaultBase => game.baseTargetFor(team),
+      UnitObjective.huntHostiles => _acquireHuntTarget()?.position,
+      UnitObjective.captureNode => captureTarget,
+    };
+  }
+
+  /// Orders this unit to walk to [point] and hold there once it arrives -
+  /// puts it under permanent [underManualControl] (it won't auto-resume
+  /// its spawn [objective] afterward), though it still auto-fights
+  /// anything that wanders within [MobileUnitBlueprint.attackRange] while
+  /// holding (see [_maybeEngage]).
+  void issueMoveOrder(Vector2 point) {
+    underManualControl = true;
+    forcedTarget = null;
+    moveOrderTarget = point.clone();
+  }
+
+  /// Orders this unit to chase down and attack [enemy], overriding whatever
+  /// it was doing - see [issueMoveOrder] for the same permanent
+  /// [underManualControl] switch.
+  void issueAttackOrder(Attackable enemy) {
+    underManualControl = true;
+    moveOrderTarget = null;
+    forcedTarget = enemy;
+  }
 
   /// Forces this unit onto a specific starting position before its first
   /// path is computed - base-rushers spawn at a random terrain spawn
@@ -329,6 +376,12 @@ class MobileUnitComponent extends PositionComponent
   /// engage - a base-rush escapes past the base and damages the player, a
   /// hunter just holds and waits for a new target next frame.
   void onReachGoal() {
+    if (underManualControl) {
+      // Arrived at a manual move order - just hold here; a fresh order (or
+      // an in-range auto-engage, see [_maybeEngage]) is what moves it next.
+      moveOrderTarget = null;
+      return;
+    }
     if (objective != UnitObjective.rushBase) return;
     game.gameState.damagePlayer(1);
     game.audioRepository.play(SfxType.enemyEscape, volume: 0.5);
@@ -645,8 +698,25 @@ class MobileUnitComponent extends PositionComponent
     if (_engaging != null && (_engaging!.destroyed || !_engaging!.isMounted)) {
       _engaging = null;
     }
-    _engaging ??= _findTargetInRange();
-    final target = _engaging;
+    if (forcedTarget != null &&
+        (forcedTarget!.destroyed || !forcedTarget!.isMounted)) {
+      forcedTarget = null;
+    }
+
+    Attackable? target;
+    if (forcedTarget != null) {
+      // A player-issued attack order only fires once actually in range -
+      // otherwise `goalPosition` (which also reads `forcedTarget`) is what
+      // walks this unit toward it first.
+      final maxDist = blueprint.attackRange * detectionRangeMultiplier;
+      final inRange = forcedTarget!.position.distanceTo(position) <= maxDist;
+      target = (inRange && canAttack(forcedTarget!.domain))
+          ? forcedTarget
+          : null;
+    } else {
+      _engaging ??= _findTargetInRange();
+      target = _engaging;
+    }
     if (target == null) return false;
 
     final toTarget = target.position - position;
@@ -722,8 +792,8 @@ class MobileUnitComponent extends PositionComponent
             splashRadius: 44,
             bodyColor: const Color(0xFF6D4C41),
             tipColor: accent,
-            affectsTowers: hostileToPlayer,
             firedBy: team,
+            attackDomains: blueprint.attackDomains,
           ),
         );
       case WeaponType.rocket:
@@ -735,8 +805,8 @@ class MobileUnitComponent extends PositionComponent
             splashRadius: 60,
             bodyColor: const Color(0xFFB0BEC5),
             tipColor: accent,
-            affectsTowers: hostileToPlayer,
             firedBy: team,
+            attackDomains: blueprint.attackDomains,
           ),
         );
       case WeaponType.laser:

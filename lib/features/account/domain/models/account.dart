@@ -13,6 +13,7 @@ abstract class Account with _$Account {
     required String id,
     required String name,
     required DateTime createdAt,
+    String? avatarUrl,
   }) = _Account;
 
   factory Account.fromJson(Map<String, dynamic> json) =>

@@ -7,6 +7,7 @@ import 'core/di/service_locator.dart';
 import 'core/router/router.dart';
 import 'features/account/domain/models/account.dart';
 import 'features/account/domain/repos/account_repository.dart';
+import 'features/account/presentation/account_profile_state.dart';
 import 'features/account/presentation/create_account_content.dart';
 import 'features/messaging/presentation/glass_message.dart';
 import 'generated/l10n.dart';
@@ -32,6 +33,8 @@ class BoomspireApp extends StatefulWidget {
 
 class _BoomspireAppState extends State<BoomspireApp> {
   final AccountRepository _accountRepository = getIt<AccountRepository>();
+  final AccountProfileState _accountProfileState =
+      getIt<AccountProfileState>();
   bool _prompted = false;
 
   @override
@@ -54,6 +57,7 @@ class _BoomspireAppState extends State<BoomspireApp> {
   @override
   void initState() {
     super.initState();
+    _accountProfileState.refresh();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _maybePromptForAccount(),
     );
@@ -72,7 +76,10 @@ class _BoomspireAppState extends State<BoomspireApp> {
       barrierDismissible: false,
       contentBuilder: (context) => CreateAccountContent(
         accountRepository: _accountRepository,
-        onDone: (account) => Navigator.of(context).pop(account),
+        onDone: (account) {
+          _accountProfileState.refresh();
+          Navigator.of(context).pop(account);
+        },
       ),
     );
   }

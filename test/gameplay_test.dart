@@ -13,6 +13,7 @@ import 'package:boomspire/core/combat/mobile_unit_repository_impl.dart';
 import 'package:boomspire/core/combat/team.dart';
 import 'package:boomspire/core/combat/unit_kind.dart';
 import 'package:boomspire/core/combat/unit_objective.dart';
+import 'package:boomspire/core/combat/weapon_type.dart';
 import 'package:boomspire/features/ai_director/impl/ai_director_repository_impl.dart';
 import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
 import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
@@ -538,6 +539,202 @@ void main() {
         );
       }
     });
+  });
+
+  group('combat damage fixes', () {
+    test(
+      'enemy vehicle splash damage also hits nearby ally units, not just '
+      'towers/base (regression: cannon/rocket hits used to skip mobile '
+      'units entirely whenever the firer was hostile to the player)',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        const stationaryAlly = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 1000,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: stationaryAlly,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        ally.position = Vector2(400, 300);
+
+        const stationaryTank = MobileUnitBlueprint(
+          kind: UnitKind.tank,
+          name: 'Test Enemy Tank',
+          maxHealth: 500,
+          speed: 0,
+          bounty: 0,
+          size: 50,
+          attackDamage: 40,
+          attackRange: 300,
+          attackInterval: 0.3,
+          isVehicle: true,
+          weaponType: WeaponType.cannon,
+        );
+        final enemyTank = MobileUnitComponent(
+          blueprint: stationaryTank,
+          team: Team.invaders,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(enemyTank);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        enemyTank.position = Vector2(420, 300);
+
+        for (var i = 0; i < 30; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.2);
+        }
+
+        expect(ally.health, lessThan(ally.blueprint.maxHealth));
+      },
+    );
+  });
+
+  group('manual unit control', () {
+    test(
+      'tapping the player\'s own unit selects it for direct orders',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        const blueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 40,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: blueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        ally.position = Vector2(300, 300);
+
+        game.handleArenaTap(ally.position);
+        expect(game.selectedUnit.value, ally);
+        expect(game.inspected.value, isNull);
+
+        // Tapping it again deselects instead of re-selecting.
+        game.handleArenaTap(ally.position);
+        expect(game.selectedUnit.value, isNull);
+      },
+    );
+
+    test(
+      'tapping open ground while a unit is selected issues a move order '
+      'it walks to and then holds at',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        final cell = _findOpenCell(game);
+        final cellCenter = grid.cellCenter(cell);
+        const blueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 40,
+          speed: 80,
+          bounty: 0,
+          size: 34,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: blueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        ally.position = cellCenter.clone();
+
+        game.handleArenaTap(ally.position);
+        expect(game.selectedUnit.value, ally);
+
+        // Offset just far enough to not land back on the unit itself, but
+        // still well inside the same open cell.
+        final orderPoint = cellCenter + Vector2(18, 0);
+        game.handleArenaTap(orderPoint);
+        expect(ally.underManualControl, isTrue);
+        expect(ally.moveOrderTarget, isNotNull);
+
+        for (var i = 0; i < 10; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.1);
+        }
+
+        // Arrived and holding - not reverted to auto-hunting anywhere else.
+        expect(ally.moveOrderTarget, isNull);
+      },
+    );
+
+    test(
+      'tapping an enemy while a unit is selected issues an attack order',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        const allyBlueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 40,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+          attackDamage: 10,
+          attackRange: 150,
+          attackInterval: 0.2,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: allyBlueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        ally.position = Vector2(300, 300);
+
+        const enemyBlueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Enemy',
+          maxHealth: 200,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final enemy = MobileUnitComponent(
+          blueprint: enemyBlueprint,
+          team: Team.invaders,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(enemy);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        enemy.position = Vector2(340, 300);
+
+        game.handleArenaTap(ally.position);
+        expect(game.selectedUnit.value, ally);
+
+        game.handleArenaTap(enemy.position);
+        expect(ally.forcedTarget, enemy);
+
+        for (var i = 0; i < 20; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.2);
+        }
+
+        expect(enemy.health, lessThan(enemy.blueprint.maxHealth));
+      },
+    );
   });
 
   test('every scene generates a terrain where every spawn can reach base', () {

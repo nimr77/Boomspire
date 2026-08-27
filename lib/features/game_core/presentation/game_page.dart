@@ -10,6 +10,7 @@ import '../../../core/combat/mobile_unit_repository.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
+import '../../account/presentation/account_profile_state.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
 import '../../audio/domain/repos/audio_repository.dart';
 import '../../level_select/presentation/biome_preview.dart';
@@ -62,6 +63,8 @@ class _GamePageState extends State<GamePage> {
   late final BoomspireGame _game;
   late final GameStateRepository _gameState;
   final ProgressRepository _progressRepository = getIt<ProgressRepository>();
+  final AccountProfileState _accountProfileState =
+      getIt<AccountProfileState>();
   bool _recorded = false;
 
   @override
@@ -299,6 +302,7 @@ class _GamePageState extends State<GamePage> {
       completed: completed,
       score: score,
     );
+    _accountProfileState.refresh();
   }
 
   void _syncOverlays() {

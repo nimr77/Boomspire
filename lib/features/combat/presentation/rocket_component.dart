@@ -24,19 +24,14 @@ class RocketComponent extends PositionComponent
   final Color bodyColor;
   final Color tipColor;
 
-  /// True so splash also damages towers instead of mobile units - set for
-  /// shells fired by a unit hostile to the player, since towers are always
-  /// player-owned today.
-  final bool affectsTowers;
-
-  /// Which domains splash damage (when [affectsTowers] is false) can hit -
-  /// mirrors the firing unit's own [Unit.attackDomains] so, e.g., a
-  /// ground-only Rocket Battery splash never clips a helicopter/plane just
-  /// passing overhead.
+  /// Which domains splash damage can hit - mirrors the firing unit's own
+  /// [Unit.attackDomains] so, e.g., a ground-only Rocket Battery splash
+  /// never clips a helicopter/plane just passing overhead.
   final Set<UnitDomain> attackDomains;
 
-  /// The [Team] that fired this shell - used to find hostile mobile units
-  /// to splash-damage (see [_detonate]) when [affectsTowers] is false.
+  /// The [Team] that fired this shell - used to find every hostile thing
+  /// (mobile units, towers, and the home base alike) to splash-damage, see
+  /// [_detonate].
   final Team firedBy;
   double _trailTimer = 0;
   RocketComponent({
@@ -47,7 +42,6 @@ class RocketComponent extends PositionComponent
     required this.firedBy,
     this.bodyColor = const Color(0xFFB0BEC5),
     this.tipColor = const Color(0xFFFF7043),
-    this.affectsTowers = false,
     this.attackDomains = const {
       UnitDomain.ground,
       UnitDomain.air,
@@ -104,24 +98,25 @@ class RocketComponent extends PositionComponent
     game.world.spawn(
       ExplosionComponent(position: position.clone(), radius: splashRadius),
     );
-    if (affectsTowers) {
-      for (final tower in List.of(game.world.activeTowers)) {
-        if (firedBy.relationTo(tower.owner) != TeamRelation.enemy) continue;
-        if (tower.position.distanceTo(position) <= splashRadius) {
-          tower.takeDamage(damage);
-        }
+    // A splash hits every hostile thing in range at once - a mobile unit
+    // caught in a shell meant for a tower still gets hurt, and vice versa -
+    // instead of the old exclusive "either units or towers/base" split that
+    // let a whole category go untouched depending on who fired.
+    for (final unit in List.of(game.world.unitsHostileTo(firedBy))) {
+      if (!attackDomains.contains(unit.domain)) continue;
+      if (unit.position.distanceTo(position) <= splashRadius) {
+        unit.takeDamage(damage);
       }
-      final base = game.enemyHomeBaseFor(firedBy);
-      if (base != null && base.position.distanceTo(position) <= splashRadius) {
-        base.takeDamage(damage);
+    }
+    for (final tower in List.of(game.world.activeTowers)) {
+      if (firedBy.relationTo(tower.owner) != TeamRelation.enemy) continue;
+      if (tower.position.distanceTo(position) <= splashRadius) {
+        tower.takeDamage(damage);
       }
-    } else {
-      for (final unit in List.of(game.world.unitsHostileTo(firedBy))) {
-        if (!attackDomains.contains(unit.domain)) continue;
-        if (unit.position.distanceTo(position) <= splashRadius) {
-          unit.takeDamage(damage);
-        }
-      }
+    }
+    final base = game.enemyHomeBaseFor(firedBy);
+    if (base != null && base.position.distanceTo(position) <= splashRadius) {
+      base.takeDamage(damage);
     }
     removeFromParent();
   }

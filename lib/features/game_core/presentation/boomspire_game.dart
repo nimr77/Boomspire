@@ -14,6 +14,7 @@ import '../../ai_director/domain/repos/ai_director_repository.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../audio/domain/repos/audio_repository.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
+import '../../combat/presentation/move_order_marker_component.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
@@ -103,6 +104,17 @@ class BoomspireGame extends FlameGame<GameWorld>
   final Map<int, bool> _hasCommandPostByTeam = {};
   final ValueNotifier<UnitType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
+
+  /// The player's own mobile unit currently under direct manual control -
+  /// tapping the arena while this is set issues a move/attack order to it
+  /// instead of the usual tower-select/inspect/build routing, see
+  /// [handleArenaTap]. Mutually exclusive with [selectedTower].
+  final ValueNotifier<MobileUnitComponent?> selectedUnit = ValueNotifier(null);
+
+  /// Pulsing pin shown at [selectedUnit]'s current move-order destination -
+  /// kept in sync every frame by [_syncMoveOrderMarker].
+  MoveOrderMarkerComponent? _moveOrderMarker;
+  Vector2? _moveOrderMarkerTarget;
 
   /// Read-only info card for whatever isn't the player's to command (an
   /// enemy tower, any mobile unit, or a resource node) - see [InspectedInfo]
@@ -457,6 +469,12 @@ class BoomspireGame extends FlameGame<GameWorld>
   void handleArenaTap(Vector2 point) {
     if (gameState.status != GameStatus.playing) return;
 
+    final controlled = selectedUnit.value;
+    if (controlled != null && !controlled.destroyed) {
+      _handleControlledUnitTap(controlled, point);
+      return;
+    }
+
     final tappedTower = _towerAt(point);
     if (tappedTower != null) {
       if (tappedTower.owner.id != playerTeam.id) {
@@ -479,6 +497,15 @@ class BoomspireGame extends FlameGame<GameWorld>
 
     final tappedUnit = _unitAt(point);
     if (tappedUnit != null) {
+      if (tappedUnit.team.id == playerTeam.id) {
+        // The player's own unit - select it for direct move/attack orders
+        // instead of just showing the read-only inspect card.
+        selectedTower.value = null;
+        inspected.value = null;
+        pendingPlacement.value = null;
+        selectedUnit.value = tappedUnit;
+        return;
+      }
       selectedTower.value = null;
       inspected.value = InspectedInfo(
         kind: InspectedKind.unit,
@@ -673,6 +700,7 @@ class BoomspireGame extends FlameGame<GameWorld>
   @override
   void update(double dt) {
     super.update(dt);
+    _syncMoveOrderMarker();
     if (_shakeEventWindow > 0) {
       _shakeEventWindow -= dt;
       if (_shakeEventWindow <= 0) _shakeEventCount = 0;
@@ -782,6 +810,86 @@ class BoomspireGame extends FlameGame<GameWorld>
       }
     }
     return null;
+  }
+
+  /// The enemy home base (from [controlled]'s side), if [point] landed on
+  /// it - lets a controlled unit be ordered to attack the base directly,
+  /// the same way it can be ordered onto an enemy tower/unit.
+  Attackable? _enemyBaseAt(Vector2 point, MobileUnitComponent controlled) {
+    final base = enemyHomeBaseFor(controlled.team);
+    if (base == null) return null;
+    return point.distanceTo(base.position) <= 50 ? base : null;
+  }
+
+  /// Routes an arena tap for a currently-[selectedUnit] into a move order
+  /// (tapping open ground), an attack order (tapping any enemy tower/unit/
+  /// base), a control hand-off (tapping another of the player's own
+  /// units), or a deselect (tapping [controlled] itself again).
+  void _handleControlledUnitTap(MobileUnitComponent controlled, Vector2 point) {
+    final tappedUnit = _unitAt(point);
+    if (tappedUnit != null) {
+      if (identical(tappedUnit, controlled)) {
+        selectedUnit.value = null;
+        return;
+      }
+      if (tappedUnit.team.id != controlled.team.id) {
+        controlled.issueAttackOrder(tappedUnit);
+        return;
+      }
+      selectedUnit.value = tappedUnit;
+      return;
+    }
+
+    final tappedTower = _towerAt(point);
+    if (tappedTower != null) {
+      if (tappedTower.owner.id != controlled.team.id) {
+        controlled.issueAttackOrder(tappedTower);
+        return;
+      }
+      // The player's own tower - let this tap fall through to the usual
+      // tower-select behavior instead of issuing a bogus move order onto
+      // it, and deselect the unit so the two selections stay exclusive.
+      selectedUnit.value = null;
+      handleArenaTap(point);
+      return;
+    }
+
+    final enemyBase = _enemyBaseAt(point, controlled);
+    if (enemyBase != null) {
+      controlled.issueAttackOrder(enemyBase);
+      return;
+    }
+
+    controlled.issueMoveOrder(point);
+  }
+
+  /// Keeps the pulsing move-order pin (see [MoveOrderMarkerComponent]) in
+  /// sync with [selectedUnit]'s live [MobileUnitComponent.moveOrderTarget]
+  /// every frame - added, moved and removed reactively rather than only at
+  /// the moment an order is issued, so it also disappears the instant the
+  /// unit arrives or gets deselected.
+  void _syncMoveOrderMarker() {
+    final unit = selectedUnit.value;
+    if (unit != null && unit.destroyed) selectedUnit.value = null;
+    final target = (unit != null && !unit.destroyed)
+        ? unit.moveOrderTarget
+        : null;
+    if (target == null) {
+      if (_moveOrderMarker != null) {
+        _moveOrderMarker!.removeFromParent();
+        _moveOrderMarker = null;
+        _moveOrderMarkerTarget = null;
+      }
+      return;
+    }
+    if (identical(_moveOrderMarkerTarget, target)) return;
+    _moveOrderMarker?.removeFromParent();
+    _moveOrderMarkerTarget = target;
+    _moveOrderMarker = MoveOrderMarkerComponent(
+      position: target.clone(),
+      color: unit!.team.color,
+    );
+    world.add(_moveOrderMarker!);
   }
 
   /// Static twin of [_resolvedStartingGold] - lets `GamePage` seed its

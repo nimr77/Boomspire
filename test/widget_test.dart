@@ -1,5 +1,6 @@
 import 'package:boomspire/core/di/service_locator.dart';
 import 'package:boomspire/features/account/domain/models/account.dart';
+import 'package:boomspire/features/account/domain/models/account_profile.dart';
 import 'package:boomspire/features/account/domain/repos/account_repository.dart';
 import 'package:boomspire/main.dart';
 import 'package:flutter/material.dart';
@@ -25,11 +26,14 @@ void main() {
 
 class _FakeAccountRepository implements AccountRepository {
   @override
-  Future<Account> createAccount({required String name}) async =>
-      Account(id: 'test', name: name, createdAt: DateTime.now());
+  Future<Account> createAccount({required String name, String? avatarUrl}) async =>
+      Account(id: 'test', name: name, createdAt: DateTime.now(), avatarUrl: avatarUrl);
 
   @override
   Future<Account?> currentAccount() async => null;
+
+  @override
+  Future<AccountProfile?> loadProfile() async => null;
 
   @override
   Future<void> signOut() async {}

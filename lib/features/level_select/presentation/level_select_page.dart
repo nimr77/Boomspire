@@ -7,8 +7,8 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
-import '../../account/domain/models/account.dart';
-import '../../account/domain/repos/account_repository.dart';
+import '../../account/presentation/account_badge.dart';
+import '../../account/presentation/account_profile_state.dart';
 import '../../game_core/domain/models/game_difficulty.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../game_core/domain/models/game_scenes.dart';
@@ -105,7 +105,8 @@ class _DifficultySelector extends StatelessWidget {
 
 class _LevelSelectPageState extends State<LevelSelectPage> {
   final ProgressRepository _progressRepository = getIt<ProgressRepository>();
-  final AccountRepository _accountRepository = getIt<AccountRepository>();
+  final AccountProfileState _accountProfileState =
+      getIt<AccountProfileState>();
   GameDifficulty _difficulty = GameDifficulty.normal;
 
   @override
@@ -151,98 +152,50 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                             .fadeIn(duration: 400.ms, delay: 80.ms)
                             .slideY(begin: -0.2, end: 0),
                         const SizedBox(height: 28),
-                        FutureBuilder<Account?>(
-                          future: _accountRepository.currentAccount(),
-                          builder: (context, accountSnapshot) {
-                            return FutureBuilder<ProgressSnapshot>(
-                              future: _progressRepository.load(),
-                              builder: (context, progressSnapshot) {
-                                final progress =
-                                    progressSnapshot.data ??
-                                    ProgressSnapshot.empty;
-                                final account = accountSnapshot.data;
-                                return Column(
-                                  mainAxisSize: MainAxisSize.min,
+                        FutureBuilder<ProgressSnapshot>(
+                          future: _progressRepository.load(),
+                          builder: (context, progressSnapshot) {
+                            final progress =
+                                progressSnapshot.data ?? ProgressSnapshot.empty;
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AccountBadge(state: _accountProfileState),
+                                Center(
+                                  child: _DifficultySelector(
+                                    value: _difficulty,
+                                    onChanged: (value) =>
+                                        setState(() => _difficulty = value),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                GridView.count(
+                                  shrinkWrap: true,
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 16,
+                                  crossAxisSpacing: 16,
+                                  childAspectRatio: 1.4,
+                                  physics: const NeverScrollableScrollPhysics(),
                                   children: [
-                                    if (account != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 18,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons.account_circle,
-                                              color: Colors.white54,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              account.name,
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 14),
-                                            const Icon(
-                                              Icons.military_tech,
-                                              color: Colors.cyanAccent,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              '${progress.totalScore}',
-                                              style: const TextStyle(
-                                                color: Colors.cyanAccent,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    Center(
-                                      child: _DifficultySelector(
-                                        value: _difficulty,
-                                        onChanged: (value) =>
-                                            setState(() => _difficulty = value),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    GridView.count(
-                                      shrinkWrap: true,
-                                      crossAxisCount: 2,
-                                      mainAxisSpacing: 16,
-                                      crossAxisSpacing: 16,
-                                      childAspectRatio: 1.4,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      children: [
-                                        for (final (index, scene)
-                                            in GameScenes.all.indexed)
-                                          _SceneCard(
-                                                scene: scene,
-                                                progress: progress,
-                                                difficulty: _difficulty,
-                                              )
-                                              .animate()
-                                              .fadeIn(
-                                                duration: 380.ms,
-                                                delay: (120 + index * 90).ms,
-                                              )
-                                              .scale(
-                                                begin: const Offset(0.92, 0.92),
-                                                curve: Curves.easeOutCubic,
-                                              ),
-                                      ],
-                                    ),
+                                    for (final (index, scene)
+                                        in GameScenes.all.indexed)
+                                      _SceneCard(
+                                            scene: scene,
+                                            progress: progress,
+                                            difficulty: _difficulty,
+                                          )
+                                          .animate()
+                                          .fadeIn(
+                                            duration: 380.ms,
+                                            delay: (120 + index * 90).ms,
+                                          )
+                                          .scale(
+                                            begin: const Offset(0.92, 0.92),
+                                            curve: Curves.easeOutCubic,
+                                          ),
                                   ],
-                                );
-                              },
+                                ),
+                              ],
                             );
                           },
                         ),

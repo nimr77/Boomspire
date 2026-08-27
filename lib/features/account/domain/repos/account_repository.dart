@@ -1,4 +1,5 @@
 import '../models/account.dart';
+import '../models/account_profile.dart';
 
 /// Manages the player's local profile/identity.
 ///
@@ -6,11 +7,16 @@ import '../models/account.dart';
 /// `FirebaseAccountRepositoryImpl` can later implement the same interface
 /// for signed-in play, without any call site needing to change.
 abstract class AccountRepository {
-  /// Creates (and persists) a new local account with the given [name].
-  Future<Account> createAccount({required String name});
+  /// Creates (and persists) a new local account with the given [name] and
+  /// optional [avatarUrl].
+  Future<Account> createAccount({required String name, String? avatarUrl});
 
   /// The currently saved account, if the player has created one.
   Future<Account?> currentAccount();
+
+  /// The current account together with its total score (from
+  /// `ProgressRepository`), or `null` if no account has been created yet.
+  Future<AccountProfile?> loadProfile();
 
   /// Clears the saved account (e.g. to let the player pick a new name).
   Future<void> signOut();
