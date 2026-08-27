@@ -232,84 +232,6 @@ class TerrainPainter {
     return hasAny ? combined : null;
   }
 
-  /// One ordered point-chain per connected group of [kind] cells, so any
-  /// hand-drawn shape (not just a single top-to-bottom crossing) renders as
-  /// its actual path rather than collapsing to one line - ordering is
-  /// reconstructed from real cell adjacency since [TerrainMap] only stores
-  /// the rasterized grid, not the original drawn stroke. A chain that
-  /// touches the top/bottom grid edge is extended straight to the matching
-  /// canvas edge so it doesn't visibly stop short of the border.
-  static List<List<ui.Offset>> _obstacleChains(
-    Grid grid,
-    List<List<ObstacleKind?>> kinds,
-    ObstacleKind kind,
-    double canvasHeight,
-  ) {
-    final chains = <List<ui.Offset>>[];
-    for (final component in _connectedCells(grid, kinds, kind)) {
-      final ordered = _chainCells(component);
-      if (ordered.isEmpty) continue;
-      final points = ordered
-          .map(
-            (c) => ui.Offset(
-              c.x * grid.cellSize + grid.cellSize / 2,
-              c.y * grid.cellSize + grid.cellSize / 2,
-            ),
-          )
-          .toList();
-      if (ordered.first.y == 0) {
-        points.insert(0, ui.Offset(points.first.dx, 0));
-      }
-      if (ordered.last.y == grid.rows - 1) {
-        points.add(ui.Offset(points.last.dx, canvasHeight));
-      }
-      chains.add(points);
-    }
-    return chains;
-  }
-
-  /// Flood-fills [kinds] (8-directional) into groups of adjacent cells that
-  /// all match [kind].
-  static List<List<Point<int>>> _connectedCells(
-    Grid grid,
-    List<List<ObstacleKind?>> kinds,
-    ObstacleKind kind,
-  ) {
-    final visited = List.generate(
-      grid.rows,
-      (_) => List<bool>.filled(grid.cols, false),
-    );
-    final components = <List<Point<int>>>[];
-    for (var row = 0; row < grid.rows; row++) {
-      for (var col = 0; col < grid.cols; col++) {
-        if (visited[row][col] || kinds[row][col] != kind) continue;
-        final component = <Point<int>>[];
-        final queue = <Point<int>>[Point(col, row)];
-        visited[row][col] = true;
-        var head = 0;
-        while (head < queue.length) {
-          final cell = queue[head++];
-          component.add(cell);
-          for (var dy = -1; dy <= 1; dy++) {
-            for (var dx = -1; dx <= 1; dx++) {
-              if (dx == 0 && dy == 0) continue;
-              final nx = cell.x + dx;
-              final ny = cell.y + dy;
-              if (nx < 0 || ny < 0 || nx >= grid.cols || ny >= grid.rows) {
-                continue;
-              }
-              if (visited[ny][nx] || kinds[ny][nx] != kind) continue;
-              visited[ny][nx] = true;
-              queue.add(Point(nx, ny));
-            }
-          }
-        }
-        components.add(component);
-      }
-    }
-    return components;
-  }
-
   /// Orders a connected group of cells into a single spatially-coherent
   /// chain: starts from the lowest-degree cell (a true endpoint for a
   /// snake-shaped stroke, or an arbitrary cell for a closed loop/blob),
@@ -360,45 +282,82 @@ class TerrainPainter {
     return chain;
   }
 
-  /// Fills a connected blob of lake cells as one unioned pond shape (an
-  /// area feature, unlike the linear river/valley ribbons).
-  static void _paintLake(
-    ui.Canvas canvas,
-    List<Point<int>> cells,
-    double cellSize,
+  /// Flood-fills [kinds] (8-directional) into groups of adjacent cells that
+  /// all match [kind].
+  static List<List<Point<int>>> _connectedCells(
+    Grid grid,
+    List<List<ObstacleKind?>> kinds,
+    ObstacleKind kind,
   ) {
-    if (cells.isEmpty) return;
-    var shape = ui.Path();
-    for (final cell in cells) {
-      final rect = ui.Rect.fromLTWH(
-        cell.x * cellSize - 2,
-        cell.y * cellSize - 2,
-        cellSize + 4,
-        cellSize + 4,
-      );
-      final piece = ui.Path()
-        ..addRRect(
-          ui.RRect.fromRectAndRadius(rect, ui.Radius.circular(cellSize * 0.4)),
-        );
-      shape = ui.Path.combine(ui.PathOperation.union, shape, piece);
+    final visited = List.generate(
+      grid.rows,
+      (_) => List<bool>.filled(grid.cols, false),
+    );
+    final components = <List<Point<int>>>[];
+    for (var row = 0; row < grid.rows; row++) {
+      for (var col = 0; col < grid.cols; col++) {
+        if (visited[row][col] || kinds[row][col] != kind) continue;
+        final component = <Point<int>>[];
+        final queue = <Point<int>>[Point(col, row)];
+        visited[row][col] = true;
+        var head = 0;
+        while (head < queue.length) {
+          final cell = queue[head++];
+          component.add(cell);
+          for (var dy = -1; dy <= 1; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+              if (dx == 0 && dy == 0) continue;
+              final nx = cell.x + dx;
+              final ny = cell.y + dy;
+              if (nx < 0 || ny < 0 || nx >= grid.cols || ny >= grid.rows) {
+                continue;
+              }
+              if (visited[ny][nx] || kinds[ny][nx] != kind) continue;
+              visited[ny][nx] = true;
+              queue.add(Point(nx, ny));
+            }
+          }
+        }
+        components.add(component);
+      }
     }
-    final bounds = shape.getBounds();
-    canvas.drawPath(
-      shape,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = cellSize * 0.5
-        ..color = const ui.Color(0xFFd8c48a).withValues(alpha: 0.45),
-    );
-    canvas.drawPath(
-      shape,
-      ui.Paint()
-        ..shader = ui.Gradient.linear(bounds.topCenter, bounds.bottomCenter, [
-          const ui.Color(0xFF0a3450),
-          const ui.Color(0xFF1f7fa8),
-          const ui.Color(0xFF0a3450),
-        ], const [0.0, 0.5, 1.0]),
-    );
+    return components;
+  }
+
+  /// One ordered point-chain per connected group of [kind] cells, so any
+  /// hand-drawn shape (not just a single top-to-bottom crossing) renders as
+  /// its actual path rather than collapsing to one line - ordering is
+  /// reconstructed from real cell adjacency since [TerrainMap] only stores
+  /// the rasterized grid, not the original drawn stroke. A chain that
+  /// touches the top/bottom grid edge is extended straight to the matching
+  /// canvas edge so it doesn't visibly stop short of the border.
+  static List<List<ui.Offset>> _obstacleChains(
+    Grid grid,
+    List<List<ObstacleKind?>> kinds,
+    ObstacleKind kind,
+    double canvasHeight,
+  ) {
+    final chains = <List<ui.Offset>>[];
+    for (final component in _connectedCells(grid, kinds, kind)) {
+      final ordered = _chainCells(component);
+      if (ordered.isEmpty) continue;
+      final points = ordered
+          .map(
+            (c) => ui.Offset(
+              c.x * grid.cellSize + grid.cellSize / 2,
+              c.y * grid.cellSize + grid.cellSize / 2,
+            ),
+          )
+          .toList();
+      if (ordered.first.y == 0) {
+        points.insert(0, ui.Offset(points.first.dx, 0));
+      }
+      if (ordered.last.y == grid.rows - 1) {
+        points.add(ui.Offset(points.last.dx, canvasHeight));
+      }
+      chains.add(points);
+    }
+    return chains;
   }
 
   static void _paintDune(
@@ -443,6 +402,52 @@ class TerrainPainter {
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 1.5
         ..color = const ui.Color(0xFF5c3d1a).withValues(alpha: 0.5),
+    );
+  }
+
+  /// Fills a connected blob of lake cells as one unioned pond shape (an
+  /// area feature, unlike the linear river/valley ribbons).
+  static void _paintLake(
+    ui.Canvas canvas,
+    List<Point<int>> cells,
+    double cellSize,
+  ) {
+    if (cells.isEmpty) return;
+    var shape = ui.Path();
+    for (final cell in cells) {
+      final rect = ui.Rect.fromLTWH(
+        cell.x * cellSize - 2,
+        cell.y * cellSize - 2,
+        cellSize + 4,
+        cellSize + 4,
+      );
+      final piece = ui.Path()
+        ..addRRect(
+          ui.RRect.fromRectAndRadius(rect, ui.Radius.circular(cellSize * 0.4)),
+        );
+      shape = ui.Path.combine(ui.PathOperation.union, shape, piece);
+    }
+    final bounds = shape.getBounds();
+    canvas.drawPath(
+      shape,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = cellSize * 0.5
+        ..color = const ui.Color(0xFFd8c48a).withValues(alpha: 0.45),
+    );
+    canvas.drawPath(
+      shape,
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          bounds.topCenter,
+          bounds.bottomCenter,
+          [
+            const ui.Color(0xFF0a3450),
+            const ui.Color(0xFF1f7fa8),
+            const ui.Color(0xFF0a3450),
+          ],
+          const [0.0, 0.5, 1.0],
+        ),
     );
   }
 
@@ -697,7 +702,6 @@ class TerrainPainter {
       }
     }
   }
-
 
   /// Smooths a polyline into a curved [ui.Path] by quadratic-bezier-ing
   /// through the midpoint of every consecutive pair - a cheap way to avoid

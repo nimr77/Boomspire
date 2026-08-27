@@ -21,21 +21,6 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
   late Future<List<MapDraft>> _draftsFuture = _draftRepository.listDrafts();
   late MapDraft _pendingNewDraft = _freshDraft();
 
-  MapDraft _freshDraft() => MapDraft(
-    id: DateTime.now().microsecondsSinceEpoch.toString(),
-    name: 'New Map',
-  );
-
-  void _refresh() => setState(() {
-    _draftsFuture = _draftRepository.listDrafts();
-    _pendingNewDraft = _freshDraft();
-  });
-
-  Future<void> _deleteDraft(String id) async {
-    await _draftRepository.deleteDraft(id);
-    _refresh();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,11 +36,12 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
         closedColor: const Color(0xFF1A1F26),
         openColor: const Color(0xFF0A0E14),
         onClosed: (_) => _refresh(),
-        closedBuilder: (context, openContainer) => FloatingActionButton.extended(
-          onPressed: openContainer,
-          icon: const Icon(Icons.add),
-          label: const Text('New Map'),
-        ),
+        closedBuilder: (context, openContainer) =>
+            FloatingActionButton.extended(
+              onPressed: openContainer,
+              icon: const Icon(Icons.add),
+              label: const Text('New Map'),
+            ),
         openBuilder: (context, closeContainer) =>
             MapEditorPage(initialDraft: _pendingNewDraft),
       ),
@@ -119,5 +105,19 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
       ),
     );
   }
-}
 
+  Future<void> _deleteDraft(String id) async {
+    await _draftRepository.deleteDraft(id);
+    _refresh();
+  }
+
+  MapDraft _freshDraft() => MapDraft(
+    id: DateTime.now().microsecondsSinceEpoch.toString(),
+    name: 'New Map',
+  );
+
+  void _refresh() => setState(() {
+    _draftsFuture = _draftRepository.listDrafts();
+    _pendingNewDraft = _freshDraft();
+  });
+}
