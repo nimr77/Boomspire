@@ -1,8 +1,8 @@
-import '../models/tower_blueprint.dart';
 import '../models/tower_type.dart';
+import '../models/unit_blueprint.dart';
 
-/// Catalog of buildable tower types and their stats.
+/// Catalog of buildable combat tower types and their stats.
 abstract class TowerRepository {
-  List<TowerBlueprint> get all;
-  TowerBlueprint blueprintFor(TowerType type);
+  List<UnitBlueprint> get all;
+  UnitBlueprint blueprintFor(TowerType type);
 }

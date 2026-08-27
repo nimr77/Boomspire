@@ -1,8 +1,9 @@
-import 'tower_type.dart';
+import 'unit_type.dart';
 
-/// Static combat stats and cost/space requirements for a tower type.
-class TowerBlueprint {
-  final TowerType type;
+/// Static combat stats and cost/space requirements for a buildable unit -
+/// a combat tower ([TowerType]) or a support building ([BuildingType]).
+class UnitBlueprint {
+  final UnitType type;
 
   final String name;
 
@@ -26,7 +27,7 @@ class TowerBlueprint {
   final bool canTargetGround;
 
   final bool canTargetAir;
-  const TowerBlueprint({
+  const UnitBlueprint({
     required this.type,
     required this.name,
     required this.cost,

@@ -4,15 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
-import '../../../towers/domain/models/tower_blueprint.dart';
+import '../../../towers/domain/models/building_type.dart';
 import '../../../towers/domain/models/tower_type.dart';
+import '../../../towers/domain/models/unit_blueprint.dart';
+import '../../../towers/domain/models/unit_type.dart';
 import '../../../towers/presentation/tower_sprites.dart';
 import '../boomspire_game.dart';
-
-/// Support structures (e.g. Tech Lab, Command Post) never fire - anything
-/// with no damage/range is a "building" rather than a combat tower, so the
-/// build menu can group them under their own tab.
-bool _isBuilding(TowerBlueprint bp) => bp.damage <= 0 && bp.range <= 0;
 
 /// Horizontal row of construction cameo buttons docked at the right end of
 /// the bottom command bar (see [HudOverlay]) - one square button per tower
@@ -67,12 +64,13 @@ class _BuildMenuState extends State<BuildMenu> {
             child: ListenableBuilder(
               listenable: game.gameState,
               builder: (context, _) {
-                return ValueListenableBuilder<TowerType?>(
+                return ValueListenableBuilder<UnitType?>(
                   valueListenable: game.selectedTowerType,
                   builder: (context, selected, _) {
-                    final entries = game.towerRepository.all
-                        .where((bp) => _isBuilding(bp) == _showBuildings)
-                        .toList();
+                    final entries = [
+                      ...game.towerRepository.all,
+                      ...game.buildingRepository.all,
+                    ].where((bp) => (bp.type is BuildingType) == _showBuildings).toList();
                     return AnimatedSwitcher(
                       duration: const Duration(milliseconds: 220),
                       switchInCurve: Curves.easeOut,
@@ -126,7 +124,7 @@ class _BuildMenuState extends State<BuildMenu> {
 /// Frosted-glass hover card: build cost, core stats, and (when relevant)
 /// the build-limit count and unlock requirement for a tower type.
 class _GlassTooltip extends StatelessWidget {
-  final TowerBlueprint blueprint;
+  final UnitBlueprint blueprint;
   final String? lockReason;
   final int builtCount;
   final int? limit;
@@ -294,7 +292,7 @@ class _MenuTab extends StatelessWidget {
 }
 
 class _TowerButton extends StatefulWidget {
-  final TowerBlueprint blueprint;
+  final UnitBlueprint blueprint;
 
   final bool selected;
   final bool enabled;
@@ -388,11 +386,14 @@ class _TowerButtonState extends State<_TowerButton> {
                             TowerType.antiAir => Icons.radar,
                             TowerType.machineGun => Icons.gps_fixed,
                             TowerType.laser => Icons.bolt,
-                            TowerType.techLab => Icons.biotech,
                             TowerType.rocketSilo => Icons.rocket_launch,
-                            TowerType.commandPost => Icons.cell_tower,
                             TowerType.artilleryBunker => Icons.fort,
                             TowerType.sam => Icons.satellite_alt,
+                            BuildingType.techLab => Icons.biotech,
+                            BuildingType.commandPost => Icons.cell_tower,
+                            BuildingType.trainingCenter => Icons.groups,
+                            BuildingType.warFactory => Icons.factory,
+                            _ => Icons.help_outline,
                           },
                           color: accent,
                           size: 22,

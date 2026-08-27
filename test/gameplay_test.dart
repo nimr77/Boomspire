@@ -9,6 +9,7 @@
 import 'dart:math';
 
 import 'package:boomspire/features/ai_director/impl/ai_director_repository_impl.dart';
+import 'package:boomspire/features/allies/impl/ally_unit_repository_impl.dart';
 import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
 import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
 import 'package:boomspire/features/enemies/impl/enemy_repository_impl.dart';
@@ -17,7 +18,9 @@ import 'package:boomspire/features/game_core/domain/models/game_scenes.dart';
 import 'package:boomspire/features/game_core/impl/game_state_repository_impl.dart';
 import 'package:boomspire/features/game_core/presentation/boomspire_game.dart';
 import 'package:boomspire/features/terrain/impl/terrain_repository_impl.dart';
+import 'package:boomspire/features/towers/domain/models/building_type.dart';
 import 'package:boomspire/features/towers/domain/models/tower_type.dart';
+import 'package:boomspire/features/towers/impl/building_repository_impl.dart';
 import 'package:boomspire/features/towers/impl/tower_repository_impl.dart';
 import 'package:boomspire/features/waves/impl/wave_repository_impl.dart';
 import 'package:flame/game.dart';
@@ -83,7 +86,7 @@ void main() {
     test(
       'single-use buildings (Tech Lab, Command Post) lock once built',
       () async {
-        for (final type in [TowerType.techLab, TowerType.commandPost]) {
+        for (final type in [BuildingType.techLab, BuildingType.commandPost]) {
           final game = await _bootGame(GameScenes.all.first);
           final grid = game.terrainMap.grid;
           expect(game.buildBlockReason(type), isNull);
@@ -102,6 +105,57 @@ void main() {
                 '$type should report a lock reason once its 1-build cap is hit',
           );
         }
+      },
+    );
+
+    test(
+      'Training Center periodically produces an Ally Soldier',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        game.gameState.addGold(1000);
+
+        final cell = _findOpenCell(game);
+        game.selectTowerType(BuildingType.trainingCenter);
+        game.handleArenaTap(grid.cellCenter(cell));
+        game.handleArenaTap(grid.cellCenter(cell));
+
+        expect(game.towerCountFor(BuildingType.trainingCenter), 1);
+        expect(game.world.activeAllies, isEmpty);
+
+        // Advance time in a few chunks past the spawn interval so the
+        // Training Center's internal timer fires - yielding to the event
+        // loop between ticks lets its async sprite-load finish mounting it.
+        for (var i = 0; i < 20; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(1.0);
+        }
+
+        expect(game.world.activeAllies, isNotEmpty);
+      },
+    );
+
+    test(
+      'War Factory periodically produces an Ally vehicle/aircraft',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        game.gameState.addGold(1000);
+
+        final cell = _findOpenCell(game);
+        game.selectTowerType(BuildingType.warFactory);
+        game.handleArenaTap(grid.cellCenter(cell));
+        game.handleArenaTap(grid.cellCenter(cell));
+
+        expect(game.towerCountFor(BuildingType.warFactory), 1);
+        expect(game.world.activeAllies, isEmpty);
+
+        for (var i = 0; i < 25; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(1.0);
+        }
+
+        expect(game.world.activeAllies, isNotEmpty);
       },
     );
   });
@@ -164,6 +218,8 @@ Point<int> _findOpenCell(BoomspireGame game) {
 BoomspireGame _newGame(GameScene scene) => BoomspireGame(
   terrainRepository: TerrainRepositoryImpl(),
   towerRepository: TowerRepositoryImpl(),
+  buildingRepository: BuildingRepositoryImpl(),
+  allyUnitRepository: AllyUnitRepositoryImpl(),
   enemyRepository: EnemyRepositoryImpl(),
   waveRepository: WaveRepositoryImpl(
     totalWaves: scene.waveCount,

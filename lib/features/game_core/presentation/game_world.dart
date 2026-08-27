@@ -5,7 +5,7 @@ import '../../allies/presentation/ally_unit_component.dart';
 import '../../enemies/presentation/enemy_component.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
-import '../../towers/domain/models/tower_type.dart';
+import '../../towers/domain/models/building_type.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../../waves/presentation/wave_director_component.dart';
 import 'boomspire_game.dart';
@@ -61,7 +61,7 @@ class GameWorld extends World
   void removeTower(TowerComponent tower) {
     activeTowers.remove(tower);
     tower.removeFromParent();
-    if (tower.blueprint.type == TowerType.commandPost) {
+    if (tower.blueprint.type == BuildingType.commandPost) {
       game.enforceSupportedTowerLimits();
     }
   }

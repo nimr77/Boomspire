@@ -4,6 +4,8 @@ import '../../features/account/domain/repos/account_repository.dart';
 import '../../features/account/impl/local_account_repository_impl.dart';
 import '../../features/ai_director/domain/repos/ai_director_repository.dart';
 import '../../features/ai_director/impl/ai_director_repository_impl.dart';
+import '../../features/allies/domain/repos/ally_unit_repository.dart';
+import '../../features/allies/impl/ally_unit_repository_impl.dart';
 import '../../features/audio/domain/repos/audio_repository.dart';
 import '../../features/audio/impl/audio_repository_impl.dart';
 import '../../features/enemies/domain/repos/enemy_repository.dart';
@@ -15,7 +17,9 @@ import '../../features/progress/impl/local_progress_repository_impl.dart';
 import '../../features/terrain/domain/models/biome.dart';
 import '../../features/terrain/domain/repos/terrain_repository.dart';
 import '../../features/terrain/impl/terrain_repository_impl.dart';
+import '../../features/towers/domain/repos/building_repository.dart';
 import '../../features/towers/domain/repos/tower_repository.dart';
+import '../../features/towers/impl/building_repository_impl.dart';
 import '../../features/towers/impl/tower_repository_impl.dart';
 import '../../features/waves/domain/repos/wave_repository.dart';
 import '../../features/waves/impl/wave_repository_impl.dart';
@@ -39,6 +43,12 @@ void setupServiceLocator() {
     )
     ..registerLazySingleton<TerrainRepository>(() => TerrainRepositoryImpl())
     ..registerLazySingleton<TowerRepository>(() => TowerRepositoryImpl())
+    ..registerLazySingleton<BuildingRepository>(
+      () => BuildingRepositoryImpl(),
+    )
+    ..registerLazySingleton<AllyUnitRepository>(
+      () => AllyUnitRepositoryImpl(),
+    )
     ..registerLazySingleton<EnemyRepository>(() => EnemyRepositoryImpl())
     ..registerLazySingleton<AudioRepository>(() => AudioRepositoryImpl())
     ..registerLazySingleton<AiDirectorRepository>(

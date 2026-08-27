@@ -13,4 +13,11 @@ class GameConfig {
   /// Added per current wave to tower upgrade cost multiplier - upgrades get
   /// steadily pricier as a run goes on (see `TowerComponent.upgradeCost`).
   static const upgradeCostWaveScaling = 0.03;
+
+  /// Seconds between each Ally Soldier the Training Center sends out.
+  static const trainingCenterSpawnInterval = 14.0;
+
+  /// Seconds between each Ally vehicle/aircraft the War Factory sends out -
+  /// slower than the Training Center since these units hit much harder.
+  static const warFactorySpawnInterval = 20.0;
 }

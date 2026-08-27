@@ -17,7 +17,7 @@ import '../../enemies/presentation/enemy_component.dart';
 import '../../enemies/presentation/floating_text_component.dart';
 import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/presentation/boomspire_game.dart';
-import '../domain/models/tower_blueprint.dart';
+import '../domain/models/unit_blueprint.dart';
 import 'tower_sprites.dart';
 
 /// Gold cost to attach a point-defense module that shoots down incoming
@@ -43,7 +43,7 @@ abstract class TowerComponent extends PositionComponent
   /// Seconds between shield charges regenerating once regen kicks in.
   static const double _shieldRechargeInterval = 6.0;
 
-  final TowerBlueprint blueprint;
+  final UnitBlueprint blueprint;
   double hp;
   double maxHp;
   int col = 0;

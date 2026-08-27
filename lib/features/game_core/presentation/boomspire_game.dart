@@ -7,6 +7,7 @@ import 'package:flutter/material.dart' show Color;
 
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
+import '../../allies/domain/repos/ally_unit_repository.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../audio/domain/repos/audio_repository.dart';
 import '../../enemies/domain/repos/enemy_repository.dart';
@@ -14,8 +15,11 @@ import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
-import '../../towers/domain/models/tower_blueprint.dart';
+import '../../towers/domain/models/building_type.dart';
 import '../../towers/domain/models/tower_type.dart';
+import '../../towers/domain/models/unit_blueprint.dart';
+import '../../towers/domain/models/unit_type.dart';
+import '../../towers/domain/repos/building_repository.dart';
 import '../../towers/domain/repos/tower_repository.dart';
 import '../../towers/presentation/anti_air_tower_component.dart';
 import '../../towers/presentation/artillery_bunker_component.dart';
@@ -28,6 +32,8 @@ import '../../towers/presentation/rocket_tower_component.dart';
 import '../../towers/presentation/sam_tower_component.dart';
 import '../../towers/presentation/tech_lab_component.dart';
 import '../../towers/presentation/tower_component.dart';
+import '../../towers/presentation/training_center_component.dart';
+import '../../towers/presentation/war_factory_component.dart';
 import '../../waves/domain/repos/wave_repository.dart';
 import '../../waves/presentation/wave_director_component.dart';
 import '../domain/models/game_config.dart';
@@ -51,6 +57,8 @@ class BoomspireGame extends FlameGame<GameWorld> {
 
   final TerrainRepository terrainRepository;
   final TowerRepository towerRepository;
+  final BuildingRepository buildingRepository;
+  final AllyUnitRepository allyUnitRepository;
   final EnemyRepository enemyRepository;
   final WaveRepository waveRepository;
   final AudioRepository audioRepository;
@@ -71,7 +79,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
   /// (together with [hasTechLab]) before the SAM Site can be built. Stays
   /// true even if every Command Post is later destroyed/sold.
   bool hasCommandPost = false;
-  final ValueNotifier<TowerType?> selectedTowerType = ValueNotifier(null);
+  final ValueNotifier<UnitType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
 
   final ValueNotifier<String> commanderNote = ValueNotifier('');
@@ -99,6 +107,8 @@ class BoomspireGame extends FlameGame<GameWorld> {
   BoomspireGame({
     required this.terrainRepository,
     required this.towerRepository,
+    required this.buildingRepository,
+    required this.allyUnitRepository,
     required this.enemyRepository,
     required this.waveRepository,
     required this.audioRepository,
@@ -116,7 +126,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
 
   /// How many active Command Posts are standing - each one supports one
   /// Artillery Bunker (see [buildLimitFor]).
-  int get activeCommandPostCount => towerCountFor(TowerType.commandPost);
+  int get activeCommandPostCount => towerCountFor(BuildingType.commandPost);
 
   @override
   Color backgroundColor() => const Color(0xFF14181d);
@@ -128,7 +138,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
 
   /// Why [type] can't be built right now, or null if it's buildable (gold
   /// permitting) - shown in the build menu's lock overlay/tooltip.
-  String? buildBlockReason(TowerType type) {
+  String? buildBlockReason(UnitType type) {
     if (type == TowerType.laser && !hasTechLab) return 'Requires Tech Lab';
     if (type == TowerType.artilleryBunker && activeCommandPostCount == 0) {
       return 'Requires Command Post';
@@ -144,15 +154,18 @@ class BoomspireGame extends FlameGame<GameWorld> {
   }
 
   /// Max simultaneous count allowed for [type], or null if unlimited. The
-  /// Tech Lab, Command Post and Laser Lance only ever need one; Artillery
-  /// Bunker rides along with however many Command Posts are standing (so it
-  /// too tops out at one); the SAM Site is capped at two.
-  int? buildLimitFor(TowerType type) => switch (type) {
+  /// Tech Lab, Command Post, Training Center, War Factory and Laser Lance
+  /// only ever need one; Artillery Bunker rides along with however many
+  /// Command Posts are standing (so it too tops out at one); the SAM Site
+  /// is capped at two.
+  int? buildLimitFor(UnitType type) => switch (type) {
     TowerType.laser => 1,
-    TowerType.techLab => 1,
-    TowerType.commandPost => 1,
     TowerType.artilleryBunker => activeCommandPostCount,
     TowerType.sam => 2,
+    BuildingType.techLab => 1,
+    BuildingType.commandPost => 1,
+    BuildingType.trainingCenter => 1,
+    BuildingType.warFactory => 1,
     _ => null,
   };
 
@@ -166,7 +179,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
     audioRepository.play(SfxType.buildPlace, volume: 0.6);
   }
 
-  bool canBuildTower(TowerType type) => buildBlockReason(type) == null;
+  bool canBuildTower(UnitType type) => buildBlockReason(type) == null;
 
   /// Called whenever a Command Post is destroyed or sold - any Artillery
   /// Bunker built beyond what the remaining Command Posts can still support
@@ -270,7 +283,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
     _shakeEventWindow = 0;
   }
 
-  void selectTowerType(TowerType? type) {
+  void selectTowerType(UnitType? type) {
     selectedTowerType.value = selectedTowerType.value == type ? null : type;
     pendingPlacement.value = null;
   }
@@ -320,7 +333,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
   }
 
   /// How many of [type] are currently standing on the battlefield.
-  int towerCountFor(TowerType type) =>
+  int towerCountFor(UnitType type) =>
       world.activeTowers.where((t) => t.blueprint.type == type).length;
 
   @override
@@ -355,12 +368,12 @@ class BoomspireGame extends FlameGame<GameWorld> {
     tower.upgrade();
   }
 
-  void _buildTower(TowerType type, Vector2 point) {
+  void _buildTower(UnitType type, Vector2 point) {
     final grid = terrainMap.grid;
     final cell = grid.worldToCell(point);
     if (!_isBuildableCell(cell)) return;
 
-    final blueprint = towerRepository.blueprintFor(type);
+    final blueprint = blueprintFor(type);
     if (gameState.gold < blueprint.cost) return;
     if (!canBuildTower(type)) return;
 
@@ -386,17 +399,23 @@ class BoomspireGame extends FlameGame<GameWorld> {
     world.spawnTower(
       _createTower(type, grid.cellCenter(cell), grid.cellSize, blueprint),
     );
-    if (type == TowerType.techLab) hasTechLab = true;
-    if (type == TowerType.commandPost) hasCommandPost = true;
+    if (type == BuildingType.techLab) hasTechLab = true;
+    if (type == BuildingType.commandPost) hasCommandPost = true;
     audioRepository.play(SfxType.buildPlace, volume: 0.7);
     selectedTowerType.value = null;
   }
 
+  /// Looks up [type]'s stats from whichever repository actually owns it -
+  /// the combat tower catalog or the support building catalog.
+  UnitBlueprint blueprintFor(UnitType type) => type is BuildingType
+      ? buildingRepository.blueprintFor(type)
+      : towerRepository.blueprintFor(type as TowerType);
+
   TowerComponent _createTower(
-    TowerType type,
+    UnitType type,
     Vector2 position,
     double cellSize,
-    TowerBlueprint blueprint,
+    UnitBlueprint blueprint,
   ) {
     return switch (type) {
       TowerType.machineGun => MachineGunTowerComponent(
@@ -424,17 +443,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
         cellSize: cellSize,
         blueprint: blueprint,
       ),
-      TowerType.techLab => TechLabComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
       TowerType.rocketSilo => RocketSiloTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.commandPost => CommandPostComponent(
         position: position,
         cellSize: cellSize,
         blueprint: blueprint,
@@ -449,6 +458,27 @@ class BoomspireGame extends FlameGame<GameWorld> {
         cellSize: cellSize,
         blueprint: blueprint,
       ),
+      BuildingType.techLab => TechLabComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.commandPost => CommandPostComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.trainingCenter => TrainingCenterComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.warFactory => WarFactoryComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      _ => throw ArgumentError('Unknown unit type: $type'),
     };
   }
 

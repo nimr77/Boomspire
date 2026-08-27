@@ -6,11 +6,13 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
+import '../../allies/domain/repos/ally_unit_repository.dart';
 import '../../audio/domain/repos/audio_repository.dart';
 import '../../enemies/domain/repos/enemy_repository.dart';
 import '../../level_select/presentation/biome_preview.dart';
 import '../../progress/domain/repos/progress_repository.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
+import '../../towers/domain/repos/building_repository.dart';
 import '../../towers/domain/repos/tower_repository.dart';
 import '../../waves/domain/repos/wave_repository.dart';
 import '../domain/models/game_difficulty.dart';
@@ -133,6 +135,8 @@ class _GamePageState extends State<GamePage> {
     _game = BoomspireGame(
       terrainRepository: getIt<TerrainRepository>(),
       towerRepository: getIt<TowerRepository>(),
+      buildingRepository: getIt<BuildingRepository>(),
+      allyUnitRepository: getIt<AllyUnitRepository>(),
       enemyRepository: getIt<EnemyRepository>(),
       waveRepository: getIt<WaveRepository>(
         param1: widget.scene.waveCount,

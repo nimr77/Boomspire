@@ -45,7 +45,7 @@ class GhostPlacementComponent extends PositionComponent
     final grid = game.terrainMap.grid;
     final center = grid.cellCenter(cell);
     final offset = Offset(center.x, center.y);
-    final blueprint = game.towerRepository.blueprintFor(type);
+    final blueprint = game.blueprintFor(type);
     final accent = TowerSpriteFactory.accentColor(type);
     final pulse = 0.5 + 0.5 * sin(_pulsePhase);
 

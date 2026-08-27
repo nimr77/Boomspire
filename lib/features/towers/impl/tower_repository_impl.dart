@@ -1,10 +1,10 @@
-import '../domain/models/tower_blueprint.dart';
 import '../domain/models/tower_type.dart';
+import '../domain/models/unit_blueprint.dart';
 import '../domain/repos/tower_repository.dart';
 
 class TowerRepositoryImpl implements TowerRepository {
-  static const _blueprints = <TowerType, TowerBlueprint>{
-    TowerType.machineGun: TowerBlueprint(
+  static const _blueprints = <TowerType, UnitBlueprint>{
+    TowerType.machineGun: UnitBlueprint(
       type: TowerType.machineGun,
       name: 'Gatling Turret',
       cost: 40,
@@ -13,7 +13,7 @@ class TowerRepositoryImpl implements TowerRepository {
       fireRate: 0.15,
       maxHp: 90,
     ),
-    TowerType.rocket: TowerBlueprint(
+    TowerType.rocket: UnitBlueprint(
       type: TowerType.rocket,
       name: 'Rocket Battery',
       cost: 90,
@@ -23,7 +23,7 @@ class TowerRepositoryImpl implements TowerRepository {
       splashRadius: 75,
       maxHp: 120,
     ),
-    TowerType.cannon: TowerBlueprint(
+    TowerType.cannon: UnitBlueprint(
       type: TowerType.cannon,
       name: 'Siege Cannon',
       cost: 140,
@@ -33,7 +33,7 @@ class TowerRepositoryImpl implements TowerRepository {
       splashRadius: 55,
       maxHp: 200,
     ),
-    TowerType.antiAir: TowerBlueprint(
+    TowerType.antiAir: UnitBlueprint(
       type: TowerType.antiAir,
       name: 'Flak Battery',
       cost: 110,
@@ -44,7 +44,7 @@ class TowerRepositoryImpl implements TowerRepository {
       canTargetGround: false,
       canTargetAir: true,
     ),
-    TowerType.laser: TowerBlueprint(
+    TowerType.laser: UnitBlueprint(
       type: TowerType.laser,
       name: 'Laser Lance',
       cost: 170,
@@ -57,16 +57,7 @@ class TowerRepositoryImpl implements TowerRepository {
       canTargetGround: true,
       canTargetAir: true,
     ),
-    TowerType.techLab: TowerBlueprint(
-      type: TowerType.techLab,
-      name: 'Tech Lab',
-      cost: 200,
-      range: 0,
-      damage: 0,
-      fireRate: 1,
-      maxHp: 70,
-    ),
-    TowerType.rocketSilo: TowerBlueprint(
+    TowerType.rocketSilo: UnitBlueprint(
       type: TowerType.rocketSilo,
       name: 'Rocket Silo',
       cost: 220,
@@ -80,16 +71,7 @@ class TowerRepositoryImpl implements TowerRepository {
       canTargetGround: true,
       canTargetAir: false,
     ),
-    TowerType.commandPost: TowerBlueprint(
-      type: TowerType.commandPost,
-      name: 'Command Post',
-      cost: 280,
-      range: 0,
-      damage: 0,
-      fireRate: 1,
-      maxHp: 110,
-    ),
-    TowerType.artilleryBunker: TowerBlueprint(
+    TowerType.artilleryBunker: UnitBlueprint(
       type: TowerType.artilleryBunker,
       name: 'Artillery Bunker',
       cost: 200,
@@ -99,7 +81,7 @@ class TowerRepositoryImpl implements TowerRepository {
       splashRadius: 40,
       maxHp: 160,
     ),
-    TowerType.sam: TowerBlueprint(
+    TowerType.sam: UnitBlueprint(
       type: TowerType.sam,
       name: 'SAM Site',
       cost: 160,
@@ -117,8 +99,8 @@ class TowerRepositoryImpl implements TowerRepository {
   };
 
   @override
-  List<TowerBlueprint> get all => _blueprints.values.toList(growable: false);
+  List<UnitBlueprint> get all => _blueprints.values.toList(growable: false);
 
   @override
-  TowerBlueprint blueprintFor(TowerType type) => _blueprints[type]!;
+  UnitBlueprint blueprintFor(TowerType type) => _blueprints[type]!;
 }

@@ -4,39 +4,45 @@ import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/rendering/procedural_image.dart';
+import '../domain/models/building_type.dart';
 import '../domain/models/tower_type.dart';
+import '../domain/models/unit_type.dart';
 
 /// Procedurally paints tower base plates and turrets - our "2D object
-/// models" for towers, cached per [TowerType] so art is generated once.
+/// models" for towers and buildings, cached per [UnitType] so art is
+/// generated once.
 class TowerSpriteFactory {
-  static final Map<TowerType, Sprite> _baseCache = {};
+  static final Map<UnitType, Sprite> _baseCache = {};
 
-  static final Map<TowerType, Sprite> _turretCache = {};
+  static final Map<UnitType, Sprite> _turretCache = {};
   TowerSpriteFactory._();
 
-  /// The faction color for this tower type - reused for turret art and for
+  /// The faction color for this unit type - reused for turret art and for
   /// the ground fire-pulse effect when it shoots.
-  static Color accentColor(TowerType type) => switch (type) {
+  static Color accentColor(UnitType type) => switch (type) {
     TowerType.rocket => const Color(0xFFFF6B35),
     TowerType.cannon => const Color(0xFFFFC107),
     TowerType.antiAir => const Color(0xFF7C4DFF),
     TowerType.machineGun => const Color(0xFF4FC3F7),
     TowerType.laser => const Color(0xFFFF3D9A),
-    TowerType.techLab => const Color(0xFF1DE9B6),
     TowerType.rocketSilo => const Color(0xFFFF8A00),
-    TowerType.commandPost => const Color(0xFFFFD54A),
     TowerType.artilleryBunker => const Color(0xFF8D6E63),
     TowerType.sam => const Color(0xFF00E5FF),
+    BuildingType.techLab => const Color(0xFF1DE9B6),
+    BuildingType.commandPost => const Color(0xFFFFD54A),
+    BuildingType.trainingCenter => const Color(0xFF66BB6A),
+    BuildingType.warFactory => const Color(0xFFB0BEC5),
+    _ => const Color(0xFFBDBDBD),
   };
 
-  static Future<Sprite> base(TowerType type) async {
+  static Future<Sprite> base(UnitType type) async {
     final cached = _baseCache[type];
     if (cached != null) return cached;
     final image = await renderToImage(64, 64, (c) => _paintBase(c, type));
     return _baseCache[type] = Sprite(image);
   }
 
-  static Future<Sprite> turret(TowerType type) async {
+  static Future<Sprite> turret(UnitType type) async {
     final cached = _turretCache[type];
     if (cached != null) return cached;
     final image = await renderToImage(48, 48, (c) => _paintTurret(c, type));
@@ -139,7 +145,7 @@ class TowerSpriteFactory {
     _paintViewhole(canvas, center.translate(-7, 6));
   }
 
-  static void _paintBase(Canvas canvas, TowerType type) {
+  static void _paintBase(Canvas canvas, UnitType type) {
     const center = Offset(32, 32);
     final accent = accentColor(type);
 
@@ -545,7 +551,87 @@ class TowerSpriteFactory {
     _paintViewhole(canvas, center.translate(0, 7));
   }
 
-  static void _paintTurret(Canvas canvas, TowerType type) {
+  static void _paintTrainingCenterTurret(Canvas canvas, Offset center) {
+    // A small flagpole with a fluttering pennant - reads as a barracks/muster
+    // point rather than a weapon, since it never actually fires; it just
+    // musters fresh soldiers to send out.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center.translate(0, -6), width: 3, height: 20),
+        const Radius.circular(1.5),
+      ),
+      Paint()..color = const Color(0xFF2b2f36),
+    );
+    final flag = Path()
+      ..moveTo(center.dx + 1.5, center.dy - 15)
+      ..lineTo(center.dx + 11, center.dy - 12)
+      ..lineTo(center.dx + 1.5, center.dy - 8)
+      ..close();
+    canvas.drawPath(flag, Paint()..color = const Color(0xFF66BB6A));
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF4c7a4f), Color(0xFF2b2f36)],
+        ).createShader(Rect.fromCircle(center: center, radius: 12)),
+    );
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFF66BB6A),
+    );
+    _paintViewhole(canvas, center.translate(0, 7));
+  }
+
+  static void _paintWarFactoryTurret(Canvas canvas, Offset center) {
+    // A stubby smokestack with a crane arm - reads as heavy industry rather
+    // than a weapon, since it never actually fires; it just rolls out
+    // vehicles and aircraft.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center.translate(-5, -8), width: 7, height: 22),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF78909C),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center.translate(-5, -20), width: 9, height: 5),
+        const Radius.circular(1.5),
+      ),
+      Paint()..color = const Color(0xFF37474F),
+    );
+    canvas.drawLine(
+      center.translate(2, -14),
+      center.translate(12, -18),
+      Paint()
+        ..color = const Color(0xFFB0BEC5)
+        ..strokeWidth = 2,
+    );
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF607d8b), Color(0xFF2b2f36)],
+        ).createShader(Rect.fromCircle(center: center, radius: 12)),
+    );
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFFB0BEC5),
+    );
+    _paintViewhole(canvas, center.translate(0, 7));
+  }
+
+  static void _paintTurret(Canvas canvas, UnitType type) {
     const center = Offset(24, 24);
     switch (type) {
       case TowerType.machineGun:
@@ -558,16 +644,20 @@ class TowerSpriteFactory {
         _paintAntiAirTurret(canvas, center);
       case TowerType.laser:
         _paintLaserTurret(canvas, center);
-      case TowerType.techLab:
-        _paintTechLabTurret(canvas, center);
       case TowerType.rocketSilo:
         _paintRocketSiloTurret(canvas, center);
-      case TowerType.commandPost:
-        _paintCommandPostTurret(canvas, center);
       case TowerType.artilleryBunker:
         _paintArtilleryBunkerTurret(canvas, center);
       case TowerType.sam:
         _paintSamTurret(canvas, center);
+      case BuildingType.techLab:
+        _paintTechLabTurret(canvas, center);
+      case BuildingType.commandPost:
+        _paintCommandPostTurret(canvas, center);
+      case BuildingType.trainingCenter:
+        _paintTrainingCenterTurret(canvas, center);
+      case BuildingType.warFactory:
+        _paintWarFactoryTurret(canvas, center);
     }
   }
 

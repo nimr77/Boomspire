@@ -69,7 +69,7 @@ class TerrainComponent extends PositionComponent
 
     final selected = game.selectedTowerType.value;
     if (selected == null) return;
-    final blueprint = game.towerRepository.blueprintFor(selected);
+    final blueprint = game.blueprintFor(selected);
     final canAfford = game.gameState.gold >= blueprint.cost;
     final grid = terrainMap.grid;
 
