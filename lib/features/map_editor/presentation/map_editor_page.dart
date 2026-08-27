@@ -33,6 +33,11 @@ import '../impl/draft_wave_repository.dart';
 import '../impl/editor_terrain_generator.dart';
 import '../impl/map_draft_terrain_repository.dart';
 
+/// Wave Defense has exactly one player base; Skirmish supports up to one
+/// per [PlayerPalette] slot.
+int _maxHomeSites(GameMode mode) =>
+    mode == GameMode.skirmish ? PlayerPalette.colors.length : 1;
+
 /// The map editor: paint terrain obstacles, draw freehand rivers/lakes,
 /// size the arena, and author the scene's sun/weather timeline.
 ///
@@ -451,21 +456,19 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           runSpacing: 8,
                           children: [
                             for (final tool in _EditorTool.values)
-                              if (tool != _EditorTool.homeSite ||
-                                  currentDraft.mode == GameMode.skirmish)
-                                ChoiceChip(
-                                  label: Text(tool.label),
-                                  selected: currentTool == tool,
-                                  onSelected: (_) => _state.setTool(tool),
-                                ),
+                              ChoiceChip(
+                                label: Text(tool.label),
+                                selected: currentTool == tool,
+                                onSelected: (_) => _state.setTool(tool),
+                              ),
                           ],
                         ),
                         if (currentTool == _EditorTool.homeSite) ...[
                           const SizedBox(height: 8),
                           Text(
                             'Home sites: ${currentDraft.homeSites.length}/'
-                            '${PlayerPalette.colors.length} - tap to place, tap '
-                            'a marker to remove.',
+                            '${_maxHomeSites(currentDraft.mode)} - tap to '
+                            'place, tap a marker to remove.',
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
@@ -525,15 +528,11 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             _updateDraft(
                               (d) => d.copyWith(
                                 mode: mode,
-                                homeSites: mode == GameMode.skirmish
-                                    ? d.homeSites
-                                    : const [],
+                                homeSites: d.homeSites
+                                    .take(_maxHomeSites(mode))
+                                    .toList(),
                               ),
                             );
-                            if (mode != GameMode.skirmish &&
-                                currentTool == _EditorTool.homeSite) {
-                              _state.setTool(_EditorTool.mountain);
-                            }
                           },
                         ),
                         Row(
@@ -949,9 +948,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
   }
 
   /// Rasterizes the draft's current terrain and launches a real playthrough
-  /// of it via the normal [GamePage] - home/spawn placement is fixed (east
-  /// edge base, single western approach) since a draft doesn't carry
-  /// [GameScene.homeSites]/layout data yet.
+  /// of it via the normal [GamePage] - the base lands at the editor's placed
+  /// home site if one was set (falls back to the default east-edge base,
+  /// single western approach, otherwise).
   Future<void> _play() async {
     _state.setPlaying(true);
     final draft = _state.draft.value;
@@ -978,6 +977,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
         terrainRepository: MapDraftTerrainRepository(
           draft: draft,
           preview: preview,
+          humanBaseSite: draft.homeSites.isNotEmpty
+              ? draft.homeSites.first
+              : null,
         ),
         waveRepository: DraftWaveRepository(
           loadouts: draft.waveLoadouts,
@@ -1066,8 +1068,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
   }
 
   /// Places a new numbered home site at the tapped point, or removes an
-  /// existing one if tapped near it - capped at [PlayerPalette.colors]'
-  /// length since that's how many distinct player markers are supported.
+  /// existing one if tapped near it. Wave Defense only ever has a single
+  /// player base, so it's capped at 1; Skirmish allows one per
+  /// [PlayerPalette.colors] slot.
   void _toggleHomeSiteAt(Offset local) {
     final point = _toWorld(local);
     const removeRadius = 32.0;
@@ -1077,10 +1080,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
           (site.x - point.x).abs() < removeRadius &&
           (site.y - point.y).abs() < removeRadius,
     );
-    if (existingIndex == -1 &&
-        draft.homeSites.length >= PlayerPalette.colors.length) {
+    final maxSites = _maxHomeSites(draft.mode);
+    if (existingIndex == -1 && draft.homeSites.length >= maxSites) {
       _showToast(
-        'Only ${PlayerPalette.colors.length} home sites supported',
+        'Only $maxSites home sites supported',
         icon: Icons.info_outline,
       );
       return;
