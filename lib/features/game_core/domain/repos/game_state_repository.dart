@@ -15,13 +15,14 @@ abstract class GameStateRepository extends ChangeNotifier {
   int get gold;
   int get goldEarned;
   int get health;
-  GameStatus get status;
-
-  int get totalWaves;
 
   /// How many enemies have been killed this run - drives the escalating
   /// bonus in [addKillGold].
   int get killCount;
+
+  GameStatus get status;
+
+  int get totalWaves;
 
   void addGold(int amount);
 
