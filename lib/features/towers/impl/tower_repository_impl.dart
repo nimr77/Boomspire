@@ -60,7 +60,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.techLab: TowerBlueprint(
       type: TowerType.techLab,
       name: 'Tech Lab',
-      cost: 60,
+      cost: 200,
       range: 0,
       damage: 0,
       fireRate: 1,
@@ -83,7 +83,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.commandPost: TowerBlueprint(
       type: TowerType.commandPost,
       name: 'Command Post',
-      cost: 130,
+      cost: 280,
       range: 0,
       damage: 0,
       fireRate: 1,

@@ -79,6 +79,31 @@ void main() {
         expect(game.world.activeTowers, isEmpty);
       },
     );
+
+    test(
+      'single-use buildings (Tech Lab, Command Post) lock once built',
+      () async {
+        for (final type in [TowerType.techLab, TowerType.commandPost]) {
+          final game = await _bootGame(GameScenes.all.first);
+          final grid = game.terrainMap.grid;
+          expect(game.buildBlockReason(type), isNull);
+          game.gameState.addGold(1000);
+
+          final cell = _findOpenCell(game);
+          game.selectTowerType(type);
+          game.handleArenaTap(grid.cellCenter(cell));
+          game.handleArenaTap(grid.cellCenter(cell));
+
+          expect(game.towerCountFor(type), 1);
+          expect(
+            game.buildBlockReason(type),
+            'Max 1 built',
+            reason:
+                '$type should report a lock reason once its 1-build cap is hit',
+          );
+        }
+      },
+    );
   });
 
   test('every scene generates a terrain where every spawn can reach base', () {
