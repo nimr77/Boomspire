@@ -8,6 +8,8 @@ import '../../features/audio/domain/repos/audio_repository.dart';
 import '../../features/audio/impl/audio_repository_impl.dart';
 import '../../features/game_core/domain/repos/game_state_repository.dart';
 import '../../features/game_core/impl/game_state_repository_impl.dart';
+import '../../features/map_editor/domain/repos/map_draft_repository.dart';
+import '../../features/map_editor/impl/local_map_draft_repository_impl.dart';
 import '../../features/progress/domain/repos/progress_repository.dart';
 import '../../features/progress/impl/local_progress_repository_impl.dart';
 import '../../features/terrain/domain/models/biome.dart';
@@ -38,6 +40,9 @@ void setupServiceLocator() {
     )
     ..registerLazySingleton<ProgressRepository>(
       () => LocalProgressRepositoryImpl(),
+    )
+    ..registerLazySingleton<MapDraftRepository>(
+      () => LocalMapDraftRepositoryImpl(),
     )
     ..registerLazySingleton<TerrainRepository>(() => TerrainRepositoryImpl())
     ..registerLazySingleton<TowerRepository>(() => TowerRepositoryImpl())
