@@ -42,7 +42,7 @@ class TowerRepositoryImpl implements TowerRepository {
       type: TowerType.antiAir,
       name: S.current.towerNameAntiAir,
       cost: 150,
-      range: 260,
+      range: 300,
       damage: 26,
       fireRate: 0.5,
       maxHp: 100,
@@ -63,7 +63,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.rocketSilo: UnitBlueprint(
       type: TowerType.rocketSilo,
       name: S.current.towerNameRocketSilo,
-      range: 400,
+      range: 450,
       // Long-range-only siege weapon: anything that gets inside this radius
       // is under its minimum arc and can't be engaged at all - it relies on
       // other towers to screen it from close-range attackers.

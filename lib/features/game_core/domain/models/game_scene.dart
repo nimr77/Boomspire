@@ -45,6 +45,11 @@ class GameScene {
   /// [GameMode.waveDefense] scenes, which always use [homeLayout] instead.
   final List<HomeSite> homeSites;
 
+  /// Capturable second-resource nodes on this scene's map - placed as a
+  /// fraction of the arena size so the same scene definition still makes
+  /// sense at any arena size. Empty for scenes with no capturable economy.
+  final List<ResourceNodeSite> resourceNodeSites;
+
   const GameScene({
     required this.id,
     required this.name,
@@ -56,6 +61,7 @@ class GameScene {
     this.homeLayout = HomeLayout.eastEdge,
     this.spawnLayout = SpawnLayout.single,
     this.homeSites = const [],
+    this.resourceNodeSites = const [],
   });
 
   factory GameScene.fromJson(Map<String, dynamic> json) => GameScene(
@@ -77,6 +83,9 @@ class GameScene {
     homeSites: (json['homeSites'] as List<dynamic>? ?? const [])
         .map((site) => HomeSite.fromJson(site as Map<String, dynamic>))
         .toList(),
+    resourceNodeSites: (json['resourceNodeSites'] as List<dynamic>? ?? const [])
+        .map((site) => ResourceNodeSite.fromJson(site as Map<String, dynamic>))
+        .toList(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -90,6 +99,9 @@ class GameScene {
     'homeLayout': homeLayout.name,
     'spawnLayout': spawnLayout.name,
     'homeSites': homeSites.map((site) => site.toJson()).toList(),
+    'resourceNodeSites': resourceNodeSites
+        .map((site) => site.toJson())
+        .toList(),
   };
 }
 
@@ -127,4 +139,22 @@ enum SpawnLayout {
 
   /// Every open edge around the base.
   surround,
+}
+
+/// A capturable resource node's placement on a scene's map, as a fraction of
+/// the arena size (0,0 = top-left, 1,1 = bottom-right) so the same scene
+/// definition still makes sense at any arena size.
+class ResourceNodeSite {
+  final double dx;
+  final double dy;
+
+  const ResourceNodeSite({required this.dx, required this.dy});
+
+  factory ResourceNodeSite.fromJson(Map<String, dynamic> json) =>
+      ResourceNodeSite(
+        dx: (json['dx'] as num).toDouble(),
+        dy: (json['dy'] as num).toDouble(),
+      );
+
+  Map<String, dynamic> toJson() => {'dx': dx, 'dy': dy};
 }

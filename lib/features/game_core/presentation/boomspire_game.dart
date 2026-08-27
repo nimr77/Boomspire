@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Color;
@@ -45,11 +46,13 @@ import '../domain/repos/game_state_repository.dart';
 import 'game_world.dart';
 import 'ghost_placement_component.dart';
 import 'home_base_component.dart';
+import 'resource_node_component.dart';
 
 /// Composition root: wires the domain repositories into a running Flame
 /// game, owns the shared "build mode" selection, and mediates tower
 /// placement/repair taps coming from [GameWorld].
-class BoomspireGame extends FlameGame<GameWorld> {
+class BoomspireGame extends FlameGame<GameWorld>
+    with HasKeyboardHandlerComponents<GameWorld> {
   /// Caps how many independent shake *impulses* can land in quick
   /// succession (see [shakeCamera]) - once the cap is hit within
   /// [_shakeEventWindow], further triggers just extend/strengthen the
@@ -300,6 +303,9 @@ class BoomspireGame extends FlameGame<GameWorld> {
       ),
     );
     world.add(GhostPlacementComponent());
+    for (final point in terrainMap.resourceNodePoints) {
+      world.add(ResourceNodeComponent(position: Vector2(point.x, point.y)));
+    }
     enemyFocusHint = FocusHint.nearestTower;
     commanderNote.value = '';
     selectedTowerType.value = null;
@@ -307,6 +313,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
     pendingPlacement.value = null;
     hasTechLab = false;
     hasCommandPost = false;
+    world.cameraPosition = Vector2.zero();
     _shakeEventCount = 0;
     _shakeEventWindow = 0;
   }
@@ -371,20 +378,25 @@ class BoomspireGame extends FlameGame<GameWorld> {
       _shakeEventWindow -= dt;
       if (_shakeEventWindow <= 0) _shakeEventCount = 0;
     }
-    if (_shakeDuration <= 0) return;
-    _shakeDuration = (_shakeDuration - dt).clamp(0.0, _shakeMaxDuration);
-    if (_shakeDuration <= 0) {
-      camera.viewfinder.position = Vector2.zero();
-      _shakePower = 0;
-      return;
+    var shakeOffset = Vector2.zero();
+    if (_shakeDuration > 0) {
+      _shakeDuration = (_shakeDuration - dt).clamp(0.0, _shakeMaxDuration);
+      if (_shakeDuration <= 0) {
+        _shakePower = 0;
+      } else {
+        final falloff = _shakeDuration / _shakeMaxDuration;
+        shakeOffset =
+            Vector2(
+              _shakeRandom.nextDouble() * 2 - 1,
+              _shakeRandom.nextDouble() * 2 - 1,
+            ) *
+            (_shakePower * falloff);
+      }
     }
-    final falloff = _shakeDuration / _shakeMaxDuration;
-    camera.viewfinder.position =
-        Vector2(
-          _shakeRandom.nextDouble() * 2 - 1,
-          _shakeRandom.nextDouble() * 2 - 1,
-        ) *
-        (_shakePower * falloff);
+    // Single writer for the viewfinder position - the free-scroll pan (see
+    // `GameWorld._panCamera`) plus this frame's shake jitter on top, so the
+    // two effects never fight over `camera.viewfinder.position`.
+    camera.viewfinder.position = world.cameraPosition + shakeOffset;
   }
 
   /// Upgrades the currently-selected tower by one tier, if affordable and

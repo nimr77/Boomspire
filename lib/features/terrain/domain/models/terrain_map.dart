@@ -27,6 +27,11 @@ class TerrainMap {
   /// so attacks come from multiple directions (or even every edge).
   final List<PathPoint> spawnPoints;
   final PathPoint basePoint;
+
+  /// Capturable second-resource node positions (see
+  /// `GameScene.resourceNodeSites`) - empty for scenes with no capturable
+  /// economy.
+  final List<PathPoint> resourceNodePoints;
   const TerrainMap({
     required this.arenaWidth,
     required this.arenaHeight,
@@ -35,5 +40,6 @@ class TerrainMap {
     required this.obstacleKinds,
     required this.spawnPoints,
     required this.basePoint,
+    this.resourceNodePoints = const [],
   });
 }

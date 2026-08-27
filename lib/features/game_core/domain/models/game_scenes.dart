@@ -124,6 +124,13 @@ class GameScenes {
         ),
         HomeSite(layout: HomeLayout.northEastCorner, owner: HomeSiteOwner.ai),
       ],
+      // One contested node dead-center, plus one tucked closer to each
+      // base - fought over by whichever side gets a vehicle there first.
+      resourceNodeSites: [
+        ResourceNodeSite(dx: 0.5, dy: 0.5),
+        ResourceNodeSite(dx: 0.25, dy: 0.7),
+        ResourceNodeSite(dx: 0.75, dy: 0.3),
+      ],
     ),
   ];
 

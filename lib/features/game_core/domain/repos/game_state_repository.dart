@@ -16,6 +16,11 @@ abstract class GameStateRepository extends ChangeNotifier {
   int get goldEarned;
   int get health;
 
+  /// Second resource, earned by holding capturable resource nodes (see
+  /// `ResourceNodeComponent`) - gold-only wave-defense scenes never touch
+  /// this, it stays at zero.
+  int get crystals;
+
   /// How many enemies have been killed this run - drives the escalating
   /// bonus in [addKillGold].
   int get killCount;
@@ -25,6 +30,10 @@ abstract class GameStateRepository extends ChangeNotifier {
   int get totalWaves;
 
   void addGold(int amount);
+
+  /// Awards crystals paid out by an owned resource node (see
+  /// `ResourceNodeComponent`).
+  void addCrystals(int amount);
 
   /// Awards gold for a kill, boosted by an escalating streak bonus (+5%,
   /// +10%, +20%, +40%, +80%, then capped at +100% for every kill after) -

@@ -6,6 +6,7 @@ class GameStateRepositoryImpl extends GameStateRepository {
   int _health = GameConfig.startingHealth;
   int _gold = GameConfig.startingGold;
   int _goldEarned = 0;
+  int _crystals = 0;
   int _currentWave = 1;
   int _totalWaves = 1;
   int _killCount = 0;
@@ -17,6 +18,8 @@ class GameStateRepositoryImpl extends GameStateRepository {
   int get gold => _gold;
   @override
   int get goldEarned => _goldEarned;
+  @override
+  int get crystals => _crystals;
   @override
   int get health => _health;
   @override
@@ -30,6 +33,12 @@ class GameStateRepositoryImpl extends GameStateRepository {
   void addGold(int amount) {
     _gold += amount;
     _goldEarned += amount;
+    notifyListeners();
+  }
+
+  @override
+  void addCrystals(int amount) {
+    _crystals += amount;
     notifyListeners();
   }
 
@@ -59,6 +68,7 @@ class GameStateRepositoryImpl extends GameStateRepository {
     _health = GameConfig.startingHealth;
     _gold = GameConfig.startingGold;
     _goldEarned = 0;
+    _crystals = 0;
     _currentWave = 1;
     _killCount = 0;
     _status = GameStatus.playing;

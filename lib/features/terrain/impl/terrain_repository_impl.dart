@@ -33,7 +33,8 @@ class TerrainRepositoryImpl implements TerrainRepository {
 
     final baseCell = _baseCell(scene.homeLayout, cols, rows);
     final spawnCells = _spawnCells(baseCell, cols, rows);
-    final protectedCells = [baseCell, ...spawnCells];
+    final nodeCells = _resourceNodeCells(scene.resourceNodeSites, cols, rows);
+    final protectedCells = [baseCell, ...spawnCells, ...nodeCells];
     final palette = scene.biome.palette;
     final seed =
         1337 +
@@ -56,7 +57,10 @@ class TerrainRepositoryImpl implements TerrainRepository {
       palette.crossing,
       protectedCells,
     );
-    _ensureReachable(grid, obstacleKinds, spawnCells, baseCell);
+    _ensureReachable(grid, obstacleKinds, [
+      ...spawnCells,
+      ...nodeCells,
+    ], baseCell);
 
     return TerrainMap(
       arenaWidth: arenaWidth,
@@ -71,6 +75,9 @@ class TerrainRepositoryImpl implements TerrainRepository {
         grid.cellCenter(baseCell).x,
         grid.cellCenter(baseCell).y,
       ),
+      resourceNodePoints: nodeCells
+          .map((c) => PathPoint(grid.cellCenter(c).x, grid.cellCenter(c).y))
+          .toList(),
     );
   }
 
@@ -213,4 +220,20 @@ class TerrainRepositoryImpl implements TerrainRepository {
     }
     return false;
   }
+
+  /// Converts each scene-relative [ResourceNodeSite] fraction into a grid
+  /// cell, clamped inside the playable area so nodes never land on the
+  /// unreachable border.
+  List<Point<int>> _resourceNodeCells(
+    List<ResourceNodeSite> sites,
+    int cols,
+    int rows,
+  ) => sites
+      .map(
+        (site) => Point(
+          (site.dx * cols).round().clamp(1, cols - 2),
+          (site.dy * rows).round().clamp(1, rows - 2),
+        ),
+      )
+      .toList();
 }

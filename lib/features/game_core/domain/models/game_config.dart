@@ -41,4 +41,18 @@ class GameConfig {
   /// tier (see `GoldMineComponent.killGoldBonus` and
   /// `BoomspireGame.goldMineKillGoldBonus`).
   static const goldMineBaseKillGoldBonus = 0.05;
+
+  /// How close a vehicle must be to a resource node to contest/hold it
+  /// (see `ResourceNodeComponent`).
+  static const resourceNodeCaptureRadius = 48.0;
+
+  /// Seconds an uncontested vehicle must hold a resource node before it
+  /// flips to that vehicle's team.
+  static const resourceNodeCaptureTime = 4.0;
+
+  /// Seconds between each owned resource node's crystal payout.
+  static const resourceNodePayoutInterval = 6.0;
+
+  /// Crystals paid out per tick by an owned resource node.
+  static const resourceNodeCrystalsPerTick = 10;
 }

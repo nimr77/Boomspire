@@ -20,6 +20,7 @@ void main() {
     expect(decoded.homeLayout, original.homeLayout);
     expect(decoded.spawnLayout, original.spawnLayout);
     expect(decoded.homeSites, isEmpty);
+    expect(decoded.resourceNodeSites, isEmpty);
   });
 
   test('skirmish scene round-trips its homeSites through JSON', () {
@@ -32,6 +33,18 @@ void main() {
     for (var i = 0; i < original.homeSites.length; i++) {
       expect(decoded.homeSites[i].layout, original.homeSites[i].layout);
       expect(decoded.homeSites[i].owner, original.homeSites[i].owner);
+    }
+  });
+
+  test('skirmish scene round-trips its resourceNodeSites through JSON', () {
+    final original = GameScenes.skirmishes.first;
+
+    final decoded = GameScene.fromJson(original.toJson());
+
+    expect(decoded.resourceNodeSites.length, original.resourceNodeSites.length);
+    for (var i = 0; i < original.resourceNodeSites.length; i++) {
+      expect(decoded.resourceNodeSites[i].dx, original.resourceNodeSites[i].dx);
+      expect(decoded.resourceNodeSites[i].dy, original.resourceNodeSites[i].dy);
     }
   });
 
@@ -48,5 +61,6 @@ void main() {
     expect(decoded.homeLayout, HomeLayout.eastEdge);
     expect(decoded.spawnLayout, SpawnLayout.single);
     expect(decoded.homeSites, isEmpty);
+    expect(decoded.resourceNodeSites, isEmpty);
   });
 }
