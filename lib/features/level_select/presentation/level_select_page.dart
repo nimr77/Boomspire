@@ -25,39 +25,6 @@ class LevelSelectPage extends StatefulWidget {
   State<LevelSelectPage> createState() => _LevelSelectPageState();
 }
 
-/// Segmented easy/normal/hard picker - scales AI aggression and rations the
-/// Laser Lance build limit for the run about to start. Styled as a single
-/// HUD panel (matching the build menu's tab strip) rather than loose chips.
-class _DifficultySelector extends StatelessWidget {
-  final GameDifficulty value;
-  final ValueChanged<GameDifficulty> onChanged;
-
-  const _DifficultySelector({required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1F26),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF2A323C), width: 1.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final difficulty in GameDifficulty.values)
-            _DifficultySegment(
-              label: difficulty.label,
-              selected: value == difficulty,
-              onTap: () => onChanged(difficulty),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DifficultySegment extends StatelessWidget {
   final String label;
   final bool selected;
@@ -97,6 +64,39 @@ class _DifficultySegment extends StatelessWidget {
             letterSpacing: 1,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Segmented easy/normal/hard picker - scales AI aggression and rations the
+/// Laser Lance build limit for the run about to start. Styled as a single
+/// HUD panel (matching the build menu's tab strip) rather than loose chips.
+class _DifficultySelector extends StatelessWidget {
+  final GameDifficulty value;
+  final ValueChanged<GameDifficulty> onChanged;
+
+  const _DifficultySelector({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1F26),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF2A323C), width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final difficulty in GameDifficulty.values)
+            _DifficultySegment(
+              label: difficulty.label,
+              selected: value == difficulty,
+              onTap: () => onChanged(difficulty),
+            ),
+        ],
       ),
     );
   }
