@@ -36,11 +36,13 @@ class _BuildMenuState extends State<BuildMenu> {
       decoration: const BoxDecoration(
         border: Border(left: BorderSide(color: Color(0xFF2A323C), width: 2)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // The tab strip sits directly on top of the button panel below,
+          // as one cohesive menu, rather than stealing its own separate row.
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -57,40 +59,63 @@ class _BuildMenuState extends State<BuildMenu> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          ListenableBuilder(
-            listenable: game.gameState,
-            builder: (context, _) {
-              return ValueListenableBuilder<TowerType?>(
-                valueListenable: game.selectedTowerType,
-                builder: (context, selected, _) {
-                  final entries = game.towerRepository.all
-                      .where((bp) => _isBuilding(bp) == _showBuildings)
-                      .toList();
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: entries.map((bp) {
-                        final lockReason = game.buildBlockReason(bp.type);
-                        final affordable = game.gameState.gold >= bp.cost;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: _TowerButton(
-                            blueprint: bp,
-                            selected: selected == bp.type,
-                            enabled: affordable && lockReason == null,
-                            lockReason: lockReason,
-                            builtCount: game.towerCountFor(bp.type),
-                            limit: game.buildLimitFor(bp.type),
-                            onTap: () => game.selectTowerType(bp.type),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  );
-                },
-              );
-            },
+          const SizedBox(height: 6),
+          // Kept at its original, unshrunk size - the tabs above animate
+          // their own height instead of squeezing this row.
+          SizedBox(
+            height: 90,
+            child: ListenableBuilder(
+              listenable: game.gameState,
+              builder: (context, _) {
+                return ValueListenableBuilder<TowerType?>(
+                  valueListenable: game.selectedTowerType,
+                  builder: (context, selected, _) {
+                    final entries = game.towerRepository.all
+                        .where((bp) => _isBuilding(bp) == _showBuildings)
+                        .toList();
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      switchInCurve: Curves.easeOut,
+                      switchOutCurve: Curves.easeIn,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.08),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      ),
+                      child: SingleChildScrollView(
+                        key: ValueKey(_showBuildings),
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: entries.map((bp) {
+                            final lockReason = game.buildBlockReason(bp.type);
+                            final affordable = game.gameState.gold >= bp.cost;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: _TowerButton(
+                                blueprint: bp,
+                                selected: selected == bp.type,
+                                enabled: affordable && lockReason == null,
+                                lockReason: lockReason,
+                                builtCount: game.towerCountFor(bp.type),
+                                limit: game.buildLimitFor(bp.type),
+                                onTap: () => game.selectTowerType(bp.type),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

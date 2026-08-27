@@ -21,7 +21,9 @@ class HudOverlay extends StatelessWidget {
       top: false,
       child:
           Container(
-                height: 112,
+                // Tall enough for the build menu's tab strip *plus* its
+                // original full-size tower/building buttons underneath.
+                height: 146,
                 decoration: const BoxDecoration(
                   color: Color(0xE60F1216),
                   border: Border(

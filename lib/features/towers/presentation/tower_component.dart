@@ -39,13 +39,16 @@ const double _antiRocketRange = 95;
 abstract class TowerComponent extends PositionComponent
     with HasGameReference<BoomspireGame>
     implements Targetable {
-  final TowerBlueprint blueprint;
+  /// Seconds between shield charges regenerating once regen kicks in.
+  static const double _shieldRechargeInterval = 6.0;
 
+  final TowerBlueprint blueprint;
   double hp;
   double maxHp;
   int col = 0;
   int row = 0;
   double _cooldown = 0;
+
   int upgradeLevel = 0;
 
   /// Current shield charges remaining - each charge fully blocks one
@@ -54,15 +57,13 @@ abstract class TowerComponent extends PositionComponent
   /// hits for a bit.
   int shield = 0;
   double _shieldRegenDelay = 0;
+
   double _shieldRegenProgress = 0;
 
   /// Extra shield charges granted by the comeback mechanic (see
   /// [_grantComebackBonus]), on top of the normal per-tier [shieldMax] -
   /// folded into that cap so a bonus shield is never invisible/un-regenerating.
   int _bonusShieldCharges = 0;
-
-  /// Seconds between shield charges regenerating once regen kicks in.
-  static const double _shieldRechargeInterval = 6.0;
 
   /// Point-defense module - when true, this tower shoots down any enemy
   /// rocket/shell that gets within [_antiRocketRange] of it.
@@ -385,7 +386,11 @@ abstract class TowerComponent extends PositionComponent
       _scanAntiRocket();
       return;
     }
-    target.markTargeted(TowerSpriteFactory.accentColor(blueprint.type));
+    // Only tint the target when this tower is the one selected/tapped -
+    // otherwise every tower on the map would highlight its target at once.
+    if (game.selectedTower.value == this) {
+      target.markTargeted(TowerSpriteFactory.accentColor(blueprint.type));
+    }
 
     final toTarget = target.position - position;
     final desiredAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
