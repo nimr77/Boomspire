@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 
 import '../../../core/combat/targetable.dart';
+import '../../../core/combat/team.dart';
 import '../../../core/combat/unit.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../game_core/presentation/boomspire_game.dart';
@@ -23,20 +24,27 @@ class RocketComponent extends PositionComponent
   final Color bodyColor;
   final Color tipColor;
 
-  /// True for enemy-fired shells so splash also damages towers, not enemies.
+  /// True so splash also damages towers instead of mobile units - set for
+  /// shells fired by a unit hostile to the player, since towers are always
+  /// player-owned today.
   final bool affectsTowers;
 
   /// Which domains splash damage (when [affectsTowers] is false) can hit -
-  /// mirrors the firing tower's own [Unit.attackDomains] so, e.g., a
+  /// mirrors the firing unit's own [Unit.attackDomains] so, e.g., a
   /// ground-only Rocket Battery splash never clips a helicopter/plane just
   /// passing overhead.
   final Set<UnitDomain> attackDomains;
+
+  /// The [Team] that fired this shell - used to find hostile mobile units
+  /// to splash-damage (see [_detonate]) when [affectsTowers] is false.
+  final Team firedBy;
   double _trailTimer = 0;
   RocketComponent({
     required Vector2 start,
     required this.target,
     required this.damage,
     required this.splashRadius,
+    required this.firedBy,
     this.bodyColor = const Color(0xFFB0BEC5),
     this.tipColor = const Color(0xFFFF7043),
     this.affectsTowers = false,
@@ -103,10 +111,10 @@ class RocketComponent extends PositionComponent
         }
       }
     } else {
-      for (final enemy in List.of(game.world.activeEnemies)) {
-        if (!attackDomains.contains(enemy.domain)) continue;
-        if (enemy.position.distanceTo(position) <= splashRadius) {
-          enemy.takeDamage(damage);
+      for (final unit in List.of(game.world.unitsHostileTo(firedBy))) {
+        if (!attackDomains.contains(unit.domain)) continue;
+        if (unit.position.distanceTo(position) <= splashRadius) {
+          unit.takeDamage(damage);
         }
       }
     }

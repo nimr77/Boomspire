@@ -272,7 +272,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
   void restart() {
     gameState.reset();
     terrainMap = terrainRepository.loadTerrain(scene: scene);
-    world.activeEnemies.clear();
+    world.activeUnits.clear();
     world.activeTowers.clear();
     for (final child in world.children.toList()) {
       if (child is! TerrainComponent) child.removeFromParent();

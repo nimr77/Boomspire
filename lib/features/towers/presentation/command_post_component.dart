@@ -1,4 +1,4 @@
-import '../../enemies/presentation/enemy_component.dart';
+import '../../combat/presentation/mobile_unit_component.dart';
 import 'tower_component.dart';
 
 /// Support structure: never fires, but each one standing raises the max
@@ -14,5 +14,5 @@ class CommandPostComponent extends TowerComponent {
   });
 
   @override
-  void fire(EnemyComponent target) {}
+  void fire(MobileUnitComponent target) {}
 }

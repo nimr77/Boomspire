@@ -10,11 +10,13 @@ import 'dart:math';
 
 import 'package:boomspire/core/combat/mobile_unit_blueprint.dart';
 import 'package:boomspire/core/combat/mobile_unit_repository_impl.dart';
+import 'package:boomspire/core/combat/team.dart';
 import 'package:boomspire/core/combat/unit_kind.dart';
+import 'package:boomspire/core/combat/unit_objective.dart';
 import 'package:boomspire/features/ai_director/impl/ai_director_repository_impl.dart';
 import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
 import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
-import 'package:boomspire/features/enemies/presentation/green_soldier_component.dart';
+import 'package:boomspire/features/combat/presentation/mobile_unit_component.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scene.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scenes.dart';
 import 'package:boomspire/features/game_core/impl/game_state_repository_impl.dart';
@@ -132,7 +134,7 @@ void main() {
         game.handleArenaTap(grid.cellCenter(cell));
 
         expect(game.towerCountFor(BuildingType.trainingCenter), 1);
-        expect(game.world.activeAllies, isEmpty);
+        expect(game.world.unitsAlliedWith(game.playerTeam), isEmpty);
 
         final trainingCenter = game.world.activeTowers
             .whereType<TrainingCenterComponent>()
@@ -144,7 +146,7 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         game.update(0);
 
-        expect(game.world.activeAllies, isNotEmpty);
+        expect(game.world.unitsAlliedWith(game.playerTeam), isNotEmpty);
         expect(game.gameState.gold, startingGold - trainingCenter.soldierCost);
         // A fresh production request is refused until the cooldown elapses.
         expect(trainingCenter.canProduce, isFalse);
@@ -165,7 +167,7 @@ void main() {
         game.handleArenaTap(grid.cellCenter(cell));
 
         expect(game.towerCountFor(BuildingType.warFactory), 1);
-        expect(game.world.activeAllies, isEmpty);
+        expect(game.world.unitsAlliedWith(game.playerTeam), isEmpty);
 
         final warFactory = game.world.activeTowers
             .whereType<WarFactoryComponent>()
@@ -175,7 +177,7 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         game.update(0);
 
-        expect(game.world.activeAllies, isNotEmpty);
+        expect(game.world.unitsAlliedWith(game.playerTeam), isNotEmpty);
         expect(
           game.gameState.gold,
           startingGold - warFactory.costFor(UnitKind.tank),
@@ -218,10 +220,15 @@ void main() {
       );
 
       // Enemy well inside the dead zone: should never take damage.
-      // Position is set only after mounting, since EnemyComponent.onLoad
-      // overwrites `position` to a random spawn point.
-      final closeEnemy = GreenSoldierComponent(blueprint: stationarySoldier);
-      game.world.spawnEnemy(closeEnemy);
+      // Position is set only after mounting, since
+      // MobileUnitComponent.onLoad overwrites `position` to a random spawn
+      // point (for `UnitObjective.rushBase` units).
+      final closeEnemy = MobileUnitComponent(
+        blueprint: stationarySoldier,
+        team: Team.invaders,
+        objective: UnitObjective.rushBase,
+      );
+      game.world.spawnUnit(closeEnemy);
       await Future<void>.delayed(Duration.zero);
       game.update(0);
       closeEnemy.position = silo.position + Vector2(blueprint.minRange / 2, 0);
@@ -232,8 +239,12 @@ void main() {
       expect(closeEnemy.health, closeEnemy.blueprint.maxHealth);
 
       // Enemy just outside the dead zone but still in range: gets hit.
-      final farEnemy = GreenSoldierComponent(blueprint: stationarySoldier);
-      game.world.spawnEnemy(farEnemy);
+      final farEnemy = MobileUnitComponent(
+        blueprint: stationarySoldier,
+        team: Team.invaders,
+        objective: UnitObjective.rushBase,
+      );
+      game.world.spawnUnit(farEnemy);
       await Future<void>.delayed(Duration.zero);
       game.update(0);
       farEnemy.position = silo.position + Vector2(blueprint.minRange + 20, 0);

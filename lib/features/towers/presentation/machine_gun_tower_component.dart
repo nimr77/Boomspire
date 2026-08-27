@@ -1,7 +1,7 @@
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/bullet_component.dart';
 import '../../combat/presentation/muzzle_flash_component.dart';
-import '../../enemies/presentation/enemy_component.dart';
+import '../../combat/presentation/mobile_unit_component.dart';
 import 'tower_component.dart';
 
 class MachineGunTowerComponent extends TowerComponent {
@@ -12,7 +12,7 @@ class MachineGunTowerComponent extends TowerComponent {
   });
 
   @override
-  void fire(EnemyComponent target) {
+  void fire(MobileUnitComponent target) {
     final dir = (target.position - position).normalized();
     final spawnPos = position + dir * (size.x / 2);
     game.world.spawn(

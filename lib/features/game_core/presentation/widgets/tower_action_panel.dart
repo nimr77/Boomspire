@@ -271,15 +271,13 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
     }
     if (tower is WarFactoryComponent) {
       final ready = tower.canProduce;
+      final buildableKinds = widget.game.unitRepository
+          .kindsFor(widget.game.playerTeam)
+          .where((type) => type != UnitKind.soldier);
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (final type in const [
-            UnitKind.tank,
-            UnitKind.lightVehicle,
-            UnitKind.aircraft,
-            UnitKind.rocketBarrage,
-          ]) ...[
+          for (final type in buildableKinds) ...[
             _ActionButton(
               icon: _unitIcon(type),
               label: ready
@@ -302,6 +300,11 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
     UnitKind.lightVehicle => Icons.directions_car,
     UnitKind.aircraft => Icons.flight,
     UnitKind.rocketBarrage => Icons.rocket_launch,
+    UnitKind.heavySoldier => Icons.security,
+    UnitKind.helicopter => Icons.airline_seat_recline_extra,
+    UnitKind.attackPlane => Icons.flight_takeoff,
+    UnitKind.gunboat => Icons.directions_boat,
+    UnitKind.artilleryBarrage => Icons.gps_fixed,
     _ => Icons.directions_walk,
   };
 }

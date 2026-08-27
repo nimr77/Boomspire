@@ -1,4 +1,4 @@
-import '../../enemies/presentation/enemy_component.dart';
+import '../../combat/presentation/mobile_unit_component.dart';
 import 'tower_component.dart';
 
 /// Non-combat structure: it never fires (zero range/damage), it just needs
@@ -12,5 +12,5 @@ class TechLabComponent extends TowerComponent {
   });
 
   @override
-  void fire(EnemyComponent target) {}
+  void fire(MobileUnitComponent target) {}
 }

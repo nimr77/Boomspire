@@ -1,6 +1,7 @@
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/combat/unit_kind.dart';
 import '../../../core/rendering/procedural_image.dart';
 
 /// Procedurally paints the green-soldier "2D object models" - a regular
@@ -24,6 +25,33 @@ class EnemySpriteFactory {
     final image = await renderToImage(52, 52, _paintArtilleryBarrage);
     return _artilleryBarrage = Sprite(image);
   }
+
+  /// Every [UnitKind] this factory has art for - lets a merged unit
+  /// component fall back to the other side's factory for a kind that was
+  /// only ever painted for one side (e.g. a player-built Helicopter).
+  static bool supports(UnitKind kind) => switch (kind) {
+    UnitKind.soldier ||
+    UnitKind.heavySoldier ||
+    UnitKind.tank ||
+    UnitKind.helicopter ||
+    UnitKind.attackPlane ||
+    UnitKind.gunboat ||
+    UnitKind.artilleryBarrage ||
+    UnitKind.rocketBarrage => true,
+    _ => false,
+  };
+
+  static Future<Sprite> spriteFor(UnitKind kind) => switch (kind) {
+    UnitKind.soldier => soldier(),
+    UnitKind.heavySoldier => heavySoldier(),
+    UnitKind.tank => tank(),
+    UnitKind.helicopter => helicopter(),
+    UnitKind.attackPlane => attackPlane(),
+    UnitKind.gunboat => gunboat(),
+    UnitKind.artilleryBarrage => artilleryBarrage(),
+    UnitKind.rocketBarrage => rocketBarrage(),
+    _ => throw ArgumentError('No enemy sprite for $kind'),
+  };
 
   static Future<Sprite> rocketBarrage() async {
     final cached = _rocketBarrage;

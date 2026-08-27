@@ -1,6 +1,7 @@
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/combat/unit_kind.dart';
 import '../../../core/rendering/procedural_image.dart';
 
 /// Procedurally paints the friendly unit "2D object models" - soldier, tank,
@@ -53,6 +54,27 @@ class AllySpriteFactory {
     final image = await renderToImage(54, 54, _paintTank);
     return _tank = Sprite(image);
   }
+
+  /// Every [UnitKind] this factory has art for - lets a merged unit
+  /// component fall back to the other side's factory for a kind that was
+  /// only ever painted for one side (e.g. an invader-only Gunboat).
+  static bool supports(UnitKind kind) => switch (kind) {
+    UnitKind.soldier ||
+    UnitKind.tank ||
+    UnitKind.lightVehicle ||
+    UnitKind.aircraft ||
+    UnitKind.rocketBarrage => true,
+    _ => false,
+  };
+
+  static Future<Sprite> spriteFor(UnitKind kind) => switch (kind) {
+    UnitKind.soldier => soldier(),
+    UnitKind.tank => tank(),
+    UnitKind.lightVehicle => lightVehicle(),
+    UnitKind.aircraft => aircraft(),
+    UnitKind.rocketBarrage => rocketBarrage(),
+    _ => throw ArgumentError('No ally sprite for $kind'),
+  };
 
   static void _paintAircraft(Canvas canvas) {
     const size = 50.0;

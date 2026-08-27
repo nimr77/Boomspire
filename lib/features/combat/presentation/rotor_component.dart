@@ -2,27 +2,13 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 
-import 'enemy_component.dart';
-import 'enemy_sprites.dart';
-
-class HelicopterComponent extends EnemyComponent {
-  HelicopterComponent({required super.blueprint});
-
-  @override
-  Future<void> addExtraVisuals(PositionComponent visual) async {
-    await visual.add(_RotorComponent(position: visual.size / 2));
-  }
-
-  @override
-  Future<Sprite> buildSprite() => EnemySpriteFactory.helicopter();
-}
-
-/// Always-spinning main rotor blur disc, layered above the static
-/// fuselage sprite so it reads as "alive" even while idling.
-class _RotorComponent extends PositionComponent {
+/// Always-spinning main rotor blur disc, layered above a helicopter-kind
+/// unit's static fuselage sprite so it reads as "alive" even while idling -
+/// attached via `MobileUnitComponent.addExtraVisuals`.
+class RotorComponent extends PositionComponent {
   double _spin = 0;
 
-  _RotorComponent({required Vector2 position})
+  RotorComponent({required Vector2 position})
     : super(
         position: position + Vector2(0, -position.y * 0.7),
         anchor: Anchor.center,

@@ -1,14 +1,14 @@
 import '../../../core/combat/unit_kind.dart';
-import '../../allies/presentation/ally_soldier_component.dart';
-import '../../enemies/presentation/enemy_component.dart';
+import '../../../core/combat/unit_objective.dart';
+import '../../combat/presentation/mobile_unit_component.dart';
 import '../../game_core/domain/models/game_config.dart';
 import 'tower_component.dart';
 
 /// Non-combat structure: it never fires (zero range/damage). Instead, the
 /// player mans it via the build menu shown when it's selected on the
 /// battlefield (see `TowerActionPanel`), spending gold to muster a fresh
-/// Ally Soldier that walks out to hunt down the nearest enemy on its own
-/// (see `AllyUnitComponent`).
+/// Ally Soldier that walks out to hunt down the nearest hostile on its own
+/// (see `MobileUnitComponent`/`UnitObjective.huntHostiles`).
 class TrainingCenterComponent extends TowerComponent {
   /// Seconds left before another soldier can be queued - starts ready.
   double cooldownRemaining = 0;
@@ -25,7 +25,7 @@ class TrainingCenterComponent extends TowerComponent {
       game.unitRepository.blueprintFor(game.playerTeam, UnitKind.soldier).cost;
 
   @override
-  void fire(EnemyComponent target) {}
+  void fire(MobileUnitComponent target) {}
 
   /// Spends gold to muster a fresh Ally Soldier - called from the action
   /// panel's build menu. Returns whether it actually happened.
@@ -33,14 +33,15 @@ class TrainingCenterComponent extends TowerComponent {
     if (!canProduce) return false;
     if (!game.gameState.spendGold(soldierCost)) return false;
     cooldownRemaining = GameConfig.trainingCenterProductionCooldown;
-    game.world.spawnAlly(
-      AllySoldierComponent(
+    game.world.spawnUnit(
+      MobileUnitComponent(
         blueprint: game.unitRepository.blueprintFor(
           game.playerTeam,
           UnitKind.soldier,
         ),
         position: position.clone(),
         team: game.playerTeam,
+        objective: UnitObjective.huntHostiles,
         level: upgradeLevel,
       ),
     );

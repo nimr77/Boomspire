@@ -14,7 +14,7 @@ import '../../combat/presentation/fire_pulse_component.dart';
 import '../../combat/presentation/impact_spark_component.dart';
 import '../../combat/presentation/rocket_component.dart';
 import '../../combat/presentation/smoke_trail_component.dart';
-import '../../enemies/presentation/enemy_component.dart';
+import '../../combat/presentation/mobile_unit_component.dart';
 import '../../enemies/presentation/floating_text_component.dart';
 import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/presentation/boomspire_game.dart';
@@ -166,7 +166,7 @@ abstract class TowerComponent extends PositionComponent
   void destroyBySupportLoss() => _destroy();
 
   /// Spawns the appropriate projectile/effect toward [target].
-  void fire(EnemyComponent target);
+  void fire(MobileUnitComponent target);
 
   @override
   Future<void> onLoad() async {
@@ -489,10 +489,10 @@ abstract class TowerComponent extends PositionComponent
     );
   }
 
-  EnemyComponent? _acquireTarget() {
-    EnemyComponent? closest;
+  MobileUnitComponent? _acquireTarget() {
+    MobileUnitComponent? closest;
     var closestDist = effectiveRange;
-    for (final enemy in game.world.activeEnemies) {
+    for (final enemy in game.world.unitsHostileTo(game.playerTeam)) {
       if (!canAttack(enemy.domain)) continue;
       final d = enemy.position.distanceTo(position);
       if (d < blueprint.minRange) continue;

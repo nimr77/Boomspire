@@ -4,18 +4,11 @@ import 'package:flame/components.dart';
 
 import '../../../core/combat/team.dart';
 import '../../../core/combat/unit_kind.dart';
+import '../../../core/combat/unit_objective.dart';
 import '../../ai_director/domain/models/battlefield_snapshot.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../audio/domain/models/sfx_type.dart';
-import '../../enemies/presentation/artillery_barrage_component.dart';
-import '../../enemies/presentation/attack_plane_component.dart';
-import '../../enemies/presentation/enemy_component.dart';
-import '../../enemies/presentation/green_soldier_component.dart';
-import '../../enemies/presentation/gunboat_component.dart';
-import '../../enemies/presentation/heavy_soldier_component.dart';
-import '../../enemies/presentation/helicopter_component.dart';
-import '../../enemies/presentation/rocket_barrage_component.dart';
-import '../../enemies/presentation/tank_component.dart';
+import '../../combat/presentation/mobile_unit_component.dart';
 import '../../game_core/domain/models/game_status.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 
@@ -52,14 +45,14 @@ class WaveDirectorComponent extends Component
     for (final scheduled in List.of(_queue)) {
       scheduled.timer -= dt;
       if (scheduled.timer <= 0) {
-        game.world.spawnEnemy(_createEnemy(scheduled.type));
+        game.world.spawnUnit(_createEnemy(scheduled.type));
         scheduled.remaining--;
         scheduled.timer = scheduled.interval;
         if (scheduled.remaining <= 0) _queue.remove(scheduled);
       }
     }
 
-    if (_queue.isEmpty && game.world.activeEnemies.isEmpty) {
+    if (_queue.isEmpty && game.world.unitsHostileTo(game.playerTeam).isEmpty) {
       _finishWave();
     }
   }
@@ -102,21 +95,13 @@ class WaveDirectorComponent extends Component
     unawaited(_planNextWave(waveNumber + 1));
   }
 
-  EnemyComponent _createEnemy(UnitKind type) {
-    final blueprint = game.unitRepository.blueprintFor(Team.enemy, type);
-    return switch (type) {
-      UnitKind.soldier => GreenSoldierComponent(blueprint: blueprint),
-      UnitKind.heavySoldier => HeavySoldierComponent(blueprint: blueprint),
-      UnitKind.helicopter => HelicopterComponent(blueprint: blueprint),
-      UnitKind.tank => TankComponent(blueprint: blueprint),
-      UnitKind.attackPlane => AttackPlaneComponent(blueprint: blueprint),
-      UnitKind.gunboat => GunboatComponent(blueprint: blueprint),
-      UnitKind.artilleryBarrage => ArtilleryBarrageComponent(
-        blueprint: blueprint,
-      ),
-      UnitKind.rocketBarrage => RocketBarrageComponent(blueprint: blueprint),
-      _ => throw StateError('Enemy waves do not spawn $type'),
-    };
+  MobileUnitComponent _createEnemy(UnitKind type) {
+    final blueprint = game.unitRepository.blueprintFor(Team.invaders, type);
+    return MobileUnitComponent(
+      blueprint: blueprint,
+      team: Team.invaders,
+      objective: UnitObjective.rushBase,
+    );
   }
 
   void _finishWave() {
