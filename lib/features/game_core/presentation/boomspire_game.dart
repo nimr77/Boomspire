@@ -261,20 +261,21 @@ class BoomspireGame extends FlameGame<GameWorld>
   }
 
   /// Max simultaneous count allowed for [type] per-owner, or null if
-  /// unlimited. The Tech Lab, Command Post, Training Center, War Factory,
-  /// Gold Mine, Laser Lance and Rocket Silo only ever need one (in either
-  /// game mode); Artillery Bunker rides along with however many Command
-  /// Posts that same owner has standing (so it too tops out at one per
-  /// Command Post); the SAM Site is capped at two.
+  /// unlimited. The Tech Lab, Training Center, Gold Mine, Laser Lance and
+  /// Rocket Silo only ever need one (in either game mode); Command Post and
+  /// War Factory have no cap - a player/AI can build as many as they can
+  /// afford; Artillery Bunker rides along with however many Command Posts
+  /// that same owner has standing (so it too tops out at one per Command
+  /// Post); the SAM Site is capped at two.
   int? buildLimitFor(UnitType type, {Team? owner}) => switch (type) {
     TowerType.laser => 1,
     TowerType.artilleryBunker => commandPostCountFor(owner ?? playerTeam),
     TowerType.sam => 2,
     TowerType.rocketSilo => 1,
     BuildingType.techLab => 1,
-    BuildingType.commandPost => 1,
+    BuildingType.commandPost => null,
     BuildingType.trainingCenter => 1,
-    BuildingType.warFactory => 1,
+    BuildingType.warFactory => null,
     BuildingType.goldMine => 1,
     _ => null,
   };
@@ -502,6 +503,16 @@ class BoomspireGame extends FlameGame<GameWorld>
         controlledTower.issueAttackOrder(tappedEnemyUnit);
         return;
       }
+      final tappedEnemyTower = _towerAt(point);
+      if (tappedEnemyTower != null &&
+          tappedEnemyTower != controlledTower &&
+          tappedEnemyTower.owner.relationTo(controlledTower.owner) ==
+              TeamRelation.enemy) {
+        // Same as above, but for forcing this tower onto another enemy
+        // tower/building instead of a mobile unit.
+        controlledTower.issueAttackOrder(tappedEnemyTower);
+        return;
+      }
     }
 
     final tappedTower = _towerAt(point);
@@ -668,6 +679,22 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   void selectTowerType(UnitType? type) {
     selectedTowerType.value = selectedTowerType.value == type ? null : type;
+    pendingPlacement.value = null;
+    // Entering (or leaving) build/placement mode always drops whatever
+    // unit was selected for direct orders - the two selection modes are
+    // mutually exclusive, same as `handleArenaTap` already keeps
+    // `selectedTower`/`selectedUnit` from overlapping.
+    selectedUnit.value = null;
+  }
+
+  /// Clears every selection/in-progress-placement state at once - the
+  /// right-click "cancel" gesture (see `GamePage`'s `Listener`), a quicker
+  /// way to back out than tapping empty ground.
+  void deselectAll() {
+    selectedTowerType.value = null;
+    selectedTower.value = null;
+    selectedUnit.value = null;
+    inspected.value = null;
     pendingPlacement.value = null;
   }
 

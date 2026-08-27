@@ -1,4 +1,4 @@
-import '../../combat/presentation/mobile_unit_component.dart';
+import '../../../core/combat/attackable.dart';
 import 'tower_component.dart';
 
 /// Non-combat structure: it never fires (zero range/damage), it just needs
@@ -12,5 +12,5 @@ class TechLabComponent extends TowerComponent {
   });
 
   @override
-  void fire(MobileUnitComponent target) {}
+  void fire(Attackable target) {}
 }

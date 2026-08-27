@@ -1,5 +1,6 @@
 import 'package:flame/components.dart' show Vector2;
 
+import '../../../core/combat/attackable.dart';
 import '../../../core/combat/unit_kind.dart';
 import '../../../core/combat/unit_objective.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
@@ -31,7 +32,7 @@ class WarFactoryComponent extends TowerComponent {
       game.unitRepository.blueprintFor(owner, kind).cost;
 
   @override
-  void fire(MobileUnitComponent target) {}
+  void fire(Attackable target) {}
 
   /// Spends gold to roll out an Ally unit of the given [kind] - called
   /// from the action panel's build menu. [objective]/[captureTarget] let a

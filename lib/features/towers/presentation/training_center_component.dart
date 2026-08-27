@@ -1,3 +1,4 @@
+import '../../../core/combat/attackable.dart';
 import '../../../core/combat/unit_kind.dart';
 import '../../../core/combat/unit_objective.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
@@ -27,7 +28,7 @@ class TrainingCenterComponent extends TowerComponent {
       game.unitRepository.blueprintFor(owner, UnitKind.soldier).cost;
 
   @override
-  void fire(MobileUnitComponent target) {}
+  void fire(Attackable target) {}
 
   /// Spends gold to muster a fresh Ally Soldier - called from the action
   /// panel's build menu. Returns whether it actually happened.

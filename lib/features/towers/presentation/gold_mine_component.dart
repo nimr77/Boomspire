@@ -1,7 +1,7 @@
 import 'package:flame/components.dart';
 
+import '../../../core/combat/attackable.dart';
 import '../../audio/domain/models/sfx_type.dart';
-import '../../combat/presentation/mobile_unit_component.dart';
 import '../../enemies/presentation/floating_text_component.dart';
 import '../../game_core/domain/models/game_config.dart';
 import 'tower_component.dart';
@@ -36,7 +36,7 @@ class GoldMineComponent extends TowerComponent {
   double get payoutTimeRemaining => _payoutTimer;
 
   @override
-  void fire(MobileUnitComponent target) {}
+  void fire(Attackable target) {}
 
   @override
   void update(double dt) {

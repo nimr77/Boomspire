@@ -1,12 +1,17 @@
+import 'dart:async';
+
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/services.dart';
 
+import '../../../core/combat/attackable.dart';
 import '../../../core/combat/team.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
 import '../../towers/domain/models/building_type.dart';
+import '../../towers/domain/targeting/target_assignment_computer.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../../waves/presentation/wave_director_component.dart';
 import '../domain/models/game_scene.dart';
@@ -31,12 +36,32 @@ class GameWorld extends World
   final List<TowerComponent> activeTowers = [];
   final List<ResourceNodeComponent> activeResourceNodes = [];
 
-  /// How many of each team's towers currently have a given mobile unit as
+  /// How many of each team's towers currently have a given target (a
+  /// mobile unit or an enemy tower/building) as
   /// [TowerComponent.currentTarget], refreshed once per frame (see
   /// [_refreshTargeterCounts]) from the previous frame's targeting choices.
   /// A single O(towers) pass shared by every tower's `_acquireTarget`, so
   /// avoiding target dog-piling never costs an O(towers²) rescan.
-  final Map<MobileUnitComponent, int> targeterCounts = {};
+  final Map<Attackable, int> targeterCounts = {};
+
+  /// Latest focus-fire-aware target pick per tower (keyed by
+  /// `identityHashCode`), computed on a background isolate every
+  /// [_targetComputeInterval] seconds - see [_refreshTargetAssignments] and
+  /// [suggestedTargetFor]. Empty until the first round-trip completes.
+  final Map<int, int?> _targetAssignments = {};
+
+  /// `identityHashCode` -> live unit, rebuilt once per frame so
+  /// [suggestedTargetFor] can resolve a background result back to an actual
+  /// component in O(1) without the isolate ever touching real game objects.
+  Map<int, MobileUnitComponent> _unitsById = {};
+
+  /// Same as [_unitsById] but for towers/buildings, since a background
+  /// suggestion can now point at either kind of target.
+  Map<int, TowerComponent> _towersById = {};
+
+  static const double _targetComputeInterval = 0.2;
+  double _targetComputeTimer = 0;
+  bool _targetComputeInFlight = false;
 
   /// The human player's base - always set once [initialize] has run.
   HomeBaseComponent? playerHomeBase;
@@ -181,10 +206,41 @@ class GameWorld extends World
     (u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.enemy,
   );
 
+  /// Every live tower/building whose [TowerComponent.owner] is hostile to
+  /// [team] - towers/buildings are valid targets too, scored exactly like a
+  /// stationary ground unit (see [computeTargetAssignments]); a tower's own
+  /// [TowerComponent.attackDomains] is what actually decides whether it's
+  /// allowed to hit one (e.g. an anti-air/SAM site only attacks
+  /// [UnitDomain.air] and so never targets a ground-domain tower).
+  Iterable<TowerComponent> towersHostileTo(Team team) => activeTowers.where(
+    (t) => !t.destroyed && team.relationTo(t.owner) == TeamRelation.enemy,
+  );
+
+  /// The target [tower] should shoot next, per the last completed
+  /// background focus-fire scan (see [_refreshTargetAssignments]) - `null`
+  /// if nothing has been computed yet, the suggestion has since
+  /// died/despawned, or the last scan simply found nothing in range for it.
+  Attackable? suggestedTargetFor(TowerComponent tower) {
+    final id = _targetAssignments[identityHashCode(tower)];
+    if (id == null) return null;
+    final unit = _unitsById[id];
+    if (unit != null) return (unit.destroyed || !unit.isMounted) ? null : unit;
+    final other = _towersById[id];
+    if (other == null || other.destroyed || !other.isMounted) return null;
+    return other;
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
     _refreshTargeterCounts();
+    _unitsById = {for (final u in activeUnits) identityHashCode(u): u};
+    _towersById = {for (final t in activeTowers) identityHashCode(t): t};
+    _targetComputeTimer -= dt;
+    if (_targetComputeTimer <= 0 && !_targetComputeInFlight) {
+      _targetComputeTimer = _targetComputeInterval;
+      unawaited(_refreshTargetAssignments());
+    }
     _panCamera(dt);
   }
 
@@ -251,6 +307,71 @@ class GameWorld extends World
       if (target != null) {
         targeterCounts[target] = (targeterCounts[target] ?? 0) + 1;
       }
+    }
+  }
+
+  /// Runs [computeTargetAssignments] on a background isolate via `compute()`
+  /// - the actual O(towers × enemies) focus-fire scan, taken off the main
+  /// isolate so it never competes with rendering/input on a big battlefield.
+  /// Towers only ever read the *previous* completed result through
+  /// [suggestedTargetFor]; while a scan is in flight (or before the first
+  /// one lands) `TowerComponent._acquireTarget` falls back to its own
+  /// synchronous copy of the same scoring, so nothing waits on the
+  /// round-trip to react.
+  Future<void> _refreshTargetAssignments() async {
+    _targetComputeInFlight = true;
+    try {
+      final snapshot = TargetingSnapshot(
+        towers: [
+          for (final t in activeTowers)
+            TowerSnapshot(
+              id: identityHashCode(t),
+              x: t.position.x,
+              y: t.position.y,
+              minRange: t.blueprint.minRange,
+              range: t.effectiveRange,
+              damage: t.effectiveDamage,
+              ownerId: t.owner.id,
+              currentTargetId: t.currentTarget == null
+                  ? null
+                  : identityHashCode(t.currentTarget!),
+              attackDomains: t.attackDomains,
+            ),
+        ],
+        // Every hostile candidate a tower could shoot - mobile units plus
+        // enemy towers/buildings (treated as stationary ground targets),
+        // see [towersHostileTo].
+        targets: [
+          for (final u in activeUnits)
+            if (!u.destroyed)
+              TargetSnapshot(
+                id: identityHashCode(u),
+                x: u.position.x,
+                y: u.position.y,
+                health: u.health,
+                healthRatio: u.healthRatio,
+                teamId: u.team.id,
+                domain: u.domain,
+              ),
+          for (final t in activeTowers)
+            if (!t.destroyed)
+              TargetSnapshot(
+                id: identityHashCode(t),
+                x: t.position.x,
+                y: t.position.y,
+                health: t.health,
+                healthRatio: t.healthRatio,
+                teamId: t.owner.id,
+                domain: t.domain,
+              ),
+        ],
+      );
+      final result = await compute(computeTargetAssignments, snapshot);
+      _targetAssignments
+        ..clear()
+        ..addAll(result);
+    } finally {
+      _targetComputeInFlight = false;
     }
   }
 }

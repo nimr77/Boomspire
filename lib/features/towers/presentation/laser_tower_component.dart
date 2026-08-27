@@ -1,7 +1,7 @@
+import '../../../core/combat/attackable.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/impact_spark_component.dart';
 import '../../combat/presentation/laser_beam_component.dart';
-import '../../combat/presentation/mobile_unit_component.dart';
 import 'tower_component.dart';
 import 'tower_sprites.dart';
 
@@ -16,7 +16,7 @@ class LaserTowerComponent extends TowerComponent {
   });
 
   @override
-  void fire(MobileUnitComponent target) {
+  void fire(Attackable target) {
     final accent = TowerSpriteFactory.accentColor(blueprint.type);
     target.takeDamage(effectiveDamage);
     game.world.spawn(

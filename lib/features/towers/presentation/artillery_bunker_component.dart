@@ -1,7 +1,7 @@
 import 'dart:ui';
 
+import '../../../core/combat/attackable.dart';
 import '../../audio/domain/models/sfx_type.dart';
-import '../../combat/presentation/mobile_unit_component.dart';
 import '../../combat/presentation/rocket_component.dart';
 import 'tower_component.dart';
 
@@ -16,7 +16,7 @@ class ArtilleryBunkerComponent extends TowerComponent {
   });
 
   @override
-  void fire(MobileUnitComponent target) {
+  void fire(Attackable target) {
     final dir = (target.position - position).normalized();
     final spawnPos = position + dir * (size.x / 2);
     game.world.spawn(

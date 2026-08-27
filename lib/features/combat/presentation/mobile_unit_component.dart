@@ -70,6 +70,7 @@ class MobileUnitComponent extends PositionComponent
   /// Always 0 for units not built by a player structure (e.g. invaders).
   final int level;
 
+  @override
   double health;
 
   /// True once the player has directly ordered this unit (see
@@ -93,6 +94,12 @@ class MobileUnitComponent extends PositionComponent
   Attackable? _engaging;
   Attackable? _huntTarget;
   double _bobPhase = Random().nextDouble() * pi * 2;
+
+  /// Drives the pulsing selection ring/glow in [render] - same idea as
+  /// `TowerComponent._idlePhase`, just a separate field so a unit's own
+  /// bob/facing animation timing (which varies per [MovementStyle]) never
+  /// has to double as the selection-indicator's pulse rate.
+  double _idlePhase = Random().nextDouble() * pi * 2;
 
   /// This unit's actual heading, set by movement/engage code - [_applyBob]
   /// layers its wobble on top of this every frame instead of accumulating
@@ -419,6 +426,44 @@ class MobileUnitComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
+    // Selection indicator - mirrors `TowerComponent.render`'s selection
+    // ring so tapping a unit reads the same way as tapping a tower: a
+    // pulsing glow around the unit itself plus (when it actually has a
+    // weapon) a range ring showing how far it can engage from here. Its
+    // current focus target is separately tinted via [markTargeted] in
+    // [_maybeEngage].
+    if (game.selectedUnit.value == this) {
+      final center = Offset(size.x / 2, size.y / 2);
+      final accent = team.color;
+      final pulse = 0.5 + 0.5 * sin(_idlePhase * 1.6);
+
+      if (blueprint.attackRange > 0) {
+        canvas.drawCircle(
+          center,
+          blueprint.attackRange,
+          Paint()..color = accent.withValues(alpha: 0.04 + pulse * 0.04),
+        );
+        canvas.drawCircle(
+          center,
+          blueprint.attackRange,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5 + pulse
+            ..color = accent.withValues(alpha: 0.35 + pulse * 0.3),
+        );
+      }
+
+      canvas.drawCircle(
+        center,
+        size.x * 0.62 + pulse * 3,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2 + pulse
+          ..color = accent.withValues(alpha: 0.55 + pulse * 0.35)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+    }
+
     if (health >= effectiveMaxHealth) return;
     final ratio = healthRatio;
     final barWidth = size.x * 0.8;
@@ -464,6 +509,7 @@ class MobileUnitComponent extends PositionComponent
     super.update(dt);
     if (_destroyed) return;
     if (game.gameState.status != GameStatus.playing) return;
+    _idlePhase += dt * 2.2;
 
     if (blueprint.isVehicle && showsLowHealthTelegraph && healthRatio < 0.3) {
       _preExplosionTimer -= dt;

@@ -120,15 +120,16 @@ abstract class TowerComponent extends PositionComponent
   /// `BoomspireGame.handleArenaTap`. Cleared automatically once the target
   /// dies/despawns. A stationary tower can't chase, so while this is set but
   /// the target is out of range/domain, the tower simply holds fire instead
-  /// of falling back to auto-acquiring something else.
-  MobileUnitComponent? forcedTarget;
+  /// of falling back to auto-acquiring something else. Can be a mobile unit
+  /// or an enemy tower/building - see [towersHostileTo] in `GameWorld`.
+  Attackable? forcedTarget;
 
   /// Whatever this tower actually fired at (or tried to) last frame -
   /// `null` if nothing was in range. Snapshotted once per frame into
   /// `GameWorld.targeterCounts` so every tower's [_acquireTarget] can see
   /// how contested a candidate already is without each one re-scanning
   /// every other tower itself.
-  MobileUnitComponent? currentTarget;
+  Attackable? currentTarget;
 
   TowerComponent({
     required Vector2 position,
@@ -160,6 +161,9 @@ abstract class TowerComponent extends PositionComponent
   double get effectiveDamage => blueprint.damage * _upgradeMultiplier;
 
   double get effectiveRange => blueprint.range * (1 + upgradeLevel * 0.08);
+
+  @override
+  double get health => hp;
 
   @override
   double get healthRatio => (hp / maxHp).clamp(0.0, 1.0);
@@ -206,15 +210,16 @@ abstract class TowerComponent extends PositionComponent
   /// `BoomspireGame.enforceSupportedTowerLimits`) is itself destroyed/sold.
   void destroyBySupportLoss() => _destroy();
 
-  /// Spawns the appropriate projectile/effect toward [target].
-  void fire(MobileUnitComponent target);
+  /// Spawns the appropriate projectile/effect toward [target] - a mobile
+  /// unit or an enemy tower/building.
+  void fire(Attackable target);
 
   /// Forces this tower to keep shooting [enemy] over whatever it would
   /// otherwise auto-acquire - see [forcedTarget]. The order itself is
   /// accepted regardless of current range (matches
   /// `MobileUnitComponent.issueAttackOrder`'s forgiveness); it only
   /// actually fires once [enemy] is within [effectiveRange].
-  void issueAttackOrder(MobileUnitComponent enemy) => forcedTarget = enemy;
+  void issueAttackOrder(Attackable enemy) => forcedTarget = enemy;
 
   /// Lets whoever's currently targeting this tower (a [MobileUnitComponent])
   /// tint it with their own color while the player has that attacker
@@ -499,7 +504,12 @@ abstract class TowerComponent extends PositionComponent
     // Uses this tower's own accent color (not the team color) so the
     // highlight visually matches the tower doing the shooting.
     if (game.selectedTower.value == this) {
-      target.markTargeted(TowerSpriteFactory.accentColor(blueprint.type));
+      final accent = TowerSpriteFactory.accentColor(blueprint.type);
+      if (target is MobileUnitComponent) {
+        target.markTargeted(accent);
+      } else if (target is TowerComponent) {
+        target.markTargeted(accent);
+      }
     }
 
     final toTarget = target.position - position;
@@ -550,7 +560,7 @@ abstract class TowerComponent extends PositionComponent
     );
   }
 
-  MobileUnitComponent? _acquireTarget() {
+  Attackable? _acquireTarget() {
     // Stay locked onto whatever this tower is already engaged with as long
     // as it's still a valid shot - without this, every tower re-picks
     // "closest + least-contested" completely fresh every single frame,
@@ -576,12 +586,35 @@ abstract class TowerComponent extends PositionComponent
       }
     }
 
-    MobileUnitComponent? closest;
+    // Prefer whatever the last completed background focus-fire scan (see
+    // `GameWorld._refreshTargetAssignments`, `computeTargetAssignments`)
+    // already worked out for this tower - the O(towers x enemies) scan
+    // behind it runs on a separate isolate via `compute()` instead of every
+    // tower redoing it inline on the main isolate every frame. Still
+    // double-checked here since the result can be up to
+    // `GameWorld._targetComputeInterval` stale.
+    final suggested = game.world.suggestedTargetFor(this);
+    if (suggested != null && canAttack(suggested.domain)) {
+      final d = suggested.position.distanceTo(position);
+      if (d >= blueprint.minRange && d <= effectiveRange) return suggested;
+    }
+
+    // Fallback: no background suggestion yet (just spawned, or the last
+    // scan hasn't landed) - run the same scoring synchronously so the
+    // tower is never left waiting on an isolate round-trip to react.
+    // Enemy towers/buildings are scored exactly like mobile units - just
+    // another stationary ground target, gated the same way by
+    // [Unit.canAttack]/[blueprint.minRange].
+    Attackable? closest;
     var closestDist = effectiveRange;
-    MobileUnitComponent? bestSmart;
+    Attackable? bestSmart;
     var bestSmartDist = effectiveRange;
 
-    for (final enemy in game.world.unitsHostileTo(owner)) {
+    final candidates = <Attackable>[
+      ...game.world.unitsHostileTo(owner),
+      ...game.world.towersHostileTo(owner),
+    ];
+    for (final enemy in candidates) {
       if (!canAttack(enemy.domain)) continue;
       final d = enemy.position.distanceTo(position);
       if (d < blueprint.minRange) continue;
@@ -653,7 +686,7 @@ abstract class TowerComponent extends PositionComponent
   /// that faster one solo the kill instead of every tower on it wasting
   /// shots finishing off the last sliver of health together. Ties (equal
   /// shots-to-kill) favor staying put over both towers abandoning it.
-  bool _hasFasterFinisherAssigned(MobileUnitComponent target) {
+  bool _hasFasterFinisherAssigned(Attackable target) {
     if (target.healthRatio > _nearDeathHealthRatio) return false;
     final myShots = (target.health / effectiveDamage).ceil();
     for (final other in game.world.activeTowers) {
@@ -675,7 +708,7 @@ abstract class TowerComponent extends PositionComponent
   /// full battlefield of towers. Only gates freshly acquiring a target -
   /// see [_acquireTarget]'s stickiness for why an already-assigned tower
   /// doesn't re-run this cap check every frame.
-  bool _isGoodFocusFireTarget(MobileUnitComponent enemy) {
+  bool _isGoodFocusFireTarget(Attackable enemy) {
     if (enemy.healthRatio <= _nearDeathHealthRatio) {
       // Doomed - if another tower already on it can finish it off quickly,
       // don't contest that kill; go find something else instead.
@@ -719,7 +752,7 @@ abstract class TowerComponent extends PositionComponent
   /// exclusively - it holds fire rather than auto-retargeting while the
   /// forced target is merely out of range), otherwise falls back to the
   /// normal focus-fire-aware auto-acquisition.
-  MobileUnitComponent? _resolveTarget() {
+  Attackable? _resolveTarget() {
     final forced = forcedTarget;
     if (forced != null) {
       if (forced.destroyed || !forced.isMounted) {

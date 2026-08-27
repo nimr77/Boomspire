@@ -102,26 +102,48 @@ void main() {
       },
     );
 
+    test('single-use Tech Lab locks once built', () async {
+      final game = await _bootGame(GameScenes.all.first);
+      final grid = game.terrainMap.grid;
+      expect(game.buildBlockReason(BuildingType.techLab), isNull);
+      game.gameState.addGold(1000);
+
+      final cell = _findOpenCell(game);
+      game.selectTowerType(BuildingType.techLab);
+      game.handleArenaTap(grid.cellCenter(cell));
+      game.handleArenaTap(grid.cellCenter(cell));
+
+      expect(game.towerCountFor(BuildingType.techLab), 1);
+      expect(
+        game.buildBlockReason(BuildingType.techLab),
+        'Max 1 built',
+        reason: 'Tech Lab should report a lock reason once its 1-build cap '
+            'is hit',
+      );
+    });
+
     test(
-      'single-use buildings (Tech Lab, Command Post) lock once built',
+      'Command Post and War Factory have no build cap - more than one can '
+      'be built',
       () async {
-        for (final type in [BuildingType.techLab, BuildingType.commandPost]) {
+        for (final type in [BuildingType.commandPost, BuildingType.warFactory]) {
           final game = await _bootGame(GameScenes.all.first);
           final grid = game.terrainMap.grid;
-          expect(game.buildBlockReason(type), isNull);
-          game.gameState.addGold(1000);
+          game.gameState.addGold(5000);
 
-          final cell = _findOpenCell(game);
-          game.selectTowerType(type);
-          game.handleArenaTap(grid.cellCenter(cell));
-          game.handleArenaTap(grid.cellCenter(cell));
+          for (var i = 0; i < 3; i++) {
+            expect(game.buildBlockReason(type), isNull);
+            final cell = _findOpenCell(game);
+            game.selectTowerType(type);
+            game.handleArenaTap(grid.cellCenter(cell));
+            game.handleArenaTap(grid.cellCenter(cell));
+          }
 
-          expect(game.towerCountFor(type), 1);
+          expect(game.towerCountFor(type), 3);
           expect(
             game.buildBlockReason(type),
-            'Max 1 built',
-            reason:
-                '$type should report a lock reason once its 1-build cap is hit',
+            isNull,
+            reason: '$type should never report a build-limit lock',
           );
         }
       },
@@ -643,6 +665,70 @@ void main() {
       },
     );
 
+    test(
+      'selecting a tower type to build deselects the previously-selected '
+      'unit',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        const blueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 40,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: blueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        ally.position = Vector2(300, 300);
+
+        game.handleArenaTap(ally.position);
+        expect(game.selectedUnit.value, ally);
+
+        game.selectTowerType(TowerType.machineGun);
+        expect(game.selectedUnit.value, isNull);
+        expect(game.selectedTowerType.value, TowerType.machineGun);
+      },
+    );
+
+    test('deselectAll clears unit/tower/build selections and inspect state', () async {
+        final game = await _bootGame(GameScenes.all.first);
+        const blueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 40,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: blueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        ally.position = Vector2(300, 300);
+
+        game.handleArenaTap(ally.position);
+        expect(game.selectedUnit.value, ally);
+
+        game.deselectAll();
+        expect(game.selectedUnit.value, isNull);
+        expect(game.selectedTower.value, isNull);
+        expect(game.selectedTowerType.value, isNull);
+        expect(game.inspected.value, isNull);
+        expect(game.pendingPlacement.value, isNull);
+      },
+    );
+
     test('tapping open ground while a unit is selected issues a move order '
         'it walks to and then holds at', () async {
       final game = await _bootGame(GameScenes.all.first);
@@ -902,6 +988,35 @@ void main() {
 
       expect(fastKiller.currentTarget, nearDeathEnemy);
       expect(slowPoker.currentTarget, healthyEnemy);
+    });
+
+    test('towers can target and damage an enemy tower/building, not just '
+        'mobile units', () async {
+      final game = await _bootGame(GameScenes.skirmishes.first);
+      final aiTeam = game.aiTeam!;
+
+      final playerTower = await spawnTower(game, Vector2(200, 200));
+      final enemyTower = MachineGunTowerComponent(
+        position: Vector2(220, 200),
+        cellSize: 40,
+        blueprint: mgBlueprint,
+      )..owner = aiTeam;
+      game.world.spawnTower(enemyTower);
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+
+      // Force-target the enemy tower directly, same as tapping it while
+      // the player's own tower is selected (see `handleArenaTap`).
+      playerTower.issueAttackOrder(enemyTower);
+      final startingHealth = enemyTower.health;
+
+      for (var i = 0; i < 5; i++) {
+        await Future<void>.delayed(Duration.zero);
+        game.update(0.25);
+      }
+
+      expect(playerTower.currentTarget, enemyTower);
+      expect(enemyTower.health, lessThan(startingHealth));
     });
   });
 

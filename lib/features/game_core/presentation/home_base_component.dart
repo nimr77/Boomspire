@@ -48,6 +48,9 @@ class HomeBaseComponent extends PositionComponent
   UnitDomain get domain => UnitDomain.ground;
 
   @override
+  double get health => game.gameState.health.toDouble();
+
+  @override
   double get healthRatio =>
       (game.gameState.health / GameConfig.startingHealth).clamp(0.0, 1.0);
 

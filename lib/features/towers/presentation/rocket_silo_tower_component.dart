@@ -1,3 +1,4 @@
+import '../../../core/combat/attackable.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
 import '../../combat/presentation/rocket_component.dart';
@@ -17,9 +18,12 @@ class RocketSiloTowerComponent extends TowerComponent {
   });
 
   @override
-  void fire(MobileUnitComponent target) {
+  void fire(Attackable target) {
+    // Towers/buildings are never a vehicle/sea unit - only a mobile unit's
+    // blueprint can trigger the big-target bonus.
     final isBigTarget =
-        target.blueprint.isVehicle || target.blueprint.isSeaUnit;
+        target is MobileUnitComponent &&
+        (target.blueprint.isVehicle || target.blueprint.isSeaUnit);
     final dir = (target.position - position).normalized();
     final spawnPos = position + dir * (size.x / 2);
     game.world.spawn(

@@ -39,6 +39,9 @@ class AiHomeBaseComponent extends PositionComponent
   UnitDomain get domain => UnitDomain.ground;
 
   @override
+  double get health => (game.aiEconomy?.health ?? 0).toDouble();
+
+  @override
   double get healthRatio {
     final economy = game.aiEconomy;
     if (economy == null) return 0;

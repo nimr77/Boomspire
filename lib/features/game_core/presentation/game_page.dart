@@ -93,6 +93,13 @@ class _GamePageState extends State<GamePage> {
                     onPointerDown: (event) {
                       if (event.buttons & kMiddleMouseButton != 0) {
                         _game.world.freePanning = true;
+                      } else if (event.buttons & kSecondaryMouseButton !=
+                          0) {
+                        // Right-click: a quick "cancel/deselect" gesture -
+                        // drops whatever unit/tower is selected and any
+                        // in-progress build placement, same as tapping
+                        // empty ground does on left-click.
+                        _game.deselectAll();
                       }
                     },
                     onPointerMove: (event) =>
