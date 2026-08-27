@@ -2,6 +2,7 @@
 // interpolation), its on-device storage, and the draft-to-preview terrain
 // rasterizer (painted cells + freehand river/lake paths -> obstacle grid).
 import 'package:boomspire/core/combat/unit_kind.dart';
+import 'package:boomspire/core/storage/app_database.dart';
 import 'package:boomspire/features/map_editor/domain/models/editor_point.dart';
 import 'package:boomspire/features/map_editor/domain/models/environment_settings.dart';
 import 'package:boomspire/features/map_editor/domain/models/map_draft.dart';
@@ -17,7 +18,7 @@ import 'package:boomspire/features/waves/domain/models/wave_loadout.dart';
 import 'package:boomspire/features/waves/impl/wave_loadout_generator.dart';
 import 'package:boomspire/features/waves/impl/wave_repository_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tostore/tostore.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -154,7 +155,8 @@ void main() {
   });
 
   group('LocalMapDraftRepositoryImpl', () {
-    setUp(() => SharedPreferences.setMockInitialValues({}));
+    setUp(() => AppDatabase.useForTest(ToStore.memory));
+    tearDown(AppDatabase.reset);
 
     test('saves, lists, loads and deletes drafts', () async {
       final repo = LocalMapDraftRepositoryImpl();

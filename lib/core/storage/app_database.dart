@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:tostore/tostore.dart';
 
 /// Shared on-device [ToStore] key-value engine used for every local-only
@@ -12,8 +13,36 @@ import 'package:tostore/tostore.dart';
 /// wrapper over native platform prefs.
 class AppDatabase {
   static Future<ToStore>? _future;
+  static Future<ToStore> Function() _factory = ToStore.open;
 
-  static Future<ToStore> get instance => _future ??= ToStore.open();
+  static Future<ToStore> get instance => _future ??= _factory();
 
   AppDatabase._();
+
+  /// Test-only hook: drop the cached instance (and any override set via
+  /// [useForTest]) so the next [instance] access opens fresh. Closes the
+  /// current instance first so it doesn't leave background maintenance
+  /// timers (compaction, TTL cleanup, etc.) running past the end of a test.
+  @visibleForTesting
+  static Future<void> reset() async {
+    final pending = _future;
+    _future = null;
+    _factory = ToStore.open;
+    if (pending != null) {
+      try {
+        await (await pending).close();
+      } catch (_) {
+        // Best-effort - a never-opened/already-closed instance is fine.
+      }
+    }
+  }
+
+  /// Test-only hook: swap in an isolated database (e.g. `ToStore.memory`)
+  /// so tests don't read/write the real on-device store or leak state
+  /// between test runs. Pair with [reset] in `tearDown`.
+  @visibleForTesting
+  static void useForTest(Future<ToStore> Function() factory) {
+    _factory = factory;
+    _future = null;
+  }
 }

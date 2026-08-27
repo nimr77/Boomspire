@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -251,6 +254,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
   int _generation = 0;
   bool _saving = false;
   bool _playing = false;
+  bool _downloading = false;
+  bool _uploading = false;
 
   /// Zoom applied to the canvas viewport only - doesn't affect the draft.
   final _viewerController = TransformationController();
@@ -285,6 +290,20 @@ class _MapEditorPageState extends State<MapEditorPage> {
             color: Colors.cyanAccent,
             loading: _saving,
             onPressed: _saving ? null : _save,
+          ),
+          _EditorAppBarButton(
+            icon: Icons.download,
+            label: 'Download',
+            color: Colors.amberAccent,
+            loading: _downloading,
+            onPressed: _downloading ? null : _downloadDraft,
+          ),
+          _EditorAppBarButton(
+            icon: Icons.upload,
+            label: 'Upload',
+            color: Colors.amberAccent,
+            loading: _uploading,
+            onPressed: _uploading ? null : _uploadDraft,
           ),
           const SizedBox(width: 12),
         ],
@@ -799,6 +818,32 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   WaveLoadout _currentLoadout() => _loadoutFor(_selectedWaveNumber);
 
+  /// Exports the current draft as a standalone `.json` file the player can
+  /// back up, share, or hand-edit - opens the platform's native save/
+  /// download dialog (a browser download on web, a save-as dialog on
+  /// desktop).
+  Future<void> _downloadDraft() async {
+    setState(() => _downloading = true);
+    try {
+      final bytes = Uint8List.fromList(
+        utf8.encode(
+          const JsonEncoder.withIndent('  ').convert(_draft.toJson()),
+        ),
+      );
+      final safeName = _draft.name.trim().isEmpty ? 'map' : _draft.name.trim();
+      final saved = await FilePicker.saveFile(
+        dialogTitle: 'Download map',
+        fileName: '$safeName.json',
+        bytes: bytes,
+        mimeType: 'application/json',
+      );
+      if (!mounted) return;
+      if (saved != null) _showToast('Downloaded "${_draft.name}"');
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
   void _handlePanEnd(DragEndDetails details) {
     final isWaterTool = _tool == _EditorTool.river || _tool == _EditorTool.lake;
     if (isWaterTool && _activeStroke.length >= 2) {
@@ -1047,6 +1092,44 @@ class _MapEditorPageState extends State<MapEditorPage> {
     EnvironmentSettings Function(EnvironmentSettings) update,
   ) {
     _updateDraft((d) => d.copyWith(environment: update(d.environment)));
+  }
+
+  /// Imports a previously-downloaded `.json` map file, replacing the
+  /// editor's current draft contents in place (the draft keeps its id, so
+  /// Save continues to overwrite the same slot it was opened from).
+  Future<void> _uploadDraft() async {
+    setState(() => _uploading = true);
+    try {
+      final file = await FilePicker.pickFile(
+        dialogTitle: 'Upload map',
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+      if (file == null || !mounted) return;
+      final bytes = await file.readAsBytes();
+      final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+      final imported = MapDraft.fromJson(json).copyWith(id: _draft.id);
+      setState(() {
+        _draft = imported;
+        _nameController.text = imported.name;
+        _widthController.text = imported.arenaWidth.toStringAsFixed(0);
+        _heightController.text = imported.arenaHeight.toStringAsFixed(0);
+        _startingGoldController.text = imported.startingGold.toString();
+        _waveCountController.text = imported.waveCount.toString();
+      });
+      await _regenerate();
+      if (!mounted) return;
+      _showToast('Imported "${imported.name}"');
+    } catch (_) {
+      if (mounted) {
+        _showToast(
+          'Could not read that file as a map',
+          icon: Icons.error_outline,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
   }
 
   void _zoomBy(double factor) {
