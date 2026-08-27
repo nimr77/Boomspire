@@ -572,6 +572,9 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   @override
   Future<void> onLoad() async {
+    // Yield before touching gameState so notifyListeners() (from reset())
+    // fires after the enclosing GameWidget build/layout pass has finished.
+    await Future<void>.delayed(Duration.zero);
     terrainMap = terrainRepository.loadTerrain(scene: scene);
     _terrainReady = true;
     _setupSkirmishState();
