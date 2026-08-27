@@ -30,7 +30,7 @@ class RocketSiloTowerComponent extends TowerComponent {
             ? effectiveDamage * _kBigTargetDamageMultiplier
             : effectiveDamage,
         splashRadius: blueprint.splashRadius,
-        firedBy: game.playerTeam,
+        firedBy: owner,
         attackDomains: blueprint.attackDomains,
       ),
     );

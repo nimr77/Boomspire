@@ -23,7 +23,7 @@ class CannonTowerComponent extends TowerComponent {
         target: target,
         damage: effectiveDamage,
         splashRadius: blueprint.splashRadius,
-        firedBy: game.playerTeam,
+        firedBy: owner,
         bodyColor: const Color(0xFF616161),
         tipColor: const Color(0xFFFFC107),
         attackDomains: blueprint.attackDomains,

@@ -11,4 +11,13 @@ enum UnitObjective {
   /// Hunt down the nearest hostile unit (or structure) and hold position
   /// once nothing hostile is left - used by player/ally-built units.
   huntHostiles,
+
+  /// Beeline for the opposing team's home base and keep fighting whatever's
+  /// in range along the way (including the base itself, once close enough) -
+  /// used by both sides' units in a [GameMode.skirmish] match instead of
+  /// [rushBase]/[huntHostiles], since a skirmish base is a real destructible
+  /// target rather than something to escape past or something a unit only
+  /// stumbles into while hunting. Never banks a kill/escape bounty and never
+  /// forces a spawn-point starting position, unlike [rushBase].
+  assaultBase,
 }

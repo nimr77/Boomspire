@@ -55,22 +55,26 @@ class MainMenuPage extends StatelessWidget {
                           .slideY(begin: -0.2, end: 0),
                       const SizedBox(height: 40),
                       HoverScaleCard(
-                        accentColor: Colors.cyanAccent,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SinglePlayerModeSelectPage(),
+                            accentColor: Colors.cyanAccent,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const SinglePlayerModeSelectPage(),
+                              ),
+                            ),
+                            child: MenuOptionContent(
+                              icon: Icons.person,
+                              title: S.current.mainMenuSinglePlayer,
+                              subtitle: S.current.mainMenuSinglePlayerSubtitle,
+                              accentColor: Colors.cyanAccent,
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(duration: 380.ms, delay: 160.ms)
+                          .scale(
+                            begin: const Offset(0.94, 0.94),
+                            curve: Curves.easeOutCubic,
                           ),
-                        ),
-                        child: MenuOptionContent(
-                          icon: Icons.person,
-                          title: S.current.mainMenuSinglePlayer,
-                          subtitle: S.current.mainMenuSinglePlayerSubtitle,
-                          accentColor: Colors.cyanAccent,
-                        ),
-                      ).animate().fadeIn(duration: 380.ms, delay: 160.ms).scale(
-                        begin: const Offset(0.94, 0.94),
-                        curve: Curves.easeOutCubic,
-                      ),
                     ],
                   ),
                 ),

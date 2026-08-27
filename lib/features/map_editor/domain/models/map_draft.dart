@@ -35,4 +35,3 @@ abstract class MapDraft with _$MapDraft {
   factory MapDraft.fromJson(Map<String, dynamic> json) =>
       _$MapDraftFromJson(json);
 }
-

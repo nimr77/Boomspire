@@ -28,11 +28,13 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m3(amount, seconds) => "+${amount}g in ${seconds}s";
 
-  static String m4(current, total) => "WAVE ${current} / ${total}";
+  static String m4(health) => "AI BASE ${health}";
 
-  static String m5(tier) => "Tier ${tier}";
+  static String m5(current, total) => "WAVE ${current} / ${total}";
 
-  static String m6(count) => "${count} WAVES";
+  static String m6(tier) => "Tier ${tier}";
+
+  static String m7(count) => "${count} WAVES";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -85,7 +87,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "exitToMenuTooltip": MessageLookupByLibrary.simpleMessage("Exit to menu"),
     "goldMineKillBonus": m2,
     "goldMinePayoutIn": m3,
-    "hudWaveLabel": m4,
+    "hudAiBaseLabel": m4,
+    "hudWaveLabel": m5,
     "levelSelectSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose a campaign",
     ),
@@ -115,6 +118,26 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "playAgain": MessageLookupByLibrary.simpleMessage("PLAY AGAIN"),
     "sceneCompleted": MessageLookupByLibrary.simpleMessage("COMPLETED"),
+    "skirmishPlacementAi": MessageLookupByLibrary.simpleMessage("AI"),
+    "skirmishPlacementPickHint": MessageLookupByLibrary.simpleMessage(
+      "Pick a starting site to continue",
+    ),
+    "skirmishPlacementRandomize": MessageLookupByLibrary.simpleMessage(
+      "Randomize",
+    ),
+    "skirmishPlacementStart": MessageLookupByLibrary.simpleMessage(
+      "Start Battle",
+    ),
+    "skirmishPlacementSubtitleDraft": MessageLookupByLibrary.simpleMessage(
+      "Tap a numbered site to claim it, or randomize",
+    ),
+    "skirmishPlacementSubtitleScene": MessageLookupByLibrary.simpleMessage(
+      "Your base and the AI\'s are set for this battlefield",
+    ),
+    "skirmishPlacementTitle": MessageLookupByLibrary.simpleMessage(
+      "Choose Your Base",
+    ),
+    "skirmishPlacementYou": MessageLookupByLibrary.simpleMessage("You"),
     "skirmishSelectCustomMaps": MessageLookupByLibrary.simpleMessage(
       "Your Maps",
     ),
@@ -126,6 +149,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Choose a battlefield",
     ),
     "skirmishSelectTitle": MessageLookupByLibrary.simpleMessage("Skirmish"),
+    "skirmishVictorySubtitle": MessageLookupByLibrary.simpleMessage(
+      "The enemy base has fallen!",
+    ),
     "towerMax": MessageLookupByLibrary.simpleMessage("MAX"),
     "towerNameAntiAir": MessageLookupByLibrary.simpleMessage("Flak Battery"),
     "towerNameArtilleryBunker": MessageLookupByLibrary.simpleMessage(
@@ -139,7 +165,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "towerNameRocket": MessageLookupByLibrary.simpleMessage("Rocket Battery"),
     "towerNameRocketSilo": MessageLookupByLibrary.simpleMessage("Rocket Silo"),
     "towerNameSam": MessageLookupByLibrary.simpleMessage("SAM Site"),
-    "towerTier": m5,
-    "wavesCount": m6,
+    "towerTier": m6,
+    "wavesCount": m7,
   };
 }

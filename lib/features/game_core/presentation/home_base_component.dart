@@ -2,28 +2,57 @@ import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 
+import '../../../core/combat/attackable.dart';
+import '../../../core/combat/team.dart';
+import '../../../core/combat/unit.dart';
 import '../../../core/rendering/procedural_image.dart';
 import '../domain/models/game_config.dart';
 import 'boomspire_game.dart';
 
 /// The player's home base at the terrain's end point: a defended structure
 /// (instead of a plain marker circle) that shows its remaining health and
-/// flashes/pulses red whenever the player takes damage.
+/// flashes/pulses red whenever the player takes damage. Implements
+/// [Attackable] so a [GameMode.skirmish] opponent's units can walk up and
+/// destroy it directly, same as they would a tower - its actual HP still
+/// lives in [GameStateRepository.health] (the single human player's wallet),
+/// not on this component.
 class HomeBaseComponent extends PositionComponent
-    with HasGameReference<BoomspireGame> {
+    with HasGameReference<BoomspireGame>, Unit
+    implements Attackable {
   static ui.Image? _cachedSprite;
+
+  /// Always the human player's team today - kept as a field (rather than
+  /// just reading `game.playerTeam`) so `opposingTargets()` can treat this
+  /// the same way it treats an owned tower.
+  final Team owner;
 
   late final SpriteComponent _visual;
   int _lastHealth = 0;
   double _pulse = 0;
 
-  HomeBaseComponent({required Vector2 position})
+  HomeBaseComponent({required Vector2 position, this.owner = Team.defaultPlayer})
     : super(
         position: position,
         size: Vector2.all(84),
         anchor: Anchor.center,
         priority: 6,
       );
+
+  @override
+  Set<UnitDomain> get attackDomains => const {};
+
+  @override
+  bool get destroyed => game.gameState.health <= 0;
+
+  @override
+  UnitDomain get domain => UnitDomain.ground;
+
+  @override
+  double get healthRatio =>
+      (game.gameState.health / GameConfig.startingHealth).clamp(0.0, 1.0);
+
+  @override
+  void takeDamage(double amount) => game.gameState.damagePlayer(amount.round());
 
   @override
   Future<void> onLoad() async {

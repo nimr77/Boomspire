@@ -2,6 +2,7 @@ import '../../../core/combat/unit_kind.dart';
 import '../../../core/combat/unit_objective.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
 import '../../game_core/domain/models/game_config.dart';
+import '../../game_core/domain/models/game_scene.dart';
 import 'tower_component.dart';
 
 /// Non-combat structure: it never fires (zero range/damage). Instead, the
@@ -9,7 +10,8 @@ import 'tower_component.dart';
 /// battlefield (see `TowerActionPanel`), spending gold to roll out any
 /// buildable unit of their choosing that heads out to hunt down the
 /// nearest hostile on its own (see
-/// `MobileUnitComponent`/`UnitObjective.huntHostiles`).
+/// `MobileUnitComponent`/`UnitObjective.huntHostiles`) - or, on a
+/// [GameMode.skirmish] map, marches to assault the AI's base instead.
 class WarFactoryComponent extends TowerComponent {
   /// Seconds left before another vehicle/aircraft can be queued - starts
   /// ready.
@@ -24,7 +26,7 @@ class WarFactoryComponent extends TowerComponent {
   bool get canProduce => !destroyed && cooldownRemaining <= 0;
 
   int costFor(UnitKind kind) =>
-      game.unitRepository.blueprintFor(game.playerTeam, kind).cost;
+      game.unitRepository.blueprintFor(owner, kind).cost;
 
   @override
   void fire(MobileUnitComponent target) {}
@@ -34,15 +36,17 @@ class WarFactoryComponent extends TowerComponent {
   /// happened.
   bool produceUnit(UnitKind kind) {
     if (!canProduce) return false;
-    final blueprint = game.unitRepository.blueprintFor(game.playerTeam, kind);
+    final blueprint = game.unitRepository.blueprintFor(owner, kind);
     if (!game.gameState.spendGold(blueprint.cost)) return false;
     cooldownRemaining = GameConfig.warFactoryProductionCooldown;
     game.world.spawnUnit(
       MobileUnitComponent(
         blueprint: blueprint,
         position: position.clone(),
-        team: game.playerTeam,
-        objective: UnitObjective.huntHostiles,
+        team: owner,
+        objective: game.scene.mode == GameMode.skirmish
+            ? UnitObjective.assaultBase
+            : UnitObjective.huntHostiles,
         level: upgradeLevel,
       ),
     );

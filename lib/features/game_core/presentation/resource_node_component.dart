@@ -104,6 +104,8 @@ class ResourceNodeComponent extends PositionComponent
     _payoutTimer -= GameConfig.resourceNodePayoutInterval;
     if (owner == game.playerTeam) {
       game.gameState.addCrystals(GameConfig.resourceNodeCrystalsPerTick);
+    } else if (owner == game.aiTeam) {
+      game.aiEconomy?.addGold(GameConfig.aiResourceNodeGoldPerTick);
     }
   }
 }

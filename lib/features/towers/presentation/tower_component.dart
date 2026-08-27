@@ -6,6 +6,7 @@ import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart' show Curves;
 
 import '../../../core/combat/attackable.dart';
+import '../../../core/combat/team.dart';
 import '../../../core/combat/unit.dart';
 import '../../../core/rendering/model_loader.dart';
 import '../../audio/domain/models/sfx_type.dart';
@@ -78,6 +79,14 @@ abstract class TowerComponent extends PositionComponent
   /// Point-defense module - when true, this tower shoots down any enemy
   /// rocket/shell that gets within [_antiRocketRange] of it.
   bool antiRocket = false;
+
+  /// Who this tower belongs to - always the human player in wave-defense.
+  /// In a [GameMode.skirmish] match, [BoomspireGame.createTower]/the AI
+  /// controller set this to [Team.aiOpponent] for AI-built towers so
+  /// targeting/splash/anti-rocket all key off the actual owner instead of
+  /// unconditionally assuming the player. Set post-construction (not a
+  /// constructor param) so no tower subclass needs its signature changed.
+  Team owner = Team.defaultPlayer;
 
   double _antiRocketCooldown = 0;
 
@@ -492,7 +501,7 @@ abstract class TowerComponent extends PositionComponent
   MobileUnitComponent? _acquireTarget() {
     MobileUnitComponent? closest;
     var closestDist = effectiveRange;
-    for (final enemy in game.world.unitsHostileTo(game.playerTeam)) {
+    for (final enemy in game.world.unitsHostileTo(owner)) {
       if (!canAttack(enemy.domain)) continue;
       final d = enemy.position.distanceTo(position);
       if (d < blueprint.minRange) continue;
@@ -582,7 +591,10 @@ abstract class TowerComponent extends PositionComponent
   void _scanAntiRocket() {
     if (!antiRocket || _antiRocketCooldown > 0) return;
     for (final rocket in game.world.children.query<RocketComponent>()) {
-      if (!rocket.affectsTowers || rocket.isRemoving) continue;
+      if (rocket.firedBy.relationTo(owner) != TeamRelation.enemy ||
+          rocket.isRemoving) {
+        continue;
+      }
       if (rocket.position.distanceTo(position) > _antiRocketRange) continue;
       rocket.removeFromParent();
       game.world.spawn(

@@ -33,6 +33,16 @@ class Team {
     color: Color(0xFF00E5FF),
   );
 
+  /// The Gemini-directed skirmish opponent (see `AiSkirmishControllerComponent`)
+  /// - builds/produces from the same roster the human player does, just from
+  /// its own base/economy on a [GameMode.skirmish] map.
+  static const aiOpponent = Team(
+    id: 2,
+    label: 'AI Commander',
+    catalog: UnitCatalog.buildableRoster,
+    color: Color(0xFFFF6D00),
+  );
+
   /// Same [id] on two [Team]s means the same side - this is the only thing
   /// [relationTo] ever looks at.
   final int id;

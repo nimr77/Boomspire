@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../domain/models/battlefield_snapshot.dart';
+import '../domain/models/skirmish_directive.dart';
 import '../domain/models/strategy_directive.dart';
 import '../domain/repos/ai_director_repository.dart';
 
@@ -46,5 +47,22 @@ class AiDirectorRepositoryImpl implements AiDirectorRepository {
       // Proxy down / no key / network hiccup - silently use the fallback.
     }
     return StrategyDirective.fallback(snapshot.waveNumber);
+  }
+
+  @override
+  Future<SkirmishDirective> planSkirmish(SkirmishSnapshot snapshot) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '$_proxyUrl/skirmish',
+        data: snapshot.toJson(),
+        options: Options(contentType: Headers.jsonContentType),
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        return SkirmishDirective.fromJson(response.data!);
+      }
+    } catch (_) {
+      // Proxy down / no key / network hiccup - silently use the fallback.
+    }
+    return SkirmishDirective.fallback(snapshot);
   }
 }

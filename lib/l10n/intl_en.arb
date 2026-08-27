@@ -34,6 +34,22 @@
   "@skirmishSelectCustomMaps": {},
   "skirmishSelectEmptyCustom": "No custom skirmish maps yet - draw one in the Map Editor.",
   "@skirmishSelectEmptyCustom": {},
+  "skirmishPlacementTitle": "Choose Your Base",
+  "@skirmishPlacementTitle": {},
+  "skirmishPlacementSubtitleDraft": "Tap a numbered site to claim it, or randomize",
+  "@skirmishPlacementSubtitleDraft": {},
+  "skirmishPlacementSubtitleScene": "Your base and the AI's are set for this battlefield",
+  "@skirmishPlacementSubtitleScene": {},
+  "skirmishPlacementRandomize": "Randomize",
+  "@skirmishPlacementRandomize": {},
+  "skirmishPlacementStart": "Start Battle",
+  "@skirmishPlacementStart": {},
+  "skirmishPlacementYou": "You",
+  "@skirmishPlacementYou": {},
+  "skirmishPlacementAi": "AI",
+  "@skirmishPlacementAi": {},
+  "skirmishPlacementPickHint": "Pick a starting site to continue",
+  "@skirmishPlacementPickHint": {},
   "wavesCount": "{count} WAVES",
   "@wavesCount": {
     "placeholders": {
@@ -63,6 +79,14 @@
       }
     }
   },
+  "hudAiBaseLabel": "AI BASE {health}",
+  "@hudAiBaseLabel": {
+    "placeholders": {
+      "health": {
+        "type": "int"
+      }
+    }
+  },
   "baseOverrunTitle": "BASE OVERRUN",
   "@baseOverrunTitle": {},
   "baseOverrunSubtitle": "The circuit has been breached.",
@@ -77,6 +101,8 @@
       }
     }
   },
+  "skirmishVictorySubtitle": "The enemy base has fallen!",
+  "@skirmishVictorySubtitle": {},
   "playAgain": "PLAY AGAIN",
   "@playAgain": {},
   "changeMap": "CHANGE MAP",

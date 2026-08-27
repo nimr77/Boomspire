@@ -2,13 +2,15 @@ import '../../../core/combat/unit_kind.dart';
 import '../../../core/combat/unit_objective.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
 import '../../game_core/domain/models/game_config.dart';
+import '../../game_core/domain/models/game_scene.dart';
 import 'tower_component.dart';
 
 /// Non-combat structure: it never fires (zero range/damage). Instead, the
 /// player mans it via the build menu shown when it's selected on the
 /// battlefield (see `TowerActionPanel`), spending gold to muster a fresh
 /// Ally Soldier that walks out to hunt down the nearest hostile on its own
-/// (see `MobileUnitComponent`/`UnitObjective.huntHostiles`).
+/// (see `MobileUnitComponent`/`UnitObjective.huntHostiles`) - or, on a
+/// [GameMode.skirmish] map, marches to assault the AI's base instead.
 class TrainingCenterComponent extends TowerComponent {
   /// Seconds left before another soldier can be queued - starts ready.
   double cooldownRemaining = 0;
@@ -22,7 +24,7 @@ class TrainingCenterComponent extends TowerComponent {
   bool get canProduce => !destroyed && cooldownRemaining <= 0;
 
   int get soldierCost =>
-      game.unitRepository.blueprintFor(game.playerTeam, UnitKind.soldier).cost;
+      game.unitRepository.blueprintFor(owner, UnitKind.soldier).cost;
 
   @override
   void fire(MobileUnitComponent target) {}
@@ -35,13 +37,12 @@ class TrainingCenterComponent extends TowerComponent {
     cooldownRemaining = GameConfig.trainingCenterProductionCooldown;
     game.world.spawnUnit(
       MobileUnitComponent(
-        blueprint: game.unitRepository.blueprintFor(
-          game.playerTeam,
-          UnitKind.soldier,
-        ),
+        blueprint: game.unitRepository.blueprintFor(owner, UnitKind.soldier),
         position: position.clone(),
-        team: game.playerTeam,
-        objective: UnitObjective.huntHostiles,
+        team: owner,
+        objective: game.scene.mode == GameMode.skirmish
+            ? UnitObjective.assaultBase
+            : UnitObjective.huntHostiles,
         level: upgradeLevel,
       ),
     );

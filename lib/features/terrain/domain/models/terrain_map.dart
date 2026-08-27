@@ -28,6 +28,10 @@ class TerrainMap {
   final List<PathPoint> spawnPoints;
   final PathPoint basePoint;
 
+  /// The AI opponent's base, for a [GameMode.skirmish] scene - null for a
+  /// [GameMode.waveDefense] scene, which only ever has the one [basePoint].
+  final PathPoint? secondaryBasePoint;
+
   /// Capturable second-resource node positions (see
   /// `GameScene.resourceNodeSites`) - empty for scenes with no capturable
   /// economy.
@@ -40,6 +44,7 @@ class TerrainMap {
     required this.obstacleKinds,
     required this.spawnPoints,
     required this.basePoint,
+    this.secondaryBasePoint,
     this.resourceNodePoints = const [],
   });
 }

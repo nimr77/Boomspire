@@ -55,4 +55,9 @@ class GameConfig {
 
   /// Crystals paid out per tick by an owned resource node.
   static const resourceNodeCrystalsPerTick = 10;
+
+  /// Gold paid out per tick by a resource node owned by the AI opponent in
+  /// a skirmish match - crystals are a player-only currency, so an
+  /// AI-held node pays into `AiEconomy.gold` at this rate instead.
+  static const aiResourceNodeGoldPerTick = 60;
 }

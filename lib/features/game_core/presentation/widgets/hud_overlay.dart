@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../domain/models/game_scene.dart';
 import '../boomspire_game.dart';
 import 'build_menu.dart';
 
@@ -70,11 +71,17 @@ class HudOverlay extends StatelessWidget {
                         child: ListenableBuilder(
                           listenable: game.gameState,
                           builder: (context, _) {
+                            final aiEconomy = game.aiEconomy;
+                            final label =
+                                game.scene.mode == GameMode.skirmish &&
+                                    aiEconomy != null
+                                ? S.current.hudAiBaseLabel(aiEconomy.health)
+                                : S.current.hudWaveLabel(
+                                    game.gameState.currentWave,
+                                    game.gameState.totalWaves,
+                                  );
                             return Text(
-                              S.current.hudWaveLabel(
-                                game.gameState.currentWave,
-                                game.gameState.totalWaves,
-                              ),
+                              label,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,

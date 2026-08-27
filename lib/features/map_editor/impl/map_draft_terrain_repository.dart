@@ -6,6 +6,7 @@ import '../../terrain/domain/models/obstacle_kind.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../domain/models/editor_terrain_preview.dart';
+import '../domain/models/editor_point.dart';
 import '../domain/models/map_draft.dart';
 
 /// Turns an editor-authored [MapDraft] into a real, playable [TerrainMap] so
@@ -13,22 +14,44 @@ import '../domain/models/map_draft.dart';
 /// draft's already-rasterized [EditorTerrainPreview] rather than the
 /// procedural generation [TerrainRepository]'s default impl does.
 ///
-/// Home/spawn placement is fixed (base on the east edge, single spawn from
-/// the west) since [MapDraft] doesn't carry [GameScene.homeSites]/layout
-/// data yet - both cells (and a guaranteed path between them) are carved
-/// clear of any painted obstacles so a test play is always winnable.
+/// Home/spawn placement defaults to a fixed base on the east edge and a
+/// single spawn from the west, but [humanBaseSite] (chosen on the pre-game
+/// placement screen) overrides the base cell when provided. When [aiBaseSite]
+/// is also provided (a real skirmish match, not just a quick single-base test
+/// play), it becomes the second, AI-owned base instead of that default single
+/// spawn point. Every carved cell (and a guaranteed path between whichever
+/// two matter) is cleared of any painted obstacles so a test play is always
+/// winnable.
 class MapDraftTerrainRepository implements TerrainRepository {
   final MapDraft draft;
   final EditorTerrainPreview preview;
+  final EditorPoint? humanBaseSite;
+  final EditorPoint? aiBaseSite;
 
-  MapDraftTerrainRepository({required this.draft, required this.preview});
+  MapDraftTerrainRepository({
+    required this.draft,
+    required this.preview,
+    this.humanBaseSite,
+    this.aiBaseSite,
+  });
 
   @override
   TerrainMap loadTerrain({required GameScene scene}) {
     final grid = preview.grid;
     final obstacleKinds = preview.obstacleKinds;
-    final baseCell = Point(grid.cols - 1, grid.rows ~/ 2);
-    final spawnCell = Point(0, grid.rows ~/ 2);
+    Point<int> cellFor(EditorPoint site) => Point(
+      (site.x / draft.arenaWidth * grid.cols).floor().clamp(0, grid.cols - 1),
+      (site.y / draft.arenaHeight * grid.rows).floor().clamp(
+        0,
+        grid.rows - 1,
+      ),
+    );
+
+    final site = humanBaseSite;
+    final baseCell = site != null ? cellFor(site) : Point(grid.cols - 1, grid.rows ~/ 2);
+    final aiSite = aiBaseSite;
+    final secondaryBaseCell = aiSite != null ? cellFor(aiSite) : null;
+    final spawnCell = secondaryBaseCell ?? Point(0, grid.rows ~/ 2);
 
     void clearCell(Point<int> cell) {
       grid.setMountain(cell.x, cell.y, false);
@@ -52,6 +75,12 @@ class MapDraftTerrainRepository implements TerrainRepository {
         grid.cellCenter(baseCell).x,
         grid.cellCenter(baseCell).y,
       ),
+      secondaryBasePoint: secondaryBaseCell == null
+          ? null
+          : PathPoint(
+              grid.cellCenter(secondaryBaseCell).x,
+              grid.cellCenter(secondaryBaseCell).y,
+            ),
     );
   }
 

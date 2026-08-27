@@ -54,40 +54,46 @@ class SinglePlayerModeSelectPage extends StatelessWidget {
                           .slideY(begin: -0.2, end: 0),
                       const SizedBox(height: 32),
                       HoverScaleCard(
-                        accentColor: Colors.orangeAccent,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const LevelSelectPage(),
+                            accentColor: Colors.orangeAccent,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const LevelSelectPage(),
+                              ),
+                            ),
+                            child: MenuOptionContent(
+                              icon: Icons.shield,
+                              title: S.current.modeTowerDefenseTitle,
+                              subtitle: S.current.modeTowerDefenseSubtitle,
+                              accentColor: Colors.orangeAccent,
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(duration: 360.ms, delay: 140.ms)
+                          .scale(
+                            begin: const Offset(0.94, 0.94),
+                            curve: Curves.easeOutCubic,
                           ),
-                        ),
-                        child: MenuOptionContent(
-                          icon: Icons.shield,
-                          title: S.current.modeTowerDefenseTitle,
-                          subtitle: S.current.modeTowerDefenseSubtitle,
-                          accentColor: Colors.orangeAccent,
-                        ),
-                      ).animate().fadeIn(duration: 360.ms, delay: 140.ms).scale(
-                        begin: const Offset(0.94, 0.94),
-                        curve: Curves.easeOutCubic,
-                      ),
                       const SizedBox(height: 18),
                       HoverScaleCard(
-                        accentColor: Colors.redAccent,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SkirmishLevelSelectPage(),
+                            accentColor: Colors.redAccent,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const SkirmishLevelSelectPage(),
+                              ),
+                            ),
+                            child: MenuOptionContent(
+                              icon: Icons.swap_horiz,
+                              title: S.current.modeSkirmishTitle,
+                              subtitle: S.current.modeSkirmishSubtitle,
+                              accentColor: Colors.redAccent,
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(duration: 360.ms, delay: 220.ms)
+                          .scale(
+                            begin: const Offset(0.94, 0.94),
+                            curve: Curves.easeOutCubic,
                           ),
-                        ),
-                        child: MenuOptionContent(
-                          icon: Icons.swap_horiz,
-                          title: S.current.modeSkirmishTitle,
-                          subtitle: S.current.modeSkirmishSubtitle,
-                          accentColor: Colors.redAccent,
-                        ),
-                      ).animate().fadeIn(duration: 360.ms, delay: 220.ms).scale(
-                        begin: const Offset(0.94, 0.94),
-                        curve: Curves.easeOutCubic,
-                      ),
                     ],
                   ),
                 ),

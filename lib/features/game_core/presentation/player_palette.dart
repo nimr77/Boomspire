@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 /// home-site tool and the skirmish/VS AI pre-game placement screen agree
 /// on what "Player N" looks like.
 class PlayerPalette {
-  const PlayerPalette._();
-
   static const List<Color> colors = [
     Colors.blueAccent,
     Colors.redAccent,
     Colors.amberAccent,
     Colors.purpleAccent,
   ];
+
+  const PlayerPalette._();
 
   static Color colorFor(int slot) => colors[slot % colors.length];
 

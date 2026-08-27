@@ -31,8 +31,24 @@ class TerrainRepositoryImpl implements TerrainRepository {
       (_) => List<ObstacleKind?>.filled(cols, null),
     );
 
-    final baseCell = _baseCell(scene.homeLayout, cols, rows);
-    final spawnCells = _spawnCells(baseCell, cols, rows);
+    final baseCell = scene.mode == GameMode.skirmish && scene.homeSites.isNotEmpty
+        ? _baseCell(_homeSiteFor(scene, HomeSiteOwner.player).layout, cols, rows)
+        : _baseCell(scene.homeLayout, cols, rows);
+
+    // A skirmish scene's "spawn" is the AI opponent's base - every unit that
+    // marches toward the player's base starts from there, and the same
+    // "every declared entry point can still reach the base" check the
+    // player's build menu already runs (see `BoomspireGame._buildTower`)
+    // then doubles as "never let either side wall the other completely
+    // out". Only one AI seat is supported today (see [GameScenes.skirmishes]'
+    // doc comment) - additional `ai` seats are ignored for now.
+    final secondaryBaseCell = scene.mode == GameMode.skirmish && scene.homeSites.isNotEmpty
+        ? _baseCell(_homeSiteFor(scene, HomeSiteOwner.ai).layout, cols, rows)
+        : null;
+
+    final spawnCells = secondaryBaseCell != null
+        ? [secondaryBaseCell]
+        : _spawnCells(baseCell, cols, rows);
     final nodeCells = _resourceNodeCells(scene.resourceNodeSites, cols, rows);
     final protectedCells = [baseCell, ...spawnCells, ...nodeCells];
     final palette = scene.biome.palette;
@@ -75,10 +91,29 @@ class TerrainRepositoryImpl implements TerrainRepository {
         grid.cellCenter(baseCell).x,
         grid.cellCenter(baseCell).y,
       ),
+      secondaryBasePoint: secondaryBaseCell == null
+          ? null
+          : PathPoint(
+              grid.cellCenter(secondaryBaseCell).x,
+              grid.cellCenter(secondaryBaseCell).y,
+            ),
       resourceNodePoints: nodeCells
           .map((c) => PathPoint(grid.cellCenter(c).x, grid.cellCenter(c).y))
           .toList(),
     );
+  }
+
+  /// The (first) [HomeSite] claimed by [owner] on a skirmish scene, falling
+  /// back to whichever site is first/last if none is explicitly tagged that
+  /// way - keeps terrain generation resilient even if a future scene ever
+  /// omits an owner.
+  HomeSite _homeSiteFor(GameScene scene, HomeSiteOwner owner) {
+    for (final site in scene.homeSites) {
+      if (site.owner == owner) return site;
+    }
+    return owner == HomeSiteOwner.player
+        ? scene.homeSites.first
+        : scene.homeSites.last;
   }
 
   Point<int> _baseCell(HomeLayout layout, int cols, int rows) =>

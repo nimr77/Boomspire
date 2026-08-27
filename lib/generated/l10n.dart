@@ -220,6 +220,81 @@ class S {
     );
   }
 
+  /// `Choose Your Base`
+  String get skirmishPlacementTitle {
+    return Intl.message(
+      'Choose Your Base',
+      name: 'skirmishPlacementTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap a numbered site to claim it, or randomize`
+  String get skirmishPlacementSubtitleDraft {
+    return Intl.message(
+      'Tap a numbered site to claim it, or randomize',
+      name: 'skirmishPlacementSubtitleDraft',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your base and the AI's are set for this battlefield`
+  String get skirmishPlacementSubtitleScene {
+    return Intl.message(
+      'Your base and the AI\'s are set for this battlefield',
+      name: 'skirmishPlacementSubtitleScene',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Randomize`
+  String get skirmishPlacementRandomize {
+    return Intl.message(
+      'Randomize',
+      name: 'skirmishPlacementRandomize',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Start Battle`
+  String get skirmishPlacementStart {
+    return Intl.message(
+      'Start Battle',
+      name: 'skirmishPlacementStart',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You`
+  String get skirmishPlacementYou {
+    return Intl.message(
+      'You',
+      name: 'skirmishPlacementYou',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `AI`
+  String get skirmishPlacementAi {
+    return Intl.message('AI', name: 'skirmishPlacementAi', desc: '', args: []);
+  }
+
+  /// `Pick a starting site to continue`
+  String get skirmishPlacementPickHint {
+    return Intl.message(
+      'Pick a starting site to continue',
+      name: 'skirmishPlacementPickHint',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `{count} WAVES`
   String wavesCount(int count) {
     return Intl.message(
@@ -260,6 +335,16 @@ class S {
     );
   }
 
+  /// `AI BASE {health}`
+  String hudAiBaseLabel(int health) {
+    return Intl.message(
+      'AI BASE $health',
+      name: 'hudAiBaseLabel',
+      desc: '',
+      args: [health],
+    );
+  }
+
   /// `BASE OVERRUN`
   String get baseOverrunTitle {
     return Intl.message(
@@ -297,6 +382,16 @@ class S {
       name: 'defenseHoldsSubtitle',
       desc: '',
       args: [waves],
+    );
+  }
+
+  /// `The enemy base has fallen!`
+  String get skirmishVictorySubtitle {
+    return Intl.message(
+      'The enemy base has fallen!',
+      name: 'skirmishVictorySubtitle',
+      desc: '',
+      args: [],
     );
   }
 

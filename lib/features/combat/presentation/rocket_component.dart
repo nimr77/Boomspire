@@ -106,9 +106,14 @@ class RocketComponent extends PositionComponent
     );
     if (affectsTowers) {
       for (final tower in List.of(game.world.activeTowers)) {
+        if (firedBy.relationTo(tower.owner) != TeamRelation.enemy) continue;
         if (tower.position.distanceTo(position) <= splashRadius) {
           tower.takeDamage(damage);
         }
+      }
+      final base = game.enemyHomeBaseFor(firedBy);
+      if (base != null && base.position.distanceTo(position) <= splashRadius) {
+        base.takeDamage(damage);
       }
     } else {
       for (final unit in List.of(game.world.unitsHostileTo(firedBy))) {

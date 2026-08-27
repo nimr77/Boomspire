@@ -25,7 +25,7 @@ class ArtilleryBunkerComponent extends TowerComponent {
         target: target,
         damage: effectiveDamage,
         splashRadius: blueprint.splashRadius,
-        firedBy: game.playerTeam,
+        firedBy: owner,
         bodyColor: const Color(0xFF6d5a4e),
         tipColor: const Color(0xFF8D6E63),
         attackDomains: blueprint.attackDomains,

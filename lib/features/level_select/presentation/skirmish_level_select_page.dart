@@ -6,21 +6,18 @@ import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../game_core/domain/models/game_scenes.dart';
-import '../../game_core/presentation/game_page.dart';
 import '../../map_editor/domain/models/map_draft.dart';
 import '../../map_editor/domain/repos/map_draft_repository.dart';
-import '../../map_editor/impl/editor_terrain_generator.dart';
-import '../../map_editor/impl/map_draft_terrain_repository.dart';
 import '../../terrain/domain/models/biome.dart';
 import 'biome_preview.dart';
+import 'skirmish_placement_page.dart';
 
 /// Skirmish map picker: lists the built-in "Featured" skirmish scenes plus
 /// any user-authored [MapDraft]s saved in [GameMode.skirmish] mode from the
 /// map editor.
 ///
-/// Full home-vs-home AI gameplay isn't wired up yet (only the data model
-/// exists) - picking a map still launches a single-base test-play via
-/// [GamePage], same as the map editor's own Play button.
+/// Picking a map opens [SkirmishPlacementPage] to preview the battlefield
+/// and claim a starting site before the match launches.
 class SkirmishLevelSelectPage extends StatefulWidget {
   const SkirmishLevelSelectPage({super.key});
 
@@ -32,7 +29,6 @@ class SkirmishLevelSelectPage extends StatefulWidget {
 class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
   final MapDraftRepository _draftRepository = getIt<MapDraftRepository>();
   late final Future<List<MapDraft>> _draftsFuture = _loadSkirmishDrafts();
-  bool _launching = false;
 
   Future<List<MapDraft>> _loadSkirmishDrafts() async {
     final drafts = await _draftRepository.listDrafts();
@@ -47,10 +43,7 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
         children: [
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                vertical: 24,
-                horizontal: 16,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 720),
@@ -138,21 +131,15 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                           if (drafts == null) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 24),
-                              child: Center(
-                                child: CircularProgressIndicator(),
-                              ),
+                              child: Center(child: CircularProgressIndicator()),
                             );
                           }
                           if (drafts.isEmpty) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 S.current.skirmishSelectEmptyCustom,
-                                style: const TextStyle(
-                                  color: Colors.white38,
-                                ),
+                                style: const TextStyle(color: Colors.white38),
                               ),
                             );
                           }
@@ -163,7 +150,13 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: _SkirmishDraftTile(
                                     draft: draft,
-                                    onTap: () => _launchDraft(draft),
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => SkirmishPlacementPage(
+                                          draft: draft,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                             ],
@@ -203,42 +196,7 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
               ),
             ),
           ),
-          if (_launching)
-            const ColoredBox(
-              color: Color(0x99000000),
-              child: Center(child: CircularProgressIndicator()),
-            ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _launchDraft(MapDraft draft) async {
-    setState(() => _launching = true);
-    final preview = await EditorTerrainGenerator().generate(draft);
-    if (!mounted) return;
-    setState(() => _launching = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Testing as wave defense - full skirmish coming soon.',
-        ),
-      ),
-    );
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GamePage(
-          scene: GameScene(
-            id: 'draft-${draft.id}',
-            name: draft.name.isEmpty ? 'Untitled Map' : draft.name,
-            briefing: 'Testing your hand-drawn skirmish map.',
-            biome: draft.biome,
-          ),
-          terrainRepository: MapDraftTerrainRepository(
-            draft: draft,
-            preview: preview,
-          ),
-        ),
       ),
     );
   }
@@ -257,7 +215,7 @@ class _SkirmishSceneCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => GamePage(scene: scene)),
+          MaterialPageRoute(builder: (_) => SkirmishPlacementPage(scene: scene)),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(14),
@@ -335,10 +293,7 @@ class _SkirmishDraftTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
           leading: const Icon(Icons.map_outlined, color: Colors.redAccent),
-          title: Text(
-            draft.name,
-            style: const TextStyle(color: Colors.white),
-          ),
+          title: Text(draft.name, style: const TextStyle(color: Colors.white)),
           subtitle: Text(
             '${draft.biome.displayName} · ${draft.homeSites.length} '
             'home site${draft.homeSites.length == 1 ? '' : 's'}',

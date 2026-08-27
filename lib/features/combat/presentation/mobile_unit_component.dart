@@ -189,13 +189,14 @@ class MobileUnitComponent extends PositionComponent
   }
 
   /// Where this unit should head toward right now - the player's base for
-  /// a base-rush, the nearest live hostile target for a hunt. Null means
-  /// "hold position".
+  /// a base-rush, the opposing base for a skirmish assault, the nearest
+  /// live hostile target for a hunt. Null means "hold position".
   Vector2? goalPosition() => switch (objective) {
     UnitObjective.rushBase => Vector2(
       game.terrainMap.basePoint.x,
       game.terrainMap.basePoint.y,
     ),
+    UnitObjective.assaultBase => game.baseTargetFor(team),
     UnitObjective.huntHostiles => _acquireHuntTarget()?.position,
   };
 
@@ -299,13 +300,20 @@ class MobileUnitComponent extends PositionComponent
 
   /// Everything this unit's weapon might stop and engage instead of
   /// continuing toward [goalPosition] - every mobile unit hostile to
-  /// [team], plus the player's towers/structures if [team] is itself
-  /// hostile to the player (towers are always player-owned today).
+  /// [team], plus any tower/base owned by a side hostile to [team]. In
+  /// wave-defense every tower/base is player-owned, so this reduces to the
+  /// exact same "towers count only if this unit is hostile to the player"
+  /// check it used to be; in a skirmish it also lets AI-owned towers/base
+  /// draw player-unit fire and vice versa.
   Iterable<Attackable> opposingTargets() {
-    final targets = <Attackable>[...game.world.unitsHostileTo(team)];
-    if (team.relationTo(game.playerTeam) == TeamRelation.enemy) {
-      targets.addAll(game.world.activeTowers);
-    }
+    final targets = <Attackable>[
+      ...game.world.unitsHostileTo(team),
+      ...game.world.activeTowers.where(
+        (t) => team.relationTo(t.owner) == TeamRelation.enemy,
+      ),
+    ];
+    final base = game.enemyHomeBaseFor(team);
+    if (base != null) targets.add(base);
     return targets;
   }
 

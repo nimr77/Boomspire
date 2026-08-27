@@ -9,6 +9,9 @@ import '../../terrain/presentation/terrain_component.dart';
 import '../../towers/domain/models/building_type.dart';
 import '../../towers/presentation/tower_component.dart';
 import '../../waves/presentation/wave_director_component.dart';
+import '../domain/models/game_scene.dart';
+import 'ai_home_base_component.dart';
+import 'ai_skirmish_controller_component.dart';
 import 'boomspire_game.dart';
 import 'ghost_placement_component.dart';
 import 'home_base_component.dart';
@@ -35,6 +38,12 @@ class GameWorld extends World
   final List<MobileUnitComponent> activeUnits = [];
   final List<TowerComponent> activeTowers = [];
 
+  /// The human player's base - always set once [initialize] has run.
+  HomeBaseComponent? playerHomeBase;
+
+  /// The AI opponent's base - only set for a [GameMode.skirmish] match.
+  AiHomeBaseComponent? aiHomeBase;
+
   /// Top-left world coordinate the viewport currently shows - `BoomspireGame`
   /// layers its camera-shake jitter on top of this every frame rather than
   /// fighting over `camera.viewfinder.position` directly. Panning is a no-op
@@ -47,7 +56,10 @@ class GameWorld extends World
 
   Future<void> initialize() async {
     await add(TerrainComponent(terrainMap: game.terrainMap));
-    await add(WaveDirectorComponent());
+    final skirmish = game.scene.mode == GameMode.skirmish;
+    if (!skirmish) {
+      await add(WaveDirectorComponent());
+    }
     await add(
       CloudLayerComponent(
         arenaSize: Vector2(
@@ -56,14 +68,26 @@ class GameWorld extends World
         ),
       ),
     );
-    await add(
-      HomeBaseComponent(
-        position: Vector2(
-          game.terrainMap.basePoint.x,
-          game.terrainMap.basePoint.y,
-        ),
+    playerHomeBase = HomeBaseComponent(
+      position: Vector2(
+        game.terrainMap.basePoint.x,
+        game.terrainMap.basePoint.y,
       ),
+      owner: game.playerTeam,
     );
+    await add(playerHomeBase!);
+    if (skirmish) {
+      final secondary = game.terrainMap.secondaryBasePoint;
+      if (secondary != null) {
+        aiHomeBase = AiHomeBaseComponent(
+          position: Vector2(secondary.x, secondary.y),
+        );
+        await add(aiHomeBase!);
+      }
+      await add(AiSkirmishControllerComponent());
+    } else {
+      aiHomeBase = null;
+    }
     await add(GhostPlacementComponent());
     for (final point in game.terrainMap.resourceNodePoints) {
       await add(ResourceNodeComponent(position: Vector2(point.x, point.y)));

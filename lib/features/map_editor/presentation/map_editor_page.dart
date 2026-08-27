@@ -8,9 +8,11 @@ import 'package:flutter/material.dart';
 import '../../../core/di/service_locator.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../game_core/presentation/game_page.dart';
+import '../../game_core/presentation/home_site_marker_painter.dart';
 import '../../game_core/presentation/player_palette.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../../terrain/domain/models/obstacle_kind.dart';
+import '../../terrain/presentation/obstacle_color.dart';
 import '../domain/models/editor_point.dart';
 import '../domain/models/editor_terrain_preview.dart';
 import '../domain/models/environment_settings.dart';
@@ -706,36 +708,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
     });
   }
 
-  /// Places a new numbered home site at the tapped point, or removes an
-  /// existing one if tapped near it - capped at [PlayerPalette.colors]'
-  /// length since that's how many distinct player markers are supported.
-  void _toggleHomeSiteAt(Offset local) {
-    final point = _toWorld(local);
-    const removeRadius = 32.0;
-    final existingIndex = _draft.homeSites.indexWhere(
-      (site) =>
-          (site.x - point.x).abs() < removeRadius &&
-          (site.y - point.y).abs() < removeRadius,
-    );
-    if (existingIndex == -1 &&
-        _draft.homeSites.length >= PlayerPalette.colors.length) {
-      _showToast(
-        'Only ${PlayerPalette.colors.length} home sites supported',
-        icon: Icons.info_outline,
-      );
-      return;
-    }
-    _updateDraft((d) {
-      final sites = [...d.homeSites];
-      if (existingIndex != -1) {
-        sites.removeAt(existingIndex);
-      } else {
-        sites.add(point);
-      }
-      return d.copyWith(homeSites: sites);
-    });
-  }
-
   /// Rasterizes the draft's current terrain and launches a real playthrough
   /// of it via the normal [GamePage] - home/spawn placement is fixed (east
   /// edge base, single western approach) since a draft doesn't carry
@@ -819,6 +791,36 @@ class _MapEditorPageState extends State<MapEditorPage> {
     overlay.insert(entry);
   }
 
+  /// Places a new numbered home site at the tapped point, or removes an
+  /// existing one if tapped near it - capped at [PlayerPalette.colors]'
+  /// length since that's how many distinct player markers are supported.
+  void _toggleHomeSiteAt(Offset local) {
+    final point = _toWorld(local);
+    const removeRadius = 32.0;
+    final existingIndex = _draft.homeSites.indexWhere(
+      (site) =>
+          (site.x - point.x).abs() < removeRadius &&
+          (site.y - point.y).abs() < removeRadius,
+    );
+    if (existingIndex == -1 &&
+        _draft.homeSites.length >= PlayerPalette.colors.length) {
+      _showToast(
+        'Only ${PlayerPalette.colors.length} home sites supported',
+        icon: Icons.info_outline,
+      );
+      return;
+    }
+    _updateDraft((d) {
+      final sites = [...d.homeSites];
+      if (existingIndex != -1) {
+        sites.removeAt(existingIndex);
+      } else {
+        sites.add(point);
+      }
+      return d.copyWith(homeSites: sites);
+    });
+  }
+
   EditorPoint _toWorld(Offset local) {
     return EditorPoint(
       x: (local.dx / _canvasSize.width * _draft.arenaWidth).clamp(
@@ -899,7 +901,7 @@ class _MapEditorPainter extends CustomPainter {
           if (kind == null) continue;
           canvas.drawRect(
             Rect.fromLTWH(col * cellW, row * cellH, cellW, cellH),
-            Paint()..color = _colorFor(kind, palette),
+            Paint()..color = obstacleColor(kind, palette),
           );
         }
       }
@@ -965,13 +967,18 @@ class _MapEditorPainter extends CustomPainter {
         oldDelegate.homeSites != homeSites;
   }
 
-  Color _colorFor(ObstacleKind kind, BiomePalette palette) => switch (kind) {
-    ObstacleKind.mountain => palette.capColor,
-    ObstacleKind.dune => palette.ridgeLight,
-    ObstacleKind.river => Colors.blueAccent,
-    ObstacleKind.valley => palette.ridgeDark,
-    ObstacleKind.lake => Colors.teal.shade300,
-  };
+  /// Draws each skirmish home site as a numbered, colored marker so a map
+  /// author can see at a glance which player seat sits where - the same
+  /// numbering/coloring the pre-game placement screen will use.
+  void _paintHomeSites(Canvas canvas, Size size) {
+    for (final (index, site) in homeSites.indexed) {
+      final center = Offset(
+        site.x / arenaWidth * size.width,
+        site.y / arenaHeight * size.height,
+      );
+      paintHomeSiteMarker(canvas, center, index);
+    }
+  }
 
   /// Tints/dims the scene by sun height and adds raking light from whichever
   /// side the sun sits on - low angles (sunrise/sunset) look warm and
@@ -1050,50 +1057,6 @@ class _MapEditorPainter extends CustomPainter {
         final y = rnd.nextDouble() * size.height;
         canvas.drawCircle(Offset(x, y), 1.5, paint);
       }
-    }
-  }
-
-  /// Draws each skirmish home site as a numbered, colored marker so a map
-  /// author can see at a glance which player seat sits where - the same
-  /// numbering/coloring the pre-game placement screen will use.
-  void _paintHomeSites(Canvas canvas, Size size) {
-    for (final (index, site) in homeSites.indexed) {
-      final center = Offset(
-        site.x / arenaWidth * size.width,
-        site.y / arenaHeight * size.height,
-      );
-      final color = PlayerPalette.colorFor(index);
-      canvas.drawCircle(
-        center,
-        16,
-        Paint()
-          ..color = Colors.black.withValues(alpha: 0.35)
-          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 4),
-      );
-      canvas.drawCircle(center, 14, Paint()..color = color);
-      canvas.drawCircle(
-        center,
-        14,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = Colors.white,
-      );
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: '${index + 1}',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      textPainter.paint(
-        canvas,
-        center - Offset(textPainter.width / 2, textPainter.height / 2),
-      );
     }
   }
 }
