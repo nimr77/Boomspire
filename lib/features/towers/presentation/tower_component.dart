@@ -48,15 +48,21 @@ abstract class TowerComponent extends PositionComponent
   double _cooldown = 0;
   int upgradeLevel = 0;
 
-  /// Current absorbed-damage shield charge - depletes before [hp] and
-  /// regenerates on its own once the tower stops taking hits for a bit.
-  double shield = 0;
+  /// Current shield charges remaining - each charge fully blocks one
+  /// incoming hit (regardless of its damage) instead of chipping away at
+  /// [hp], then depletes; recharges on its own once the tower stops taking
+  /// hits for a bit.
+  int shield = 0;
   double _shieldRegenDelay = 0;
+  double _shieldRegenProgress = 0;
 
-  /// Extra shield capacity granted by the comeback mechanic (see
+  /// Extra shield charges granted by the comeback mechanic (see
   /// [_grantComebackBonus]), on top of the normal per-tier [shieldMax] -
   /// folded into that cap so a bonus shield is never invisible/un-regenerating.
-  double _bonusShieldCap = 0;
+  int _bonusShieldCharges = 0;
+
+  /// Seconds between shield charges regenerating once regen kicks in.
+  static const double _shieldRechargeInterval = 6.0;
 
   /// Point-defense module - when true, this tower shoots down any enemy
   /// rocket/shell that gets within [_antiRocketRange] of it.
@@ -108,10 +114,11 @@ abstract class TowerComponent extends PositionComponent
     return (_investedGold * 0.5 * (0.6 + hpRatio * 0.4)).round();
   }
 
-  /// Shield capacity for the current tier - 0 until the first upgrade, then
-  /// rises with [upgradeLevel] so "shield power" reads as an upgrade payoff,
-  /// plus any [_bonusShieldCap] from the comeback mechanic.
-  double get shieldMax => upgradeLevel * 35.0 + _bonusShieldCap;
+  /// Shield capacity for the current tier, in whole hits blocked - 0 until
+  /// the first upgrade, then one charge per upgrade tier (so a fully
+  /// upgraded tower blocks up to [kMaxTowerUpgradeLevel] shots), plus any
+  /// [_bonusShieldCharges] from the comeback mechanic.
+  int get shieldMax => upgradeLevel + _bonusShieldCharges;
 
   /// Gold cost for the next upgrade tier - rises steeply so upgrades stay a
   /// meaningful late-game gold sink.
@@ -277,7 +284,7 @@ abstract class TowerComponent extends PositionComponent
     // Shield bubble - only present once the first upgrade grants one,
     // opacity/thickness scale with how much charge is currently banked.
     if (shieldMax > 0) {
-      final shieldRatio = (shield / shieldMax).clamp(0.0, 1.0);
+      final shieldRatio = (shield / shieldMax).clamp(0.0, 1.0).toDouble();
       if (shieldRatio > 0) {
         canvas.drawCircle(
           Offset(size.x / 2, size.y / 2),
@@ -332,10 +339,8 @@ abstract class TowerComponent extends PositionComponent
     if (_destroyed) return;
     _shieldRegenDelay = 3.0;
     if (shield > 0) {
-      final absorbed = min(shield, amount);
-      shield -= absorbed;
-      amount -= absorbed;
-      if (amount <= 0) return;
+      shield--;
+      return;
     }
     hp = (hp - amount).clamp(0, maxHp);
     if (hp <= 0) _destroy();
@@ -352,8 +357,14 @@ abstract class TowerComponent extends PositionComponent
       if (_shieldRegenDelay > 0) {
         _shieldRegenDelay -= dt;
       } else {
-        shield = (shield + shieldMax * 0.15 * dt).clamp(0, shieldMax);
+        _shieldRegenProgress += dt;
+        if (_shieldRegenProgress >= _shieldRechargeInterval) {
+          _shieldRegenProgress -= _shieldRechargeInterval;
+          shield++;
+        }
       }
+    } else {
+      _shieldRegenProgress = 0;
     }
 
     final hpRatio = hp / maxHp;
@@ -465,7 +476,7 @@ abstract class TowerComponent extends PositionComponent
         ),
       );
     } else {
-      _bonusShieldCap = max(_bonusShieldCap, 50.0);
+      _bonusShieldCharges = max(_bonusShieldCharges, 2);
       shield = shieldMax;
       game.audioRepository.play(SfxType.towerRepair, volume: 0.6);
       game.world.spawn(
