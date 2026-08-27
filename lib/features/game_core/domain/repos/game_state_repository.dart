@@ -27,9 +27,11 @@ abstract class GameStateRepository extends ChangeNotifier {
 
   /// Awards gold for a kill, boosted by an escalating streak bonus (+5%,
   /// +10%, +20%, +40%, +80%, then capped at +100% for every kill after) -
-  /// see `GameConfig.killGoldBonusTiers`. Returns the actual amount added
-  /// (base + bonus) so callers can show it in floating text.
-  int addKillGold(int baseAmount);
+  /// see `GameConfig.killGoldBonusTiers` - plus [extraBonus] (e.g. from
+  /// standing Gold Mines, see `BoomspireGame.goldMineKillGoldBonus`).
+  /// Returns the actual amount added (base + bonuses) so callers can show
+  /// it in floating text.
+  int addKillGold(int baseAmount, {double extraBonus = 0});
   void damagePlayer(int amount);
   void reset();
   void setStatus(GameStatus status);

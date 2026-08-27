@@ -27,4 +27,18 @@ class GameConfig {
   /// Training Center / War Factory support buildings in the build menu.
   static const trainingCenterUnlockScore = 250;
   static const warFactoryUnlockScore = 500;
+
+  /// Seconds between each Gold Mine passive payout tick (see
+  /// `GoldMineComponent`).
+  static const goldMineTickInterval = 5.0;
+
+  /// Passive gold paid out per tick at upgrade tier 0 - rises by one more
+  /// full base payout per upgrade tier (see `GoldMineComponent.payoutAmount`).
+  static const goldMineBaseGoldPerTick = 5;
+
+  /// Bonus added on top of every kill-gold reward per active Gold Mine at
+  /// upgrade tier 0 (5%) - rises by one more full base bonus per upgrade
+  /// tier (see `GoldMineComponent.killGoldBonus` and
+  /// `BoomspireGame.goldMineKillGoldBonus`).
+  static const goldMineBaseKillGoldBonus = 0.05;
 }

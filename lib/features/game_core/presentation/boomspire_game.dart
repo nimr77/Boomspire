@@ -25,6 +25,7 @@ import '../../towers/presentation/anti_air_tower_component.dart';
 import '../../towers/presentation/artillery_bunker_component.dart';
 import '../../towers/presentation/cannon_tower_component.dart';
 import '../../towers/presentation/command_post_component.dart';
+import '../../towers/presentation/gold_mine_component.dart';
 import '../../towers/presentation/laser_tower_component.dart';
 import '../../towers/presentation/machine_gun_tower_component.dart';
 import '../../towers/presentation/rocket_silo_tower_component.dart';
@@ -132,6 +133,14 @@ class BoomspireGame extends FlameGame<GameWorld> {
   /// Artillery Bunker (see [buildLimitFor]).
   int get activeCommandPostCount => towerCountFor(BuildingType.commandPost);
 
+  /// Sum of every standing Gold Mine's kill-gold bonus (see
+  /// `GoldMineComponent.killGoldBonus`) - added on top of the normal
+  /// escalating streak bonus for every kill (see
+  /// `GameStateRepository.addKillGold`).
+  double get goldMineKillGoldBonus => world.activeTowers
+      .whereType<GoldMineComponent>()
+      .fold(0.0, (sum, mine) => sum + mine.killGoldBonus);
+
   @override
   Color backgroundColor() => const Color(0xFF14181d);
 
@@ -172,10 +181,10 @@ class BoomspireGame extends FlameGame<GameWorld> {
   }
 
   /// Max simultaneous count allowed for [type], or null if unlimited. The
-  /// Tech Lab, Command Post, Training Center, War Factory and Laser Lance
-  /// only ever need one; Artillery Bunker rides along with however many
-  /// Command Posts are standing (so it too tops out at one); the SAM Site
-  /// is capped at two.
+  /// Tech Lab, Command Post, Training Center, War Factory, Gold Mine and
+  /// Laser Lance only ever need one; Artillery Bunker rides along with
+  /// however many Command Posts are standing (so it too tops out at one);
+  /// the SAM Site is capped at two.
   int? buildLimitFor(UnitType type) => switch (type) {
     TowerType.laser => 1,
     TowerType.artilleryBunker => activeCommandPostCount,
@@ -184,6 +193,7 @@ class BoomspireGame extends FlameGame<GameWorld> {
     BuildingType.commandPost => 1,
     BuildingType.trainingCenter => 1,
     BuildingType.warFactory => 1,
+    BuildingType.goldMine => 1,
     _ => null,
   };
 
@@ -486,6 +496,11 @@ class BoomspireGame extends FlameGame<GameWorld> {
         blueprint: blueprint,
       ),
       BuildingType.warFactory => WarFactoryComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.goldMine => GoldMineComponent(
         position: position,
         cellSize: cellSize,
         blueprint: blueprint,

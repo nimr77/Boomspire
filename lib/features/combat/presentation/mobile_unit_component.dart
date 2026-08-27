@@ -223,7 +223,10 @@ class MobileUnitComponent extends PositionComponent
   void onDeath() {
     if (objective != UnitObjective.rushBase) return;
     final baseReward = blueprint.bounty + (game.gameState.currentWave - 1) * 2;
-    final reward = game.gameState.addKillGold(baseReward);
+    final reward = game.gameState.addKillGold(
+      baseReward,
+      extraBonus: game.goldMineKillGoldBonus,
+    );
     game.audioRepository.play(SfxType.goldGain, volume: 0.35);
     game.world.spawn(
       FloatingTextComponent(

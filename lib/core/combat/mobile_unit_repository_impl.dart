@@ -7,10 +7,10 @@ import 'unit_kind.dart';
 import 'weapon_type.dart';
 
 class MobileUnitRepositoryImpl implements MobileUnitRepository {
-  // Keyed by `Team.catalog` rather than a specific Team instance, since any
-  // number of builder Teams (future multiplayer seats) all draw from the
-  // exact same buildable roster - only their `Team.color` differs.
-  static const _invaderBlueprints = <UnitKind, MobileUnitBlueprint>{
+  // Keyed by `isEnemy` rather than a specific Team instance, since any
+  // number of human player Teams (future multiplayer seats) all draw from
+  // the exact same "player" roster/stats - only their `Team.color` differs.
+  static const _enemyBlueprints = <UnitKind, MobileUnitBlueprint>{
     UnitKind.soldier: MobileUnitBlueprint(
       kind: UnitKind.soldier,
       name: 'Soldier',
@@ -137,13 +137,10 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
   };
 
   // Note: these are the stats a fresh, un-upgraded Training Center/War
-  // Factory produces - a producing building's `upgradeLevel` scales
-  // health/damage up from here (see `MobileUnitComponent.level`), so
-  // stronger units require investing in that building first. Covers every
-  // `UnitKind` - including ones the invader roster above also uses - so any
-  // builder team can muster any kind, just at these (cheaper, buyable)
-  // stats rather than the invader roster's tuning.
-  static const _buildableBlueprints = <UnitKind, MobileUnitBlueprint>{
+  // Factory produces - `AllyUnitComponent` scales health/damage up with the
+  // producing building's `upgradeLevel`, so stronger ally units require
+  // investing in that building first.
+  static const _playerBlueprints = <UnitKind, MobileUnitBlueprint>{
     UnitKind.soldier: MobileUnitBlueprint(
       kind: UnitKind.soldier,
       name: 'Ally Soldier',
@@ -199,6 +196,8 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       movementStyle: MovementStyle.swoop,
       weaponType: WeaponType.rocket,
     ),
+    // New: the player-side counterpart of the enemy Rocket Barrage -
+    // mustered from the War Factory like the other vehicles.
     UnitKind.rocketBarrage: MobileUnitBlueprint(
       kind: UnitKind.rocketBarrage,
       name: 'Ally Rocket Barrage',
@@ -214,102 +213,19 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       movementStyle: MovementStyle.roll,
       weaponType: WeaponType.rocket,
     ),
-    // Below: kinds that used to be exclusive to the invader roster - same
-    // combat stats, just priced for the build menu so any builder team can
-    // field them too.
-    UnitKind.heavySoldier: MobileUnitBlueprint(
-      kind: UnitKind.heavySoldier,
-      name: 'Ally Heavy Soldier',
-      cost: 110,
-      maxHealth: 150,
-      speed: 40,
-      size: 46,
-      attackDamage: 10,
-      attackRange: 140,
-      attackInterval: 1.4,
-      weaponType: WeaponType.cannon,
-    ),
-    UnitKind.helicopter: MobileUnitBlueprint(
-      kind: UnitKind.helicopter,
-      name: 'Ally Helicopter',
-      cost: 130,
-      maxHealth: 60,
-      speed: 95,
-      size: 38,
-      domain: UnitDomain.air,
-      attackDomains: {UnitDomain.ground, UnitDomain.air},
-      isVehicle: true,
-      attackDamage: 6,
-      attackRange: 160,
-      attackInterval: 0.9,
-      movementStyle: MovementStyle.hover,
-      weaponType: WeaponType.rocket,
-    ),
-    UnitKind.attackPlane: MobileUnitBlueprint(
-      kind: UnitKind.attackPlane,
-      name: 'Ally Attack Plane',
-      cost: 170,
-      maxHealth: 65,
-      speed: 230,
-      size: 40,
-      domain: UnitDomain.air,
-      attackDomains: {UnitDomain.ground, UnitDomain.air},
-      isVehicle: true,
-      attackDamage: 45,
-      attackRange: 180,
-      attackInterval: 0.7,
-      movementStyle: MovementStyle.swoop,
-      weaponType: WeaponType.rocket,
-    ),
-    UnitKind.gunboat: MobileUnitBlueprint(
-      kind: UnitKind.gunboat,
-      name: 'Ally Gunboat',
-      cost: 190,
-      maxHealth: 340,
-      speed: 30,
-      size: 58,
-      domain: UnitDomain.sea,
-      attackDomains: {UnitDomain.ground, UnitDomain.sea},
-      isVehicle: true,
-      attackDamage: 18,
-      attackRange: 210,
-      attackInterval: 1.8,
-      movementStyle: MovementStyle.sail,
-      weaponType: WeaponType.cannon,
-    ),
-    UnitKind.artilleryBarrage: MobileUnitBlueprint(
-      kind: UnitKind.artilleryBarrage,
-      name: 'Ally Artillery Barrage',
-      cost: 250,
-      maxHealth: 200,
-      speed: 26,
-      size: 52,
-      isVehicle: true,
-      attackDamage: 40,
-      attackRange: 260,
-      attackInterval: 2.4,
-      projectileCount: 3,
-      movementStyle: MovementStyle.roll,
-      weaponType: WeaponType.rocket,
-      prefersStructures: true,
-    ),
   };
 
   @override
   MobileUnitBlueprint blueprintFor(Team team, UnitKind kind) {
-    final blueprint = _tableFor(team.catalog)[kind];
+    final table = team.isEnemy ? _enemyBlueprints : _playerBlueprints;
+    final blueprint = table[kind];
     if (blueprint == null) {
-      throw ArgumentError('$kind is not available to ${team.label}');
+      throw ArgumentError('$kind is not available to ${team.id}');
     }
     return blueprint;
   }
 
   @override
-  List<UnitKind> kindsFor(Team team) => _tableFor(team.catalog).keys.toList();
-
-  static Map<UnitKind, MobileUnitBlueprint> _tableFor(UnitCatalog catalog) =>
-      switch (catalog) {
-        UnitCatalog.invaderRoster => _invaderBlueprints,
-        UnitCatalog.buildableRoster => _buildableBlueprints,
-      };
+  List<UnitKind> kindsFor(Team team) =>
+      (team.isEnemy ? _enemyBlueprints : _playerBlueprints).keys.toList();
 }

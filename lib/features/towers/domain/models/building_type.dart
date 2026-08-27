@@ -7,4 +7,5 @@ enum BuildingType implements UnitType {
   commandPost,
   trainingCenter,
   warFactory,
+  goldMine,
 }

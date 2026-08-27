@@ -34,11 +34,11 @@ class GameStateRepositoryImpl extends GameStateRepository {
   }
 
   @override
-  int addKillGold(int baseAmount) {
+  int addKillGold(int baseAmount, {double extraBonus = 0}) {
     final tiers = GameConfig.killGoldBonusTiers;
     final bonus = tiers[_killCount.clamp(0, tiers.length - 1)];
     _killCount++;
-    final amount = (baseAmount * (1 + bonus)).round();
+    final amount = (baseAmount * (1 + bonus + extraBonus)).round();
     addGold(amount);
     return amount;
   }

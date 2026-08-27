@@ -24,11 +24,15 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m1(waves) => "All ${waves} waves repelled!";
 
-  static String m2(current, total) => "WAVE ${current} / ${total}";
+  static String m2(percent) => "+${percent}% kill gold";
 
-  static String m3(tier) => "Tier ${tier}";
+  static String m3(amount, seconds) => "+${amount}g in ${seconds}s";
 
-  static String m4(count) => "${count} WAVES";
+  static String m4(current, total) => "WAVE ${current} / ${total}";
+
+  static String m5(tier) => "Tier ${tier}";
+
+  static String m6(count) => "${count} WAVES";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -55,6 +59,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "buildingNameCommandPost": MessageLookupByLibrary.simpleMessage(
       "Command Post",
     ),
+    "buildingNameGoldMine": MessageLookupByLibrary.simpleMessage("Gold Mine"),
     "buildingNameTechLab": MessageLookupByLibrary.simpleMessage("Tech Lab"),
     "buildingNameTrainingCenter": MessageLookupByLibrary.simpleMessage(
       "Training Center",
@@ -78,7 +83,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Exit fullscreen",
     ),
     "exitToMenuTooltip": MessageLookupByLibrary.simpleMessage("Exit to menu"),
-    "hudWaveLabel": m2,
+    "goldMineKillBonus": m2,
+    "goldMinePayoutIn": m3,
+    "hudWaveLabel": m4,
     "levelSelectSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose a campaign",
     ),
@@ -98,7 +105,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "towerNameRocket": MessageLookupByLibrary.simpleMessage("Rocket Battery"),
     "towerNameRocketSilo": MessageLookupByLibrary.simpleMessage("Rocket Silo"),
     "towerNameSam": MessageLookupByLibrary.simpleMessage("SAM Site"),
-    "towerTier": m3,
-    "wavesCount": m4,
+    "towerTier": m5,
+    "wavesCount": m6,
   };
 }

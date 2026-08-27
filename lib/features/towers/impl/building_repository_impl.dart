@@ -45,6 +45,15 @@ class BuildingRepositoryImpl implements BuildingRepository {
           fireRate: 1,
           maxHp: 140,
         ),
+        BuildingType.goldMine: UnitBlueprint(
+          type: BuildingType.goldMine,
+          name: S.current.buildingNameGoldMine,
+          cost: 800,
+          range: 0,
+          damage: 0,
+          fireRate: 1,
+          maxHp: 100,
+        ),
       };
 
   @override

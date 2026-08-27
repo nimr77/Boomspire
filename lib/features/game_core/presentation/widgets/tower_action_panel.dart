@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/combat/unit_kind.dart';
 import '../../../../generated/l10n.dart';
+import '../../../towers/presentation/gold_mine_component.dart';
 import '../../../towers/presentation/tower_component.dart';
 import '../../../towers/presentation/tower_sprites.dart';
 import '../../../towers/presentation/training_center_component.dart';
@@ -171,6 +172,10 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
             const SizedBox(height: 8),
             _buildUnitRow(tower),
           ],
+          if (tower is GoldMineComponent) ...[
+            const SizedBox(height: 8),
+            _buildGoldMineRow(tower),
+          ],
         ],
       ),
     );
@@ -295,6 +300,33 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
     return const SizedBox.shrink();
   }
 
+  /// Row shown under a Gold Mine's stats - the countdown/amount for its
+  /// next passive payout, and the flat bonus it's currently adding to
+  /// every kill-gold reward.
+  Widget _buildGoldMineRow(GoldMineComponent tower) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 4,
+      children: [
+        _StatChip(
+          icon: Icons.paid,
+          label: S.current.goldMinePayoutIn(
+            tower.payoutAmount,
+            tower.payoutTimeRemaining.ceil(),
+          ),
+          color: const Color(0xFFFFB300),
+        ),
+        _StatChip(
+          icon: Icons.local_fire_department,
+          label: S.current.goldMineKillBonus(
+            (tower.killGoldBonus * 100).round(),
+          ),
+          color: const Color(0xFFFF8A65),
+        ),
+      ],
+    );
+  }
+
   IconData _unitIcon(UnitKind type) => switch (type) {
     UnitKind.tank => Icons.local_shipping,
     UnitKind.lightVehicle => Icons.directions_car,
@@ -307,4 +339,45 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
     UnitKind.artilleryBarrage => Icons.gps_fixed,
     _ => Icons.directions_walk,
   };
+}
+
+/// Small icon+text pill for a passive stat readout - used by the Gold
+/// Mine's row since it has no action button, just information.
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xB31A1F26),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

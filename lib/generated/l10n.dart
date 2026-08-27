@@ -444,6 +444,36 @@ class S {
       args: [],
     );
   }
+
+  /// `Gold Mine`
+  String get buildingNameGoldMine {
+    return Intl.message(
+      'Gold Mine',
+      name: 'buildingNameGoldMine',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `+{amount}g in {seconds}s`
+  String goldMinePayoutIn(int amount, int seconds) {
+    return Intl.message(
+      '+${amount}g in ${seconds}s',
+      name: 'goldMinePayoutIn',
+      desc: '',
+      args: [amount, seconds],
+    );
+  }
+
+  /// `+{percent}% kill gold`
+  String goldMineKillBonus(int percent) {
+    return Intl.message(
+      '+$percent% kill gold',
+      name: 'goldMineKillBonus',
+      desc: '',
+      args: [percent],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
