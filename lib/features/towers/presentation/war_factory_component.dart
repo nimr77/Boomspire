@@ -1,3 +1,5 @@
+import 'package:flame/components.dart' show Vector2;
+
 import '../../../core/combat/unit_kind.dart';
 import '../../../core/combat/unit_objective.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
@@ -32,9 +34,16 @@ class WarFactoryComponent extends TowerComponent {
   void fire(MobileUnitComponent target) {}
 
   /// Spends gold to roll out an Ally unit of the given [kind] - called
-  /// from the action panel's build menu. Returns whether it actually
+  /// from the action panel's build menu. [objective]/[captureTarget] let a
+  /// caller (currently only `AiSkirmishControllerComponent`) send the unit
+  /// on a resource-node capture run instead of its usual errand; omit both
+  /// for the normal hunt/assault behavior. Returns whether it actually
   /// happened.
-  bool produceUnit(UnitKind kind) {
+  bool produceUnit(
+    UnitKind kind, {
+    UnitObjective? objective,
+    Vector2? captureTarget,
+  }) {
     if (!canProduce) return false;
     final blueprint = game.unitRepository.blueprintFor(owner, kind);
     if (!game.spendGoldFor(owner, blueprint.cost)) return false;
@@ -44,9 +53,12 @@ class WarFactoryComponent extends TowerComponent {
         blueprint: blueprint,
         position: position.clone(),
         team: owner,
-        objective: game.scene.mode == GameMode.skirmish
-            ? UnitObjective.assaultBase
-            : UnitObjective.huntHostiles,
+        objective:
+            objective ??
+            (game.scene.mode == GameMode.skirmish
+                ? UnitObjective.assaultBase
+                : UnitObjective.huntHostiles),
+        captureTarget: captureTarget,
         level: upgradeLevel,
       ),
     );

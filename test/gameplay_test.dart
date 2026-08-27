@@ -19,8 +19,10 @@ import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
 import 'package:boomspire/features/combat/presentation/mobile_unit_component.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scene.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scenes.dart';
+import 'package:boomspire/features/game_core/domain/models/inspected_info.dart';
 import 'package:boomspire/features/game_core/impl/game_state_repository_impl.dart';
 import 'package:boomspire/features/game_core/presentation/boomspire_game.dart';
+import 'package:boomspire/features/game_core/presentation/resource_node_component.dart';
 import 'package:boomspire/features/terrain/impl/terrain_repository_impl.dart';
 import 'package:boomspire/features/towers/domain/models/building_type.dart';
 import 'package:boomspire/features/towers/domain/models/tower_type.dart';
@@ -256,16 +258,101 @@ void main() {
     });
   });
 
+  group('click-to-inspect', () {
+    test(
+      'tapping the player\'s own tower selects it, not the inspect card',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        final cell = _findOpenCell(game);
+        game.selectTowerType(TowerType.machineGun);
+        game.handleArenaTap(grid.cellCenter(cell));
+        game.handleArenaTap(grid.cellCenter(cell));
+
+        final tower = game.world.activeTowers.first;
+        game.handleArenaTap(tower.position);
+
+        expect(game.selectedTower.value, tower);
+        expect(game.inspected.value, isNull);
+      },
+    );
+
+    test(
+      'tapping an enemy tower shows its info instead of doing nothing',
+      () async {
+        final game = await _bootGame(GameScenes.skirmishes.first);
+        final aiTeam = game.aiTeam!;
+        final base = game.world.aiHomeBase!;
+        final grid = game.terrainMap.grid;
+        final baseCell = grid.worldToCell(base.position);
+        final built = game.buildStructure(
+          aiTeam,
+          TowerType.machineGun,
+          grid.cellCenter(Point(baseCell.x + 2, baseCell.y)),
+        );
+        expect(built, isNotNull);
+
+        game.handleArenaTap(built!.position);
+
+        expect(game.selectedTower.value, isNull);
+        expect(game.inspected.value, isNotNull);
+        expect(game.inspected.value!.kind, InspectedKind.tower);
+        expect(game.inspected.value!.owner, aiTeam);
+        expect(game.inspected.value!.name, built.blueprint.name);
+      },
+    );
+
+    test('tapping any unit shows its info', () async {
+      final game = await _bootGame(GameScenes.skirmishes.first);
+      const blueprint = MobileUnitBlueprint(
+        kind: UnitKind.soldier,
+        name: 'Test Soldier',
+        maxHealth: 10,
+        speed: 0,
+        bounty: 0,
+        size: 34,
+      );
+      final unit = MobileUnitComponent(
+        blueprint: blueprint,
+        team: game.aiTeam!,
+        objective: UnitObjective.huntHostiles,
+        position: Vector2(200, 200),
+      );
+      game.world.spawnUnit(unit);
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+      unit.position = Vector2(200, 200);
+
+      game.handleArenaTap(unit.position);
+
+      expect(game.inspected.value, isNotNull);
+      expect(game.inspected.value!.kind, InspectedKind.unit);
+      expect(game.inspected.value!.owner, game.aiTeam);
+      expect(game.inspected.value!.name, blueprint.name);
+    });
+
+    test('tapping a resource node shows its info with a description', () async {
+      final game = await _bootGame(GameScenes.skirmishes.first);
+      final node = ResourceNodeComponent(position: Vector2(400, 300));
+      game.world.activeResourceNodes.add(node);
+      await game.world.add(node);
+
+      game.handleArenaTap(node.position);
+
+      expect(game.inspected.value, isNotNull);
+      expect(game.inspected.value!.kind, InspectedKind.resourceNode);
+      expect(game.inspected.value!.owner, isNull);
+      expect(game.inspected.value!.description, isNotNull);
+    });
+  });
+
   group('skirmish AI parity', () {
     test(
       'both sides start a skirmish with the scene-scoped starting gold',
       () async {
         final game = await _bootGame(GameScenes.skirmishes.first);
         expect(game.gameState.gold, GameScenes.skirmishes.first.startingGold);
-        expect(
-          game.aiEconomy!.gold,
-          GameScenes.skirmishes.first.startingGold,
-        );
+        expect(game.aiEconomy!.gold, GameScenes.skirmishes.first.startingGold);
       },
     );
 

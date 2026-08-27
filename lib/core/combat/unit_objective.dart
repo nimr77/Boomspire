@@ -20,4 +20,11 @@ enum UnitObjective {
   /// stumbles into while hunting. Never banks a kill/escape bounty and never
   /// forces a spawn-point starting position, unlike [rushBase].
   assaultBase,
+
+  /// Head for and hold at a fixed world point (see
+  /// `MobileUnitComponent.captureTarget`) - a vehicle sent to claim a
+  /// `ResourceNodeComponent`. Still fights anything that gets in range
+  /// along the way/while holding, same as [assaultBase]; never banks a
+  /// kill/escape bounty.
+  captureNode,
 }

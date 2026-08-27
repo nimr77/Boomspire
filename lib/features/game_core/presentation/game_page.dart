@@ -25,6 +25,7 @@ import '../domain/repos/game_state_repository.dart';
 import 'boomspire_game.dart';
 import 'widgets/game_over_overlay.dart';
 import 'widgets/hud_overlay.dart';
+import 'widgets/inspect_panel.dart';
 import 'widgets/tower_action_panel.dart';
 import 'widgets/victory_overlay.dart';
 
@@ -178,6 +179,15 @@ class _GamePageState extends State<GamePage> {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: TowerActionPanel(game: _game),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 112,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: InspectPanel(game: _game),
             ),
           ),
           Positioned(

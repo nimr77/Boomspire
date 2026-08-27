@@ -25,8 +25,8 @@ class ResourceNodeComponent extends PositionComponent
   double _captureProgress = 0;
   double _payoutTimer = 0;
 
-  late final CircleComponent _core;
   late final CircleComponent _progressRing;
+  late final PolygonComponent _icon;
 
   ResourceNodeComponent({required Vector2 position})
     : super(position: position, size: Vector2.all(36), anchor: Anchor.center);
@@ -41,13 +41,17 @@ class ResourceNodeComponent extends PositionComponent
       position: size / 2,
       paint: Paint()..color = const Color(0x00000000),
     );
-    _core = CircleComponent(
-      radius: size.x / 2 - 6,
-      anchor: Anchor.center,
+    // A diamond "icon" rather than a flat circle - grey while unclaimed,
+    // tinted to whichever team's color once a vehicle claims it (see
+    // [_ownerColor]).
+    _icon = PolygonComponent.relative(
+      [Vector2(0, -1), Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0)],
+      parentSize: Vector2.all(size.x - 12),
       position: size / 2,
+      anchor: Anchor.center,
       paint: Paint()..color = _ownerColor,
     );
-    await addAll([_progressRing, _core]);
+    await addAll([_progressRing, _icon]);
   }
 
   @override
@@ -55,7 +59,7 @@ class ResourceNodeComponent extends PositionComponent
     super.update(dt);
     _updateCapture(dt);
     _updatePayout(dt);
-    _core.paint.color = _ownerColor;
+    _icon.paint.color = _ownerColor;
     _progressRing.paint.color = (_leadingTeam?.color ?? _ownerColor).withValues(
       alpha: _captureProgress / GameConfig.resourceNodeCaptureTime * 0.6,
     );

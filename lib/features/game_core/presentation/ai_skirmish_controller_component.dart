@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 
 import '../../../core/combat/team.dart';
 import '../../../core/combat/unit_kind.dart';
+import '../../../core/combat/unit_objective.dart';
 import '../../ai_director/domain/models/skirmish_directive.dart';
 import '../../towers/domain/models/building_type.dart';
 import '../../towers/domain/models/tower_type.dart';
@@ -89,6 +90,10 @@ class AiSkirmishControllerComponent extends Component
     if (_decisionTimer >= _decisionInterval) {
       _decisionTimer = 0;
       _tryBuild(aiTeam);
+      // Claiming a resource node is a standing economic priority, so it's
+      // tried before (and thus gets first refusal on any free War Factory
+      // ahead of) a purely-combat production roll.
+      _tryCaptureNode(aiTeam);
       _tryProduce(aiTeam);
     }
   }
@@ -207,6 +212,55 @@ class AiSkirmishControllerComponent extends Component
         if (kinds.isNotEmpty) {
           tower.produceUnit(kinds[_rnd.nextInt(kinds.length)]);
         }
+      }
+    }
+  }
+
+  /// Sends an owned ground vehicle to go claim a resource node the AI
+  /// doesn't already own - the same `ResourceNodeComponent` economy feature
+  /// the player can use, so the AI's income isn't limited to its base
+  /// buildings alone. Skips a node it's already sent a capturer toward so
+  /// it doesn't spam its whole War Factory queue at one node, and never
+  /// steals a vehicle destined for combat (it only ever produces an extra
+  /// one for this purpose, through the same gold-gated
+  /// [WarFactoryComponent.produceUnit] the player's build menu uses).
+  void _tryCaptureNode(Team aiTeam) {
+    final nodes = game.world.activeResourceNodes.where(
+      (n) => n.owner?.id != aiTeam.id,
+    );
+    if (nodes.isEmpty) return;
+
+    final capturersEnRoute = game.world.activeUnits.where(
+      (u) =>
+          !u.destroyed &&
+          u.team.id == aiTeam.id &&
+          u.objective == UnitObjective.captureNode,
+    );
+
+    for (final node in nodes) {
+      final alreadyClaiming = capturersEnRoute.any(
+        (u) => u.captureTarget != null && u.captureTarget == node.position,
+      );
+      if (alreadyClaiming) continue;
+
+      for (final tower in game.world.activeTowers) {
+        if (tower.owner.id != aiTeam.id) continue;
+        if (tower is! WarFactoryComponent || !tower.canProduce) continue;
+        final kinds = game.unitRepository
+            .kindsFor(aiTeam)
+            .where((k) {
+              final blueprint = game.unitRepository.blueprintFor(aiTeam, k);
+              return blueprint.isVehicle &&
+                  blueprint.cost <= game.goldFor(aiTeam);
+            })
+            .toList();
+        if (kinds.isEmpty) continue;
+        final produced = tower.produceUnit(
+          kinds[_rnd.nextInt(kinds.length)],
+          objective: UnitObjective.captureNode,
+          captureTarget: node.position.clone(),
+        );
+        if (produced) return;
       }
     }
   }

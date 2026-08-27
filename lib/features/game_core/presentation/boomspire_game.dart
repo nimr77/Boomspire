@@ -13,6 +13,7 @@ import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../audio/domain/repos/audio_repository.dart';
+import '../../combat/presentation/mobile_unit_component.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
@@ -44,6 +45,7 @@ import '../domain/models/game_config.dart';
 import '../domain/models/game_difficulty.dart';
 import '../domain/models/game_scene.dart';
 import '../domain/models/game_status.dart';
+import '../domain/models/inspected_info.dart';
 import '../domain/repos/game_state_repository.dart';
 import 'ai_home_base_component.dart';
 import 'ai_skirmish_controller_component.dart';
@@ -101,6 +103,12 @@ class BoomspireGame extends FlameGame<GameWorld>
   final Map<int, bool> _hasCommandPostByTeam = {};
   final ValueNotifier<UnitType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
+
+  /// Read-only info card for whatever isn't the player's to command (an
+  /// enemy tower, any mobile unit, or a resource node) - see [InspectedInfo]
+  /// and `InspectPanel`. Mutually exclusive with [selectedTower]:
+  /// [handleArenaTap] always clears one before setting the other.
+  final ValueNotifier<InspectedInfo?> inspected = ValueNotifier(null);
 
   final ValueNotifier<String> commanderNote = ValueNotifier('');
 
@@ -440,29 +448,67 @@ class BoomspireGame extends FlameGame<GameWorld>
   int goldFor(Team owner) =>
       owner.id == playerTeam.id ? gameState.gold : (aiEconomy?.gold ?? 0);
 
-  /// Routes an arena tap to selecting a tower under the tap (for the
-  /// repair/upgrade/sell action panel), or - if a tower type is selected -
-  /// previewing/building on an empty, reachable grid cell. The first tap on
-  /// a valid cell only shows the range preview (see [pendingPlacement]); a
-  /// second tap on that same cell actually commits the build.
+  /// Routes an arena tap to inspecting/selecting whatever's under it - the
+  /// player's own tower opens the repair/upgrade/sell action panel, anything
+  /// else tappable (an enemy tower, any unit, a resource node) shows a
+  /// read-only [inspected] info card - or, if nothing's under the tap and a
+  /// tower type is selected, previews/builds on an empty, reachable grid
+  /// cell. The first tap on a valid cell only shows the range preview (see
+  /// [pendingPlacement]); a second tap on that same cell actually commits
+  /// the build.
   void handleArenaTap(Vector2 point) {
     if (gameState.status != GameStatus.playing) return;
 
     final tappedTower = _towerAt(point);
     if (tappedTower != null) {
-      // The AI's own towers aren't the player's to inspect/repair/sell -
-      // just cancel any in-progress placement instead of selecting them.
       if (tappedTower.owner.id != playerTeam.id) {
+        // Not the player's to command - just show who/what it is.
+        inspected.value = InspectedInfo(
+          kind: InspectedKind.tower,
+          name: tappedTower.blueprint.name,
+          owner: tappedTower.owner,
+        );
         pendingPlacement.value = null;
         return;
       }
+      inspected.value = null;
       selectedTower.value = selectedTower.value == tappedTower
           ? null
           : tappedTower;
       pendingPlacement.value = null;
       return;
     }
+
+    final tappedUnit = _unitAt(point);
+    if (tappedUnit != null) {
+      selectedTower.value = null;
+      inspected.value = InspectedInfo(
+        kind: InspectedKind.unit,
+        name: tappedUnit.blueprint.name,
+        owner: tappedUnit.team,
+      );
+      pendingPlacement.value = null;
+      return;
+    }
+
+    final tappedNode = _resourceNodeAt(point);
+    if (tappedNode != null) {
+      selectedTower.value = null;
+      inspected.value = InspectedInfo(
+        kind: InspectedKind.resourceNode,
+        name: 'Resource Node',
+        owner: tappedNode.owner,
+        description:
+            'Hold a vehicle here for ${GameConfig.resourceNodeCaptureTime.toInt()}s to '
+            'capture it - it then pays its owner bonus income every '
+            '${GameConfig.resourceNodePayoutInterval.toInt()}s.',
+      );
+      pendingPlacement.value = null;
+      return;
+    }
+
     selectedTower.value = null;
+    inspected.value = null;
 
     final type = selectedTowerType.value;
     if (type == null) {
@@ -514,6 +560,7 @@ class BoomspireGame extends FlameGame<GameWorld>
     gameState.reset(startingGold: _resolvedStartingGold);
     world.activeUnits.clear();
     world.activeTowers.clear();
+    world.activeResourceNodes.clear();
     for (final child in world.children.toList()) {
       if (child is! TerrainComponent) child.removeFromParent();
     }
@@ -544,12 +591,15 @@ class BoomspireGame extends FlameGame<GameWorld>
     }
     world.add(GhostPlacementComponent());
     for (final point in terrainMap.resourceNodePoints) {
-      world.add(ResourceNodeComponent(position: Vector2(point.x, point.y)));
+      final node = ResourceNodeComponent(position: Vector2(point.x, point.y));
+      world.activeResourceNodes.add(node);
+      world.add(node);
     }
     enemyFocusHint = FocusHint.nearestTower;
     commanderNote.value = '';
     selectedTowerType.value = null;
     selectedTower.value = null;
+    inspected.value = null;
     pendingPlacement.value = null;
     _hasTechLabByTeam.clear();
     _hasCommandPostByTeam.clear();
@@ -713,6 +763,25 @@ class BoomspireGame extends FlameGame<GameWorld>
           (point.y - tower.position.y).abs() <= half) {
         return tower;
       }
+    }
+    return null;
+  }
+
+  MobileUnitComponent? _unitAt(Vector2 point) {
+    for (final unit in world.activeUnits) {
+      if (unit.destroyed) continue;
+      final half = unit.size.x / 2;
+      if ((point.x - unit.position.x).abs() <= half &&
+          (point.y - unit.position.y).abs() <= half) {
+        return unit;
+      }
+    }
+    return null;
+  }
+
+  ResourceNodeComponent? _resourceNodeAt(Vector2 point) {
+    for (final node in world.activeResourceNodes) {
+      if (point.distanceTo(node.position) <= node.size.x / 2) return node;
     }
     return null;
   }

@@ -36,7 +36,7 @@ _MapDraft _$MapDraftFromJson(Map<String, dynamic> json) => _MapDraft(
       : EnvironmentSettings.fromJson(
           json['environment'] as Map<String, dynamic>,
         ),
-  startingGold: (json['startingGold'] as num?)?.toInt() ?? 2000,
+  startingGold: (json['startingGold'] as num?)?.toInt() ?? 3000,
 );
 
 Map<String, dynamic> _$MapDraftToJson(_MapDraft instance) => <String, dynamic>{

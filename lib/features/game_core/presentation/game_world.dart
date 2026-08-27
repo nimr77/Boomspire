@@ -29,6 +29,7 @@ class GameWorld extends World
 
   final List<MobileUnitComponent> activeUnits = [];
   final List<TowerComponent> activeTowers = [];
+  final List<ResourceNodeComponent> activeResourceNodes = [];
 
   /// The human player's base - always set once [initialize] has run.
   HomeBaseComponent? playerHomeBase;
@@ -100,7 +101,9 @@ class GameWorld extends World
     }
     await add(GhostPlacementComponent());
     for (final point in game.terrainMap.resourceNodePoints) {
-      await add(ResourceNodeComponent(position: Vector2(point.x, point.y)));
+      final node = ResourceNodeComponent(position: Vector2(point.x, point.y));
+      activeResourceNodes.add(node);
+      await add(node);
     }
   }
 

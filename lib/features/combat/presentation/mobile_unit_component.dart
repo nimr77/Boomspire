@@ -58,6 +58,11 @@ class MobileUnitComponent extends PositionComponent
   final Team team;
   final UnitObjective objective;
 
+  /// Fixed world point to head for and hold at - only meaningful when
+  /// [objective] is [UnitObjective.captureNode] (a resource node's
+  /// position never moves, so a live component reference isn't needed).
+  final Vector2? captureTarget;
+
   /// Upgrade tier (0-based) of the producing building (Training Center/War
   /// Factory), if any - stats scale up with this so investing in the
   /// producer, not a flat spawn, is what makes built units stronger.
@@ -84,6 +89,7 @@ class MobileUnitComponent extends PositionComponent
     required this.team,
     required this.objective,
     this.level = 0,
+    this.captureTarget,
     super.position,
   }) : health = blueprint.maxHealth,
        super(
@@ -198,6 +204,7 @@ class MobileUnitComponent extends PositionComponent
     ),
     UnitObjective.assaultBase => game.baseTargetFor(team),
     UnitObjective.huntHostiles => _acquireHuntTarget()?.position,
+    UnitObjective.captureNode => captureTarget,
   };
 
   /// Forces this unit onto a specific starting position before its first
@@ -240,7 +247,10 @@ class MobileUnitComponent extends PositionComponent
       );
       return;
     }
-    if (objective != UnitObjective.assaultBase) return;
+    if (objective != UnitObjective.assaultBase &&
+        objective != UnitObjective.captureNode) {
+      return;
+    }
     if (team.id == game.playerTeam.id) {
       // A player-built unit died in a skirmish - the AI opponent gets the
       // credit (and gold) for the kill.
