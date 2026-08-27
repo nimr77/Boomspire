@@ -93,6 +93,12 @@ class MobileUnitComponent extends PositionComponent
   Attackable? _engaging;
   Attackable? _huntTarget;
   double _bobPhase = Random().nextDouble() * pi * 2;
+
+  /// This unit's actual heading, set by movement/engage code - [_applyBob]
+  /// layers its wobble on top of this every frame instead of accumulating
+  /// directly into `_visual.angle`, which used to spin the sprite forever
+  /// once the unit stopped moving (nothing was left to reset it).
+  double _facingAngle = 0;
   double _vaporTimer = 0;
   double _preExplosionTimer = 0;
   bool _destroyed = false;
@@ -516,15 +522,15 @@ class MobileUnitComponent extends PositionComponent
         _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 1.5);
       case MovementStyle.roll:
         _visual.position = size / 2;
-        _visual.angle += sin(_bobPhase) * 0.05;
+        _visual.angle = _facingAngle + sin(_bobPhase) * 0.05;
       case MovementStyle.hover:
         _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 2.5);
       case MovementStyle.swoop:
         _visual.position = size / 2;
-        _visual.angle += sin(_bobPhase * 0.5) * 0.08;
+        _visual.angle = _facingAngle + sin(_bobPhase * 0.5) * 0.08;
       case MovementStyle.sail:
         _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 2);
-        _visual.angle = sin(_bobPhase * 0.5) * 0.06;
+        _visual.angle = _facingAngle + sin(_bobPhase * 0.5) * 0.06;
     }
   }
 
@@ -652,7 +658,7 @@ class MobileUnitComponent extends PositionComponent
     }
     final dir = applySeparationSteering(toTarget / dist);
     position += dir * step;
-    _visual.angle = atan2(dir.y, dir.x) + pi / 2;
+    _facingAngle = atan2(dir.y, dir.x) + pi / 2;
 
     if (blueprint.movementStyle == MovementStyle.swoop) {
       _vaporTimer -= dt;
@@ -685,7 +691,7 @@ class MobileUnitComponent extends PositionComponent
     } else {
       final dir = applySeparationSteering(toTarget / dist);
       position += dir * step;
-      _visual.angle = atan2(dir.y, dir.x) + pi / 2;
+      _facingAngle = atan2(dir.y, dir.x) + pi / 2;
     }
   }
 
@@ -732,7 +738,7 @@ class MobileUnitComponent extends PositionComponent
     }
 
     final toTarget = target.position - position;
-    _visual.angle = atan2(toTarget.y, toTarget.x) + pi / 2;
+    _facingAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
 
     _attackCooldown -= dt;
     if (_attackCooldown <= 0) {

@@ -16,7 +16,7 @@ class BuildingRepositoryImpl implements BuildingRepository {
           range: 0,
           damage: 0,
           fireRate: 1,
-          maxHp: 70,
+          maxHp: 200,
         ),
         BuildingType.commandPost: UnitBlueprint(
           type: BuildingType.commandPost,
@@ -25,7 +25,7 @@ class BuildingRepositoryImpl implements BuildingRepository {
           range: 0,
           damage: 0,
           fireRate: 1,
-          maxHp: 110,
+          maxHp: 200,
         ),
         BuildingType.trainingCenter: UnitBlueprint(
           type: BuildingType.trainingCenter,
@@ -34,7 +34,7 @@ class BuildingRepositoryImpl implements BuildingRepository {
           range: 0,
           damage: 0,
           fireRate: 1,
-          maxHp: 90,
+          maxHp: 200,
         ),
         BuildingType.warFactory: UnitBlueprint(
           type: BuildingType.warFactory,
@@ -43,16 +43,16 @@ class BuildingRepositoryImpl implements BuildingRepository {
           range: 0,
           damage: 0,
           fireRate: 1,
-          maxHp: 140,
+          maxHp: 200,
         ),
         BuildingType.goldMine: UnitBlueprint(
           type: BuildingType.goldMine,
           name: S.current.buildingNameGoldMine,
-          cost: 800,
+          cost: 250,
           range: 0,
           damage: 0,
           fireRate: 1,
-          maxHp: 100,
+          maxHp: 200,
         ),
       };
 

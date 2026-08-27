@@ -199,23 +199,6 @@ class GameWorld extends World
     );
   }
 
-  /// Rebuilds [targeterCounts] from each tower's [TowerComponent.currentTarget]
-  /// as of the end of the previous frame - a single O(towers) pass run once
-  /// at the top of this frame's [update], before any tower re-evaluates its
-  /// own target, so the "how contested is this candidate" check every
-  /// tower's `_acquireTarget` does stays O(1) instead of every tower
-  /// independently rescanning every other tower (which would be
-  /// O(towers²) per frame).
-  void _refreshTargeterCounts() {
-    targeterCounts.clear();
-    for (final tower in activeTowers) {
-      final target = tower.currentTarget;
-      if (target != null) {
-        targeterCounts[target] = (targeterCounts[target] ?? 0) + 1;
-      }
-    }
-  }
-
   /// Free-scrolling RTS camera: arrow keys/WASD move [cameraPosition] at a
   /// constant screen-space speed (C&C-Generals-style, not an eased pan),
   /// clamped so the viewport never shows past the map's edge. A no-op while
@@ -252,5 +235,22 @@ class GameWorld extends World
       (cameraPosition.x + delta.x).clamp(0.0, bounds.x),
       (cameraPosition.y + delta.y).clamp(0.0, bounds.y),
     );
+  }
+
+  /// Rebuilds [targeterCounts] from each tower's [TowerComponent.currentTarget]
+  /// as of the end of the previous frame - a single O(towers) pass run once
+  /// at the top of this frame's [update], before any tower re-evaluates its
+  /// own target, so the "how contested is this candidate" check every
+  /// tower's `_acquireTarget` does stays O(1) instead of every tower
+  /// independently rescanning every other tower (which would be
+  /// O(towers²) per frame).
+  void _refreshTargeterCounts() {
+    targeterCounts.clear();
+    for (final tower in activeTowers) {
+      final target = tower.currentTarget;
+      if (target != null) {
+        targeterCounts[target] = (targeterCounts[target] ?? 0) + 1;
+      }
+    }
   }
 }

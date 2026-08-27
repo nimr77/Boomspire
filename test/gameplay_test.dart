@@ -28,8 +28,10 @@ import 'package:boomspire/features/game_core/presentation/resource_node_componen
 import 'package:boomspire/features/terrain/impl/terrain_repository_impl.dart';
 import 'package:boomspire/features/towers/domain/models/building_type.dart';
 import 'package:boomspire/features/towers/domain/models/tower_type.dart';
+import 'package:boomspire/features/towers/domain/models/unit_blueprint.dart';
 import 'package:boomspire/features/towers/impl/building_repository_impl.dart';
 import 'package:boomspire/features/towers/impl/tower_repository_impl.dart';
+import 'package:boomspire/features/towers/presentation/machine_gun_tower_component.dart';
 import 'package:boomspire/features/towers/presentation/rocket_silo_tower_component.dart';
 import 'package:boomspire/features/towers/presentation/training_center_component.dart';
 import 'package:boomspire/features/towers/presentation/war_factory_component.dart';
@@ -641,51 +643,48 @@ void main() {
       },
     );
 
-    test(
-      'tapping open ground while a unit is selected issues a move order '
-      'it walks to and then holds at',
-      () async {
-        final game = await _bootGame(GameScenes.all.first);
-        final grid = game.terrainMap.grid;
-        final cell = _findOpenCell(game);
-        final cellCenter = grid.cellCenter(cell);
-        const blueprint = MobileUnitBlueprint(
-          kind: UnitKind.soldier,
-          name: 'Test Ally',
-          maxHealth: 40,
-          speed: 80,
-          bounty: 0,
-          size: 34,
-        );
-        final ally = MobileUnitComponent(
-          blueprint: blueprint,
-          team: game.playerTeam,
-          objective: UnitObjective.huntHostiles,
-        );
-        game.world.spawnUnit(ally);
+    test('tapping open ground while a unit is selected issues a move order '
+        'it walks to and then holds at', () async {
+      final game = await _bootGame(GameScenes.all.first);
+      final grid = game.terrainMap.grid;
+      final cell = _findOpenCell(game);
+      final cellCenter = grid.cellCenter(cell);
+      const blueprint = MobileUnitBlueprint(
+        kind: UnitKind.soldier,
+        name: 'Test Ally',
+        maxHealth: 40,
+        speed: 80,
+        bounty: 0,
+        size: 34,
+      );
+      final ally = MobileUnitComponent(
+        blueprint: blueprint,
+        team: game.playerTeam,
+        objective: UnitObjective.huntHostiles,
+      );
+      game.world.spawnUnit(ally);
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+      ally.position = cellCenter.clone();
+
+      game.handleArenaTap(ally.position);
+      expect(game.selectedUnit.value, ally);
+
+      // Offset just far enough to not land back on the unit itself, but
+      // still well inside the same open cell.
+      final orderPoint = cellCenter + Vector2(18, 0);
+      game.handleArenaTap(orderPoint);
+      expect(ally.underManualControl, isTrue);
+      expect(ally.moveOrderTarget, isNotNull);
+
+      for (var i = 0; i < 10; i++) {
         await Future<void>.delayed(Duration.zero);
-        game.update(0);
-        ally.position = cellCenter.clone();
+        game.update(0.1);
+      }
 
-        game.handleArenaTap(ally.position);
-        expect(game.selectedUnit.value, ally);
-
-        // Offset just far enough to not land back on the unit itself, but
-        // still well inside the same open cell.
-        final orderPoint = cellCenter + Vector2(18, 0);
-        game.handleArenaTap(orderPoint);
-        expect(ally.underManualControl, isTrue);
-        expect(ally.moveOrderTarget, isNotNull);
-
-        for (var i = 0; i < 10; i++) {
-          await Future<void>.delayed(Duration.zero);
-          game.update(0.1);
-        }
-
-        // Arrived and holding - not reverted to auto-hunting anywhere else.
-        expect(ally.moveOrderTarget, isNull);
-      },
-    );
+      // Arrived and holding - not reverted to auto-hunting anywhere else.
+      expect(ally.moveOrderTarget, isNull);
+    });
 
     test(
       'tapping an enemy while a unit is selected issues an attack order',
@@ -746,7 +745,177 @@ void main() {
     );
   });
 
+  group('tower targeting', () {
+    const mgBlueprint = UnitBlueprint(
+      type: TowerType.machineGun,
+      name: 'Test MG',
+      cost: 50,
+      range: 300,
+      damage: 10,
+      fireRate: 0.2,
+      maxHp: 100,
+    );
+
+    const enemyBlueprint = MobileUnitBlueprint(
+      kind: UnitKind.soldier,
+      name: 'Test Enemy',
+      maxHealth: 200,
+      speed: 0,
+      bounty: 0,
+      size: 34,
+    );
+
+    Future<MachineGunTowerComponent> spawnTower(
+      BoomspireGame game,
+      Vector2 position,
+    ) async {
+      final tower = MachineGunTowerComponent(
+        position: position,
+        cellSize: 40,
+        blueprint: mgBlueprint,
+      );
+      game.world.spawnTower(tower);
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+      return tower;
+    }
+
+    Future<MobileUnitComponent> spawnEnemy(
+      BoomspireGame game,
+      Vector2 position, {
+      double? maxHealth,
+    }) async {
+      final enemy = MobileUnitComponent(
+        blueprint: maxHealth == null
+            ? enemyBlueprint
+            : MobileUnitBlueprint(
+                kind: UnitKind.soldier,
+                name: 'Test Enemy',
+                maxHealth: maxHealth,
+                speed: 0,
+                bounty: 0,
+                size: 34,
+              ),
+        team: Team.invaders,
+        objective: UnitObjective.huntHostiles,
+      );
+      game.world.spawnUnit(enemy);
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+      enemy.position = position;
+      return enemy;
+    }
+
+    test(
+      'selecting a tower and tapping an enemy force-targets it even over '
+      'a closer enemy',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final tower = await spawnTower(game, Vector2(200, 200));
+        final nearEnemy = await spawnEnemy(game, Vector2(220, 200));
+        final farEnemy = await spawnEnemy(game, Vector2(450, 200));
+
+        game.handleArenaTap(tower.position);
+        expect(game.selectedTower.value, tower);
+
+        game.handleArenaTap(farEnemy.position);
+        expect(tower.forcedTarget, farEnemy);
+
+        game.update(0);
+        expect(tower.currentTarget, farEnemy);
+        expect(tower.currentTarget, isNot(nearEnemy));
+      },
+    );
+
+    test(
+      'no more than 3 towers focus-fire the same healthy enemy while a '
+      'less-contested one is also in range',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final enemyA = await spawnEnemy(game, Vector2(450, 300));
+        final enemyB = await spawnEnemy(game, Vector2(430, 300));
+
+        // Towers are brought in one at a time (not all in the same frame)
+        // so each one's join decision reflects an up-to-date targeter
+        // count instead of every tower deciding off the same stale zero.
+        final towers = <MachineGunTowerComponent>[];
+        for (var i = 0; i < 4; i++) {
+          final tower = await spawnTower(game, Vector2(200.0 + i * 5, 300));
+          game.update(0.05);
+          towers.add(tower);
+        }
+
+        final onEnemyA = towers.where((t) => t.currentTarget == enemyA);
+        final onEnemyB = towers.where((t) => t.currentTarget == enemyB);
+        expect(onEnemyA.length, lessThanOrEqualTo(3));
+        // The 4th tower had nowhere less-contested to go on enemyA, so it
+        // picked the other enemy instead of piling on regardless.
+        expect(onEnemyB, isNotEmpty);
+      },
+    );
+
+    test(
+      'a near-dead target already being finished off by a fast tower is '
+      'left alone by a much slower one, which retargets instead',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final fastKiller = MachineGunTowerComponent(
+          position: Vector2(200, 300),
+          cellSize: 40,
+          blueprint: const UnitBlueprint(
+            type: TowerType.machineGun,
+            name: 'Fast Killer',
+            cost: 50,
+            range: 300,
+            damage: 200,
+            fireRate: 0.2,
+            maxHp: 100,
+          ),
+        );
+        game.world.spawnTower(fastKiller);
+        final slowPoker = MachineGunTowerComponent(
+          position: Vector2(220, 300),
+          cellSize: 40,
+          blueprint: const UnitBlueprint(
+            type: TowerType.machineGun,
+            name: 'Slow Poker',
+            cost: 50,
+            range: 300,
+            damage: 1,
+            fireRate: 0.2,
+            maxHp: 100,
+          ),
+        );
+        game.world.spawnTower(slowPoker);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+
+        final nearDeathEnemy = await spawnEnemy(
+          game,
+          Vector2(450, 300),
+          maxHealth: 1000,
+        );
+        final healthyEnemy = await spawnEnemy(game, Vector2(450, 330));
+
+        // Both towers commit to the same (currently healthy) target first.
+        game.update(0.05);
+        fastKiller.currentTarget = nearDeathEnemy;
+        slowPoker.currentTarget = nearDeathEnemy;
+
+        // It then takes heavy damage and drops well under the near-death
+        // threshold - `fastKiller` can one-shot what's left, `slowPoker`
+        // very much can't.
+        nearDeathEnemy.health = 10;
+        game.update(0.05);
+
+        expect(fastKiller.currentTarget, nearDeathEnemy);
+        expect(slowPoker.currentTarget, healthyEnemy);
+      },
+    );
+  });
+
   test('every scene generates a terrain where every spawn can reach base', () {
+
     for (final scene in GameScenes.all) {
       final terrain = TerrainRepositoryImpl().loadTerrain(scene: scene);
       final grid = terrain.grid;
