@@ -26,14 +26,14 @@ class GoldMineComponent extends TowerComponent {
   double get killGoldBonus =>
       GameConfig.goldMineBaseKillGoldBonus * (1 + upgradeLevel);
 
-  /// Seconds remaining until the next passive payout - shown in the tower
-  /// action panel.
-  double get payoutTimeRemaining => _payoutTimer;
-
   /// Passive gold paid out every `GameConfig.goldMineTickInterval` seconds -
   /// rises by one more full base payout per upgrade tier.
   int get payoutAmount =>
       GameConfig.goldMineBaseGoldPerTick * (1 + upgradeLevel);
+
+  /// Seconds remaining until the next passive payout - shown in the tower
+  /// action panel.
+  double get payoutTimeRemaining => _payoutTimer;
 
   @override
   void fire(MobileUnitComponent target) {}
