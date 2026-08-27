@@ -50,6 +50,8 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "baseOverrunTitle": MessageLookupByLibrary.simpleMessage("BASE OVERRUN"),
     "bestWaveReached": m0,
+    "buildMenuBuildingsTab": MessageLookupByLibrary.simpleMessage("Buildings"),
+    "buildMenuTowersTab": MessageLookupByLibrary.simpleMessage("Towers"),
     "changeMap": MessageLookupByLibrary.simpleMessage("CHANGE MAP"),
     "defenseHoldsSubtitle": m1,
     "defenseHoldsTitle": MessageLookupByLibrary.simpleMessage("DEFENSE HOLDS"),

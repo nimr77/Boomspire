@@ -88,5 +88,9 @@
   "accountQuickPlay": "Quick Play",
   "@accountQuickPlay": {},
   "accountNameRequired": "Please enter a name",
-  "@accountNameRequired": {}
+  "@accountNameRequired": {},
+  "buildMenuTowersTab": "Towers",
+  "@buildMenuTowersTab": {},
+  "buildMenuBuildingsTab": "Buildings",
+  "@buildMenuBuildingsTab": {}
 }

@@ -3,60 +3,141 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../generated/l10n.dart';
 import '../../../towers/domain/models/tower_blueprint.dart';
 import '../../../towers/domain/models/tower_type.dart';
 import '../../../towers/presentation/tower_sprites.dart';
 import '../boomspire_game.dart';
 
+/// Support structures (e.g. Tech Lab, Command Post) never fire - anything
+/// with no damage/range is a "building" rather than a combat tower, so the
+/// build menu can group them under their own tab.
+bool _isBuilding(TowerBlueprint bp) => bp.damage <= 0 && bp.range <= 0;
+
 /// Horizontal row of construction cameo buttons docked at the right end of
 /// the bottom command bar (see [HudOverlay]) - one square button per tower
-/// type, with a cost badge.
-class BuildMenu extends StatelessWidget {
+/// type, with a cost badge. Split into a "Towers" and "Buildings" tab.
+class BuildMenu extends StatefulWidget {
   final BoomspireGame game;
 
   const BuildMenu({super.key, required this.game});
 
   @override
+  State<BuildMenu> createState() => _BuildMenuState();
+}
+
+class _BuildMenuState extends State<BuildMenu> {
+  bool _showBuildings = false;
+
+  @override
   Widget build(BuildContext context) {
+    final game = widget.game;
     return Container(
       decoration: const BoxDecoration(
         border: Border(left: BorderSide(color: Color(0xFF2A323C), width: 2)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      child: ListenableBuilder(
-        listenable: game.gameState,
-        builder: (context, _) {
-          return ValueListenableBuilder<TowerType?>(
-            valueListenable: game.selectedTowerType,
-            builder: (context, selected, _) {
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: game.towerRepository.all.map((bp) {
-                    final lockReason = game.buildBlockReason(bp.type);
-                    final affordable = game.gameState.gold >= bp.cost;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: _TowerButton(
-                        blueprint: bp,
-                        selected: selected == bp.type,
-                        enabled: affordable && lockReason == null,
-                        lockReason: lockReason,
-                        builtCount: game.towerCountFor(bp.type),
-                        limit: game.buildLimitFor(bp.type),
-                        onTap: () => game.selectTowerType(bp.type),
-                      ),
-                    );
-                  }).toList(),
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MenuTab(
+                label: S.current.buildMenuTowersTab,
+                selected: !_showBuildings,
+                onTap: () => setState(() => _showBuildings = false),
+              ),
+              const SizedBox(width: 6),
+              _MenuTab(
+                label: S.current.buildMenuBuildingsTab,
+                selected: _showBuildings,
+                onTap: () => setState(() => _showBuildings = true),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ListenableBuilder(
+            listenable: game.gameState,
+            builder: (context, _) {
+              return ValueListenableBuilder<TowerType?>(
+                valueListenable: game.selectedTowerType,
+                builder: (context, selected, _) {
+                  final entries = game.towerRepository.all
+                      .where((bp) => _isBuilding(bp) == _showBuildings)
+                      .toList();
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: entries.map((bp) {
+                        final lockReason = game.buildBlockReason(bp.type);
+                        final affordable = game.gameState.gold >= bp.cost;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: _TowerButton(
+                            blueprint: bp,
+                            selected: selected == bp.type,
+                            enabled: affordable && lockReason == null,
+                            lockReason: lockReason,
+                            builtCount: game.towerCountFor(bp.type),
+                            limit: game.buildLimitFor(bp.type),
+                            onTap: () => game.selectTowerType(bp.type),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 }
+
+/// Small pill toggle used to switch between the Towers/Buildings tabs.
+class _MenuTab extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _MenuTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white.withValues(alpha: 0.14) : null,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: selected ? Colors.white70 : Colors.white24,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.white54,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 /// Frosted-glass hover card: build cost, core stats, and (when relevant)
 /// the build-limit count and unlock requirement for a tower type.

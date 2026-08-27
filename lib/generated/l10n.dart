@@ -309,6 +309,26 @@ class S {
       args: [],
     );
   }
+
+  /// `Towers`
+  String get buildMenuTowersTab {
+    return Intl.message(
+      'Towers',
+      name: 'buildMenuTowersTab',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Buildings`
+  String get buildMenuBuildingsTab {
+    return Intl.message(
+      'Buildings',
+      name: 'buildMenuBuildingsTab',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
