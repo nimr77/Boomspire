@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// A tappable card that scales up and brightens its border on mouse hover
@@ -22,54 +23,84 @@ class HoverScaleCard extends StatefulWidget {
   State<HoverScaleCard> createState() => _HoverScaleCardState();
 }
 
+/// Private hover/press state for [HoverScaleCard]: a page/widget-local
+/// holder (not shared) exposing read-only [ValueListenable]s so the card
+/// never needs `setState`.
+class _HoverPressState {
+  final ValueNotifier<bool> _hovering = ValueNotifier(false);
+  final ValueNotifier<bool> _pressed = ValueNotifier(false);
+
+  ValueListenable<bool> get hovering => _hovering;
+  ValueListenable<bool> get pressed => _pressed;
+  Listenable get listenable => Listenable.merge([_hovering, _pressed]);
+
+  void setHovering(bool value) => _hovering.value = value;
+  void setPressed(bool value) => _pressed.value = value;
+
+  void dispose() {
+    _hovering.dispose();
+    _pressed.dispose();
+  }
+}
+
 class _HoverScaleCardState extends State<HoverScaleCard> {
-  bool _hovering = false;
-  bool _pressed = false;
+  final _HoverPressState _state = _HoverPressState();
 
   @override
   Widget build(BuildContext context) {
-    final active = _hovering || _pressed;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapCancel: () => setState(() => _pressed = false),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: active ? 1.03 : 1.0,
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            decoration: BoxDecoration(
-              borderRadius: widget.borderRadius,
-              border: Border.all(
-                color: active
-                    ? widget.accentColor
-                    : widget.accentColor.withValues(alpha: 0.25),
-                width: active ? 2 : 1.5,
+    return ListenableBuilder(
+      listenable: _state.listenable,
+      builder: (context, _) {
+        final active = _state.hovering.value || _state.pressed.value;
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => _state.setHovering(true),
+          onExit: (_) => _state.setHovering(false),
+          child: GestureDetector(
+            onTapDown: (_) => _state.setPressed(true),
+            onTapCancel: () => _state.setPressed(false),
+            onTapUp: (_) => _state.setPressed(false),
+            onTap: widget.onTap,
+            child: AnimatedScale(
+              scale: active ? 1.03 : 1.0,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                decoration: BoxDecoration(
+                  borderRadius: widget.borderRadius,
+                  border: Border.all(
+                    color: active
+                        ? widget.accentColor
+                        : widget.accentColor.withValues(alpha: 0.25),
+                    width: active ? 2 : 1.5,
+                  ),
+                  boxShadow: active
+                      ? [
+                          BoxShadow(
+                            color: widget.accentColor.withValues(alpha: 0.35),
+                            blurRadius: 24,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : const [],
+                ),
+                child: ClipRRect(
+                  borderRadius: widget.borderRadius,
+                  child: widget.child,
+                ),
               ),
-              boxShadow: active
-                  ? [
-                      BoxShadow(
-                        color: widget.accentColor.withValues(alpha: 0.35),
-                        blurRadius: 24,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : const [],
-            ),
-            child: ClipRRect(
-              borderRadius: widget.borderRadius,
-              child: widget.child,
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  @override
+  void dispose() {
+    _state.dispose();
+    super.dispose();
   }
 }

@@ -142,7 +142,8 @@ class _StatChip extends StatelessWidget {
 }
 
 class _TowerActionPanelState extends State<TowerActionPanel> {
-  Timer? _ticker;
+  Timer? _pollTimer;
+  final ValueNotifier<int> _tick = ValueNotifier(0);
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +166,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
               ? const SizedBox.shrink(key: ValueKey('no-tower-selected'))
               : ListenableBuilder(
                   key: ValueKey(tower),
-                  listenable: widget.game.gameState,
+                  listenable: Listenable.merge([widget.game.gameState, _tick]),
                   builder: (context, _) => _buildCard(tower),
                 ),
         );
@@ -175,7 +176,8 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
 
   @override
   void dispose() {
-    _ticker?.cancel();
+    _pollTimer?.cancel();
+    _tick.dispose();
     super.dispose();
   }
 
@@ -185,8 +187,8 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
     // The selected tower's HP changes continuously from combat (a Flame
     // component, not a Listenable) - poll at a modest rate so the card
     // stays live without wiring a full ChangeNotifier through it.
-    _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      if (widget.game.selectedTower.value != null && mounted) setState(() {});
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      if (widget.game.selectedTower.value != null && mounted) _tick.value++;
     });
   }
 

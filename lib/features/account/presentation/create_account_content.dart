@@ -24,7 +24,7 @@ class CreateAccountContent extends StatefulWidget {
 class _CreateAccountContentState extends State<CreateAccountContent> {
   final _controller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _submitting = false;
+  final ValueNotifier<bool> _submitting = ValueNotifier(false);
 
   @override
   Widget build(BuildContext context) {
@@ -74,36 +74,46 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
             ),
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _submitting ? null : _continue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlueAccent,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                S.current.accountContinue,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Center(
-            child: TextButton(
-              onPressed: _submitting ? null : () => widget.onDone(null),
-              child: Text(
-                S.current.accountQuickPlay,
-                style: const TextStyle(color: Colors.white54),
-              ),
-            ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _submitting,
+            builder: (context, submitting, _) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: submitting ? null : _continue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.lightBlueAccent,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        S.current.accountContinue,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: TextButton(
+                      onPressed: submitting ? null : () => widget.onDone(null),
+                      child: Text(
+                        S.current.accountQuickPlay,
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -113,12 +123,13 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
   @override
   void dispose() {
     _controller.dispose();
+    _submitting.dispose();
     super.dispose();
   }
 
   Future<void> _continue() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _submitting = true);
+    _submitting.value = true;
     final account = await widget.accountRepository.createAccount(
       name: _controller.text,
     );

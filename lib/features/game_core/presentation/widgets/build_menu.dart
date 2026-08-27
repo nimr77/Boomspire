@@ -24,7 +24,7 @@ class BuildMenu extends StatefulWidget {
 }
 
 class _BuildMenuState extends State<BuildMenu> {
-  bool _showBuildings = false;
+  final ValueNotifier<bool> _showBuildings = ValueNotifier(false);
 
   @override
   Widget build(BuildContext context) {
@@ -34,96 +34,112 @@ class _BuildMenuState extends State<BuildMenu> {
         border: Border(left: BorderSide(color: Color(0xFF2A323C), width: 2)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // The tab strip sits directly on top of the button panel below,
-          // as one cohesive menu, rather than stealing its own separate row.
-          Row(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _showBuildings,
+        builder: (context, showBuildings, _) {
+          return Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _MenuTab(
-                label: S.current.buildMenuTowersTab,
-                selected: !_showBuildings,
-                onTap: () => setState(() => _showBuildings = false),
+              // The tab strip sits directly on top of the button panel below,
+              // as one cohesive menu, rather than stealing its own separate row.
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _MenuTab(
+                    label: S.current.buildMenuTowersTab,
+                    selected: !showBuildings,
+                    onTap: () => _showBuildings.value = false,
+                  ),
+                  const SizedBox(width: 6),
+                  _MenuTab(
+                    label: S.current.buildMenuBuildingsTab,
+                    selected: showBuildings,
+                    onTap: () => _showBuildings.value = true,
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
-              _MenuTab(
-                label: S.current.buildMenuBuildingsTab,
-                selected: _showBuildings,
-                onTap: () => setState(() => _showBuildings = true),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          // Kept at its original, unshrunk size - the tabs above animate
-          // their own height instead of squeezing this row.
-          SizedBox(
-            height: 90,
-            child: ListenableBuilder(
-              listenable: game.gameState,
-              builder: (context, _) {
-                return ValueListenableBuilder<UnitType?>(
-                  valueListenable: game.selectedTowerType,
-                  builder: (context, selected, _) {
-                    final entries =
-                        [
-                              ...game.towerRepository.all,
-                              ...game.buildingRepository.all,
-                            ]
-                            .where(
-                              (bp) =>
-                                  (bp.type is BuildingType) == _showBuildings,
-                            )
-                            .toList();
-                    return AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      switchInCurve: Curves.easeOut,
-                      switchOutCurve: Curves.easeIn,
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.08),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      ),
-                      child: SingleChildScrollView(
-                        key: ValueKey(_showBuildings),
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: entries.map((bp) {
-                            final lockReason = game.buildBlockReason(bp.type);
-                            final affordable = game.gameState.gold >= bp.cost;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
+              const SizedBox(height: 6),
+              // Kept at its original, unshrunk size - the tabs above animate
+              // their own height instead of squeezing this row.
+              SizedBox(
+                height: 90,
+                child: ListenableBuilder(
+                  listenable: game.gameState,
+                  builder: (context, _) {
+                    return ValueListenableBuilder<UnitType?>(
+                      valueListenable: game.selectedTowerType,
+                      builder: (context, selected, _) {
+                        final entries =
+                            [
+                                  ...game.towerRepository.all,
+                                  ...game.buildingRepository.all,
+                                ]
+                                .where(
+                                  (bp) =>
+                                      (bp.type is BuildingType) ==
+                                      showBuildings,
+                                )
+                                .toList();
+                        return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0, 0.08),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
                               ),
-                              child: _TowerButton(
-                                blueprint: bp,
-                                selected: selected == bp.type,
-                                enabled: affordable && lockReason == null,
-                                lockReason: lockReason,
-                                builtCount: game.towerCountFor(bp.type),
-                                limit: game.buildLimitFor(bp.type),
-                                onTap: () => game.selectTowerType(bp.type),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                          child: SingleChildScrollView(
+                            key: ValueKey(showBuildings),
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: entries.map((bp) {
+                                final lockReason = game.buildBlockReason(
+                                  bp.type,
+                                );
+                                final affordable =
+                                    game.gameState.gold >= bp.cost;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  child: _TowerButton(
+                                    blueprint: bp,
+                                    selected: selected == bp.type,
+                                    enabled: affordable && lockReason == null,
+                                    lockReason: lockReason,
+                                    builtCount: game.towerCountFor(bp.type),
+                                    limit: game.buildLimitFor(bp.type),
+                                    onTap: () => game.selectTowerType(bp.type),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _showBuildings.dispose();
+    super.dispose();
   }
 }
 
@@ -324,7 +340,7 @@ class _TowerButton extends StatefulWidget {
 
 class _TowerButtonState extends State<_TowerButton> {
   final LayerLink _link = LayerLink();
-  bool _hovering = false;
+  final ValueNotifier<bool> _hovering = ValueNotifier(false);
   OverlayEntry? _overlayEntry;
 
   @override
@@ -333,158 +349,163 @@ class _TowerButtonState extends State<_TowerButton> {
     final selected = widget.selected;
     final locked = widget.lockReason != null;
     final accent = TowerSpriteFactory.accentColor(blueprint.type);
-    final glowing = selected || _hovering;
     return CompositedTransformTarget(
       link: _link,
       child: Opacity(
         opacity: widget.enabled ? 1 : 0.45,
         child: MouseRegion(
           onEnter: (_) {
-            setState(() => _hovering = true);
+            _hovering.value = true;
             _showTooltip();
           },
           onExit: (_) {
-            setState(() => _hovering = false);
+            _hovering.value = false;
             _hideTooltip();
           },
           child: InkWell(
             onTap: widget.enabled ? widget.onTap : null,
             borderRadius: BorderRadius.circular(8),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              curve: Curves.easeOut,
-              width: 84,
-              transform: Matrix4.identity()
-                ..scaleByDouble(
-                  _hovering ? 1.06 : 1.0,
-                  _hovering ? 1.06 : 1.0,
-                  1.0,
-                  1.0,
-                ),
-              transformAlignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1F26),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: glowing ? accent : Colors.white24,
-                  width: selected ? 2.5 : (_hovering ? 2 : 1),
-                ),
-                boxShadow: glowing
-                    ? [
-                        BoxShadow(
-                          color: accent.withValues(
-                            alpha: selected ? 0.5 : 0.35,
-                          ),
-                          blurRadius: selected ? 10 : 14,
-                          spreadRadius: _hovering ? 1 : 0,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          switch (blueprint.type) {
-                            TowerType.rocket => Icons.local_fire_department,
-                            TowerType.cannon => Icons.whatshot,
-                            TowerType.antiAir => Icons.radar,
-                            TowerType.machineGun => Icons.gps_fixed,
-                            TowerType.laser => Icons.bolt,
-                            TowerType.rocketSilo => Icons.rocket_launch,
-                            TowerType.artilleryBunker => Icons.fort,
-                            TowerType.sam => Icons.satellite_alt,
-                            BuildingType.techLab => Icons.biotech,
-                            BuildingType.commandPost => Icons.cell_tower,
-                            BuildingType.trainingCenter => Icons.groups,
-                            BuildingType.warFactory => Icons.factory,
-                            BuildingType.goldMine => Icons.diamond,
-                            _ => Icons.help_outline,
-                          },
-                          color: accent,
-                          size: 22,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          blueprint.name,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _hovering,
+              builder: (context, hovering, _) {
+                final glowing = selected || hovering;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 140),
+                  curve: Curves.easeOut,
+                  width: 84,
+                  transform: Matrix4.identity()
+                    ..scaleByDouble(
+                      hovering ? 1.06 : 1.0,
+                      hovering ? 1.06 : 1.0,
+                      1.0,
+                      1.0,
                     ),
+                  transformAlignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1F26),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: glowing ? accent : Colors.white24,
+                      width: selected ? 2.5 : (hovering ? 2 : 1),
+                    ),
+                    boxShadow: glowing
+                        ? [
+                            BoxShadow(
+                              color: accent.withValues(
+                                alpha: selected ? 0.5 : 0.35,
+                              ),
+                              blurRadius: selected ? 10 : 14,
+                              spreadRadius: hovering ? 1 : 0,
+                            ),
+                          ]
+                        : null,
                   ),
-                  Positioned(
-                    right: 3,
-                    bottom: 3,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '${blueprint.cost}g',
-                        style: const TextStyle(
-                          color: Colors.amberAccent,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              switch (blueprint.type) {
+                                TowerType.rocket => Icons.local_fire_department,
+                                TowerType.cannon => Icons.whatshot,
+                                TowerType.antiAir => Icons.radar,
+                                TowerType.machineGun => Icons.gps_fixed,
+                                TowerType.laser => Icons.bolt,
+                                TowerType.rocketSilo => Icons.rocket_launch,
+                                TowerType.artilleryBunker => Icons.fort,
+                                TowerType.sam => Icons.satellite_alt,
+                                BuildingType.techLab => Icons.biotech,
+                                BuildingType.commandPost => Icons.cell_tower,
+                                BuildingType.trainingCenter => Icons.groups,
+                                BuildingType.warFactory => Icons.factory,
+                                BuildingType.goldMine => Icons.diamond,
+                                _ => Icons.help_outline,
+                              },
+                              color: accent,
+                              size: 22,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              blueprint.name,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      Positioned(
+                        right: 3,
+                        bottom: 3,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black87,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${blueprint.cost}g',
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (widget.limit != null)
+                        Positioned(
+                          left: 3,
+                          top: 3,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black87,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${widget.builtCount}/${widget.limit}',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (locked)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.lock,
+                                color: Colors.white70,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  if (widget.limit != null)
-                    Positioned(
-                      left: 3,
-                      top: 3,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black87,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '${widget.builtCount}/${widget.limit}',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (locked)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.lock,
-                            color: Colors.white70,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ),
@@ -495,6 +516,7 @@ class _TowerButtonState extends State<_TowerButton> {
   @override
   void dispose() {
     _hideTooltip();
+    _hovering.dispose();
     super.dispose();
   }
 

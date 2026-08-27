@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -234,6 +234,90 @@ class _EditorToastState extends State<_EditorToast>
 
 enum _EditorTool { mountain, dune, erase, river, lake, homeSite }
 
+/// Page-owned state for [MapEditorPage]: every mutable piece of editor UI
+/// state (the draft itself, its live terrain preview, brush selection,
+/// in-progress stroke, wave being edited, and save/play/upload/download
+/// busy flags) lives here as private [ValueNotifier]s with read-only
+/// [ValueListenable] getters - instantiated and disposed by the page's own
+/// State, not shared anywhere else.
+class _MapEditorState {
+  final ValueNotifier<MapDraft> _draft;
+  final ValueNotifier<EditorTerrainPreview?> _preview = ValueNotifier(null);
+  final ValueNotifier<_EditorTool> _tool = ValueNotifier(_EditorTool.mountain);
+  final ValueNotifier<double> _riverWidth = ValueNotifier(48);
+  final ValueNotifier<int> _selectedWaveNumber = ValueNotifier(1);
+  final ValueNotifier<List<EditorPoint>> _activeStroke = ValueNotifier(
+    const [],
+  );
+  final ValueNotifier<bool> _saving = ValueNotifier(false);
+  final ValueNotifier<bool> _playing = ValueNotifier(false);
+  final ValueNotifier<bool> _downloading = ValueNotifier(false);
+  final ValueNotifier<bool> _uploading = ValueNotifier(false);
+  final ValueNotifier<double> _zoom = ValueNotifier(1.0);
+  final ValueNotifier<double> _previewProgress = ValueNotifier(0.0);
+
+  _MapEditorState(MapDraft initialDraft) : _draft = ValueNotifier(initialDraft);
+
+  ValueListenable<MapDraft> get draft => _draft;
+  ValueListenable<EditorTerrainPreview?> get preview => _preview;
+  ValueListenable<_EditorTool> get tool => _tool;
+  ValueListenable<double> get riverWidth => _riverWidth;
+  ValueListenable<int> get selectedWaveNumber => _selectedWaveNumber;
+  ValueListenable<List<EditorPoint>> get activeStroke => _activeStroke;
+  ValueListenable<bool> get saving => _saving;
+  ValueListenable<bool> get playing => _playing;
+  ValueListenable<bool> get downloading => _downloading;
+  ValueListenable<bool> get uploading => _uploading;
+  ValueListenable<double> get zoom => _zoom;
+  ValueListenable<double> get previewProgress => _previewProgress;
+
+  /// A single [Listenable] combining every notifier above, so the page can
+  /// rebuild its whole (tightly-coupled) editor tree from one listener
+  /// instead of nesting a builder per field.
+  Listenable get listenable => Listenable.merge([
+    _draft,
+    _preview,
+    _tool,
+    _riverWidth,
+    _selectedWaveNumber,
+    _activeStroke,
+    _saving,
+    _playing,
+    _downloading,
+    _uploading,
+    _zoom,
+    _previewProgress,
+  ]);
+
+  void setDraft(MapDraft value) => _draft.value = value;
+  void setPreview(EditorTerrainPreview? value) => _preview.value = value;
+  void setTool(_EditorTool value) => _tool.value = value;
+  void setRiverWidth(double value) => _riverWidth.value = value;
+  void setSelectedWaveNumber(int value) => _selectedWaveNumber.value = value;
+  void setActiveStroke(List<EditorPoint> value) => _activeStroke.value = value;
+  void setSaving(bool value) => _saving.value = value;
+  void setPlaying(bool value) => _playing.value = value;
+  void setDownloading(bool value) => _downloading.value = value;
+  void setUploading(bool value) => _uploading.value = value;
+  void setZoom(double value) => _zoom.value = value;
+  void setPreviewProgress(double value) => _previewProgress.value = value;
+
+  void dispose() {
+    _draft.dispose();
+    _preview.dispose();
+    _tool.dispose();
+    _riverWidth.dispose();
+    _selectedWaveNumber.dispose();
+    _activeStroke.dispose();
+    _saving.dispose();
+    _playing.dispose();
+    _downloading.dispose();
+    _uploading.dispose();
+    _zoom.dispose();
+    _previewProgress.dispose();
+  }
+}
+
 class _MapEditorPageState extends State<MapEditorPage> {
   final MapDraftRepository _draftRepository = getIt<MapDraftRepository>();
   final _generator = EditorTerrainGenerator();
@@ -243,507 +327,530 @@ class _MapEditorPageState extends State<MapEditorPage> {
   final _startingGoldController = TextEditingController();
   final _waveCountController = TextEditingController();
 
-  late MapDraft _draft = widget.initialDraft;
-  EditorTerrainPreview? _preview;
-  _EditorTool _tool = _EditorTool.mountain;
-  double _riverWidth = 48;
-  int _selectedWaveNumber = 1;
-  List<EditorPoint> _activeStroke = [];
+  late final _MapEditorState _state = _MapEditorState(widget.initialDraft);
   Size _canvasSize = const Size(900, 540);
   Timer? _regenDebounce;
   int _generation = 0;
-  bool _saving = false;
-  bool _playing = false;
-  bool _downloading = false;
-  bool _uploading = false;
 
   /// Zoom applied to the canvas viewport only - doesn't affect the draft.
   final _viewerController = TransformationController();
-  double _zoom = 1.0;
-
-  /// Which point of the weather timeline (0..1) the canvas previews live.
-  double _previewProgress = 0.0;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0E14),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF11161D),
-        title: TextField(
-          controller: _nameController,
-          style: const TextStyle(color: Colors.white, fontSize: 18),
-          decoration: const InputDecoration(border: InputBorder.none),
-          onChanged: (value) => _updateDraft((d) => d.copyWith(name: value)),
-        ),
-        actions: [
-          _EditorAppBarButton(
-            icon: Icons.play_arrow,
-            label: 'Play',
-            color: Colors.lightGreenAccent,
-            loading: _playing,
-            onPressed: _playing ? null : _play,
+    return ListenableBuilder(
+      listenable: _state.listenable,
+      builder: (context, _) {
+        final currentDraft = _state.draft.value;
+        final currentPreview = _state.preview.value;
+        final currentTool = _state.tool.value;
+        final currentRiverWidth = _state.riverWidth.value;
+        final currentSelectedWave = _state.selectedWaveNumber.value;
+        final currentStroke = _state.activeStroke.value;
+        final currentSaving = _state.saving.value;
+        final currentPlaying = _state.playing.value;
+        final currentDownloading = _state.downloading.value;
+        final currentUploading = _state.uploading.value;
+        final currentZoom = _state.zoom.value;
+        final currentPreviewProgress = _state.previewProgress.value;
+        return Scaffold(
+          backgroundColor: const Color(0xFF0A0E14),
+          appBar: AppBar(
+            backgroundColor: const Color(0xFF11161D),
+            title: TextField(
+              controller: _nameController,
+              style: const TextStyle(color: Colors.white, fontSize: 18),
+              decoration: const InputDecoration(border: InputBorder.none),
+              onChanged: (value) =>
+                  _updateDraft((d) => d.copyWith(name: value)),
+            ),
+            actions: [
+              _EditorAppBarButton(
+                icon: Icons.play_arrow,
+                label: 'Play',
+                color: Colors.lightGreenAccent,
+                loading: currentPlaying,
+                onPressed: currentPlaying ? null : _play,
+              ),
+              _EditorAppBarButton(
+                icon: Icons.save,
+                label: 'Save',
+                color: Colors.cyanAccent,
+                loading: currentSaving,
+                onPressed: currentSaving ? null : _save,
+              ),
+              _EditorAppBarButton(
+                icon: Icons.download,
+                label: 'Download',
+                color: Colors.amberAccent,
+                loading: currentDownloading,
+                onPressed: currentDownloading ? null : _downloadDraft,
+              ),
+              _EditorAppBarButton(
+                icon: Icons.upload,
+                label: 'Upload',
+                color: Colors.amberAccent,
+                loading: currentUploading,
+                onPressed: currentUploading ? null : _uploadDraft,
+              ),
+              const SizedBox(width: 12),
+            ],
           ),
-          _EditorAppBarButton(
-            icon: Icons.save,
-            label: 'Save',
-            color: Colors.cyanAccent,
-            loading: _saving,
-            onPressed: _saving ? null : _save,
-          ),
-          _EditorAppBarButton(
-            icon: Icons.download,
-            label: 'Download',
-            color: Colors.amberAccent,
-            loading: _downloading,
-            onPressed: _downloading ? null : _downloadDraft,
-          ),
-          _EditorAppBarButton(
-            icon: Icons.upload,
-            label: 'Upload',
-            color: Colors.amberAccent,
-            loading: _uploading,
-            onPressed: _uploading ? null : _uploadDraft,
-          ),
-          const SizedBox(width: 12),
-        ],
-      ),
-      body: Row(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        tooltip: 'Zoom out',
-                        icon: const Icon(Icons.remove, color: Colors.white70),
-                        onPressed: () => _zoomBy(1 / 1.25),
-                      ),
-                      Text(
-                        '${(_zoom * 100).round()}%',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      IconButton(
-                        tooltip: 'Zoom in',
-                        icon: const Icon(Icons.add, color: Colors.white70),
-                        onPressed: () => _zoomBy(1.25),
-                      ),
-                      IconButton(
-                        tooltip: 'Reset zoom',
-                        icon: const Icon(
-                          Icons.center_focus_weak,
-                          color: Colors.white70,
-                        ),
-                        onPressed: _resetZoom,
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final aspect = _draft.arenaWidth / _draft.arenaHeight;
-                          var width = constraints.maxWidth;
-                          var height = width / aspect;
-                          if (height > constraints.maxHeight) {
-                            height = constraints.maxHeight;
-                            width = height * aspect;
-                          }
-                          _canvasSize = Size(width, height);
-                          return Container(
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: Colors.white24,
-                                width: 1.5,
-                              ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black45,
-                                  blurRadius: 24,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
+          body: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            tooltip: 'Zoom out',
+                            icon: const Icon(
+                              Icons.remove,
+                              color: Colors.white70,
                             ),
-                            child: Listener(
-                              onPointerSignal: (event) {
-                                if (event is PointerScrollEvent) {
-                                  _zoomBy(
-                                    event.scrollDelta.dy < 0 ? 1.1 : 1 / 1.1,
-                                  );
-                                }
-                              },
-                              child: InteractiveViewer(
-                                transformationController: _viewerController,
-                                panEnabled: false,
-                                scaleEnabled: true,
-                                minScale: 1,
-                                maxScale: 4,
-                                onInteractionEnd: (_) => setState(
-                                  () => _zoom = _viewerController.value
-                                      .getMaxScaleOnAxis(),
+                            onPressed: () => _zoomBy(1 / 1.25),
+                          ),
+                          Text(
+                            '${(currentZoom * 100).round()}%',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          IconButton(
+                            tooltip: 'Zoom in',
+                            icon: const Icon(Icons.add, color: Colors.white70),
+                            onPressed: () => _zoomBy(1.25),
+                          ),
+                          IconButton(
+                            tooltip: 'Reset zoom',
+                            icon: const Icon(
+                              Icons.center_focus_weak,
+                              color: Colors.white70,
+                            ),
+                            onPressed: _resetZoom,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final aspect =
+                                  currentDraft.arenaWidth /
+                                  currentDraft.arenaHeight;
+                              var width = constraints.maxWidth;
+                              var height = width / aspect;
+                              if (height > constraints.maxHeight) {
+                                height = constraints.maxHeight;
+                                width = height * aspect;
+                              }
+                              _canvasSize = Size(width, height);
+                              return Container(
+                                clipBehavior: Clip.antiAlias,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: Colors.white24,
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black45,
+                                      blurRadius: 24,
+                                      offset: Offset(0, 10),
+                                    ),
+                                  ],
                                 ),
-                                child: GestureDetector(
-                                  onPanStart: _handlePanStart,
-                                  onPanUpdate: _handlePanUpdate,
-                                  onPanEnd: _handlePanEnd,
-                                  child: CustomPaint(
-                                    size: _canvasSize,
-                                    painter: _MapEditorPainter(
-                                      preview: _preview,
-                                      activeStroke: _activeStroke,
-                                      tool: _tool,
-                                      arenaWidth: _draft.arenaWidth,
-                                      arenaHeight: _draft.arenaHeight,
-                                      environment: _draft.environment,
-                                      previewProgress: _previewProgress,
-                                      homeSites: _draft.homeSites,
+                                child: Listener(
+                                  onPointerSignal: (event) {
+                                    if (event is PointerScrollEvent) {
+                                      _zoomBy(
+                                        event.scrollDelta.dy < 0
+                                            ? 1.1
+                                            : 1 / 1.1,
+                                      );
+                                    }
+                                  },
+                                  child: InteractiveViewer(
+                                    transformationController: _viewerController,
+                                    panEnabled: false,
+                                    scaleEnabled: true,
+                                    minScale: 1,
+                                    maxScale: 4,
+                                    onInteractionEnd: (_) => _state.setZoom(
+                                      _viewerController.value
+                                          .getMaxScaleOnAxis(),
+                                    ),
+                                    child: GestureDetector(
+                                      onPanStart: _handlePanStart,
+                                      onPanUpdate: _handlePanUpdate,
+                                      onPanEnd: _handlePanEnd,
+                                      child: CustomPaint(
+                                        size: _canvasSize,
+                                        painter: _MapEditorPainter(
+                                          preview: currentPreview,
+                                          activeStroke: currentStroke,
+                                          tool: currentTool,
+                                          arenaWidth: currentDraft.arenaWidth,
+                                          arenaHeight: currentDraft.arenaHeight,
+                                          environment: currentDraft.environment,
+                                          previewProgress:
+                                              currentPreviewProgress,
+                                          homeSites: currentDraft.homeSites,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-            child: SizedBox(
-              width: 320,
-              child: Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF11161D),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white24, width: 1.5),
-                ),
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _SectionLabel('Brush'),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final tool in _EditorTool.values)
-                          if (tool != _EditorTool.homeSite ||
-                              _draft.mode == GameMode.skirmish)
-                            ChoiceChip(
-                              label: Text(tool.label),
-                              selected: _tool == tool,
-                              onSelected: (_) => setState(() => _tool = tool),
-                            ),
-                      ],
-                    ),
-                    if (_tool == _EditorTool.homeSite) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Home sites: ${_draft.homeSites.length}/'
-                        '${PlayerPalette.colors.length} - tap to place, tap '
-                        'a marker to remove.',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                    if (_tool == _EditorTool.river) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'River width: ${_riverWidth.toStringAsFixed(0)}',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      Slider(
-                        value: _riverWidth,
-                        min: 16,
-                        max: 160,
-                        onChanged: (value) =>
-                            setState(() => _riverWidth = value),
-                      ),
-                    ],
-                    const Divider(color: Colors.white24, height: 32),
-                    _SectionLabel('Map'),
-                    DropdownButtonFormField<Biome>(
-                      initialValue: _draft.biome,
-                      dropdownColor: const Color(0xFF1A1F26),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(labelText: 'Biome'),
-                      items: [
-                        for (final biome in Biome.values)
-                          DropdownMenuItem(
-                            value: biome,
-                            child: Text(biome.displayName),
-                          ),
-                      ],
-                      onChanged: (biome) {
-                        if (biome != null) {
-                          _updateDraft((d) => d.copyWith(biome: biome));
-                        }
-                      },
-                    ),
-                    DropdownButtonFormField<GameMode>(
-                      initialValue: _draft.mode,
-                      dropdownColor: const Color(0xFF1A1F26),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(labelText: 'Mode'),
-                      items: const [
-                        DropdownMenuItem(
-                          value: GameMode.waveDefense,
-                          child: Text('Wave Defense'),
-                        ),
-                        DropdownMenuItem(
-                          value: GameMode.skirmish,
-                          child: Text('Skirmish'),
-                        ),
-                      ],
-                      onChanged: (mode) {
-                        if (mode == null) return;
-                        _updateDraft(
-                          (d) => d.copyWith(
-                            mode: mode,
-                            homeSites: mode == GameMode.skirmish
-                                ? d.homeSites
-                                : const [],
-                          ),
-                        );
-                        if (mode != GameMode.skirmish &&
-                            _tool == _EditorTool.homeSite) {
-                          setState(() => _tool = _EditorTool.mountain);
-                        }
-                      },
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _widthController,
-                            style: const TextStyle(color: Colors.white),
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Width',
-                            ),
-                            onSubmitted: (_) => _applyArenaSize(),
-                            onEditingComplete: _applyArenaSize,
+                              );
+                            },
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: _heightController,
-                            style: const TextStyle(color: Colors.white),
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Height',
-                            ),
-                            onSubmitted: (_) => _applyArenaSize(),
-                            onEditingComplete: _applyArenaSize,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _startingGoldController,
-                      style: const TextStyle(color: Colors.white),
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Starting gold',
                       ),
-                      onSubmitted: (_) => _applyStartingGold(),
-                      onEditingComplete: _applyStartingGold,
-                    ),
-                    if (_draft.mode == GameMode.waveDefense) ...[
-                      const Divider(color: Colors.white24, height: 32),
-                      _SectionLabel('Waves'),
-                      TextField(
-                        controller: _waveCountController,
-                        style: const TextStyle(color: Colors.white),
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Number of waves',
-                        ),
-                        onSubmitted: (_) => _applyWaveCount(),
-                        onEditingComplete: _applyWaveCount,
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _randomizeAllWaves,
-                        icon: const Icon(Icons.shuffle),
-                        label: Text('Randomize all ${_draft.waveCount} waves'),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          IconButton(
-                            tooltip: 'Previous wave',
-                            icon: const Icon(
-                              Icons.chevron_left,
-                              color: Colors.white70,
-                            ),
-                            onPressed: _selectedWaveNumber > 1
-                                ? () => setState(() => _selectedWaveNumber--)
-                                : null,
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Wave $_selectedWaveNumber / ${_draft.waveCount}'
-                              '${_hasCustomLoadout(_selectedWaveNumber) ? '' : ' (auto)'}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Next wave',
-                            icon: const Icon(
-                              Icons.chevron_right,
-                              color: Colors.white70,
-                            ),
-                            onPressed: _selectedWaveNumber < _draft.waveCount
-                                ? () => setState(() => _selectedWaveNumber++)
-                                : null,
-                          ),
-                        ],
-                      ),
-                      for (final kind in UnitKind.values)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  kind.name,
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: 'Fewer',
-                                icon: const Icon(
-                                  Icons.remove_circle_outline,
-                                  color: Colors.white54,
-                                ),
-                                onPressed: () => _setWaveUnitCount(
-                                  kind,
-                                  _currentLoadout().countOf(kind) - 1,
-                                ),
-                              ),
-                              SizedBox(
-                                width: 28,
-                                child: Text(
-                                  '${_currentLoadout().countOf(kind)}',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: 'More',
-                                icon: const Icon(
-                                  Icons.add_circle_outline,
-                                  color: Colors.white54,
-                                ),
-                                onPressed: () => _setWaveUnitCount(
-                                  kind,
-                                  _currentLoadout().countOf(kind) + 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _randomizeSelectedWave,
-                              icon: const Icon(Icons.casino),
-                              label: const Text('Randomize'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _clearSelectedWave,
-                              icon: const Icon(Icons.restore),
-                              label: const Text('Reset to auto'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const Divider(color: Colors.white24, height: 32),
-                    _SectionLabel('Environment'),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text(
-                        'Dynamic weather over match',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      value: _draft.environment.dynamicWeather,
-                      onChanged: (value) => _updateEnvironment(
-                        (env) => env.copyWith(dynamicWeather: value),
-                      ),
-                    ),
-                    Text(
-                      'Sun angle: ${(_draft.environment.sunAngle * 100).toStringAsFixed(0)}%',
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                    Slider(
-                      value: _draft.environment.sunAngle,
-                      onChanged: (value) => _updateEnvironment(
-                        (env) => env.copyWith(sunAngle: value),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Preview weather at: ${(_previewProgress * 100).toStringAsFixed(0)}% of match',
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                    Slider(
-                      value: _previewProgress,
-                      onChanged: (value) =>
-                          setState(() => _previewProgress = value),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Weather timeline',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    for (final (index, keyframe)
-                        in _draft.environment.timeline.indexed)
-                      _WeatherKeyframeEditor(
-                        keyframe: keyframe,
-                        onChanged: (updated) =>
-                            _replaceKeyframe(index, updated),
-                        onRemove: () => _removeKeyframe(index),
-                      ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: _addKeyframe,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add keyframe'),
                     ),
                   ],
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+                child: SizedBox(
+                  width: 320,
+                  child: Container(
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF11161D),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white24, width: 1.5),
+                    ),
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _SectionLabel('Brush'),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final tool in _EditorTool.values)
+                              if (tool != _EditorTool.homeSite ||
+                                  currentDraft.mode == GameMode.skirmish)
+                                ChoiceChip(
+                                  label: Text(tool.label),
+                                  selected: currentTool == tool,
+                                  onSelected: (_) => _state.setTool(tool),
+                                ),
+                          ],
+                        ),
+                        if (currentTool == _EditorTool.homeSite) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            'Home sites: ${currentDraft.homeSites.length}/'
+                            '${PlayerPalette.colors.length} - tap to place, tap '
+                            'a marker to remove.',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                        if (currentTool == _EditorTool.river) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            'River width: ${currentRiverWidth.toStringAsFixed(0)}',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          Slider(
+                            value: currentRiverWidth,
+                            min: 16,
+                            max: 160,
+                            onChanged: (value) => _state.setRiverWidth(value),
+                          ),
+                        ],
+                        const Divider(color: Colors.white24, height: 32),
+                        _SectionLabel('Map'),
+                        DropdownButtonFormField<Biome>(
+                          initialValue: currentDraft.biome,
+                          dropdownColor: const Color(0xFF1A1F26),
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(labelText: 'Biome'),
+                          items: [
+                            for (final biome in Biome.values)
+                              DropdownMenuItem(
+                                value: biome,
+                                child: Text(biome.displayName),
+                              ),
+                          ],
+                          onChanged: (biome) {
+                            if (biome != null) {
+                              _updateDraft((d) => d.copyWith(biome: biome));
+                            }
+                          },
+                        ),
+                        DropdownButtonFormField<GameMode>(
+                          initialValue: currentDraft.mode,
+                          dropdownColor: const Color(0xFF1A1F26),
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(labelText: 'Mode'),
+                          items: const [
+                            DropdownMenuItem(
+                              value: GameMode.waveDefense,
+                              child: Text('Wave Defense'),
+                            ),
+                            DropdownMenuItem(
+                              value: GameMode.skirmish,
+                              child: Text('Skirmish'),
+                            ),
+                          ],
+                          onChanged: (mode) {
+                            if (mode == null) return;
+                            _updateDraft(
+                              (d) => d.copyWith(
+                                mode: mode,
+                                homeSites: mode == GameMode.skirmish
+                                    ? d.homeSites
+                                    : const [],
+                              ),
+                            );
+                            if (mode != GameMode.skirmish &&
+                                currentTool == _EditorTool.homeSite) {
+                              _state.setTool(_EditorTool.mountain);
+                            }
+                          },
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _widthController,
+                                style: const TextStyle(color: Colors.white),
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Width',
+                                ),
+                                onSubmitted: (_) => _applyArenaSize(),
+                                onEditingComplete: _applyArenaSize,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _heightController,
+                                style: const TextStyle(color: Colors.white),
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Height',
+                                ),
+                                onSubmitted: (_) => _applyArenaSize(),
+                                onEditingComplete: _applyArenaSize,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _startingGoldController,
+                          style: const TextStyle(color: Colors.white),
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Starting gold',
+                          ),
+                          onSubmitted: (_) => _applyStartingGold(),
+                          onEditingComplete: _applyStartingGold,
+                        ),
+                        if (currentDraft.mode == GameMode.waveDefense) ...[
+                          const Divider(color: Colors.white24, height: 32),
+                          _SectionLabel('Waves'),
+                          TextField(
+                            controller: _waveCountController,
+                            style: const TextStyle(color: Colors.white),
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Number of waves',
+                            ),
+                            onSubmitted: (_) => _applyWaveCount(),
+                            onEditingComplete: _applyWaveCount,
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: _randomizeAllWaves,
+                            icon: const Icon(Icons.shuffle),
+                            label: Text(
+                              'Randomize all ${currentDraft.waveCount} waves',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              IconButton(
+                                tooltip: 'Previous wave',
+                                icon: const Icon(
+                                  Icons.chevron_left,
+                                  color: Colors.white70,
+                                ),
+                                onPressed: currentSelectedWave > 1
+                                    ? () => _state.setSelectedWaveNumber(
+                                        currentSelectedWave - 1,
+                                      )
+                                    : null,
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'Wave $currentSelectedWave / ${currentDraft.waveCount}'
+                                  '${_hasCustomLoadout(currentSelectedWave) ? '' : ' (auto)'}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Next wave',
+                                icon: const Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.white70,
+                                ),
+                                onPressed:
+                                    currentSelectedWave < currentDraft.waveCount
+                                    ? () => _state.setSelectedWaveNumber(
+                                        currentSelectedWave + 1,
+                                      )
+                                    : null,
+                              ),
+                            ],
+                          ),
+                          for (final kind in UnitKind.values)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      kind.name,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Fewer',
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                      color: Colors.white54,
+                                    ),
+                                    onPressed: () => _setWaveUnitCount(
+                                      kind,
+                                      _currentLoadout().countOf(kind) - 1,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 28,
+                                    child: Text(
+                                      '${_currentLoadout().countOf(kind)}',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'More',
+                                    icon: const Icon(
+                                      Icons.add_circle_outline,
+                                      color: Colors.white54,
+                                    ),
+                                    onPressed: () => _setWaveUnitCount(
+                                      kind,
+                                      _currentLoadout().countOf(kind) + 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _randomizeSelectedWave,
+                                  icon: const Icon(Icons.casino),
+                                  label: const Text('Randomize'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _clearSelectedWave,
+                                  icon: const Icon(Icons.restore),
+                                  label: const Text('Reset to auto'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const Divider(color: Colors.white24, height: 32),
+                        _SectionLabel('Environment'),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text(
+                            'Dynamic weather over match',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          value: currentDraft.environment.dynamicWeather,
+                          onChanged: (value) => _updateEnvironment(
+                            (env) => env.copyWith(dynamicWeather: value),
+                          ),
+                        ),
+                        Text(
+                          'Sun angle: ${(currentDraft.environment.sunAngle * 100).toStringAsFixed(0)}%',
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        Slider(
+                          value: currentDraft.environment.sunAngle,
+                          onChanged: (value) => _updateEnvironment(
+                            (env) => env.copyWith(sunAngle: value),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Preview weather at: ${(currentPreviewProgress * 100).toStringAsFixed(0)}% of match',
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        Slider(
+                          value: currentPreviewProgress,
+                          onChanged: (value) =>
+                              _state.setPreviewProgress(value),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Weather timeline',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        for (final (index, keyframe)
+                            in currentDraft.environment.timeline.indexed)
+                          _WeatherKeyframeEditor(
+                            keyframe: keyframe,
+                            onChanged: (updated) =>
+                                _replaceKeyframe(index, updated),
+                            onRemove: () => _removeKeyframe(index),
+                          ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: _addKeyframe,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add keyframe'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -756,22 +863,24 @@ class _MapEditorPageState extends State<MapEditorPage> {
     _startingGoldController.dispose();
     _waveCountController.dispose();
     _viewerController.dispose();
+    _state.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    _nameController.text = _draft.name;
-    _widthController.text = _draft.arenaWidth.toStringAsFixed(0);
-    _heightController.text = _draft.arenaHeight.toStringAsFixed(0);
-    _startingGoldController.text = _draft.startingGold.toString();
-    _waveCountController.text = _draft.waveCount.toString();
+    final draft = widget.initialDraft;
+    _nameController.text = draft.name;
+    _widthController.text = draft.arenaWidth.toStringAsFixed(0);
+    _heightController.text = draft.arenaHeight.toStringAsFixed(0);
+    _startingGoldController.text = draft.startingGold.toString();
+    _waveCountController.text = draft.waveCount.toString();
     _regenerate();
   }
 
   void _addKeyframe() {
-    final timeline = _draft.environment.timeline;
+    final timeline = _state.draft.value.environment.timeline;
     final nextProgress = timeline.isEmpty
         ? 0.0
         : (timeline.last.atProgress + 0.25).clamp(0.0, 1.0);
@@ -807,30 +916,29 @@ class _MapEditorPageState extends State<MapEditorPage> {
     final count = int.tryParse(_waveCountController.text)?.clamp(1, 200);
     if (count == null) return;
     _updateDraft((d) => d.copyWith(waveCount: count));
-    if (_selectedWaveNumber > count) {
-      setState(() => _selectedWaveNumber = count);
+    if (_state.selectedWaveNumber.value > count) {
+      _state.setSelectedWaveNumber(count);
     }
   }
 
   void _clearSelectedWave() {
-    _replaceLoadout(WaveLoadout(waveNumber: _selectedWaveNumber));
+    _replaceLoadout(WaveLoadout(waveNumber: _state.selectedWaveNumber.value));
   }
 
-  WaveLoadout _currentLoadout() => _loadoutFor(_selectedWaveNumber);
+  WaveLoadout _currentLoadout() => _loadoutFor(_state.selectedWaveNumber.value);
 
   /// Exports the current draft as a standalone `.json` file the player can
   /// back up, share, or hand-edit - opens the platform's native save/
   /// download dialog (a browser download on web, a save-as dialog on
   /// desktop).
   Future<void> _downloadDraft() async {
-    setState(() => _downloading = true);
+    _state.setDownloading(true);
     try {
+      final draft = _state.draft.value;
       final bytes = Uint8List.fromList(
-        utf8.encode(
-          const JsonEncoder.withIndent('  ').convert(_draft.toJson()),
-        ),
+        utf8.encode(const JsonEncoder.withIndent('  ').convert(draft.toJson())),
       );
-      final safeName = _draft.name.trim().isEmpty ? 'map' : _draft.name.trim();
+      final safeName = draft.name.trim().isEmpty ? 'map' : draft.name.trim();
       final saved = await FilePicker.saveFile(
         dialogTitle: 'Download map',
         fileName: '$safeName.json',
@@ -838,55 +946,55 @@ class _MapEditorPageState extends State<MapEditorPage> {
         mimeType: 'application/json',
       );
       if (!mounted) return;
-      if (saved != null) _showToast('Downloaded "${_draft.name}"');
+      if (saved != null) _showToast('Downloaded "${draft.name}"');
     } finally {
-      if (mounted) setState(() => _downloading = false);
+      if (mounted) _state.setDownloading(false);
     }
   }
 
   void _handlePanEnd(DragEndDetails details) {
-    final isWaterTool = _tool == _EditorTool.river || _tool == _EditorTool.lake;
-    if (isWaterTool && _activeStroke.length >= 2) {
+    final tool = _state.tool.value;
+    final stroke = _state.activeStroke.value;
+    final isWaterTool = tool == _EditorTool.river || tool == _EditorTool.lake;
+    if (isWaterTool && stroke.length >= 2) {
       final path = WaterPath(
-        kind: _tool == _EditorTool.river
+        kind: tool == _EditorTool.river
             ? WaterFeatureKind.river
             : WaterFeatureKind.lake,
-        points: _activeStroke,
-        width: _riverWidth,
+        points: stroke,
+        width: _state.riverWidth.value,
       );
       _updateDraft((d) => d.copyWith(waterPaths: [...d.waterPaths, path]));
     }
-    setState(() => _activeStroke = []);
+    _state.setActiveStroke(const []);
   }
 
   void _handlePanStart(DragStartDetails details) {
-    switch (_tool) {
+    switch (_state.tool.value) {
       case _EditorTool.mountain:
       case _EditorTool.dune:
       case _EditorTool.erase:
         _paintAt(details.localPosition);
       case _EditorTool.river:
       case _EditorTool.lake:
-        setState(() => _activeStroke = [_toWorld(details.localPosition)]);
+        _state.setActiveStroke([_toWorld(details.localPosition)]);
       case _EditorTool.homeSite:
         _toggleHomeSiteAt(details.localPosition);
     }
   }
 
   void _handlePanUpdate(DragUpdateDetails details) {
-    switch (_tool) {
+    switch (_state.tool.value) {
       case _EditorTool.mountain:
       case _EditorTool.dune:
       case _EditorTool.erase:
         _paintAt(details.localPosition);
       case _EditorTool.river:
       case _EditorTool.lake:
-        setState(
-          () => _activeStroke = [
-            ..._activeStroke,
-            _toWorld(details.localPosition),
-          ],
-        );
+        _state.setActiveStroke([
+          ..._state.activeStroke.value,
+          _toWorld(details.localPosition),
+        ]);
       case _EditorTool.homeSite:
         break; // single-tap placement only, handled in onPanStart
     }
@@ -896,20 +1004,20 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _loadoutFor(waveNumber).unitCounts.isNotEmpty;
 
   WaveLoadout _loadoutFor(int waveNumber) {
-    for (final loadout in _draft.waveLoadouts) {
+    for (final loadout in _state.draft.value.waveLoadouts) {
       if (loadout.waveNumber == waveNumber) return loadout;
     }
     return WaveLoadout(waveNumber: waveNumber);
   }
 
   void _paintAt(Offset local) {
-    final preview = _preview;
+    final preview = _state.preview.value;
     if (preview == null) return;
     final point = _toWorld(local);
     final grid = preview.grid;
     final col = (point.x / grid.cellSize).floor().clamp(0, grid.cols - 1);
     final row = (point.y / grid.cellSize).floor().clamp(0, grid.rows - 1);
-    final kind = switch (_tool) {
+    final kind = switch (_state.tool.value) {
       _EditorTool.mountain => ObstacleKind.mountain,
       _EditorTool.dune => ObstacleKind.dune,
       _EditorTool.erase => null,
@@ -929,11 +1037,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
   /// edge base, single western approach) since a draft doesn't carry
   /// [GameScene.homeSites]/layout data yet.
   Future<void> _play() async {
-    setState(() => _playing = true);
-    final preview = await _generator.generate(_draft);
+    _state.setPlaying(true);
+    final draft = _state.draft.value;
+    final preview = await _generator.generate(draft);
     if (!mounted) return;
-    setState(() => _playing = false);
-    if (_draft.mode == GameMode.skirmish) {
+    _state.setPlaying(false);
+    if (draft.mode == GameMode.skirmish) {
       _showToast(
         'Testing as wave defense - skirmish playtesting is coming soon.',
         icon: Icons.info_outline,
@@ -943,23 +1052,23 @@ class _MapEditorPageState extends State<MapEditorPage> {
       Routes.game.route,
       extra: GameRouteArgs(
         scene: GameScene(
-          id: 'draft-${_draft.id}',
-          name: _draft.name.isEmpty ? 'Untitled Map' : _draft.name,
+          id: 'draft-${draft.id}',
+          name: draft.name.isEmpty ? 'Untitled Map' : draft.name,
           briefing: 'Testing your hand-drawn map draft.',
-          biome: _draft.biome,
-          waveCount: _draft.waveCount,
-          startingGold: _draft.startingGold,
+          biome: draft.biome,
+          waveCount: draft.waveCount,
+          startingGold: draft.startingGold,
         ),
         terrainRepository: MapDraftTerrainRepository(
-          draft: _draft,
+          draft: draft,
           preview: preview,
         ),
         waveRepository: DraftWaveRepository(
-          loadouts: _draft.waveLoadouts,
-          totalWaves: _draft.waveCount,
+          loadouts: draft.waveLoadouts,
+          totalWaves: draft.waveCount,
           fallback: WaveRepositoryImpl(
-            totalWaves: _draft.waveCount,
-            biome: _draft.biome,
+            totalWaves: draft.waveCount,
+            biome: draft.biome,
           ),
         ),
       ),
@@ -974,14 +1083,16 @@ class _MapEditorPageState extends State<MapEditorPage> {
   }
 
   void _randomizeSelectedWave() {
-    _replaceLoadout(WaveLoadoutGenerator.randomizeWave(_selectedWaveNumber));
+    _replaceLoadout(
+      WaveLoadoutGenerator.randomizeWave(_state.selectedWaveNumber.value),
+    );
   }
 
   Future<void> _regenerate() async {
     final generation = ++_generation;
-    final preview = await _generator.generate(_draft);
+    final preview = await _generator.generate(_state.draft.value);
     if (!mounted || generation != _generation) return;
-    setState(() => _preview = preview);
+    _state.setPreview(preview);
   }
 
   void _removeKeyframe(int index) {
@@ -1009,18 +1120,17 @@ class _MapEditorPageState extends State<MapEditorPage> {
   }
 
   void _resetZoom() {
-    setState(() {
-      _zoom = 1.0;
-      _viewerController.value = Matrix4.identity();
-    });
+    _state.setZoom(1.0);
+    _viewerController.value = Matrix4.identity();
   }
 
   Future<void> _save() async {
-    setState(() => _saving = true);
-    await _draftRepository.saveDraft(_draft);
+    _state.setSaving(true);
+    final draft = _state.draft.value;
+    await _draftRepository.saveDraft(draft);
     if (!mounted) return;
-    setState(() => _saving = false);
-    _showToast('Saved "${_draft.name}"');
+    _state.setSaving(false);
+    _showToast('Saved "${draft.name}"');
   }
 
   void _setWaveUnitCount(UnitKind kind, int count) {
@@ -1045,13 +1155,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
   void _toggleHomeSiteAt(Offset local) {
     final point = _toWorld(local);
     const removeRadius = 32.0;
-    final existingIndex = _draft.homeSites.indexWhere(
+    final draft = _state.draft.value;
+    final existingIndex = draft.homeSites.indexWhere(
       (site) =>
           (site.x - point.x).abs() < removeRadius &&
           (site.y - point.y).abs() < removeRadius,
     );
     if (existingIndex == -1 &&
-        _draft.homeSites.length >= PlayerPalette.colors.length) {
+        draft.homeSites.length >= PlayerPalette.colors.length) {
       _showToast(
         'Only ${PlayerPalette.colors.length} home sites supported',
         icon: Icons.info_outline,
@@ -1070,20 +1181,21 @@ class _MapEditorPageState extends State<MapEditorPage> {
   }
 
   EditorPoint _toWorld(Offset local) {
+    final draft = _state.draft.value;
     return EditorPoint(
-      x: (local.dx / _canvasSize.width * _draft.arenaWidth).clamp(
+      x: (local.dx / _canvasSize.width * draft.arenaWidth).clamp(
         0,
-        _draft.arenaWidth,
+        draft.arenaWidth,
       ),
-      y: (local.dy / _canvasSize.height * _draft.arenaHeight).clamp(
+      y: (local.dy / _canvasSize.height * draft.arenaHeight).clamp(
         0,
-        _draft.arenaHeight,
+        draft.arenaHeight,
       ),
     );
   }
 
   void _updateDraft(MapDraft Function(MapDraft) update) {
-    setState(() => _draft = update(_draft));
+    _state.setDraft(update(_state.draft.value));
     _regenDebounce?.cancel();
     _regenDebounce = Timer(const Duration(milliseconds: 250), _regenerate);
   }
@@ -1098,7 +1210,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
   /// editor's current draft contents in place (the draft keeps its id, so
   /// Save continues to overwrite the same slot it was opened from).
   Future<void> _uploadDraft() async {
-    setState(() => _uploading = true);
+    _state.setUploading(true);
     try {
       final file = await FilePicker.pickFile(
         dialogTitle: 'Upload map',
@@ -1108,15 +1220,14 @@ class _MapEditorPageState extends State<MapEditorPage> {
       if (file == null || !mounted) return;
       final bytes = await file.readAsBytes();
       final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-      final imported = MapDraft.fromJson(json).copyWith(id: _draft.id);
-      setState(() {
-        _draft = imported;
-        _nameController.text = imported.name;
-        _widthController.text = imported.arenaWidth.toStringAsFixed(0);
-        _heightController.text = imported.arenaHeight.toStringAsFixed(0);
-        _startingGoldController.text = imported.startingGold.toString();
-        _waveCountController.text = imported.waveCount.toString();
-      });
+      final imported = MapDraft.fromJson(json)
+          .copyWith(id: _state.draft.value.id);
+      _state.setDraft(imported);
+      _nameController.text = imported.name;
+      _widthController.text = imported.arenaWidth.toStringAsFixed(0);
+      _heightController.text = imported.arenaHeight.toStringAsFixed(0);
+      _startingGoldController.text = imported.startingGold.toString();
+      _waveCountController.text = imported.waveCount.toString();
       await _regenerate();
       if (!mounted) return;
       _showToast('Imported "${imported.name}"');
@@ -1128,16 +1239,15 @@ class _MapEditorPageState extends State<MapEditorPage> {
         );
       }
     } finally {
-      if (mounted) setState(() => _uploading = false);
+      if (mounted) _state.setUploading(false);
     }
   }
 
   void _zoomBy(double factor) {
-    setState(() {
-      _zoom = (_zoom * factor).clamp(1.0, 4.0);
-      _viewerController.value = Matrix4.identity()
-        ..scaleByDouble(_zoom, _zoom, _zoom, 1);
-    });
+    final next = (_state.zoom.value * factor).clamp(1.0, 4.0);
+    _state.setZoom(next);
+    _viewerController.value = Matrix4.identity()
+      ..scaleByDouble(next, next, next, 1);
   }
 }
 

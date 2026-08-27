@@ -21,7 +21,6 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
   final MapDraftsListState _state = MapDraftsListState(
     getIt<MapDraftRepository>(),
   );
-  late MapDraft _pendingNewDraft = _freshDraft();
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +44,7 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
               label: const Text('New Map'),
             ),
         openBuilder: (context, closeContainer) =>
-            MapEditorPage(initialDraft: _pendingNewDraft),
+            MapEditorPage(initialDraft: _state.pendingNewDraft.value),
       ),
       body: ValueListenableBuilder<List<MapDraft>?>(
         valueListenable: _state.drafts,
@@ -123,13 +122,7 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
     await _state.deleteDraft(id);
   }
 
-  MapDraft _freshDraft() => MapDraft(
-    id: DateTime.now().microsecondsSinceEpoch.toString(),
-    name: 'New Map',
-  );
-
   void _refresh() {
     _state.refresh();
-    setState(() => _pendingNewDraft = _freshDraft());
   }
 }

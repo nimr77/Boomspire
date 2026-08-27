@@ -198,31 +198,42 @@ class _PlacementSurface extends StatefulWidget {
 }
 
 class _PlacementSurfaceState extends State<_PlacementSurface> {
-  int? _hoveredSlot;
+  final ValueNotifier<int?> _hoveredSlot = ValueNotifier(null);
+
+  @override
+  void dispose() {
+    _hoveredSlot.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, constraints.maxHeight);
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            widget.background,
-            for (final (index, fraction) in widget.sites.indexed)
-              _HomeSiteMarker(
-                center: Offset(
-                  fraction.dx * size.width,
-                  fraction.dy * size.height,
-                ),
-                index: index,
-                selected: widget.selectedSlot == index,
-                hovered: _hoveredSlot == index,
-                onHoverChanged: (hovering) =>
-                    setState(() => _hoveredSlot = hovering ? index : null),
-                onTap: () => widget.onTapSlot(index),
-              ),
-          ],
+    return ValueListenableBuilder<int?>(
+      valueListenable: _hoveredSlot,
+      builder: (context, hoveredSlot, _) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final size = Size(constraints.maxWidth, constraints.maxHeight);
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                widget.background,
+                for (final (index, fraction) in widget.sites.indexed)
+                  _HomeSiteMarker(
+                    center: Offset(
+                      fraction.dx * size.width,
+                      fraction.dy * size.height,
+                    ),
+                    index: index,
+                    selected: widget.selectedSlot == index,
+                    hovered: hoveredSlot == index,
+                    onHoverChanged: (hovering) =>
+                        _hoveredSlot.value = hovering ? index : null,
+                    onTap: () => widget.onTapSlot(index),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
@@ -240,54 +251,67 @@ class _SeatChip extends StatefulWidget {
 }
 
 class _SeatChipState extends State<_SeatChip> {
-  bool _hovered = false;
+  final ValueNotifier<bool> _hovered = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _hovered.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final color = PlayerPalette.colorFor(widget.index);
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedScale(
-        scale: _hovered ? 1.08 : 1.0,
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOutBack,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: widget.isYou ? 0.35 : 0.12),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color, width: widget.isYou ? 2 : 1),
-            boxShadow: _hovered
-                ? [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.7),
-                      blurRadius: 14,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                : const [],
-          ),
-          child: Text(
-            '${widget.index + 1} · ${widget.isYou ? S.current.skirmishPlacementYou : S.current.skirmishPlacementAi}',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: widget.isYou ? FontWeight.bold : FontWeight.normal,
+      onEnter: (_) => _hovered.value = true,
+      onExit: (_) => _hovered.value = false,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _hovered,
+        builder: (context, hovered, _) {
+          return AnimatedScale(
+            scale: hovered ? 1.08 : 1.0,
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOutBack,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: widget.isYou ? 0.35 : 0.12),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: color, width: widget.isYou ? 2 : 1),
+                boxShadow: hovered
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.7),
+                          blurRadius: 14,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : const [],
+              ),
+              child: Text(
+                '${widget.index + 1} · ${widget.isYou ? S.current.skirmishPlacementYou : S.current.skirmishPlacementAi}',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: widget.isYou
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 }
 
 class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
-  late final SkirmishPlacementState? _placementState;
-
-  int? _selectedSlot;
-  bool _launching = false;
+  final SkirmishPlacementState _placementState = SkirmishPlacementState();
 
   bool get _isDraft => widget.draft != null;
   int get _siteCount =>
@@ -295,7 +319,15 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        _placementState.selectedSlot,
+        _placementState.launching,
+      ]),
+      builder: (context, _) {
+        final selectedSlot = _placementState.selectedSlot.value;
+        final launching = _placementState.launching.value;
+        return Scaffold(
       backgroundColor: const Color(0xFF0A0E14),
       body: SafeArea(
         child: Stack(
@@ -341,7 +373,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                             ),
                             child: _isDraft
                                 ? ValueListenableBuilder<EditorTerrainPreview?>(
-                                    valueListenable: _placementState!.preview,
+                                    valueListenable: _placementState.preview,
                                     builder: (context, preview, _) {
                                       if (preview == null) {
                                         return const Center(
@@ -357,7 +389,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                               ),
                                             )
                                             .toList(),
-                                        selectedSlot: _selectedSlot,
+                                        selectedSlot: selectedSlot,
                                         onTapSlot: _selectSlot,
                                         background: CustomPaint(
                                           painter: _DraftPreviewPainter(
@@ -373,7 +405,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                           (s) => _fractionForLayout(s.layout),
                                         )
                                         .toList(),
-                                    selectedSlot: _selectedSlot,
+                                    selectedSlot: selectedSlot,
                                     onTapSlot: _selectSlot,
                                     background: BiomePreview(
                                       scene: widget.scene!,
@@ -391,7 +423,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                         alignment: WrapAlignment.center,
                         children: [
                           for (var i = 0; i < _siteCount; i++)
-                            _SeatChip(index: i, isYou: _selectedSlot == i),
+                            _SeatChip(index: i, isYou: selectedSlot == i),
                         ],
                       ),
                     const SizedBox(height: 20),
@@ -410,7 +442,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                           ),
                         if (_isDraft) const SizedBox(width: 12),
                         ElevatedButton.icon(
-                          onPressed: _launching ? null : _start,
+                          onPressed: launching ? null : _start,
                           icon: const Icon(Icons.play_arrow),
                           label: Text(S.current.skirmishPlacementStart),
                           style: ElevatedButton.styleFrom(
@@ -449,7 +481,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                 ),
               ),
             ),
-            if (_launching)
+            if (launching)
               const ColoredBox(
                 color: Color(0x99000000),
                 child: Center(child: CircularProgressIndicator()),
@@ -457,12 +489,14 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
           ],
         ),
       ),
+        );
+      },
     );
   }
 
   @override
   void dispose() {
-    _placementState?.dispose();
+    _placementState.dispose();
     super.dispose();
   }
 
@@ -470,20 +504,19 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   void initState() {
     super.initState();
     if (_isDraft) {
-      _placementState = SkirmishPlacementState()..load(widget.draft!);
+      _placementState.load(widget.draft!);
     } else {
-      _placementState = null;
       final sites = widget.scene!.homeSites;
       final playerIndex = sites.indexWhere(
         (s) => s.owner == HomeSiteOwner.player,
       );
-      _selectedSlot = playerIndex >= 0 ? playerIndex : null;
+      _placementState.selectSlot(playerIndex >= 0 ? playerIndex : null);
     }
   }
 
   void _randomize() {
     if (_siteCount == 0) return;
-    setState(() => _selectedSlot = Random().nextInt(_siteCount));
+    _placementState.selectSlot(Random().nextInt(_siteCount));
   }
 
   /// The scene to actually launch for a built-in (non-draft) map: unchanged
@@ -493,13 +526,14 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   /// tapped and the AI takes over the original player site instead.
   GameScene _sceneForLaunch() {
     final scene = widget.scene!;
+    final selectedSlot = _placementState.selectedSlot.value;
     final playerIndex = scene.homeSites.indexWhere(
       (s) => s.owner == HomeSiteOwner.player,
     );
-    if (_selectedSlot == null || _selectedSlot == playerIndex) return scene;
+    if (selectedSlot == null || selectedSlot == playerIndex) return scene;
     final sites = [
       for (final (i, site) in scene.homeSites.indexed)
-        if (i == _selectedSlot)
+        if (i == selectedSlot)
           HomeSite(layout: site.layout, owner: HomeSiteOwner.player)
         else if (i == playerIndex)
           HomeSite(layout: site.layout, owner: HomeSiteOwner.ai)
@@ -523,11 +557,11 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   }
 
   void _selectSlot(int index) {
-    setState(() => _selectedSlot = index);
+    _placementState.selectSlot(index);
   }
 
   Future<void> _start() async {
-    if (_isDraft && _siteCount > 0 && _selectedSlot == null) {
+    if (_isDraft && _siteCount > 0 && _placementState.selectedSlot.value == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(S.current.skirmishPlacementPickHint)),
       );
@@ -542,14 +576,15 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
       return;
     }
 
-    setState(() => _launching = true);
-    final preview = await _placementState!.load(widget.draft!);
+    _placementState.setLaunching(true);
+    final preview = await _placementState.load(widget.draft!);
     if (!mounted) return;
-    setState(() => _launching = false);
+    _placementState.setLaunching(false);
 
+    final selectedSlot = _placementState.selectedSlot.value;
     final draft = widget.draft!;
-    final chosen = _selectedSlot != null
-        ? draft.homeSites[_selectedSlot!]
+    final chosen = selectedSlot != null
+        ? draft.homeSites[selectedSlot]
         : null;
     // The AI takes the first other declared site - today's map editor
     // always gives a skirmish-flagged draft at least two home sites (one
@@ -558,7 +593,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
     // launching a skirmish with no opposing base to fight.
     EditorPoint? aiSite;
     for (var i = 0; i < draft.homeSites.length; i++) {
-      if (i != _selectedSlot) {
+      if (i != selectedSlot) {
         aiSite = draft.homeSites[i];
         break;
       }

@@ -83,6 +83,7 @@ class _MinimapPainter extends CustomPainter {
 class _MinimapWidgetState extends State<MinimapWidget>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
+  final ValueNotifier<int> _tick = ValueNotifier(0);
 
   @override
   Widget build(BuildContext context) {
@@ -99,30 +100,36 @@ class _MinimapWidgetState extends State<MinimapWidget>
     final width = MinimapWidget.height * (arenaWidth / arenaHeight);
     final size = Size(width, MinimapWidget.height);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapUp: (details) => _navigateTo(details.localPosition, size),
-      onPanUpdate: (details) => _navigateTo(details.localPosition, size),
-      child: Container(
-        width: size.width,
-        height: size.height,
-        decoration: BoxDecoration(
-          color: const Color(0xCC0F1319),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white24, width: 1.5),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: CustomPaint(
-          painter: _MinimapPainter(game: widget.game),
-          size: size,
-        ),
-      ),
+    return ValueListenableBuilder<int>(
+      valueListenable: _tick,
+      builder: (context, _, _) {
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (details) => _navigateTo(details.localPosition, size),
+          onPanUpdate: (details) => _navigateTo(details.localPosition, size),
+          child: Container(
+            width: size.width,
+            height: size.height,
+            decoration: BoxDecoration(
+              color: const Color(0xCC0F1319),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white24, width: 1.5),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: CustomPaint(
+              painter: _MinimapPainter(game: widget.game),
+              size: size,
+            ),
+          ),
+        );
+      },
     );
   }
 
   @override
   void dispose() {
     _ticker.dispose();
+    _tick.dispose();
     super.dispose();
   }
 
@@ -132,7 +139,7 @@ class _MinimapWidgetState extends State<MinimapWidget>
     // Flutter widgets don't repaint on their own every frame the way a
     // Flame component does - a ticker drives the minimap's live redraw
     // (tower/unit dots, camera rect) in step with the game underneath it.
-    _ticker = createTicker((_) => setState(() {}))..start();
+    _ticker = createTicker((_) => _tick.value++)..start();
   }
 
   void _navigateTo(Offset local, Size size) {

@@ -107,7 +107,9 @@ class _DifficultySelector extends StatelessWidget {
 class _LevelSelectPageState extends State<LevelSelectPage> {
   final AccountProfileState _accountProfileState = getIt<AccountProfileState>();
   final LevelSelectState _state = LevelSelectState(getIt<ProgressRepository>());
-  GameDifficulty _difficulty = GameDifficulty.normal;
+  final ValueNotifier<GameDifficulty> _difficulty = ValueNotifier(
+    GameDifficulty.normal,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -157,45 +159,55 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                           builder: (context, progressValue, _) {
                             final progress =
                                 progressValue ?? ProgressSnapshot.empty;
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                AccountBadge(state: _accountProfileState),
-                                Center(
-                                  child: _DifficultySelector(
-                                    value: _difficulty,
-                                    onChanged: (value) =>
-                                        setState(() => _difficulty = value),
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                GridView.count(
-                                  shrinkWrap: true,
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 16,
-                                  crossAxisSpacing: 16,
-                                  childAspectRatio: 1.4,
-                                  physics: const NeverScrollableScrollPhysics(),
+                            return ValueListenableBuilder<GameDifficulty>(
+                              valueListenable: _difficulty,
+                              builder: (context, difficulty, _) {
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    for (final (index, scene)
-                                        in GameScenes.all.indexed)
-                                      _SceneCard(
-                                            scene: scene,
-                                            progress: progress,
-                                            difficulty: _difficulty,
-                                          )
-                                          .animate()
-                                          .fadeIn(
-                                            duration: 380.ms,
-                                            delay: (120 + index * 90).ms,
-                                          )
-                                          .scale(
-                                            begin: const Offset(0.92, 0.92),
-                                            curve: Curves.easeOutCubic,
-                                          ),
+                                    AccountBadge(state: _accountProfileState),
+                                    Center(
+                                      child: _DifficultySelector(
+                                        value: difficulty,
+                                        onChanged: (value) =>
+                                            _difficulty.value = value,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    GridView.count(
+                                      shrinkWrap: true,
+                                      crossAxisCount: 2,
+                                      mainAxisSpacing: 16,
+                                      crossAxisSpacing: 16,
+                                      childAspectRatio: 1.4,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      children: [
+                                        for (final (index, scene)
+                                            in GameScenes.all.indexed)
+                                          _SceneCard(
+                                                scene: scene,
+                                                progress: progress,
+                                                difficulty: difficulty,
+                                                onReturn: _state.load,
+                                              )
+                                              .animate()
+                                              .fadeIn(
+                                                duration: 380.ms,
+                                                delay: (120 + index * 90).ms,
+                                              )
+                                              .scale(
+                                                begin: const Offset(
+                                                  0.92,
+                                                  0.92,
+                                                ),
+                                                curve: Curves.easeOutCubic,
+                                              ),
+                                      ],
+                                    ),
                                   ],
-                                ),
-                              ],
+                                );
+                              },
                             );
                           },
                         ),
@@ -241,6 +253,7 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
   @override
   void dispose() {
     _state.dispose();
+    _difficulty.dispose();
     super.dispose();
   }
 
@@ -255,11 +268,13 @@ class _SceneCard extends StatelessWidget {
   final GameScene scene;
   final ProgressSnapshot progress;
   final GameDifficulty difficulty;
+  final Future<void> Function() onReturn;
 
   const _SceneCard({
     required this.scene,
     required this.progress,
     required this.difficulty,
+    required this.onReturn,
   });
 
   @override
@@ -271,11 +286,12 @@ class _SceneCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          context.push(
+        onTap: () async {
+          await context.push(
             Routes.game.route,
             extra: GameRouteArgs(scene: scene, difficulty: difficulty),
           );
+          await onReturn();
         },
         child: ClipRRect(
           borderRadius: BorderRadius.circular(14),

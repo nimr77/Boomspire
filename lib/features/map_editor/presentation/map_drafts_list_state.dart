@@ -9,10 +9,14 @@ import '../domain/repos/map_draft_repository.dart';
 class MapDraftsListState {
   final MapDraftRepository _draftRepository;
   final ValueNotifier<List<MapDraft>?> _drafts = ValueNotifier(null);
+  final ValueNotifier<MapDraft> _pendingNewDraft = ValueNotifier(
+    _freshDraft(),
+  );
 
   MapDraftsListState(this._draftRepository);
 
   ValueListenable<List<MapDraft>?> get drafts => _drafts;
+  ValueListenable<MapDraft> get pendingNewDraft => _pendingNewDraft;
 
   Future<void> deleteDraft(String id) async {
     await _draftRepository.deleteDraft(id);
@@ -21,9 +25,16 @@ class MapDraftsListState {
 
   void dispose() {
     _drafts.dispose();
+    _pendingNewDraft.dispose();
   }
 
   Future<void> refresh() async {
     _drafts.value = await _draftRepository.listDrafts();
+    _pendingNewDraft.value = _freshDraft();
   }
+
+  static MapDraft _freshDraft() => MapDraft(
+    id: DateTime.now().microsecondsSinceEpoch.toString(),
+    name: 'New Map',
+  );
 }
