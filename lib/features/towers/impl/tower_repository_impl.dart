@@ -12,7 +12,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.machineGun: UnitBlueprint(
       type: TowerType.machineGun,
       name: S.current.towerNameMachineGun,
-      cost: 40,
+      cost: 100,
       range: 150,
       damage: 7,
       fireRate: 0.15,
@@ -21,7 +21,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.rocket: UnitBlueprint(
       type: TowerType.rocket,
       name: S.current.towerNameRocket,
-      cost: 90,
+      cost: 250,
       range: 230,
       damage: 60,
       fireRate: 1.7,
@@ -31,7 +31,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.cannon: UnitBlueprint(
       type: TowerType.cannon,
       name: S.current.towerNameCannon,
-      cost: 140,
+      cost: 300,
       range: 190,
       damage: 95,
       fireRate: 2.4,
@@ -41,7 +41,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.antiAir: UnitBlueprint(
       type: TowerType.antiAir,
       name: S.current.towerNameAntiAir,
-      cost: 110,
+      cost: 150,
       range: 260,
       damage: 26,
       fireRate: 0.5,
@@ -51,7 +51,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.laser: UnitBlueprint(
       type: TowerType.laser,
       name: S.current.towerNameLaser,
-      cost: 170,
+      cost: 800,
       range: 210,
       damage: 14,
       fireRate: 0.08,
@@ -63,13 +63,13 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.rocketSilo: UnitBlueprint(
       type: TowerType.rocketSilo,
       name: S.current.towerNameRocketSilo,
-      cost: 220,
       range: 340,
       // Long-range-only siege weapon: anything that gets inside this radius
       // is under its minimum arc and can't be engaged at all - it relies on
       // other towers to screen it from close-range attackers.
       minRange: 130,
       damage: 90,
+      cost: 500,
       // Slow reload to match its long-range-only role - it isn't meant to
       // duel anything up close, only pound targets from afar.
       fireRate: 4.5,
