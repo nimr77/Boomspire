@@ -31,8 +31,13 @@ class TerrainRepositoryImpl implements TerrainRepository {
       (_) => List<ObstacleKind?>.filled(cols, null),
     );
 
-    final baseCell = scene.mode == GameMode.skirmish && scene.homeSites.isNotEmpty
-        ? _baseCell(_homeSiteFor(scene, HomeSiteOwner.player).layout, cols, rows)
+    final baseCell =
+        scene.mode == GameMode.skirmish && scene.homeSites.isNotEmpty
+        ? _baseCell(
+            _homeSiteFor(scene, HomeSiteOwner.player).layout,
+            cols,
+            rows,
+          )
         : _baseCell(scene.homeLayout, cols, rows);
 
     // A skirmish scene's "spawn" is the AI opponent's base - every unit that
@@ -42,7 +47,8 @@ class TerrainRepositoryImpl implements TerrainRepository {
     // then doubles as "never let either side wall the other completely
     // out". Only one AI seat is supported today (see [GameScenes.skirmishes]'
     // doc comment) - additional `ai` seats are ignored for now.
-    final secondaryBaseCell = scene.mode == GameMode.skirmish && scene.homeSites.isNotEmpty
+    final secondaryBaseCell =
+        scene.mode == GameMode.skirmish && scene.homeSites.isNotEmpty
         ? _baseCell(_homeSiteFor(scene, HomeSiteOwner.ai).layout, cols, rows)
         : null;
 
@@ -101,19 +107,6 @@ class TerrainRepositoryImpl implements TerrainRepository {
           .map((c) => PathPoint(grid.cellCenter(c).x, grid.cellCenter(c).y))
           .toList(),
     );
-  }
-
-  /// The (first) [HomeSite] claimed by [owner] on a skirmish scene, falling
-  /// back to whichever site is first/last if none is explicitly tagged that
-  /// way - keeps terrain generation resilient even if a future scene ever
-  /// omits an owner.
-  HomeSite _homeSiteFor(GameScene scene, HomeSiteOwner owner) {
-    for (final site in scene.homeSites) {
-      if (site.owner == owner) return site;
-    }
-    return owner == HomeSiteOwner.player
-        ? scene.homeSites.first
-        : scene.homeSites.last;
   }
 
   Point<int> _baseCell(HomeLayout layout, int cols, int rows) =>
@@ -192,6 +185,35 @@ class TerrainRepositoryImpl implements TerrainRepository {
     }
   }
 
+  /// The (first) [HomeSite] claimed by [owner] on a skirmish scene, falling
+  /// back to whichever site is first/last if none is explicitly tagged that
+  /// way - keeps terrain generation resilient even if a future scene ever
+  /// omits an owner.
+  HomeSite _homeSiteFor(GameScene scene, HomeSiteOwner owner) {
+    for (final site in scene.homeSites) {
+      if (site.owner == owner) return site;
+    }
+    return owner == HomeSiteOwner.player
+        ? scene.homeSites.first
+        : scene.homeSites.last;
+  }
+
+  /// Converts each scene-relative [ResourceNodeSite] fraction into a grid
+  /// cell, clamped inside the playable area so nodes never land on the
+  /// unreachable border.
+  List<Point<int>> _resourceNodeCells(
+    List<ResourceNodeSite> sites,
+    int cols,
+    int rows,
+  ) => sites
+      .map(
+        (site) => Point(
+          (site.dx * cols).round().clamp(1, cols - 2),
+          (site.dy * rows).round().clamp(1, rows - 2),
+        ),
+      )
+      .toList();
+
   void _scatterHighGround(
     Grid grid,
     List<List<ObstacleKind?>> kinds,
@@ -255,20 +277,4 @@ class TerrainRepositoryImpl implements TerrainRepository {
     }
     return false;
   }
-
-  /// Converts each scene-relative [ResourceNodeSite] fraction into a grid
-  /// cell, clamped inside the playable area so nodes never land on the
-  /// unreachable border.
-  List<Point<int>> _resourceNodeCells(
-    List<ResourceNodeSite> sites,
-    int cols,
-    int rows,
-  ) => sites
-      .map(
-        (site) => Point(
-          (site.dx * cols).round().clamp(1, cols - 2),
-          (site.dy * rows).round().clamp(1, rows - 2),
-        ),
-      )
-      .toList();
 }

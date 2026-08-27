@@ -46,16 +46,6 @@ class AiHomeBaseComponent extends PositionComponent
   Team get owner => game.aiTeam ?? Team.aiOpponent;
 
   @override
-  void takeDamage(double amount) {
-    final economy = game.aiEconomy;
-    if (economy == null || economy.isDefeated) return;
-    economy.damageBase(amount.round());
-    if (economy.isDefeated) {
-      game.gameState.setStatus(GameStatus.victory);
-    }
-  }
-
-  @override
   void render(Canvas canvas) {
     final accent = owner.color;
     final center = Offset(size.x / 2, size.y / 2);
@@ -66,20 +56,30 @@ class AiHomeBaseComponent extends PositionComponent
     // the battlefield's structures share).
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: center, width: size.x * 0.8, height: size.y * 0.6),
+        Rect.fromCenter(
+          center: center,
+          width: size.x * 0.8,
+          height: size.y * 0.6,
+        ),
         const Radius.circular(10),
       ),
       Paint()..color = const Color(0xFF20242B),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: center, width: size.x * 0.8, height: size.y * 0.6),
+        Rect.fromCenter(
+          center: center,
+          width: size.x * 0.8,
+          height: size.y * 0.6,
+        ),
         const Radius.circular(10),
       ),
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
-        ..color = accent.withValues(alpha: 0.75 + 0.15 * (0.5 + 0.5 * _pulseWave())),
+        ..color = accent.withValues(
+          alpha: 0.75 + 0.15 * (0.5 + 0.5 * _pulseWave()),
+        ),
     );
     final breath = 0.5 + 0.5 * _pulseWave();
     canvas.drawCircle(
@@ -118,6 +118,16 @@ class AiHomeBaseComponent extends PositionComponent
       ),
       Paint()..color = ratio > 0.4 ? accent : const Color(0xFFE53935),
     );
+  }
+
+  @override
+  void takeDamage(double amount) {
+    final economy = game.aiEconomy;
+    if (economy == null || economy.isDefeated) return;
+    economy.damageBase(amount.round());
+    if (economy.isDefeated) {
+      game.gameState.setStatus(GameStatus.victory);
+    }
   }
 
   @override

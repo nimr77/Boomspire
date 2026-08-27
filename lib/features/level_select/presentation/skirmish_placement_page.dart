@@ -19,6 +19,16 @@ import '../../terrain/domain/models/biome.dart';
 import '../../terrain/presentation/obstacle_color.dart';
 import 'biome_preview.dart';
 
+/// Maps a built-in scene's [HomeLayout] to a fractional position within the
+/// arena - matches the cell math `TerrainRepositoryImpl` uses so the marker
+/// lands where the real base will spawn.
+Offset _fractionForLayout(HomeLayout layout) => switch (layout) {
+  HomeLayout.eastEdge => const Offset(0.94, 0.5),
+  HomeLayout.center => const Offset(0.5, 0.5),
+  HomeLayout.northEastCorner => const Offset(0.88, 0.12),
+  HomeLayout.southWestCorner => const Offset(0.12, 0.88),
+};
+
 /// Pre-game placement/preview screen shown after picking a skirmish map:
 /// lets the player see the battlefield and claim one of its numbered,
 /// colored home sites (manually or via [_randomize]) before the match
@@ -41,6 +51,154 @@ class SkirmishPlacementPage extends StatefulWidget {
   State<SkirmishPlacementPage> createState() => _SkirmishPlacementPageState();
 }
 
+/// Lightweight read-only terrain preview (biome gradient + rasterized
+/// obstacle cells, no sun/weather) - enough to see the map's shape while
+/// picking a starting site.
+class _DraftPreviewPainter extends CustomPainter {
+  final EditorTerrainPreview preview;
+
+  _DraftPreviewPainter({required this.preview});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final palette = preview.biome.palette;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          const Offset(0, 0),
+          Offset(0, size.height),
+          [palette.groundTop, palette.groundMid, palette.groundBottom],
+          const [0.0, 0.5, 1.0],
+        ),
+    );
+
+    final grid = preview.grid;
+    if (grid.cols == 0 || grid.rows == 0) return;
+    final cellW = size.width / grid.cols;
+    final cellH = size.height / grid.rows;
+    for (var row = 0; row < grid.rows; row++) {
+      for (var col = 0; col < grid.cols; col++) {
+        final kind = preview.obstacleKinds[row][col];
+        if (kind == null) continue;
+        canvas.drawRect(
+          Rect.fromLTWH(col * cellW, row * cellH, cellW, cellH),
+          Paint()..color = obstacleColor(kind, palette),
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DraftPreviewPainter oldDelegate) =>
+      oldDelegate.preview != preview;
+}
+
+class _MarkerPainter extends CustomPainter {
+  final List<Offset> sites;
+  final int? selectedSlot;
+
+  _MarkerPainter({required this.sites, required this.selectedSlot});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final (index, fraction) in sites.indexed) {
+      final center = Offset(fraction.dx * size.width, fraction.dy * size.height);
+      paintHomeSiteMarker(
+        canvas,
+        center,
+        index,
+        radius: 18,
+        highlighted: index == selectedSlot,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MarkerPainter oldDelegate) =>
+      oldDelegate.sites != sites || oldDelegate.selectedSlot != selectedSlot;
+}
+
+/// Renders [background] with a numbered/colored marker per fractional site
+/// position, and reports taps near a marker via [onTapSlot].
+class _PlacementSurface extends StatelessWidget {
+  final List<Offset> sites;
+  final int? selectedSlot;
+  final ValueChanged<int> onTapSlot;
+  final Widget background;
+
+  const _PlacementSurface({
+    required this.sites,
+    required this.selectedSlot,
+    required this.onTapSlot,
+    required this.background,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        return GestureDetector(
+          onTapUp: (details) {
+            for (final (index, fraction) in sites.indexed) {
+              final center = Offset(
+                fraction.dx * size.width,
+                fraction.dy * size.height,
+              );
+              if ((details.localPosition - center).distance <= 22) {
+                onTapSlot(index);
+                return;
+              }
+            }
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              background,
+              CustomPaint(
+                painter: _MarkerPainter(
+                  sites: sites,
+                  selectedSlot: selectedSlot,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SeatChip extends StatelessWidget {
+  final int index;
+  final bool isYou;
+
+  const _SeatChip({required this.index, required this.isYou});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = PlayerPalette.colorFor(index);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isYou ? 0.35 : 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color, width: isYou ? 2 : 1),
+      ),
+      child: Text(
+        '${index + 1} · ${isYou ? S.current.skirmishPlacementYou : S.current.skirmishPlacementAi}',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: isYou ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+}
+
 class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   late final Future<EditorTerrainPreview>? _draftPreviewFuture = widget.draft ==
           null
@@ -53,92 +211,6 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   bool get _isDraft => widget.draft != null;
   int get _siteCount =>
       widget.draft?.homeSites.length ?? widget.scene?.homeSites.length ?? 0;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!_isDraft) {
-      final sites = widget.scene!.homeSites;
-      final playerIndex = sites.indexWhere(
-        (s) => s.owner == HomeSiteOwner.player,
-      );
-      _selectedSlot = playerIndex >= 0 ? playerIndex : null;
-    }
-  }
-
-  void _randomize() {
-    if (_siteCount == 0) return;
-    setState(() => _selectedSlot = Random().nextInt(_siteCount));
-  }
-
-  void _selectSlot(int index) {
-    if (!_isDraft) return; // Built-in scenes have fixed ownership.
-    setState(() => _selectedSlot = index);
-  }
-
-  Future<void> _start() async {
-    if (_isDraft && _siteCount > 0 && _selectedSlot == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(S.current.skirmishPlacementPickHint)),
-      );
-      return;
-    }
-
-    if (!_isDraft) {
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => GamePage(scene: widget.scene!)));
-      return;
-    }
-
-    setState(() => _launching = true);
-    final preview = await _draftPreviewFuture!;
-    if (!mounted) return;
-    setState(() => _launching = false);
-
-    final draft = widget.draft!;
-    final chosen = _selectedSlot != null
-        ? draft.homeSites[_selectedSlot!]
-        : null;
-    // The AI takes the first other declared site - today's map editor
-    // always gives a skirmish-flagged draft at least two home sites (one
-    // per seat). If, for whatever reason, there isn't a second site to
-    // hand to the AI, fall back to a single-base test-play instead of
-    // launching a skirmish with no opposing base to fight.
-    EditorPoint? aiSite;
-    for (var i = 0; i < draft.homeSites.length; i++) {
-      if (i != _selectedSlot) {
-        aiSite = draft.homeSites[i];
-        break;
-      }
-    }
-    if (aiSite == null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Testing as single-base - add another home site for a full skirmish.'),
-        ),
-      );
-    }
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GamePage(
-          scene: GameScene(
-            id: 'draft-${draft.id}',
-            name: draft.name.isEmpty ? 'Untitled Map' : draft.name,
-            briefing: 'Testing your hand-drawn skirmish map.',
-            biome: draft.biome,
-            mode: aiSite != null ? GameMode.skirmish : GameMode.waveDefense,
-          ),
-          terrainRepository: MapDraftTerrainRepository(
-            draft: draft,
-            preview: preview,
-            humanBaseSite: chosen,
-            aiBaseSite: aiSite,
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -310,160 +382,88 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
       ),
     );
   }
-}
-
-/// Maps a built-in scene's [HomeLayout] to a fractional position within the
-/// arena - matches the cell math `TerrainRepositoryImpl` uses so the marker
-/// lands where the real base will spawn.
-Offset _fractionForLayout(HomeLayout layout) => switch (layout) {
-  HomeLayout.eastEdge => const Offset(0.94, 0.5),
-  HomeLayout.center => const Offset(0.5, 0.5),
-  HomeLayout.northEastCorner => const Offset(0.88, 0.12),
-  HomeLayout.southWestCorner => const Offset(0.12, 0.88),
-};
-
-/// Renders [background] with a numbered/colored marker per fractional site
-/// position, and reports taps near a marker via [onTapSlot].
-class _PlacementSurface extends StatelessWidget {
-  final List<Offset> sites;
-  final int? selectedSlot;
-  final ValueChanged<int> onTapSlot;
-  final Widget background;
-
-  const _PlacementSurface({
-    required this.sites,
-    required this.selectedSlot,
-    required this.onTapSlot,
-    required this.background,
-  });
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, constraints.maxHeight);
-        return GestureDetector(
-          onTapUp: (details) {
-            for (final (index, fraction) in sites.indexed) {
-              final center = Offset(
-                fraction.dx * size.width,
-                fraction.dy * size.height,
-              );
-              if ((details.localPosition - center).distance <= 22) {
-                onTapSlot(index);
-                return;
-              }
-            }
-          },
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              background,
-              CustomPaint(
-                painter: _MarkerPainter(
-                  sites: sites,
-                  selectedSlot: selectedSlot,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _MarkerPainter extends CustomPainter {
-  final List<Offset> sites;
-  final int? selectedSlot;
-
-  _MarkerPainter({required this.sites, required this.selectedSlot});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final (index, fraction) in sites.indexed) {
-      final center = Offset(fraction.dx * size.width, fraction.dy * size.height);
-      paintHomeSiteMarker(
-        canvas,
-        center,
-        index,
-        radius: 18,
-        highlighted: index == selectedSlot,
+  void initState() {
+    super.initState();
+    if (!_isDraft) {
+      final sites = widget.scene!.homeSites;
+      final playerIndex = sites.indexWhere(
+        (s) => s.owner == HomeSiteOwner.player,
       );
+      _selectedSlot = playerIndex >= 0 ? playerIndex : null;
     }
   }
 
-  @override
-  bool shouldRepaint(covariant _MarkerPainter oldDelegate) =>
-      oldDelegate.sites != sites || oldDelegate.selectedSlot != selectedSlot;
-}
+  void _randomize() {
+    if (_siteCount == 0) return;
+    setState(() => _selectedSlot = Random().nextInt(_siteCount));
+  }
 
-/// Lightweight read-only terrain preview (biome gradient + rasterized
-/// obstacle cells, no sun/weather) - enough to see the map's shape while
-/// picking a starting site.
-class _DraftPreviewPainter extends CustomPainter {
-  final EditorTerrainPreview preview;
+  void _selectSlot(int index) {
+    if (!_isDraft) return; // Built-in scenes have fixed ownership.
+    setState(() => _selectedSlot = index);
+  }
 
-  _DraftPreviewPainter({required this.preview});
+  Future<void> _start() async {
+    if (_isDraft && _siteCount > 0 && _selectedSlot == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.current.skirmishPlacementPickHint)),
+      );
+      return;
+    }
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final palette = preview.biome.palette;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          const Offset(0, 0),
-          Offset(0, size.height),
-          [palette.groundTop, palette.groundMid, palette.groundBottom],
-          const [0.0, 0.5, 1.0],
-        ),
-    );
+    if (!_isDraft) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => GamePage(scene: widget.scene!)));
+      return;
+    }
 
-    final grid = preview.grid;
-    if (grid.cols == 0 || grid.rows == 0) return;
-    final cellW = size.width / grid.cols;
-    final cellH = size.height / grid.rows;
-    for (var row = 0; row < grid.rows; row++) {
-      for (var col = 0; col < grid.cols; col++) {
-        final kind = preview.obstacleKinds[row][col];
-        if (kind == null) continue;
-        canvas.drawRect(
-          Rect.fromLTWH(col * cellW, row * cellH, cellW, cellH),
-          Paint()..color = obstacleColor(kind, palette),
-        );
+    setState(() => _launching = true);
+    final preview = await _draftPreviewFuture!;
+    if (!mounted) return;
+    setState(() => _launching = false);
+
+    final draft = widget.draft!;
+    final chosen = _selectedSlot != null
+        ? draft.homeSites[_selectedSlot!]
+        : null;
+    // The AI takes the first other declared site - today's map editor
+    // always gives a skirmish-flagged draft at least two home sites (one
+    // per seat). If, for whatever reason, there isn't a second site to
+    // hand to the AI, fall back to a single-base test-play instead of
+    // launching a skirmish with no opposing base to fight.
+    EditorPoint? aiSite;
+    for (var i = 0; i < draft.homeSites.length; i++) {
+      if (i != _selectedSlot) {
+        aiSite = draft.homeSites[i];
+        break;
       }
     }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DraftPreviewPainter oldDelegate) =>
-      oldDelegate.preview != preview;
-}
-
-class _SeatChip extends StatelessWidget {
-  final int index;
-  final bool isYou;
-
-  const _SeatChip({required this.index, required this.isYou});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = PlayerPalette.colorFor(index);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isYou ? 0.35 : 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color, width: isYou ? 2 : 1),
-      ),
-      child: Text(
-        '${index + 1} · ${isYou ? S.current.skirmishPlacementYou : S.current.skirmishPlacementAi}',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: isYou ? FontWeight.bold : FontWeight.normal,
+    if (aiSite == null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Testing as single-base - add another home site for a full skirmish.'),
+        ),
+      );
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GamePage(
+          scene: GameScene(
+            id: 'draft-${draft.id}',
+            name: draft.name.isEmpty ? 'Untitled Map' : draft.name,
+            briefing: 'Testing your hand-drawn skirmish map.',
+            biome: draft.biome,
+            mode: aiSite != null ? GameMode.skirmish : GameMode.waveDefense,
+          ),
+          terrainRepository: MapDraftTerrainRepository(
+            draft: draft,
+            preview: preview,
+            humanBaseSite: chosen,
+            aiBaseSite: aiSite,
+          ),
         ),
       ),
     );

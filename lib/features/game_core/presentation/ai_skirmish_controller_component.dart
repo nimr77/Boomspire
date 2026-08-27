@@ -82,15 +82,6 @@ class AiSkirmishControllerComponent extends Component
     }
   }
 
-  Future<void> _refreshDirective() async {
-    _fetchingDirective = true;
-    try {
-      _directive = await game.aiDirector.planSkirmish(_buildSnapshot());
-    } finally {
-      _fetchingDirective = false;
-    }
-  }
-
   SkirmishSnapshot _buildSnapshot() {
     final economy = game.aiEconomy!;
     final aiTeam = game.aiTeam!;
@@ -106,6 +97,39 @@ class AiSkirmishControllerComponent extends Component
           .where((t) => t.owner == game.playerTeam)
           .length,
     );
+  }
+
+  /// Looks for a free, buildable cell in an expanding ring around the AI's
+  /// base - keeps its towers clustered around its own base rather than
+  /// scattered anywhere on the map.
+  Point<int>? _findBuildCell(Vector2 basePosition) {
+    final grid = game.terrainMap.grid;
+    final baseCell = grid.worldToCell(basePosition);
+    for (var radius = 2; radius <= 6; radius++) {
+      final candidates = <Point<int>>[];
+      for (var dx = -radius; dx <= radius; dx++) {
+        for (var dy = -radius; dy <= radius; dy++) {
+          if (dx.abs() != radius && dy.abs() != radius) continue;
+          candidates.add(Point(baseCell.x + dx, baseCell.y + dy));
+        }
+      }
+      candidates.shuffle(_rnd);
+      for (final cell in candidates) {
+        if (!grid.inBounds(cell.x, cell.y)) continue;
+        if (grid.isBlocked(cell.x, cell.y)) continue;
+        return cell;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _refreshDirective() async {
+    _fetchingDirective = true;
+    try {
+      _directive = await game.aiDirector.planSkirmish(_buildSnapshot());
+    } finally {
+      _fetchingDirective = false;
+    }
   }
 
   void _tryBuildTower() {
@@ -161,30 +185,6 @@ class AiSkirmishControllerComponent extends Component
     game.world.spawnTower(tower);
   }
 
-  /// Looks for a free, buildable cell in an expanding ring around the AI's
-  /// base - keeps its towers clustered around its own base rather than
-  /// scattered anywhere on the map.
-  Point<int>? _findBuildCell(Vector2 basePosition) {
-    final grid = game.terrainMap.grid;
-    final baseCell = grid.worldToCell(basePosition);
-    for (var radius = 2; radius <= 6; radius++) {
-      final candidates = <Point<int>>[];
-      for (var dx = -radius; dx <= radius; dx++) {
-        for (var dy = -radius; dy <= radius; dy++) {
-          if (dx.abs() != radius && dy.abs() != radius) continue;
-          candidates.add(Point(baseCell.x + dx, baseCell.y + dy));
-        }
-      }
-      candidates.shuffle(_rnd);
-      for (final cell in candidates) {
-        if (!grid.inBounds(cell.x, cell.y)) continue;
-        if (grid.isBlocked(cell.x, cell.y)) continue;
-        return cell;
-      }
-    }
-    return null;
-  }
-
   void _tryProduceUnit() {
     final economy = game.aiEconomy!;
     final aiTeam = game.aiTeam!;
@@ -195,8 +195,8 @@ class AiSkirmishControllerComponent extends Component
     if (kinds.isEmpty) return;
     final affordable = kinds
         .where(
-          (k) => game.unitRepository.blueprintFor(aiTeam, k).cost <=
-              economy.gold,
+          (k) =>
+              game.unitRepository.blueprintFor(aiTeam, k).cost <= economy.gold,
         )
         .toList();
     if (affordable.isEmpty) return;

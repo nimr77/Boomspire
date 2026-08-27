@@ -31,6 +31,8 @@ class ResourceNodeComponent extends PositionComponent
   ResourceNodeComponent({required Vector2 position})
     : super(position: position, size: Vector2.all(36), anchor: Anchor.center);
 
+  Color get _ownerColor => owner?.color ?? const Color(0xFF9E9E9E);
+
   @override
   Future<void> onLoad() async {
     _progressRing = CircleComponent(
@@ -47,8 +49,6 @@ class ResourceNodeComponent extends PositionComponent
     );
     await addAll([_progressRing, _core]);
   }
-
-  Color get _ownerColor => owner?.color ?? const Color(0xFF9E9E9E);
 
   @override
   void update(double dt) {

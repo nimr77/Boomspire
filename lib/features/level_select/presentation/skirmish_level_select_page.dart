@@ -26,14 +26,41 @@ class SkirmishLevelSelectPage extends StatefulWidget {
       _SkirmishLevelSelectPageState();
 }
 
+class _SkirmishDraftTile extends StatelessWidget {
+  final MapDraft draft;
+  final VoidCallback onTap;
+
+  const _SkirmishDraftTile({required this.draft, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF161B22),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          leading: const Icon(Icons.map_outlined, color: Colors.redAccent),
+          title: Text(draft.name, style: const TextStyle(color: Colors.white)),
+          subtitle: Text(
+            '${draft.biome.displayName} · ${draft.homeSites.length} '
+            'home site${draft.homeSites.length == 1 ? '' : 's'}',
+            style: const TextStyle(color: Colors.white54),
+          ),
+          trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+        ),
+      ),
+    );
+  }
+}
+
 class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
   final MapDraftRepository _draftRepository = getIt<MapDraftRepository>();
   late final Future<List<MapDraft>> _draftsFuture = _loadSkirmishDrafts();
-
-  Future<List<MapDraft>> _loadSkirmishDrafts() async {
-    final drafts = await _draftRepository.listDrafts();
-    return drafts.where((d) => d.mode == GameMode.skirmish).toList();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,9 +179,8 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                                     draft: draft,
                                     onTap: () => Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (_) => SkirmishPlacementPage(
-                                          draft: draft,
-                                        ),
+                                        builder: (_) =>
+                                            SkirmishPlacementPage(draft: draft),
                                       ),
                                     ),
                                   ),
@@ -200,6 +226,11 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
       ),
     );
   }
+
+  Future<List<MapDraft>> _loadSkirmishDrafts() async {
+    final drafts = await _draftRepository.listDrafts();
+    return drafts.where((d) => d.mode == GameMode.skirmish).toList();
+  }
 }
 
 class _SkirmishSceneCard extends StatelessWidget {
@@ -215,7 +246,9 @@ class _SkirmishSceneCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => SkirmishPlacementPage(scene: scene)),
+          MaterialPageRoute(
+            builder: (_) => SkirmishPlacementPage(scene: scene),
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(14),
@@ -268,38 +301,6 @@ class _SkirmishSceneCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SkirmishDraftTile extends StatelessWidget {
-  final MapDraft draft;
-  final VoidCallback onTap;
-
-  const _SkirmishDraftTile({required this.draft, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFF161B22),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          leading: const Icon(Icons.map_outlined, color: Colors.redAccent),
-          title: Text(draft.name, style: const TextStyle(color: Colors.white)),
-          subtitle: Text(
-            '${draft.biome.displayName} · ${draft.homeSites.length} '
-            'home site${draft.homeSites.length == 1 ? '' : 's'}',
-            style: const TextStyle(color: Colors.white54),
-          ),
-          trailing: const Icon(Icons.chevron_right, color: Colors.white38),
         ),
       ),
     );

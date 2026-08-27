@@ -5,8 +5,8 @@ import '../../game_core/domain/models/game_scene.dart';
 import '../../terrain/domain/models/obstacle_kind.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
-import '../domain/models/editor_terrain_preview.dart';
 import '../domain/models/editor_point.dart';
+import '../domain/models/editor_terrain_preview.dart';
 import '../domain/models/map_draft.dart';
 
 /// Turns an editor-authored [MapDraft] into a real, playable [TerrainMap] so
@@ -41,14 +41,13 @@ class MapDraftTerrainRepository implements TerrainRepository {
     final obstacleKinds = preview.obstacleKinds;
     Point<int> cellFor(EditorPoint site) => Point(
       (site.x / draft.arenaWidth * grid.cols).floor().clamp(0, grid.cols - 1),
-      (site.y / draft.arenaHeight * grid.rows).floor().clamp(
-        0,
-        grid.rows - 1,
-      ),
+      (site.y / draft.arenaHeight * grid.rows).floor().clamp(0, grid.rows - 1),
     );
 
     final site = humanBaseSite;
-    final baseCell = site != null ? cellFor(site) : Point(grid.cols - 1, grid.rows ~/ 2);
+    final baseCell = site != null
+        ? cellFor(site)
+        : Point(grid.cols - 1, grid.rows ~/ 2);
     final aiSite = aiBaseSite;
     final secondaryBaseCell = aiSite != null ? cellFor(aiSite) : null;
     final spawnCell = secondaryBaseCell ?? Point(0, grid.rows ~/ 2);

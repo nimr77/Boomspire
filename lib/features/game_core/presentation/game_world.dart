@@ -117,12 +117,6 @@ class GameWorld extends World
     game.handleArenaTap(event.localPosition);
   }
 
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _panCamera(dt);
-  }
-
   void removeTower(TowerComponent tower) {
     activeTowers.remove(tower);
     tower.removeFromParent();
@@ -162,6 +156,12 @@ class GameWorld extends World
   Iterable<MobileUnitComponent> unitsHostileTo(Team team) => activeUnits.where(
     (u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.enemy,
   );
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _panCamera(dt);
+  }
 
   /// Free-scrolling RTS camera: arrow keys/WASD and edge-of-screen mouse
   /// panning both move [cameraPosition] at a constant screen-space speed

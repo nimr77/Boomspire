@@ -90,45 +90,6 @@ aggression scales how many enemies spawn and how fast. compositionBias multiplie
   }
 }
 
-Future<void> _handleSkirmish(HttpRequest request, String? apiKey) async {
-  Map<String, dynamic> snapshot = const {};
-  try {
-    final body = await utf8.decoder.bind(request).join();
-    snapshot = jsonDecode(body) as Map<String, dynamic>;
-
-    final directive = (apiKey != null && apiKey.isNotEmpty)
-        ? await _askGeminiSkirmish(apiKey, snapshot)
-        : SkirmishDirective.fallback(_snapshotFromJson(snapshot));
-
-    request.response
-      ..statusCode = HttpStatus.ok
-      ..headers.contentType = ContentType.json
-      ..write(jsonEncode(directive.toJson()));
-  } catch (e) {
-    stderr.writeln('AI director proxy falling back after error: $e');
-    request.response
-      ..statusCode = HttpStatus.ok
-      ..headers.contentType = ContentType.json
-      ..write(
-        jsonEncode(
-          SkirmishDirective.fallback(_snapshotFromJson(snapshot)).toJson(),
-        ),
-      );
-  } finally {
-    await request.response.close();
-  }
-}
-
-SkirmishSnapshot _snapshotFromJson(Map<String, dynamic> json) =>
-    SkirmishSnapshot(
-      aiGold: (json['aiGold'] as num?)?.toInt() ?? 0,
-      aiHealth: (json['aiHealth'] as num?)?.toInt() ?? 0,
-      playerGold: (json['playerGold'] as num?)?.toInt() ?? 0,
-      playerHealth: (json['playerHealth'] as num?)?.toInt() ?? 0,
-      aiTowerCount: (json['aiTowerCount'] as num?)?.toInt() ?? 0,
-      playerTowerCount: (json['playerTowerCount'] as num?)?.toInt() ?? 0,
-    );
-
 Future<SkirmishDirective> _askGeminiSkirmish(
   String apiKey,
   Map<String, dynamic> snapshot,
@@ -233,6 +194,35 @@ Future<void> _handle(HttpRequest request, String? apiKey) async {
   }
 }
 
+Future<void> _handleSkirmish(HttpRequest request, String? apiKey) async {
+  Map<String, dynamic> snapshot = const {};
+  try {
+    final body = await utf8.decoder.bind(request).join();
+    snapshot = jsonDecode(body) as Map<String, dynamic>;
+
+    final directive = (apiKey != null && apiKey.isNotEmpty)
+        ? await _askGeminiSkirmish(apiKey, snapshot)
+        : SkirmishDirective.fallback(_snapshotFromJson(snapshot));
+
+    request.response
+      ..statusCode = HttpStatus.ok
+      ..headers.contentType = ContentType.json
+      ..write(jsonEncode(directive.toJson()));
+  } catch (e) {
+    stderr.writeln('AI director proxy falling back after error: $e');
+    request.response
+      ..statusCode = HttpStatus.ok
+      ..headers.contentType = ContentType.json
+      ..write(
+        jsonEncode(
+          SkirmishDirective.fallback(_snapshotFromJson(snapshot)).toJson(),
+        ),
+      );
+  } finally {
+    await request.response.close();
+  }
+}
+
 /// Minimal KEY=VALUE parser for `server/.env`, resolved relative to this
 /// script so it works no matter what directory `dart run` is invoked from.
 Map<String, String> _loadDotEnv() {
@@ -256,6 +246,16 @@ Map<String, String> _loadDotEnv() {
   }
   return values;
 }
+
+SkirmishSnapshot _snapshotFromJson(Map<String, dynamic> json) =>
+    SkirmishSnapshot(
+      aiGold: (json['aiGold'] as num?)?.toInt() ?? 0,
+      aiHealth: (json['aiHealth'] as num?)?.toInt() ?? 0,
+      playerGold: (json['playerGold'] as num?)?.toInt() ?? 0,
+      playerHealth: (json['playerHealth'] as num?)?.toInt() ?? 0,
+      aiTowerCount: (json['aiTowerCount'] as num?)?.toInt() ?? 0,
+      playerTowerCount: (json['playerTowerCount'] as num?)?.toInt() ?? 0,
+    );
 
 String _stripCodeFence(String text) {
   final trimmed = text.trim();

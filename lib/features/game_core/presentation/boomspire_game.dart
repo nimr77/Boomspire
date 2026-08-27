@@ -162,6 +162,22 @@ class BoomspireGame extends FlameGame<GameWorld>
   /// and the in-battle exit button.
   void backToLevelSelect() => onExitToMenu?.call();
 
+  /// Where a unit belonging to [team] should march toward to assault the
+  /// opposing base - the human player's base if [team] is the AI, or the
+  /// AI's base if [team] is the player. Null if there's no such base (e.g.
+  /// [team] is neither side, or this isn't a skirmish match).
+  Vector2? baseTargetFor(Team team) {
+    if (aiTeam == null) return null;
+    if (team.id == aiTeam!.id) {
+      return Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y);
+    }
+    if (team.id == playerTeam.id) {
+      final base = world.aiHomeBase;
+      return base != null && base.isMounted ? base.position : null;
+    }
+    return null;
+  }
+
   /// Looks up [type]'s stats from whichever repository actually owns it -
   /// the combat tower catalog or the support building catalog.
   UnitBlueprint blueprintFor(UnitType type) => type is BuildingType
@@ -221,6 +237,104 @@ class BoomspireGame extends FlameGame<GameWorld>
   }
 
   bool canBuildTower(UnitType type) => buildBlockReason(type) == null;
+
+  /// Builds a [TowerComponent] of [type] - shared by the player's own build
+  /// menu and [AiSkirmishControllerComponent]. Ownership defaults to the
+  /// human player, matching every call site before skirmish mode existed.
+  TowerComponent createTower(
+    UnitType type,
+    Vector2 position,
+    double cellSize,
+    UnitBlueprint blueprint, {
+    Team? owner,
+  }) {
+    final tower = switch (type) {
+      TowerType.machineGun => MachineGunTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.rocket => RocketTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.cannon => CannonTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.antiAir => AntiAirTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.laser => LaserTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.rocketSilo => RocketSiloTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.artilleryBunker => ArtilleryBunkerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      TowerType.sam => SamTowerComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.techLab => TechLabComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.commandPost => CommandPostComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.trainingCenter => TrainingCenterComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.warFactory => WarFactoryComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      BuildingType.goldMine => GoldMineComponent(
+        position: position,
+        cellSize: cellSize,
+        blueprint: blueprint,
+      ),
+      _ => throw ArgumentError('Unknown unit type: $type'),
+    };
+    tower.owner = owner ?? playerTeam;
+    return tower;
+  }
+
+  /// The opposing side's destructible home base, as an [Attackable] a
+  /// [team] unit's weapon can engage - null outside skirmish mode, or once
+  /// that base is already gone.
+  Attackable? enemyHomeBaseFor(Team team) {
+    if (aiTeam == null) return null;
+    if (team.id == playerTeam.id) {
+      final base = world.aiHomeBase;
+      return (base != null && base.isMounted && !base.destroyed) ? base : null;
+    }
+    if (team.id == aiTeam!.id) {
+      final base = world.playerHomeBase;
+      return (base != null && base.isMounted && !base.destroyed) ? base : null;
+    }
+    return null;
+  }
 
   /// Called whenever a Command Post is destroyed or sold - any Artillery
   /// Bunker built beyond what the remaining Command Posts can still support
@@ -396,55 +510,6 @@ class BoomspireGame extends FlameGame<GameWorld>
   int towerCountFor(UnitType type) =>
       world.activeTowers.where((t) => t.blueprint.type == type).length;
 
-  /// Where a unit belonging to [team] should march toward to assault the
-  /// opposing base - the human player's base if [team] is the AI, or the
-  /// AI's base if [team] is the player. Null if there's no such base (e.g.
-  /// [team] is neither side, or this isn't a skirmish match).
-  Vector2? baseTargetFor(Team team) {
-    if (aiTeam == null) return null;
-    if (team.id == aiTeam!.id) {
-      return Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y);
-    }
-    if (team.id == playerTeam.id) {
-      final base = world.aiHomeBase;
-      return base != null && base.isMounted ? base.position : null;
-    }
-    return null;
-  }
-
-  /// The opposing side's destructible home base, as an [Attackable] a
-  /// [team] unit's weapon can engage - null outside skirmish mode, or once
-  /// that base is already gone.
-  Attackable? enemyHomeBaseFor(Team team) {
-    if (aiTeam == null) return null;
-    if (team.id == playerTeam.id) {
-      final base = world.aiHomeBase;
-      return (base != null && base.isMounted && !base.destroyed) ? base : null;
-    }
-    if (team.id == aiTeam!.id) {
-      final base = world.playerHomeBase;
-      return (base != null && base.isMounted && !base.destroyed) ? base : null;
-    }
-    return null;
-  }
-
-  /// Sets/clears [aiTeam]/[aiEconomy] for the current [scene] - called from
-  /// both [onLoad] and [restart] so a rematch re-derives the same skirmish
-  /// state instead of carrying over a stale one.
-  void _setupSkirmishState() {
-    if (scene.mode == GameMode.skirmish) {
-      aiTeam = Team.aiOpponent;
-      aiEconomy = AiEconomy(
-        gold: GameConfig.startingGold,
-        health: GameConfig.startingHealth,
-        maxHealth: GameConfig.startingHealth,
-      );
-    } else {
-      aiTeam = null;
-      aiEconomy = null;
-    }
-  }
-
   @override
   void update(double dt) {
     super.update(dt);
@@ -519,88 +584,6 @@ class BoomspireGame extends FlameGame<GameWorld>
     selectedTowerType.value = null;
   }
 
-  /// Builds a [TowerComponent] of [type] - shared by the player's own build
-  /// menu and [AiSkirmishControllerComponent]. Ownership defaults to the
-  /// human player, matching every call site before skirmish mode existed.
-  TowerComponent createTower(
-    UnitType type,
-    Vector2 position,
-    double cellSize,
-    UnitBlueprint blueprint, {
-    Team? owner,
-  }) {
-    final tower = switch (type) {
-      TowerType.machineGun => MachineGunTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.rocket => RocketTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.cannon => CannonTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.antiAir => AntiAirTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.laser => LaserTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.rocketSilo => RocketSiloTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.artilleryBunker => ArtilleryBunkerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.sam => SamTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.techLab => TechLabComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.commandPost => CommandPostComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.trainingCenter => TrainingCenterComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.warFactory => WarFactoryComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.goldMine => GoldMineComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      _ => throw ArgumentError('Unknown unit type: $type'),
-    };
-    tower.owner = owner ?? playerTeam;
-    return tower;
-  }
-
   /// Whether [cell] is empty ground that isn't a spawn point or the home
   /// base - used both for the tap-to-preview ghost and the actual build.
   bool _isBuildableCell(Point<int> cell) {
@@ -622,6 +605,23 @@ class BoomspireGame extends FlameGame<GameWorld>
     if (!gameState.spendGold(cost)) return;
     tower.repair(tower.maxHp);
     audioRepository.play(SfxType.towerRepair, volume: 0.7);
+  }
+
+  /// Sets/clears [aiTeam]/[aiEconomy] for the current [scene] - called from
+  /// both [onLoad] and [restart] so a rematch re-derives the same skirmish
+  /// state instead of carrying over a stale one.
+  void _setupSkirmishState() {
+    if (scene.mode == GameMode.skirmish) {
+      aiTeam = Team.aiOpponent;
+      aiEconomy = AiEconomy(
+        gold: GameConfig.startingGold,
+        health: GameConfig.startingHealth,
+        maxHealth: GameConfig.startingHealth,
+      );
+    } else {
+      aiTeam = null;
+      aiEconomy = null;
+    }
   }
 
   TowerComponent? _towerAt(Vector2 point) {

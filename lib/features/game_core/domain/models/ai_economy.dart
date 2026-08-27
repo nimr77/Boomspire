@@ -16,14 +16,14 @@ class AiEconomy {
 
   void addGold(int amount) => gold += amount;
 
+  void damageBase(int amount) {
+    if (isDefeated) return;
+    health = (health - amount).clamp(0, maxHealth);
+  }
+
   bool spendGold(int amount) {
     if (gold < amount) return false;
     gold -= amount;
     return true;
-  }
-
-  void damageBase(int amount) {
-    if (isDefeated) return;
-    health = (health - amount).clamp(0, maxHealth);
   }
 }

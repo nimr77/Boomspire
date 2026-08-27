@@ -1,33 +1,3 @@
-/// A compact summary of a skirmish match sent to the AI director so it can
-/// decide how the AI opponent should be playing right now, without needing
-/// the full game state.
-class SkirmishSnapshot {
-  const SkirmishSnapshot({
-    required this.aiGold,
-    required this.aiHealth,
-    required this.playerGold,
-    required this.playerHealth,
-    required this.aiTowerCount,
-    required this.playerTowerCount,
-  });
-
-  final int aiGold;
-  final int aiHealth;
-  final int playerGold;
-  final int playerHealth;
-  final int aiTowerCount;
-  final int playerTowerCount;
-
-  Map<String, dynamic> toJson() => {
-    'aiGold': aiGold,
-    'aiHealth': aiHealth,
-    'playerGold': playerGold,
-    'playerHealth': playerHealth,
-    'aiTowerCount': aiTowerCount,
-    'playerTowerCount': playerTowerCount,
-  };
-}
-
 /// High-level tuning for how the AI opponent spends its gold this stretch of
 /// the match, as decided by the AI director (or the local fallback
 /// heuristic).
@@ -80,5 +50,35 @@ class SkirmishDirective {
     'aggression': aggression,
     'buildBias': buildBias,
     'commanderNote': commanderNote,
+  };
+}
+
+/// A compact summary of a skirmish match sent to the AI director so it can
+/// decide how the AI opponent should be playing right now, without needing
+/// the full game state.
+class SkirmishSnapshot {
+  final int aiGold;
+
+  final int aiHealth;
+  final int playerGold;
+  final int playerHealth;
+  final int aiTowerCount;
+  final int playerTowerCount;
+  const SkirmishSnapshot({
+    required this.aiGold,
+    required this.aiHealth,
+    required this.playerGold,
+    required this.playerHealth,
+    required this.aiTowerCount,
+    required this.playerTowerCount,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'aiGold': aiGold,
+    'aiHealth': aiHealth,
+    'playerGold': playerGold,
+    'playerHealth': playerHealth,
+    'aiTowerCount': aiTowerCount,
+    'playerTowerCount': playerTowerCount,
   };
 }

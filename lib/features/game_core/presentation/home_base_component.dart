@@ -30,13 +30,15 @@ class HomeBaseComponent extends PositionComponent
   int _lastHealth = 0;
   double _pulse = 0;
 
-  HomeBaseComponent({required Vector2 position, this.owner = Team.defaultPlayer})
-    : super(
-        position: position,
-        size: Vector2.all(84),
-        anchor: Anchor.center,
-        priority: 6,
-      );
+  HomeBaseComponent({
+    required Vector2 position,
+    this.owner = Team.defaultPlayer,
+  }) : super(
+         position: position,
+         size: Vector2.all(84),
+         anchor: Anchor.center,
+         priority: 6,
+       );
 
   @override
   Set<UnitDomain> get attackDomains => const {};
@@ -50,9 +52,6 @@ class HomeBaseComponent extends PositionComponent
   @override
   double get healthRatio =>
       (game.gameState.health / GameConfig.startingHealth).clamp(0.0, 1.0);
-
-  @override
-  void takeDamage(double amount) => game.gameState.damagePlayer(amount.round());
 
   @override
   Future<void> onLoad() async {
@@ -106,6 +105,9 @@ class HomeBaseComponent extends PositionComponent
             : const ui.Color(0xFFE53935),
     );
   }
+
+  @override
+  void takeDamage(double amount) => game.gameState.damagePlayer(amount.round());
 
   @override
   void update(double dt) {
