@@ -96,14 +96,15 @@ abstract class TowerComponent extends PositionComponent
   /// to full HP first, THEN it becomes eligible for the next tier.
   bool get canUpgrade => upgradeLevel < kMaxTowerUpgradeLevel && hp >= maxHp;
 
+  @override
   bool get destroyed => _destroyed;
 
   double get effectiveDamage => blueprint.damage * _upgradeMultiplier;
 
+  double get effectiveRange => blueprint.range * (1 + upgradeLevel * 0.08);
+
   @override
   double get healthRatio => (hp / maxHp).clamp(0.0, 1.0);
-
-  double get effectiveRange => blueprint.range * (1 + upgradeLevel * 0.08);
 
   /// Gold cost to fully repair from current HP - 0 once at full health.
   int get repairCost {

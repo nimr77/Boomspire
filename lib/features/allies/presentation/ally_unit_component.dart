@@ -52,13 +52,13 @@ abstract class AllyUnitComponent extends PositionComponent
         priority: 9,
       );
 
-  Future<Sprite> buildSprite();
-
   @override
   bool get destroyed => _destroyed;
 
   @override
   double get healthRatio => (health / blueprint.maxHealth).clamp(0.0, 1.0);
+
+  Future<Sprite> buildSprite();
 
   @override
   Future<void> onLoad() async {
@@ -215,8 +215,7 @@ abstract class AllyUnitComponent extends PositionComponent
   }
 
   bool _maybeEngageEnemy(double dt) {
-    if (_engaging != null &&
-        (_engaging!.isRemoving || !_engaging!.isMounted)) {
+    if (_engaging != null && (_engaging!.isRemoving || !_engaging!.isMounted)) {
       _engaging = null;
     }
     _engaging ??= _findEnemyInRange();

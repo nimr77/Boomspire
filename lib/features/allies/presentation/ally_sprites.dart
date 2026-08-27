@@ -12,11 +12,11 @@ class AllySpriteFactory {
   static Sprite? _tank;
   static Sprite? _lightVehicle;
   static Sprite? _aircraft;
-  AllySpriteFactory._();
-
   static const _hull = Color(0xFF2B3A42);
+
   static const _hullDark = Color(0xFF172126);
   static const _accent = Color(0xFF00E5FF);
+  AllySpriteFactory._();
 
   static Future<Sprite> aircraft() async {
     final cached = _aircraft;
@@ -314,11 +314,8 @@ class AllySpriteFactory {
       center.translate(0, -size * 0.04),
       size * 0.2,
       Paint()
-        ..shader = const LinearGradient(
-          colors: [_hull, _hullDark],
-        ).createShader(
-          Rect.fromCircle(center: center, radius: size * 0.2),
-        ),
+        ..shader = const LinearGradient(colors: [_hull, _hullDark])
+            .createShader(Rect.fromCircle(center: center, radius: size * 0.2)),
     );
     canvas.drawCircle(
       center.translate(0, -size * 0.04),

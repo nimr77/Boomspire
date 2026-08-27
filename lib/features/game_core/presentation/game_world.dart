@@ -48,14 +48,14 @@ class GameWorld extends World
     game.handleArenaTap(event.localPosition);
   }
 
-  void removeEnemy(EnemyComponent enemy) {
-    activeEnemies.remove(enemy);
-    enemy.removeFromParent();
-  }
-
   void removeAlly(AllyUnitComponent ally) {
     activeAllies.remove(ally);
     ally.removeFromParent();
+  }
+
+  void removeEnemy(EnemyComponent enemy) {
+    activeEnemies.remove(enemy);
+    enemy.removeFromParent();
   }
 
   void removeTower(TowerComponent tower) {
@@ -69,14 +69,14 @@ class GameWorld extends World
   /// Adds any transient visual/audio effect component to the scene.
   void spawn(Component component) => add(component);
 
-  void spawnEnemy(EnemyComponent enemy) {
-    activeEnemies.add(enemy);
-    add(enemy);
-  }
-
   void spawnAlly(AllyUnitComponent ally) {
     activeAllies.add(ally);
     add(ally);
+  }
+
+  void spawnEnemy(EnemyComponent enemy) {
+    activeEnemies.add(enemy);
+    add(enemy);
   }
 
   void spawnTower(TowerComponent tower) {
