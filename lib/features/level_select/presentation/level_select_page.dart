@@ -26,7 +26,8 @@ class LevelSelectPage extends StatefulWidget {
 }
 
 /// Segmented easy/normal/hard picker - scales AI aggression and rations the
-/// Laser Lance build limit for the run about to start.
+/// Laser Lance build limit for the run about to start. Styled as a single
+/// HUD panel (matching the build menu's tab strip) rather than loose chips.
 class _DifficultySelector extends StatelessWidget {
   final GameDifficulty value;
   final ValueChanged<GameDifficulty> onChanged;
@@ -35,28 +36,68 @@ class _DifficultySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (final difficulty in GameDifficulty.values)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: ChoiceChip(
-              label: Text(difficulty.label),
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1F26),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF2A323C), width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final difficulty in GameDifficulty.values)
+            _DifficultySegment(
+              label: difficulty.label,
               selected: value == difficulty,
-              onSelected: (_) => onChanged(difficulty),
-              labelStyle: TextStyle(
-                color: value == difficulty ? Colors.black : Colors.white70,
-                fontWeight: FontWeight.bold,
-              ),
-              selectedColor: Colors.cyanAccent,
-              backgroundColor: const Color(0xFF1A1F26),
-              side: BorderSide(
-                color: value == difficulty ? Colors.cyanAccent : Colors.white24,
-              ),
+              onTap: () => onChanged(difficulty),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DifficultySegment extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _DifficultySegment({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? Colors.cyanAccent.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? Colors.cyanAccent : Colors.transparent,
+            width: 1.5,
           ),
-      ],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.cyanAccent : Colors.white54,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -73,132 +114,139 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
       body: Stack(
         children: [
           SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                            S.current.levelSelectTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 3,
-                            ),
-                          )
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .slideY(begin: -0.2, end: 0),
-                      const SizedBox(height: 6),
-                      Text(
-                            S.current.levelSelectSubtitle,
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 16,
-                            ),
-                          )
-                          .animate()
-                          .fadeIn(duration: 400.ms, delay: 80.ms)
-                          .slideY(begin: -0.2, end: 0),
-                      const SizedBox(height: 28),
-                      FutureBuilder<Account?>(
-                        future: _accountRepository.currentAccount(),
-                        builder: (context, accountSnapshot) {
-                          return FutureBuilder<ProgressSnapshot>(
-                            future: _progressRepository.load(),
-                            builder: (context, progressSnapshot) {
-                              final progress =
-                                  progressSnapshot.data ??
-                                  ProgressSnapshot.empty;
-                              final account = accountSnapshot.data;
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (account != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 18,
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.account_circle,
-                                            color: Colors.white54,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            account.name,
-                                            style: const TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
+            child: Scrollbar(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24,
+                  horizontal: 16,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                              S.current.levelSelectTitle,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 34,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
+                              ),
+                            )
+                            .animate()
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: -0.2, end: 0),
+                        const SizedBox(height: 6),
+                        Text(
+                              S.current.levelSelectSubtitle,
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 16,
+                              ),
+                            )
+                            .animate()
+                            .fadeIn(duration: 400.ms, delay: 80.ms)
+                            .slideY(begin: -0.2, end: 0),
+                        const SizedBox(height: 28),
+                        FutureBuilder<Account?>(
+                          future: _accountRepository.currentAccount(),
+                          builder: (context, accountSnapshot) {
+                            return FutureBuilder<ProgressSnapshot>(
+                              future: _progressRepository.load(),
+                              builder: (context, progressSnapshot) {
+                                final progress =
+                                    progressSnapshot.data ??
+                                    ProgressSnapshot.empty;
+                                final account = accountSnapshot.data;
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (account != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 18,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.account_circle,
+                                              color: Colors.white54,
+                                              size: 18,
                                             ),
-                                          ),
-                                          const SizedBox(width: 14),
-                                          const Icon(
-                                            Icons.military_tech,
-                                            color: Colors.cyanAccent,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            '${progress.totalScore}',
-                                            style: const TextStyle(
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              account.name,
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            const Icon(
+                                              Icons.military_tech,
                                               color: Colors.cyanAccent,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
+                                              size: 18,
                                             ),
-                                          ),
-                                        ],
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${progress.totalScore}',
+                                              style: const TextStyle(
+                                                color: Colors.cyanAccent,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    Center(
+                                      child: _DifficultySelector(
+                                        value: _difficulty,
+                                        onChanged: (value) =>
+                                            setState(() => _difficulty = value),
                                       ),
                                     ),
-                                  _DifficultySelector(
-                                    value: _difficulty,
-                                    onChanged: (value) =>
-                                        setState(() => _difficulty = value),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  GridView.count(
-                                    shrinkWrap: true,
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 16,
-                                    crossAxisSpacing: 16,
-                                    childAspectRatio: 1.4,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    children: [
-                                      for (final (index, scene)
-                                          in GameScenes.all.indexed)
-                                        _SceneCard(
-                                              scene: scene,
-                                              progress: progress,
-                                              difficulty: _difficulty,
-                                            )
-                                            .animate()
-                                            .fadeIn(
-                                              duration: 380.ms,
-                                              delay: (120 + index * 90).ms,
-                                            )
-                                            .scale(
-                                              begin: const Offset(0.92, 0.92),
-                                              curve: Curves.easeOutCubic,
-                                            ),
-                                    ],
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ],
+                                    const SizedBox(height: 20),
+                                    GridView.count(
+                                      shrinkWrap: true,
+                                      crossAxisCount: 2,
+                                      mainAxisSpacing: 16,
+                                      crossAxisSpacing: 16,
+                                      childAspectRatio: 1.4,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      children: [
+                                        for (final (index, scene)
+                                            in GameScenes.all.indexed)
+                                          _SceneCard(
+                                                scene: scene,
+                                                progress: progress,
+                                                difficulty: _difficulty,
+                                              )
+                                              .animate()
+                                              .fadeIn(
+                                                duration: 380.ms,
+                                                delay: (120 + index * 90).ms,
+                                              )
+                                              .scale(
+                                                begin: const Offset(0.92, 0.92),
+                                                curve: Curves.easeOutCubic,
+                                              ),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
