@@ -210,28 +210,6 @@ class AiSkirmishControllerComponent extends Component
     return null;
   }
 
-  /// Mans whichever production buildings the AI has already built - it
-  /// cannot produce anything at all until it has built a Training
-  /// Center/War Factory of its own, same as the player.
-  void _tryProduce(Team aiTeam) {
-    if (_rnd.nextDouble() > 0.25 + _directive.aggression * 0.6) return;
-    for (final tower in game.world.activeTowers) {
-      if (tower.owner.id != aiTeam.id) continue;
-      if (tower is TrainingCenterComponent && tower.canProduce) {
-        tower.produceSoldier();
-      } else if (tower is WarFactoryComponent && tower.canProduce) {
-        final kinds = game.unitRepository
-            .kindsFor(aiTeam)
-            .where((k) => k != UnitKind.soldier)
-            .where((k) => tower.costFor(k) <= game.goldFor(aiTeam))
-            .toList();
-        if (kinds.isNotEmpty) {
-          tower.produceUnit(kinds[_rnd.nextInt(kinds.length)]);
-        }
-      }
-    }
-  }
-
   /// Sends an owned ground vehicle to go claim a resource node the AI
   /// doesn't already own - the same `ResourceNodeComponent` economy feature
   /// the player can use, so the AI's income isn't limited to its base
@@ -262,14 +240,10 @@ class AiSkirmishControllerComponent extends Component
       for (final tower in game.world.activeTowers) {
         if (tower.owner.id != aiTeam.id) continue;
         if (tower is! WarFactoryComponent || !tower.canProduce) continue;
-        final kinds = game.unitRepository
-            .kindsFor(aiTeam)
-            .where((k) {
-              final blueprint = game.unitRepository.blueprintFor(aiTeam, k);
-              return blueprint.isVehicle &&
-                  blueprint.cost <= game.goldFor(aiTeam);
-            })
-            .toList();
+        final kinds = game.unitRepository.kindsFor(aiTeam).where((k) {
+          final blueprint = game.unitRepository.blueprintFor(aiTeam, k);
+          return blueprint.isVehicle && blueprint.cost <= game.goldFor(aiTeam);
+        }).toList();
         if (kinds.isEmpty) continue;
         final produced = tower.produceUnit(
           kinds[_rnd.nextInt(kinds.length)],
@@ -277,6 +251,28 @@ class AiSkirmishControllerComponent extends Component
           captureTarget: node.position.clone(),
         );
         if (produced) return;
+      }
+    }
+  }
+
+  /// Mans whichever production buildings the AI has already built - it
+  /// cannot produce anything at all until it has built a Training
+  /// Center/War Factory of its own, same as the player.
+  void _tryProduce(Team aiTeam) {
+    if (_rnd.nextDouble() > 0.25 + _directive.aggression * 0.6) return;
+    for (final tower in game.world.activeTowers) {
+      if (tower.owner.id != aiTeam.id) continue;
+      if (tower is TrainingCenterComponent && tower.canProduce) {
+        tower.produceSoldier();
+      } else if (tower is WarFactoryComponent && tower.canProduce) {
+        final kinds = game.unitRepository
+            .kindsFor(aiTeam)
+            .where((k) => k != UnitKind.soldier)
+            .where((k) => tower.costFor(k) <= game.goldFor(aiTeam))
+            .toList();
+        if (kinds.isNotEmpty) {
+          tower.produceUnit(kinds[_rnd.nextInt(kinds.length)]);
+        }
       }
     }
   }

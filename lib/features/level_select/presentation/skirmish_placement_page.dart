@@ -94,60 +94,6 @@ class _DraftPreviewPainter extends CustomPainter {
       oldDelegate.preview != preview;
 }
 
-/// Renders [background] with a numbered/colored marker per fractional site
-/// position, and reports taps near a marker via [onTapSlot]. Each marker is
-/// a real interactive widget (not just painted pixels) so it can glow and
-/// scale up under the mouse.
-class _PlacementSurface extends StatefulWidget {
-  final List<Offset> sites;
-  final int? selectedSlot;
-  final ValueChanged<int> onTapSlot;
-  final Widget background;
-
-  const _PlacementSurface({
-    required this.sites,
-    required this.selectedSlot,
-    required this.onTapSlot,
-    required this.background,
-  });
-
-  @override
-  State<_PlacementSurface> createState() => _PlacementSurfaceState();
-}
-
-class _PlacementSurfaceState extends State<_PlacementSurface> {
-  int? _hoveredSlot;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, constraints.maxHeight);
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            widget.background,
-            for (final (index, fraction) in widget.sites.indexed)
-              _HomeSiteMarker(
-                center: Offset(
-                  fraction.dx * size.width,
-                  fraction.dy * size.height,
-                ),
-                index: index,
-                selected: widget.selectedSlot == index,
-                hovered: _hoveredSlot == index,
-                onHoverChanged: (hovering) => setState(
-                  () => _hoveredSlot = hovering ? index : null,
-                ),
-                onTap: () => widget.onTapSlot(index),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
 /// A single numbered, colored home-site marker that glows and scales up on
 /// hover, and reports taps via [onTap].
 class _HomeSiteMarker extends StatelessWidget {
@@ -224,6 +170,59 @@ class _HomeSiteMarker extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Renders [background] with a numbered/colored marker per fractional site
+/// position, and reports taps near a marker via [onTapSlot]. Each marker is
+/// a real interactive widget (not just painted pixels) so it can glow and
+/// scale up under the mouse.
+class _PlacementSurface extends StatefulWidget {
+  final List<Offset> sites;
+  final int? selectedSlot;
+  final ValueChanged<int> onTapSlot;
+  final Widget background;
+
+  const _PlacementSurface({
+    required this.sites,
+    required this.selectedSlot,
+    required this.onTapSlot,
+    required this.background,
+  });
+
+  @override
+  State<_PlacementSurface> createState() => _PlacementSurfaceState();
+}
+
+class _PlacementSurfaceState extends State<_PlacementSurface> {
+  int? _hoveredSlot;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            widget.background,
+            for (final (index, fraction) in widget.sites.indexed)
+              _HomeSiteMarker(
+                center: Offset(
+                  fraction.dx * size.width,
+                  fraction.dy * size.height,
+                ),
+                index: index,
+                selected: widget.selectedSlot == index,
+                hovered: _hoveredSlot == index,
+                onHoverChanged: (hovering) =>
+                    setState(() => _hoveredSlot = hovering ? index : null),
+                onTap: () => widget.onTapSlot(index),
+              ),
+          ],
+        );
+      },
     );
   }
 }

@@ -165,17 +165,6 @@ class BoomspireGame extends FlameGame<GameWorld>
   /// Shared by both the player's `gameState` and the AI's `aiEconomy`.
   int get _resolvedStartingGold => resolvedStartingGold(scene);
 
-  /// Static twin of [_resolvedStartingGold] - lets `GamePage` seed its
-  /// `GameStateRepository` with the real starting amount at `initState()`,
-  /// before the HUD ever paints a frame, instead of it briefly showing
-  /// `GameStateRepositoryImpl`'s hardcoded field-initializer default until
-  /// this game's own [onLoad] gets around to calling `gameState.reset`.
-  static int resolvedStartingGold(GameScene scene) =>
-      scene.startingGold ??
-      (scene.mode == GameMode.skirmish
-          ? GameConfig.startingSkirmishGold
-          : GameConfig.startingGold);
-
   @override
   Color backgroundColor() => const Color(0xFF14181d);
 
@@ -792,4 +781,15 @@ class BoomspireGame extends FlameGame<GameWorld>
     }
     return null;
   }
+
+  /// Static twin of [_resolvedStartingGold] - lets `GamePage` seed its
+  /// `GameStateRepository` with the real starting amount at `initState()`,
+  /// before the HUD ever paints a frame, instead of it briefly showing
+  /// `GameStateRepositoryImpl`'s hardcoded field-initializer default until
+  /// this game's own [onLoad] gets around to calling `gameState.reset`.
+  static int resolvedStartingGold(GameScene scene) =>
+      scene.startingGold ??
+      (scene.mode == GameMode.skirmish
+          ? GameConfig.startingSkirmishGold
+          : GameConfig.startingGold);
 }
