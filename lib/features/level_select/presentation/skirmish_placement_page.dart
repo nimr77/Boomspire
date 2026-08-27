@@ -8,7 +8,6 @@ import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../game_core/presentation/game_page.dart';
-import '../../game_core/presentation/home_site_marker_painter.dart';
 import '../../game_core/presentation/player_palette.dart';
 import '../../map_editor/domain/models/editor_point.dart';
 import '../../map_editor/domain/models/editor_terrain_preview.dart';
@@ -95,37 +94,11 @@ class _DraftPreviewPainter extends CustomPainter {
       oldDelegate.preview != preview;
 }
 
-class _MarkerPainter extends CustomPainter {
-  final List<Offset> sites;
-  final int? selectedSlot;
-
-  _MarkerPainter({required this.sites, required this.selectedSlot});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final (index, fraction) in sites.indexed) {
-      final center = Offset(
-        fraction.dx * size.width,
-        fraction.dy * size.height,
-      );
-      paintHomeSiteMarker(
-        canvas,
-        center,
-        index,
-        radius: 18,
-        highlighted: index == selectedSlot,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _MarkerPainter oldDelegate) =>
-      oldDelegate.sites != sites || oldDelegate.selectedSlot != selectedSlot;
-}
-
 /// Renders [background] with a numbered/colored marker per fractional site
-/// position, and reports taps near a marker via [onTapSlot].
-class _PlacementSurface extends StatelessWidget {
+/// position, and reports taps near a marker via [onTapSlot]. Each marker is
+/// a real interactive widget (not just painted pixels) so it can glow and
+/// scale up under the mouse.
+class _PlacementSurface extends StatefulWidget {
   final List<Offset> sites;
   final int? selectedSlot;
   final ValueChanged<int> onTapSlot;
@@ -139,63 +112,170 @@ class _PlacementSurface extends StatelessWidget {
   });
 
   @override
+  State<_PlacementSurface> createState() => _PlacementSurfaceState();
+}
+
+class _PlacementSurfaceState extends State<_PlacementSurface> {
+  int? _hoveredSlot;
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
-        return GestureDetector(
-          onTapUp: (details) {
-            for (final (index, fraction) in sites.indexed) {
-              final center = Offset(
-                fraction.dx * size.width,
-                fraction.dy * size.height,
-              );
-              if ((details.localPosition - center).distance <= 22) {
-                onTapSlot(index);
-                return;
-              }
-            }
-          },
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              background,
-              CustomPaint(
-                painter: _MarkerPainter(
-                  sites: sites,
-                  selectedSlot: selectedSlot,
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            widget.background,
+            for (final (index, fraction) in widget.sites.indexed)
+              _HomeSiteMarker(
+                center: Offset(
+                  fraction.dx * size.width,
+                  fraction.dy * size.height,
                 ),
+                index: index,
+                selected: widget.selectedSlot == index,
+                hovered: _hoveredSlot == index,
+                onHoverChanged: (hovering) => setState(
+                  () => _hoveredSlot = hovering ? index : null,
+                ),
+                onTap: () => widget.onTapSlot(index),
               ),
-            ],
-          ),
+          ],
         );
       },
     );
   }
 }
 
-class _SeatChip extends StatelessWidget {
+/// A single numbered, colored home-site marker that glows and scales up on
+/// hover, and reports taps via [onTap].
+class _HomeSiteMarker extends StatelessWidget {
+  static const _radius = 18.0;
+  static const _hitPadding = 10.0;
+
+  final Offset center;
+  final int index;
+  final bool selected;
+  final bool hovered;
+  final ValueChanged<bool> onHoverChanged;
+  final VoidCallback onTap;
+
+  const _HomeSiteMarker({
+    required this.center,
+    required this.index,
+    required this.selected,
+    required this.hovered,
+    required this.onHoverChanged,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = PlayerPalette.colorFor(index);
+    const diameter = _radius * 2;
+    const hitSize = diameter + _hitPadding * 2;
+    return Positioned(
+      left: center.dx - hitSize / 2,
+      top: center.dy - hitSize / 2,
+      width: hitSize,
+      height: hitSize,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => onHoverChanged(true),
+        onExit: (_) => onHoverChanged(false),
+        child: GestureDetector(
+          onTap: onTap,
+          child: Center(
+            child: AnimatedScale(
+              scale: hovered ? 1.25 : 1.0,
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOutBack,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: diameter,
+                height: diameter,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: selected ? 3 : 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: hovered ? 0.9 : 0.35),
+                      blurRadius: hovered ? 20 : 6,
+                      spreadRadius: hovered ? 4 : 0,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${index + 1}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SeatChip extends StatefulWidget {
   final int index;
   final bool isYou;
 
   const _SeatChip({required this.index, required this.isYou});
 
   @override
+  State<_SeatChip> createState() => _SeatChipState();
+}
+
+class _SeatChipState extends State<_SeatChip> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final color = PlayerPalette.colorFor(index);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: isYou ? 0.35 : 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color, width: isYou ? 2 : 1),
-      ),
-      child: Text(
-        '${index + 1} · ${isYou ? S.current.skirmishPlacementYou : S.current.skirmishPlacementAi}',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: isYou ? FontWeight.bold : FontWeight.normal,
+    final color = PlayerPalette.colorFor(widget.index);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedScale(
+        scale: _hovered ? 1.08 : 1.0,
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutBack,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: widget.isYou ? 0.35 : 0.12),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color, width: widget.isYou ? 2 : 1),
+            boxShadow: _hovered
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.7),
+                      blurRadius: 14,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : const [],
+          ),
+          child: Text(
+            '${widget.index + 1} · ${widget.isYou ? S.current.skirmishPlacementYou : S.current.skirmishPlacementAi}',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: widget.isYou ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
         ),
       ),
     );

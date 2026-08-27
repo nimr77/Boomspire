@@ -163,7 +163,14 @@ class BoomspireGame extends FlameGame<GameWorld>
   /// otherwise the mode-appropriate default (a skirmish base-building war
   /// needs far more up-front capital than the drip-fed wave-defense mode).
   /// Shared by both the player's `gameState` and the AI's `aiEconomy`.
-  int get _resolvedStartingGold =>
+  int get _resolvedStartingGold => resolvedStartingGold(scene);
+
+  /// Static twin of [_resolvedStartingGold] - lets `GamePage` seed its
+  /// `GameStateRepository` with the real starting amount at `initState()`,
+  /// before the HUD ever paints a frame, instead of it briefly showing
+  /// `GameStateRepositoryImpl`'s hardcoded field-initializer default until
+  /// this game's own [onLoad] gets around to calling `gameState.reset`.
+  static int resolvedStartingGold(GameScene scene) =>
       scene.startingGold ??
       (scene.mode == GameMode.skirmish
           ? GameConfig.startingSkirmishGold
@@ -739,6 +746,13 @@ class BoomspireGame extends FlameGame<GameWorld>
     audioRepository.play(SfxType.towerRepair, volume: 0.7);
   }
 
+  ResourceNodeComponent? _resourceNodeAt(Vector2 point) {
+    for (final node in world.activeResourceNodes) {
+      if (point.distanceTo(node.position) <= node.size.x / 2) return node;
+    }
+    return null;
+  }
+
   /// Sets/clears [aiTeam]/[aiEconomy] for the current [scene] - called from
   /// both [onLoad] and [restart] so a rematch re-derives the same skirmish
   /// state instead of carrying over a stale one.
@@ -775,13 +789,6 @@ class BoomspireGame extends FlameGame<GameWorld>
           (point.y - unit.position.y).abs() <= half) {
         return unit;
       }
-    }
-    return null;
-  }
-
-  ResourceNodeComponent? _resourceNodeAt(Vector2 point) {
-    for (final node in world.activeResourceNodes) {
-      if (point.distanceTo(node.position) <= node.size.x / 2) return node;
     }
     return null;
   }

@@ -13,12 +13,6 @@ class InspectPanel extends StatelessWidget {
 
   const InspectPanel({super.key, required this.game});
 
-  IconData _iconFor(InspectedKind kind) => switch (kind) {
-    InspectedKind.tower => Icons.apartment,
-    InspectedKind.unit => Icons.directions_walk,
-    InspectedKind.resourceNode => Icons.diamond,
-  };
-
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<InspectedInfo?>(
@@ -74,10 +68,7 @@ class InspectPanel extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: ownerColor.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(6),
@@ -96,11 +87,7 @@ class InspectPanel extends StatelessWidget {
               InkWell(
                 onTap: () => game.inspected.value = null,
                 borderRadius: BorderRadius.circular(12),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white54,
-                  size: 16,
-                ),
+                child: const Icon(Icons.close, color: Colors.white54, size: 16),
               ),
             ],
           ),
@@ -118,4 +105,10 @@ class InspectPanel extends StatelessWidget {
       ),
     );
   }
+
+  IconData _iconFor(InspectedKind kind) => switch (kind) {
+    InspectedKind.tower => Icons.apartment,
+    InspectedKind.unit => Icons.directions_walk,
+    InspectedKind.resourceNode => Icons.diamond,
+  };
 }

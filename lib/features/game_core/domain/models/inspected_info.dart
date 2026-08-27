@@ -1,9 +1,5 @@
 import '../../../../core/combat/team.dart';
 
-/// Which kind of thing is being shown in the read-only inspect panel -
-/// picks the icon `InspectPanel` renders.
-enum InspectedKind { tower, unit, resourceNode }
-
 /// A lightweight, read-only snapshot of whatever the player last tapped
 /// that isn't theirs to command (an enemy-owned tower, any mobile unit, or
 /// a resource node) - shown by `InspectPanel`. Deliberately not a full
@@ -23,3 +19,7 @@ class InspectedInfo {
     this.description,
   });
 }
+
+/// Which kind of thing is being shown in the read-only inspect panel -
+/// picks the icon `InspectPanel` renders.
+enum InspectedKind { tower, unit, resourceNode }

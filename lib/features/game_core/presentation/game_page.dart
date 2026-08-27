@@ -209,7 +209,12 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    _gameState = getIt<GameStateRepository>();
+    _gameState = getIt<GameStateRepository>()
+      // Seeded with the real starting gold up front so the HUD's first
+      // painted frame never briefly shows GameStateRepositoryImpl's
+      // hardcoded fallback default before BoomspireGame.onLoad gets around
+      // to resolving/applying the scene's actual amount.
+      ..reset(startingGold: BoomspireGame.resolvedStartingGold(widget.scene));
     _game = BoomspireGame(
       terrainRepository: widget.terrainRepository ?? getIt<TerrainRepository>(),
       towerRepository: getIt<TowerRepository>(),

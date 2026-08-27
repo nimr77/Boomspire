@@ -17,6 +17,7 @@ import 'package:boomspire/features/ai_director/impl/ai_director_repository_impl.
 import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
 import 'package:boomspire/features/audio/domain/repos/audio_repository.dart';
 import 'package:boomspire/features/combat/presentation/mobile_unit_component.dart';
+import 'package:boomspire/features/game_core/domain/models/game_config.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scene.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scenes.dart';
 import 'package:boomspire/features/game_core/domain/models/inspected_info.dart';
@@ -353,6 +354,45 @@ void main() {
         final game = await _bootGame(GameScenes.skirmishes.first);
         expect(game.gameState.gold, GameScenes.skirmishes.first.startingGold);
         expect(game.aiEconomy!.gold, GameScenes.skirmishes.first.startingGold);
+      },
+    );
+
+    test(
+      'the AI can build score-gated structures (Training Center, War '
+      'Factory) with zero score - only the human player is score-gated',
+      () async {
+        final game = await _bootGame(GameScenes.skirmishes.first);
+        final aiTeam = game.aiTeam!;
+        expect(
+          game.gameState.currentScore,
+          lessThan(GameConfig.trainingCenterUnlockScore),
+        );
+        expect(
+          game.gameState.currentScore,
+          lessThan(GameConfig.warFactoryUnlockScore),
+        );
+
+        expect(
+          game.canBuildTower(BuildingType.trainingCenter, owner: aiTeam),
+          isTrue,
+        );
+        expect(
+          game.canBuildTower(BuildingType.warFactory, owner: aiTeam),
+          isTrue,
+        );
+
+        // The human player, at the same zero score, is still gated.
+        expect(
+          game.canBuildTower(
+            BuildingType.trainingCenter,
+            owner: game.playerTeam,
+          ),
+          isFalse,
+        );
+        expect(
+          game.canBuildTower(BuildingType.warFactory, owner: game.playerTeam),
+          isFalse,
+        );
       },
     );
 

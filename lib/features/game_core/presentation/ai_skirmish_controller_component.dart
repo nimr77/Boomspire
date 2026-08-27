@@ -41,14 +41,16 @@ class AiSkirmishControllerComponent extends Component
   /// just as free to build this many structures given enough gold and time.
   static const _maxOwnStructures = 24;
 
-  /// Tried in this order before any combat tower - mirrors a sensible human
-  /// build order (economy/unlocks first, then defense/offense).
+  /// Tried in this order before any combat tower - economy/production first
+  /// (a Gold Mine and a Training Center/War Factory are what actually let
+  /// the AI field units and snowball its income), Tech Lab/Command Post
+  /// last since those only unlock optional extra towers.
   static const _infrastructureBuildOrder = [
-    BuildingType.commandPost,
-    BuildingType.techLab,
+    BuildingType.goldMine,
     BuildingType.trainingCenter,
     BuildingType.warFactory,
-    BuildingType.goldMine,
+    BuildingType.techLab,
+    BuildingType.commandPost,
   ];
 
   static const _combatTowerTypes = [
@@ -89,12 +91,24 @@ class AiSkirmishControllerComponent extends Component
     _decisionTimer += dt;
     if (_decisionTimer >= _decisionInterval) {
       _decisionTimer = 0;
-      _tryBuild(aiTeam);
-      // Claiming a resource node is a standing economic priority, so it's
-      // tried before (and thus gets first refusal on any free War Factory
-      // ahead of) a purely-combat production roll.
-      _tryCaptureNode(aiTeam);
-      _tryProduce(aiTeam);
+      final justBuilt = _tryBuild(aiTeam);
+      // A Training Center/War Factory built just this tick hasn't even
+      // mounted/rendered yet, so never let it also produce/capture-dispatch
+      // in that same tick - that raced visually as "a unit appearing
+      // before its own building did". Any other structure (Gold Mine, Tech
+      // Lab, Command Post, a combat tower) doesn't produce units, so it's
+      // fine to still try capturing/producing from the AI's existing
+      // buildings in the same tick.
+      final justBuiltProduction =
+          justBuilt == BuildingType.trainingCenter ||
+          justBuilt == BuildingType.warFactory;
+      if (!justBuiltProduction) {
+        // Claiming a resource node is a standing economic priority, so
+        // it's tried before (and thus gets first refusal on any free War
+        // Factory ahead of) a purely-combat production roll.
+        _tryCaptureNode(aiTeam);
+        _tryProduce(aiTeam);
+      }
     }
   }
 
@@ -152,17 +166,18 @@ class AiSkirmishControllerComponent extends Component
 
   /// Attempts one build this tick, exactly through the same gate the
   /// player's build menu uses ([BoomspireGame.canBuildTower]/
-  /// [BoomspireGame.buildStructure]) - infrastructure (Command Post, Tech
-  /// Lab, Training Center, War Factory, Gold Mine) is preferred while any
-  /// of it is still missing and affordable; otherwise a random unlocked
-  /// combat tower is tried, gated by the directive's `buildBias`.
-  void _tryBuild(Team aiTeam) {
+  /// [BoomspireGame.buildStructure]) - infrastructure (Gold Mine, Training
+  /// Center, War Factory, Tech Lab, Command Post) is preferred while any of
+  /// it is still missing and affordable; otherwise a random unlocked combat
+  /// tower is tried, gated by the directive's `buildBias`. Returns the type
+  /// actually placed, or null if nothing was built this tick.
+  UnitType? _tryBuild(Team aiTeam) {
     final base = game.world.aiHomeBase;
-    if (base == null || !base.isMounted) return;
+    if (base == null || !base.isMounted) return null;
     final ownStructureCount = game.world.activeTowers
         .where((t) => t.owner.id == aiTeam.id)
         .length;
-    if (ownStructureCount >= _maxOwnStructures) return;
+    if (ownStructureCount >= _maxOwnStructures) return null;
 
     UnitType? type;
     for (final candidate in _infrastructureBuildOrder) {
@@ -176,7 +191,7 @@ class AiSkirmishControllerComponent extends Component
       // No affordable/unlocked infrastructure left to build right now -
       // fall back to a random unlocked combat tower, gated by buildBias so
       // the AI doesn't sink every spare coin into defense.
-      if (_rnd.nextDouble() > _directive.buildBias + 0.2) return;
+      if (_rnd.nextDouble() > _directive.buildBias + 0.2) return null;
       final options = _combatTowerTypes
           .where(
             (t) =>
@@ -184,14 +199,15 @@ class AiSkirmishControllerComponent extends Component
                 game.goldFor(aiTeam) >= game.blueprintFor(t).cost,
           )
           .toList();
-      if (options.isEmpty) return;
+      if (options.isEmpty) return null;
       type = options[_rnd.nextInt(options.length)];
     }
 
     for (final cell in _candidateCells(base.position).take(24)) {
       final point = game.terrainMap.grid.cellCenter(cell);
-      if (game.buildStructure(aiTeam, type, point) != null) return;
+      if (game.buildStructure(aiTeam, type, point) != null) return type;
     }
+    return null;
   }
 
   /// Mans whichever production buildings the AI has already built - it
