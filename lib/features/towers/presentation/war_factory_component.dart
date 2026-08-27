@@ -31,14 +31,6 @@ class WarFactoryComponent extends TowerComponent {
   @override
   void fire(EnemyComponent target) {}
 
-  @override
-  void update(double dt) {
-    super.update(dt);
-    if (cooldownRemaining > 0) {
-      cooldownRemaining = (cooldownRemaining - dt).clamp(0, double.infinity);
-    }
-  }
-
   /// Spends gold to roll out an Ally [type] (tank/light vehicle/aircraft) -
   /// called from the action panel's build menu. Returns whether it
   /// actually happened.
@@ -49,6 +41,14 @@ class WarFactoryComponent extends TowerComponent {
     cooldownRemaining = GameConfig.warFactoryProductionCooldown;
     game.world.spawnAlly(_buildAlly(type));
     return true;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (cooldownRemaining > 0) {
+      cooldownRemaining = (cooldownRemaining - dt).clamp(0, double.infinity);
+    }
   }
 
   AllyUnitComponent _buildAlly(AllyUnitType type) {

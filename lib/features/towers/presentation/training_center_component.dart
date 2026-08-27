@@ -19,21 +19,13 @@ class TrainingCenterComponent extends TowerComponent {
     required super.blueprint,
   });
 
+  bool get canProduce => !destroyed && cooldownRemaining <= 0;
+
   int get soldierCost =>
       game.allyUnitRepository.blueprintFor(AllyUnitType.soldier).cost;
 
-  bool get canProduce => !destroyed && cooldownRemaining <= 0;
-
   @override
   void fire(EnemyComponent target) {}
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    if (cooldownRemaining > 0) {
-      cooldownRemaining = (cooldownRemaining - dt).clamp(0, double.infinity);
-    }
-  }
 
   /// Spends gold to muster a fresh Ally Soldier - called from the action
   /// panel's build menu. Returns whether it actually happened.
@@ -48,5 +40,13 @@ class TrainingCenterComponent extends TowerComponent {
       ),
     );
     return true;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (cooldownRemaining > 0) {
+      cooldownRemaining = (cooldownRemaining - dt).clamp(0, double.infinity);
+    }
   }
 }
