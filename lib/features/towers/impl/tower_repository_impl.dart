@@ -51,7 +51,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.laser: UnitBlueprint(
       type: TowerType.laser,
       name: S.current.towerNameLaser,
-      cost: 800,
+      cost: 1000,
       range: 210,
       damage: 14,
       fireRate: 0.08,
@@ -82,7 +82,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.artilleryBunker: UnitBlueprint(
       type: TowerType.artilleryBunker,
       name: S.current.towerNameArtilleryBunker,
-      cost: 200,
+      cost: 800,
       range: 240,
       damage: 70,
       fireRate: 1.4,
@@ -100,7 +100,7 @@ class TowerRepositoryImpl implements TowerRepository {
       splashRadius: 20,
       // Very fragile - a couple of hits and it's gone.
       maxHp: 40,
-      cost: 160,
+      cost: 900,
       attackDomains: const {UnitDomain.air},
     ),
   };

@@ -12,7 +12,7 @@ class BuildingRepositoryImpl implements BuildingRepository {
         BuildingType.techLab: UnitBlueprint(
           type: BuildingType.techLab,
           name: S.current.buildingNameTechLab,
-          cost: 200,
+          cost: 500,
           range: 0,
           damage: 0,
           fireRate: 1,
@@ -21,7 +21,7 @@ class BuildingRepositoryImpl implements BuildingRepository {
         BuildingType.commandPost: UnitBlueprint(
           type: BuildingType.commandPost,
           name: S.current.buildingNameCommandPost,
-          cost: 280,
+          cost: 600,
           range: 0,
           damage: 0,
           fireRate: 1,
@@ -30,7 +30,7 @@ class BuildingRepositoryImpl implements BuildingRepository {
         BuildingType.trainingCenter: UnitBlueprint(
           type: BuildingType.trainingCenter,
           name: S.current.buildingNameTrainingCenter,
-          cost: 240,
+          cost: 550,
           range: 0,
           damage: 0,
           fireRate: 1,
@@ -39,7 +39,7 @@ class BuildingRepositoryImpl implements BuildingRepository {
         BuildingType.warFactory: UnitBlueprint(
           type: BuildingType.warFactory,
           name: S.current.buildingNameWarFactory,
-          cost: 320,
+          cost: 700,
           range: 0,
           damage: 0,
           fireRate: 1,
