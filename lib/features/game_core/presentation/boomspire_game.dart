@@ -50,6 +50,7 @@ import 'ai_skirmish_controller_component.dart';
 import 'game_world.dart';
 import 'ghost_placement_component.dart';
 import 'home_base_component.dart';
+import 'minimap_component.dart';
 import 'resource_node_component.dart';
 
 /// Composition root: wires the domain repositories into a running Flame
@@ -395,6 +396,7 @@ class BoomspireGame extends FlameGame<GameWorld>
     _setupSkirmishState();
     camera.viewfinder.anchor = Anchor.topLeft;
     camera.viewfinder.position = Vector2.zero();
+    await camera.viewport.add(MinimapComponent());
     await audioRepository.preload();
     await world.initialize();
   }

@@ -21,19 +21,11 @@ import 'resource_node_component.dart';
 /// towers and mobile units, and routes arena taps back to the game for
 /// tower placement.
 class GameWorld extends World
-    with
-        TapCallbacks,
-        KeyboardHandler,
-        PointerMoveCallbacks,
-        HasGameReference<BoomspireGame> {
-  /// World-space pixels/second the camera pans at while a key or a screen
-  /// edge is engaged - matches classic RTS edge-scroll speed rather than
-  /// easing toward a target.
+    with TapCallbacks, KeyboardHandler, HasGameReference<BoomspireGame> {
+  /// World-space pixels/second the camera pans at while a key is held -
+  /// matches classic RTS edge-scroll speed rather than easing toward a
+  /// target.
   static const _panSpeed = 640.0;
-
-  /// How close the pointer has to sit to the viewport's edge (in canvas
-  /// pixels) before edge-scroll kicks in.
-  static const _edgeMargin = 28.0;
 
   final List<MobileUnitComponent> activeUnits = [];
   final List<TowerComponent> activeTowers = [];
@@ -51,8 +43,15 @@ class GameWorld extends World
   /// every wave-defense scene today.
   Vector2 cameraPosition = Vector2.zero();
 
+  /// True while the player is dragging the camera with the middle mouse
+  /// button (see `GamePage`'s `Listener` - Flame's own drag/pointer-move
+  /// callbacks can't distinguish mouse buttons, so the button-down/up
+  /// detection lives at the Flutter widget layer and just flips this flag).
+  /// Keyboard panning is suppressed while this is true so the two don't
+  /// fight over [cameraPosition].
+  bool freePanning = false;
+
   final Set<LogicalKeyboardKey> _pressedKeys = {};
-  Vector2? _pointerCanvasPosition;
 
   Future<void> initialize() async {
     await add(TerrainComponent(terrainMap: game.terrainMap));
@@ -100,16 +99,6 @@ class GameWorld extends World
       ..clear()
       ..addAll(keysPressed);
     return true;
-  }
-
-  @override
-  void onPointerMove(PointerMoveEvent event) {
-    _pointerCanvasPosition = event.canvasPosition;
-  }
-
-  @override
-  void onPointerMoveStop(PointerMoveEvent event) {
-    _pointerCanvasPosition = null;
   }
 
   @override
@@ -163,21 +152,50 @@ class GameWorld extends World
     _panCamera(dt);
   }
 
-  /// Free-scrolling RTS camera: arrow keys/WASD and edge-of-screen mouse
-  /// panning both move [cameraPosition] at a constant screen-space speed
-  /// (C&C-Generals-style, not an eased pan), clamped so the viewport never
-  /// shows past the map's edge.
+  /// The farthest [cameraPosition] can go on each axis before the viewport
+  /// would show past the map's edge - `Vector2.zero()` on an axis whenever
+  /// the whole map already fits on screen along it.
+  Vector2 _cameraBounds() {
+    final viewport = game.camera.viewport.virtualSize;
+    return Vector2(
+      (game.terrainMap.arenaWidth - viewport.x).clamp(0.0, double.infinity),
+      (game.terrainMap.arenaHeight - viewport.y).clamp(0.0, double.infinity),
+    );
+  }
+
+  /// Nudges [cameraPosition] by a raw canvas-space delta (already scaled
+  /// into the camera's fixed-resolution coordinate space by the caller),
+  /// clamped to the map's edges. Used by `GamePage`'s middle-mouse-drag
+  /// free-pan handler - subtracting the pointer's delta gives the usual
+  /// "grab the map and drag it" feel (drag right reveals what's to the
+  /// left).
+  void panBy(Vector2 canvasDelta) {
+    final bounds = _cameraBounds();
+    cameraPosition = Vector2(
+      (cameraPosition.x - canvasDelta.x).clamp(0.0, bounds.x),
+      (cameraPosition.y - canvasDelta.y).clamp(0.0, bounds.y),
+    );
+  }
+
+  /// Centers the camera on a world point (clamped to the map's edges) -
+  /// used when the player taps the minimap.
+  void centerCameraOn(Vector2 worldPoint) {
+    final viewport = game.camera.viewport.virtualSize;
+    final bounds = _cameraBounds();
+    cameraPosition = Vector2(
+      (worldPoint.x - viewport.x / 2).clamp(0.0, bounds.x),
+      (worldPoint.y - viewport.y / 2).clamp(0.0, bounds.y),
+    );
+  }
+
+  /// Free-scrolling RTS camera: arrow keys/WASD move [cameraPosition] at a
+  /// constant screen-space speed (C&C-Generals-style, not an eased pan),
+  /// clamped so the viewport never shows past the map's edge. A no-op while
+  /// [freePanning] (middle-mouse drag) owns [cameraPosition] instead.
   void _panCamera(double dt) {
-    final viewport = game.camera.viewport.size;
-    final maxX = (game.terrainMap.arenaWidth - viewport.x).clamp(
-      0.0,
-      double.infinity,
-    );
-    final maxY = (game.terrainMap.arenaHeight - viewport.y).clamp(
-      0.0,
-      double.infinity,
-    );
-    if (maxX <= 0 && maxY <= 0) {
+    if (freePanning) return;
+    final bounds = _cameraBounds();
+    if (bounds.x <= 0 && bounds.y <= 0) {
       cameraPosition = Vector2.zero();
       return;
     }
@@ -200,19 +218,11 @@ class GameWorld extends World
       direction.x += 1;
     }
 
-    final pointer = _pointerCanvasPosition;
-    if (pointer != null) {
-      if (pointer.x <= _edgeMargin) direction.x -= 1;
-      if (pointer.x >= viewport.x - _edgeMargin) direction.x += 1;
-      if (pointer.y <= _edgeMargin) direction.y -= 1;
-      if (pointer.y >= viewport.y - _edgeMargin) direction.y += 1;
-    }
-
     if (direction.length2 == 0) return;
     final delta = direction.normalized() * _panSpeed * dt;
     cameraPosition = Vector2(
-      (cameraPosition.x + delta.x).clamp(0.0, maxX),
-      (cameraPosition.y + delta.y).clamp(0.0, maxY),
+      (cameraPosition.x + delta.x).clamp(0.0, bounds.x),
+      (cameraPosition.y + delta.y).clamp(0.0, bounds.y),
     );
   }
 }

@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flame/game.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
@@ -14,6 +17,7 @@ import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../towers/domain/repos/building_repository.dart';
 import '../../towers/domain/repos/tower_repository.dart';
 import '../../waves/domain/repos/wave_repository.dart';
+import '../domain/models/game_config.dart';
 import '../domain/models/game_difficulty.dart';
 import '../domain/models/game_scene.dart';
 import '../domain/models/game_status.dart';
@@ -74,31 +78,90 @@ class _GamePageState extends State<GamePage> {
           Column(
             children: [
               Expanded(
-                child: SoftEdgeBlur(
-                  edges: [
-                    EdgeBlur(
-                      type: EdgeType.topEdge,
-                      size: 60,
-                      sigma: 20,
-                      controlPoints: [
-                        ControlPoint(
-                          position: 0,
-                          type: ControlPointType.visible,
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Listener(
+                    onPointerDown: (event) {
+                      if (event.buttons & kMiddleMouseButton != 0) {
+                        _game.world.freePanning = true;
+                      }
+                    },
+                    onPointerMove: (event) =>
+                        _dragCamera(event.delta, constraints.biggest),
+                    onPointerUp: (_) => _game.world.freePanning = false,
+                    onPointerCancel: (_) => _game.world.freePanning = false,
+                    child: SoftEdgeBlur(
+                      edges: [
+                        EdgeBlur(
+                          type: EdgeType.topEdge,
+                          size: 60,
+                          sigma: 20,
+                          controlPoints: [
+                            ControlPoint(
+                              position: 0,
+                              type: ControlPointType.visible,
+                            ),
+                            ControlPoint(
+                              position: 1,
+                              type: ControlPointType.transparent,
+                            ),
+                          ],
                         ),
-                        ControlPoint(
-                          position: 1,
-                          type: ControlPointType.transparent,
+                        EdgeBlur(
+                          type: EdgeType.leftEdge,
+                          size: 48,
+                          sigma: 16,
+                          controlPoints: [
+                            ControlPoint(
+                              position: 0,
+                              type: ControlPointType.visible,
+                            ),
+                            ControlPoint(
+                              position: 1,
+                              type: ControlPointType.transparent,
+                            ),
+                          ],
+                        ),
+                        EdgeBlur(
+                          type: EdgeType.rightEdge,
+                          size: 48,
+                          sigma: 16,
+                          controlPoints: [
+                            ControlPoint(
+                              position: 0,
+                              type: ControlPointType.visible,
+                            ),
+                            ControlPoint(
+                              position: 1,
+                              type: ControlPointType.transparent,
+                            ),
+                          ],
+                        ),
+                        EdgeBlur(
+                          type: EdgeType.bottomEdge,
+                          size: 48,
+                          sigma: 16,
+                          controlPoints: [
+                            ControlPoint(
+                              position: 0,
+                              type: ControlPointType.visible,
+                            ),
+                            ControlPoint(
+                              position: 1,
+                              type: ControlPointType.transparent,
+                            ),
+                          ],
                         ),
                       ],
+                      child: GameWidget<BoomspireGame>(
+                        game: _game,
+                        overlayBuilderMap: {
+                          'gameOver': (context, game) =>
+                              GameOverOverlay(game: game),
+                          'victory': (context, game) =>
+                              VictoryOverlay(game: game),
+                        },
+                      ),
                     ),
-                  ],
-                  child: GameWidget<BoomspireGame>(
-                    game: _game,
-                    overlayBuilderMap: {
-                      'gameOver': (context, game) =>
-                          GameOverOverlay(game: game),
-                      'victory': (context, game) => VictoryOverlay(game: game),
-                    },
                   ),
                 ),
               ),
@@ -131,6 +194,21 @@ class _GamePageState extends State<GamePage> {
   void dispose() {
     _gameState.removeListener(_syncOverlays);
     super.dispose();
+  }
+
+  /// Converts a middle-mouse-drag's raw Flutter pixel delta into the
+  /// camera's fixed-resolution canvas space (see `CameraComponent.
+  /// withFixedResolution` in `BoomspireGame`) before handing it to
+  /// [GameWorld.panBy] - a no-op unless a drag is actually in progress (see
+  /// [GameWorld.freePanning], toggled by this page's `Listener`).
+  void _dragCamera(Offset delta, Size box) {
+    if (!_game.world.freePanning || box.isEmpty) return;
+    final scale = math.min(
+      box.width / GameConfig.arenaWidth,
+      box.height / GameConfig.arenaHeight,
+    );
+    if (scale <= 0) return;
+    _game.world.panBy(Vector2(delta.dx, delta.dy) / scale);
   }
 
   @override
