@@ -212,10 +212,12 @@ class BoomspireGame extends FlameGame<GameWorld>
         !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
       return 'Requires Tech Lab & Command Post';
     }
-    // Score-gated unlocks are a human-player-only concept - the AI has no
-    // "score", so it's bound only by gold, prerequisites and per-type
-    // limits.
-    if (builder.id == playerTeam.id) {
+    // Score-gated unlocks only make sense for wave-defense's ramping score
+    // - skirmish has no wave progression (`currentScore` barely moves), so
+    // gating War Factory/Training Center behind it there just permanently
+    // locks vehicles/soldiers out. Skirmish is bound only by gold,
+    // prerequisites and per-type limits, same as the AI already was.
+    if (builder.id == playerTeam.id && scene.mode != GameMode.skirmish) {
       if (type == BuildingType.trainingCenter &&
           gameState.currentScore < GameConfig.trainingCenterUnlockScore) {
         return 'Requires ${GameConfig.trainingCenterUnlockScore} score';

@@ -5,9 +5,9 @@ import 'package:flame/components.dart';
 import '../../../core/combat/attackable.dart';
 import '../../../core/combat/team.dart';
 import '../../../core/combat/unit.dart';
-import '../../../core/rendering/procedural_image.dart';
 import '../domain/models/game_config.dart';
 import 'boomspire_game.dart';
+import 'home_base_sprite.dart';
 
 /// The player's home base at the terrain's end point: a defended structure
 /// (instead of a plain marker circle) that shows its remaining health and
@@ -19,8 +19,6 @@ import 'boomspire_game.dart';
 class HomeBaseComponent extends PositionComponent
     with HasGameReference<BoomspireGame>, Unit
     implements Attackable {
-  static ui.Image? _cachedSprite;
-
   /// Always the human player's team today - kept as a field (rather than
   /// just reading `game.playerTeam`) so `opposingTargets()` can treat this
   /// the same way it treats an owned tower.
@@ -56,7 +54,7 @@ class HomeBaseComponent extends PositionComponent
   @override
   Future<void> onLoad() async {
     _lastHealth = game.gameState.health;
-    final image = _cachedSprite ??= await renderToImage(96, 96, _paintHome);
+    final image = await HomeBaseSprite.forTeam(owner);
     _visual = SpriteComponent(
       sprite: Sprite(image),
       size: size,
@@ -100,9 +98,7 @@ class HomeBaseComponent extends PositionComponent
         const ui.Radius.circular(3),
       ),
       ui.Paint()
-        ..color = ratio > 0.4
-            ? const ui.Color(0xFF00E5FF)
-            : const ui.Color(0xFFE53935),
+        ..color = ratio > 0.4 ? owner.color : const ui.Color(0xFFE53935),
     );
   }
 
@@ -116,83 +112,5 @@ class HomeBaseComponent extends PositionComponent
     if (health < _lastHealth) _pulse = 1;
     _lastHealth = health;
     if (_pulse > 0) _pulse = (_pulse - dt * 1.6).clamp(0, 1);
-  }
-
-  static void _paintHome(ui.Canvas canvas) {
-    const size = 96.0;
-    const center = ui.Offset(size / 2, size / 2 + 6);
-
-    canvas.drawOval(
-      ui.Rect.fromCenter(
-        center: center.translate(0, size * 0.34),
-        width: size * 0.7,
-        height: size * 0.16,
-      ),
-      ui.Paint()..color = const ui.Color(0x59000000),
-    );
-
-    final wallRect = ui.Rect.fromCenter(
-      center: center.translate(0, size * 0.08),
-      width: size * 0.62,
-      height: size * 0.42,
-    );
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(wallRect, const ui.Radius.circular(8)),
-      ui.Paint()
-        ..shader = ui.Gradient.linear(
-          ui.Offset(wallRect.left, wallRect.top),
-          ui.Offset(wallRect.left, wallRect.bottom),
-          [const ui.Color(0xFF37474F), const ui.Color(0xFF1B242A)],
-        ),
-    );
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(wallRect, const ui.Radius.circular(8)),
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = const ui.Color(0xFF00E5FF).withValues(alpha: 0.6),
-    );
-
-    // Roof - a simple house silhouette so the base reads as "home".
-    final roofPath = ui.Path()
-      ..moveTo(center.dx - size * 0.38, wallRect.top + 2)
-      ..lineTo(center.dx, wallRect.top - size * 0.24)
-      ..lineTo(center.dx + size * 0.38, wallRect.top + 2)
-      ..close();
-    canvas.drawPath(roofPath, ui.Paint()..color = const ui.Color(0xFF263238));
-    canvas.drawPath(
-      roofPath,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = const ui.Color(0xFF00E5FF).withValues(alpha: 0.8),
-    );
-
-    // Energy-core door glow.
-    final doorCenter = center.translate(0, size * 0.12);
-    canvas.drawCircle(
-      doorCenter,
-      size * 0.1,
-      ui.Paint()
-        ..shader = ui.Gradient.radial(doorCenter, size * 0.1, [
-          const ui.Color(0xFF80F6FF),
-          const ui.Color(0xFF00838F),
-        ]),
-    );
-
-    // Antenna.
-    final antennaTop = ui.Offset(center.dx, wallRect.top - size * 0.38);
-    canvas.drawLine(
-      ui.Offset(center.dx, wallRect.top - size * 0.24),
-      antennaTop,
-      ui.Paint()
-        ..color = const ui.Color(0xFF00E5FF)
-        ..strokeWidth = 2,
-    );
-    canvas.drawCircle(
-      antennaTop,
-      3,
-      ui.Paint()..color = const ui.Color(0xFF00E5FF),
-    );
   }
 }

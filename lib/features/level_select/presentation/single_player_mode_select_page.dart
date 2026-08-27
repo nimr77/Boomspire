@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/routes.dart';
 import '../../../core/widgets/hover_scale_card.dart';
 import '../../../core/widgets/menu_option_content.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
-import 'level_select_page.dart';
-import 'skirmish_level_select_page.dart';
 
 /// Single Player drill-down: choose Tower Defense (the original wave
 /// survival campaigns) or Skirmish (home-vs-home battles against the AI),
@@ -55,11 +55,8 @@ class SinglePlayerModeSelectPage extends StatelessWidget {
                       const SizedBox(height: 32),
                       HoverScaleCard(
                             accentColor: Colors.orangeAccent,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const LevelSelectPage(),
-                              ),
-                            ),
+                            onTap: () =>
+                                context.push(Routes.towerDefenseLevelSelect.route),
                             child: MenuOptionContent(
                               icon: Icons.shield,
                               title: S.current.modeTowerDefenseTitle,
@@ -76,11 +73,8 @@ class SinglePlayerModeSelectPage extends StatelessWidget {
                       const SizedBox(height: 18),
                       HoverScaleCard(
                             accentColor: Colors.redAccent,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SkirmishLevelSelectPage(),
-                              ),
-                            ),
+                            onTap: () =>
+                                context.push(Routes.skirmishLevelSelect.route),
                             child: MenuOptionContent(
                               icon: Icons.swap_horiz,
                               title: S.current.modeSkirmishTitle,
@@ -122,7 +116,7 @@ class SinglePlayerModeSelectPage extends StatelessWidget {
                     color: Colors.white70,
                     size: 20,
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                 ),
               ),
             ),

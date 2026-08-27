@@ -1,13 +1,11 @@
-import 'dart:convert';
 import 'dart:math';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../../core/storage/app_database.dart';
 import '../domain/models/account.dart';
 import '../domain/repos/account_repository.dart';
 
-/// On-device account storage via `shared_preferences` - the default for
-/// players who haven't (yet) signed into a cloud account. A future
+/// On-device account storage via ToStore's key-value engine - the default
+/// for players who haven't (yet) signed into a cloud account. A future
 /// `FirebaseAccountRepositoryImpl` implementing [AccountRepository] can
 /// replace this once real accounts exist, without touching UI code.
 class LocalAccountRepositoryImpl implements AccountRepository {
@@ -21,18 +19,18 @@ class LocalAccountRepositoryImpl implements AccountRepository {
       name: trimmed.isEmpty ? 'Commander' : trimmed,
       createdAt: DateTime.now(),
     );
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, jsonEncode(account.toJson()));
+    final db = await AppDatabase.instance;
+    await db.setValue(_key, account.toJson());
     return account;
   }
 
   @override
   Future<Account?> currentAccount() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
+    final db = await AppDatabase.instance;
+    final raw = await db.getValue(_key);
     if (raw == null) return null;
     try {
-      return Account.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      return Account.fromJson(Map<String, dynamic>.from(raw as Map));
     } catch (_) {
       return null;
     }
@@ -40,8 +38,8 @@ class LocalAccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<void> signOut() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_key);
+    final db = await AppDatabase.instance;
+    await db.removeValue(_key);
   }
 
   String _generateId() {

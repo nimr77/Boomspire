@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../game_core/domain/models/game_scene.dart';
 import '../../../terrain/domain/models/biome.dart';
+import '../../../waves/domain/models/wave_loadout.dart';
 import 'editor_point.dart';
 import 'environment_settings.dart';
 import 'painted_cell.dart';
@@ -17,6 +18,13 @@ part 'map_draft.g.dart';
 /// a draft targets [GameMode.skirmish]; a later pre-game screen lets the
 /// player pick or randomize which seat plays which site. Use
 /// `EditorTerrainGenerator` to rasterize a draft into a renderable preview.
+///
+/// [waveCount]/[waveLoadouts] only matter for [GameMode.waveDefense] drafts:
+/// they replace the built-in procedural wave formula with an explicit,
+/// author-controlled per-wave unit budget (see `DraftWaveRepository`). A
+/// wave number with no matching [WaveLoadout] (or an empty one) still falls
+/// back to the procedural formula, so a fresh draft plays exactly as before
+/// until an author actually customizes a wave.
 @freezed
 abstract class MapDraft with _$MapDraft {
   const factory MapDraft({
@@ -31,6 +39,8 @@ abstract class MapDraft with _$MapDraft {
     @Default([]) List<EditorPoint> homeSites,
     @Default(EnvironmentSettings()) EnvironmentSettings environment,
     @Default(3000) int startingGold,
+    @Default(10) int waveCount,
+    @Default([]) List<WaveLoadout> waveLoadouts,
   }) = _MapDraft;
 
   factory MapDraft.fromJson(Map<String, dynamic> json) =>

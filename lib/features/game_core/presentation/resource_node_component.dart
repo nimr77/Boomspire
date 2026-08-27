@@ -1,6 +1,8 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart' show Alignment, LinearGradient;
 
 import '../../../core/combat/team.dart';
 import '../domain/models/game_config.dart';
@@ -26,7 +28,7 @@ class ResourceNodeComponent extends PositionComponent
   double _payoutTimer = 0;
 
   late final CircleComponent _progressRing;
-  late final PolygonComponent _icon;
+  late final _ResourceNodePlate _icon;
 
   ResourceNodeComponent({required Vector2 position})
     : super(position: position, size: Vector2.all(36), anchor: Anchor.center);
@@ -41,16 +43,15 @@ class ResourceNodeComponent extends PositionComponent
       position: size / 2,
       paint: Paint()..color = const Color(0x00000000),
     );
-    // A diamond "icon" rather than a flat circle - grey while unclaimed,
+    // A hexagonal building-style plate - grey (neutral) while unclaimed,
     // tinted to whichever team's color once a vehicle claims it (see
-    // [_ownerColor]).
-    _icon = PolygonComponent.relative(
-      [Vector2(0, -1), Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0)],
-      parentSize: Vector2.all(size.x - 12),
-      position: size / 2,
-      anchor: Anchor.center,
-      paint: Paint()..color = _ownerColor,
-    );
+    // [_ownerColor]) - matches the same "plate + accent ring + core" look
+    // every tower/building on the map already uses, instead of the old
+    // stand-alone diamond icon.
+    _icon = _ResourceNodePlate(accent: _ownerColor)
+      ..size = Vector2.all(size.x - 6)
+      ..position = size / 2
+      ..anchor = Anchor.center;
     await addAll([_progressRing, _icon]);
   }
 
@@ -59,11 +60,12 @@ class ResourceNodeComponent extends PositionComponent
     super.update(dt);
     _updateCapture(dt);
     _updatePayout(dt);
-    _icon.paint.color = _ownerColor;
+    _icon.accent = _ownerColor;
     _progressRing.paint.color = (_leadingTeam?.color ?? _ownerColor).withValues(
       alpha: _captureProgress / GameConfig.resourceNodeCaptureTime * 0.6,
     );
   }
+
 
   void _updateCapture(double dt) {
     final nearbyVehicleTeams = <Team>{};
@@ -111,5 +113,68 @@ class ResourceNodeComponent extends PositionComponent
     } else if (owner == game.aiTeam) {
       game.aiEconomy?.addGold(GameConfig.aiResourceNodeGoldPerTick);
     }
+  }
+}
+
+/// The resource node's own "building" plate - the same hexagonal
+/// plate/accent-ring/core silhouette every tower and support building on
+/// the map shares (see `TowerSpriteFactory._paintBase`), just drawn
+/// directly each frame instead of as a cached sprite since [accent] swaps
+/// between neutral grey and a team color live as capture state changes.
+class _ResourceNodePlate extends PositionComponent {
+  Color accent;
+
+  _ResourceNodePlate({required this.accent});
+
+  @override
+  void render(Canvas canvas) {
+    final center = Offset(size.x / 2, size.y / 2);
+    final radius = size.x / 2;
+
+    final path = Path();
+    for (var i = 0; i < 6; i++) {
+      final a = pi / 6 + i * pi / 3;
+      final p = Offset(
+        center.dx + cos(a) * radius,
+        center.dy + sin(a) * radius,
+      );
+      if (i == 0) {
+        path.moveTo(p.dx, p.dy);
+      } else {
+        path.lineTo(p.dx, p.dy);
+      }
+    }
+    path.close();
+
+    canvas.drawShadow(path, const Color(0xFF000000), 3, false);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF636d7a), Color(0xFF20242a)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(Rect.fromCircle(center: center, radius: radius)),
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = accent.withValues(alpha: 0.85),
+    );
+    canvas.drawCircle(
+      center,
+      radius * 0.32,
+      Paint()..color = const Color(0xFF11151a),
+    );
+    canvas.drawCircle(
+      center,
+      radius * 0.32,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = accent,
+    );
   }
 }

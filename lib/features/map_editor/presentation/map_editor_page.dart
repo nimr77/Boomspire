@@ -4,15 +4,20 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/combat/unit_kind.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/router/routes.dart';
 import '../../game_core/domain/models/game_scene.dart';
-import '../../game_core/presentation/game_page.dart';
 import '../../game_core/presentation/home_site_marker_painter.dart';
 import '../../game_core/presentation/player_palette.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../../terrain/domain/models/obstacle_kind.dart';
 import '../../terrain/presentation/obstacle_color.dart';
+import '../../waves/domain/models/wave_loadout.dart';
+import '../../waves/impl/wave_loadout_generator.dart';
+import '../../waves/impl/wave_repository_impl.dart';
 import '../domain/models/editor_point.dart';
 import '../domain/models/editor_terrain_preview.dart';
 import '../domain/models/environment_settings.dart';
@@ -21,6 +26,7 @@ import '../domain/models/painted_cell.dart';
 import '../domain/models/water_path.dart';
 import '../domain/models/weather_keyframe.dart';
 import '../domain/repos/map_draft_repository.dart';
+import '../impl/draft_wave_repository.dart';
 import '../impl/editor_terrain_generator.dart';
 import '../impl/map_draft_terrain_repository.dart';
 
@@ -232,11 +238,13 @@ class _MapEditorPageState extends State<MapEditorPage> {
   final _widthController = TextEditingController();
   final _heightController = TextEditingController();
   final _startingGoldController = TextEditingController();
+  final _waveCountController = TextEditingController();
 
   late MapDraft _draft = widget.initialDraft;
   EditorTerrainPreview? _preview;
   _EditorTool _tool = _EditorTool.mountain;
   double _riverWidth = 48;
+  int _selectedWaveNumber = 1;
   List<EditorPoint> _activeStroke = [];
   Size _canvasSize = const Size(900, 540);
   Timer? _regenDebounce;
@@ -539,6 +547,124 @@ class _MapEditorPageState extends State<MapEditorPage> {
                       onSubmitted: (_) => _applyStartingGold(),
                       onEditingComplete: _applyStartingGold,
                     ),
+                    if (_draft.mode == GameMode.waveDefense) ...[
+                      const Divider(color: Colors.white24, height: 32),
+                      _SectionLabel('Waves'),
+                      TextField(
+                        controller: _waveCountController,
+                        style: const TextStyle(color: Colors.white),
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Number of waves',
+                        ),
+                        onSubmitted: (_) => _applyWaveCount(),
+                        onEditingComplete: _applyWaveCount,
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _randomizeAllWaves,
+                        icon: const Icon(Icons.shuffle),
+                        label: Text('Randomize all ${_draft.waveCount} waves'),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          IconButton(
+                            tooltip: 'Previous wave',
+                            icon: const Icon(
+                              Icons.chevron_left,
+                              color: Colors.white70,
+                            ),
+                            onPressed: _selectedWaveNumber > 1
+                                ? () => setState(() => _selectedWaveNumber--)
+                                : null,
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Wave $_selectedWaveNumber / ${_draft.waveCount}'
+                              '${_hasCustomLoadout(_selectedWaveNumber) ? '' : ' (auto)'}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Next wave',
+                            icon: const Icon(
+                              Icons.chevron_right,
+                              color: Colors.white70,
+                            ),
+                            onPressed: _selectedWaveNumber < _draft.waveCount
+                                ? () => setState(() => _selectedWaveNumber++)
+                                : null,
+                          ),
+                        ],
+                      ),
+                      for (final kind in UnitKind.values)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  kind.name,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Fewer',
+                                icon: const Icon(
+                                  Icons.remove_circle_outline,
+                                  color: Colors.white54,
+                                ),
+                                onPressed: () => _setWaveUnitCount(
+                                  kind,
+                                  _currentLoadout().countOf(kind) - 1,
+                                ),
+                              ),
+                              SizedBox(
+                                width: 28,
+                                child: Text(
+                                  '${_currentLoadout().countOf(kind)}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'More',
+                                icon: const Icon(
+                                  Icons.add_circle_outline,
+                                  color: Colors.white54,
+                                ),
+                                onPressed: () => _setWaveUnitCount(
+                                  kind,
+                                  _currentLoadout().countOf(kind) + 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _randomizeSelectedWave,
+                              icon: const Icon(Icons.casino),
+                              label: const Text('Randomize'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _clearSelectedWave,
+                              icon: const Icon(Icons.restore),
+                              label: const Text('Reset to auto'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const Divider(color: Colors.white24, height: 32),
                     _SectionLabel('Environment'),
                     SwitchListTile(
@@ -611,6 +737,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
     _widthController.dispose();
     _heightController.dispose();
     _startingGoldController.dispose();
+    _waveCountController.dispose();
     _viewerController.dispose();
     super.dispose();
   }
@@ -622,6 +749,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
     _widthController.text = _draft.arenaWidth.toStringAsFixed(0);
     _heightController.text = _draft.arenaHeight.toStringAsFixed(0);
     _startingGoldController.text = _draft.startingGold.toString();
+    _waveCountController.text = _draft.waveCount.toString();
     _regenerate();
   }
 
@@ -656,6 +784,54 @@ class _MapEditorPageState extends State<MapEditorPage> {
     final gold = int.tryParse(_startingGoldController.text)?.clamp(0, 100000);
     if (gold == null) return;
     _updateDraft((d) => d.copyWith(startingGold: gold));
+  }
+
+  void _applyWaveCount() {
+    final count = int.tryParse(_waveCountController.text)?.clamp(1, 200);
+    if (count == null) return;
+    _updateDraft((d) => d.copyWith(waveCount: count));
+    if (_selectedWaveNumber > count) {
+      setState(() => _selectedWaveNumber = count);
+    }
+  }
+
+  void _clearSelectedWave() {
+    _replaceLoadout(WaveLoadout(waveNumber: _selectedWaveNumber));
+  }
+
+  WaveLoadout _currentLoadout() => _loadoutFor(_selectedWaveNumber);
+
+  bool _hasCustomLoadout(int waveNumber) =>
+      _loadoutFor(waveNumber).unitCounts.isNotEmpty;
+
+  WaveLoadout _loadoutFor(int waveNumber) {
+    for (final loadout in _draft.waveLoadouts) {
+      if (loadout.waveNumber == waveNumber) return loadout;
+    }
+    return WaveLoadout(waveNumber: waveNumber);
+  }
+
+  void _randomizeAllWaves() {
+    _updateDraft(
+      (d) => d.copyWith(waveLoadouts: WaveLoadoutGenerator.randomize(d.waveCount)),
+    );
+  }
+
+  void _randomizeSelectedWave() {
+    _replaceLoadout(WaveLoadoutGenerator.randomizeWave(_selectedWaveNumber));
+  }
+
+  void _replaceLoadout(WaveLoadout loadout) {
+    _updateDraft((d) {
+      final loadouts = [...d.waveLoadouts]
+        ..removeWhere((l) => l.waveNumber == loadout.waveNumber);
+      if (loadout.unitCounts.isNotEmpty) loadouts.add(loadout);
+      return d.copyWith(waveLoadouts: loadouts);
+    });
+  }
+
+  void _setWaveUnitCount(UnitKind kind, int count) {
+    _replaceLoadout(_currentLoadout().withCount(kind, count.clamp(0, 999)));
   }
 
   void _handlePanEnd(DragEndDetails details) {
@@ -743,20 +919,27 @@ class _MapEditorPageState extends State<MapEditorPage> {
         icon: Icons.info_outline,
       );
     }
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GamePage(
-          scene: GameScene(
-            id: 'draft-${_draft.id}',
-            name: _draft.name.isEmpty ? 'Untitled Map' : _draft.name,
-            briefing: 'Testing your hand-drawn map draft.',
+    await context.push(
+      Routes.game.route,
+      extra: GameRouteArgs(
+        scene: GameScene(
+          id: 'draft-${_draft.id}',
+          name: _draft.name.isEmpty ? 'Untitled Map' : _draft.name,
+          briefing: 'Testing your hand-drawn map draft.',
+          biome: _draft.biome,
+          waveCount: _draft.waveCount,
+          startingGold: _draft.startingGold,
+        ),
+        terrainRepository: MapDraftTerrainRepository(
+          draft: _draft,
+          preview: preview,
+        ),
+        waveRepository: DraftWaveRepository(
+          loadouts: _draft.waveLoadouts,
+          totalWaves: _draft.waveCount,
+          fallback: WaveRepositoryImpl(
+            totalWaves: _draft.waveCount,
             biome: _draft.biome,
-            waveCount: 5,
-            startingGold: _draft.startingGold,
-          ),
-          terrainRepository: MapDraftTerrainRepository(
-            draft: _draft,
-            preview: preview,
           ),
         ),
       ),

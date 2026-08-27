@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/routes.dart';
 import '../../../core/widgets/hover_scale_card.dart';
 import '../../../core/widgets/menu_option_content.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
-import '../../map_editor/presentation/map_drafts_list_page.dart';
-import 'single_player_mode_select_page.dart';
 
 /// The app's true landing page: shows the game's modes first, before any
 /// map/campaign list. Currently only "Single Player" is playable (which
@@ -56,12 +56,8 @@ class MainMenuPage extends StatelessWidget {
                       const SizedBox(height: 40),
                       HoverScaleCard(
                             accentColor: Colors.cyanAccent,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const SinglePlayerModeSelectPage(),
-                              ),
-                            ),
+                            onTap: () =>
+                                context.push(Routes.singlePlayerModeSelect.route),
                             child: MenuOptionContent(
                               icon: Icons.person,
                               title: S.current.mainMenuSinglePlayer,
@@ -103,11 +99,7 @@ class MainMenuPage extends StatelessWidget {
                     color: Colors.white70,
                     size: 20,
                   ),
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const MapDraftsListPage(),
-                    ),
-                  ),
+                  onPressed: () => context.push(Routes.mapEditorList.route),
                 ),
               ),
             ),

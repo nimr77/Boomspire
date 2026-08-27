@@ -1,13 +1,10 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../../core/storage/app_database.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/repos/map_draft_repository.dart';
 
-/// On-device draft storage via `shared_preferences` - browser-storage-backed
-/// on web, file-backed on desktop, so the same code path works as a hybrid
-/// local store on every platform without any platform-specific branching.
+/// On-device draft storage via ToStore's key-value engine, so the same
+/// code path works as a hybrid local store on every platform without any
+/// platform-specific branching.
 ///
 /// All drafts are kept as one JSON array under a single key (list of maps
 /// is expected to stay small - user-authored, not a big content catalog).
@@ -23,13 +20,13 @@ class LocalMapDraftRepositoryImpl implements MapDraftRepository {
 
   @override
   Future<List<MapDraft>> listDrafts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
+    final db = await AppDatabase.instance;
+    final raw = await db.getValue(_key);
     if (raw == null) return [];
     try {
-      final list = jsonDecode(raw) as List<dynamic>;
+      final list = raw as List<dynamic>;
       return list
-          .map((e) => MapDraft.fromJson(e as Map<String, dynamic>))
+          .map((e) => MapDraft.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     } catch (_) {
       // Corrupt/foreign data shouldn't crash the editor's draft list.
@@ -59,10 +56,7 @@ class LocalMapDraftRepositoryImpl implements MapDraftRepository {
   }
 
   Future<void> _persist(List<MapDraft> drafts) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _key,
-      jsonEncode(drafts.map((d) => d.toJson()).toList()),
-    );
+    final db = await AppDatabase.instance;
+    await db.setValue(_key, drafts.map((d) => d.toJson()).toList());
   }
 }

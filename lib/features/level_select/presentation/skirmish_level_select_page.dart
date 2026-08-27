@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../game_core/domain/models/game_scene.dart';
@@ -10,7 +12,6 @@ import '../../map_editor/domain/models/map_draft.dart';
 import '../../map_editor/domain/repos/map_draft_repository.dart';
 import '../../terrain/domain/models/biome.dart';
 import 'biome_preview.dart';
-import 'skirmish_placement_page.dart';
 
 /// Skirmish map picker: lists the built-in "Featured" skirmish scenes plus
 /// any user-authored [MapDraft]s saved in [GameMode.skirmish] mode from the
@@ -177,11 +178,9 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: _SkirmishDraftTile(
                                     draft: draft,
-                                    onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            SkirmishPlacementPage(draft: draft),
-                                      ),
+                                    onTap: () => context.push(
+                                      Routes.skirmishPlacement.route,
+                                      extra: SkirmishPlacementArgs(draft: draft),
                                     ),
                                   ),
                                 ),
@@ -217,7 +216,7 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                     color: Colors.white70,
                     size: 20,
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                 ),
               ),
             ),
@@ -245,10 +244,9 @@ class _SkirmishSceneCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => SkirmishPlacementPage(scene: scene),
-          ),
+        onTap: () => context.push(
+          Routes.skirmishPlacement.route,
+          extra: SkirmishPlacementArgs(scene: scene),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(14),

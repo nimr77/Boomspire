@@ -3,11 +3,12 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../game_core/domain/models/game_scene.dart';
-import '../../game_core/presentation/game_page.dart';
 import '../../game_core/presentation/player_palette.dart';
 import '../../map_editor/domain/models/editor_point.dart';
 import '../../map_editor/domain/models/editor_terrain_preview.dart';
@@ -131,6 +132,7 @@ class _HomeSiteMarker extends StatelessWidget {
         onEnter: (_) => onHoverChanged(true),
         onExit: (_) => onHoverChanged(false),
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Center(
             child: AnimatedScale(
@@ -447,7 +449,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                     color: Colors.white70,
                     size: 20,
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                 ),
               ),
             ),
@@ -480,8 +482,43 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   }
 
   void _selectSlot(int index) {
-    if (!_isDraft) return; // Built-in scenes have fixed ownership.
     setState(() => _selectedSlot = index);
+  }
+
+  /// The scene to actually launch for a built-in (non-draft) map: unchanged
+  /// unless the player picked a different site than the one already
+  /// flagged [HomeSiteOwner.player] in the scene data, in which case the
+  /// two sites' ownership is swapped so the player starts where they
+  /// tapped and the AI takes over the original player site instead.
+  GameScene _sceneForLaunch() {
+    final scene = widget.scene!;
+    final playerIndex = scene.homeSites.indexWhere(
+      (s) => s.owner == HomeSiteOwner.player,
+    );
+    if (_selectedSlot == null || _selectedSlot == playerIndex) return scene;
+    final sites = [
+      for (final (i, site) in scene.homeSites.indexed)
+        if (i == _selectedSlot)
+          HomeSite(layout: site.layout, owner: HomeSiteOwner.player)
+        else if (i == playerIndex)
+          HomeSite(layout: site.layout, owner: HomeSiteOwner.ai)
+        else
+          site,
+    ];
+    return GameScene(
+      id: scene.id,
+      name: scene.name,
+      briefing: scene.briefing,
+      biome: scene.biome,
+      mode: scene.mode,
+      waveCount: scene.waveCount,
+      aggressionBias: scene.aggressionBias,
+      homeLayout: scene.homeLayout,
+      spawnLayout: scene.spawnLayout,
+      homeSites: sites,
+      resourceNodeSites: scene.resourceNodeSites,
+      startingGold: scene.startingGold,
+    );
   }
 
   Future<void> _start() async {
@@ -493,9 +530,10 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
     }
 
     if (!_isDraft) {
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => GamePage(scene: widget.scene!)));
+      await context.push(
+        Routes.game.route,
+        extra: GameRouteArgs(scene: _sceneForLaunch()),
+      );
       return;
     }
 
@@ -529,23 +567,22 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
         ),
       );
     }
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GamePage(
-          scene: GameScene(
-            id: 'draft-${draft.id}',
-            name: draft.name.isEmpty ? 'Untitled Map' : draft.name,
-            briefing: 'Testing your hand-drawn skirmish map.',
-            biome: draft.biome,
-            mode: aiSite != null ? GameMode.skirmish : GameMode.waveDefense,
-            startingGold: draft.startingGold,
-          ),
-          terrainRepository: MapDraftTerrainRepository(
-            draft: draft,
-            preview: preview,
-            humanBaseSite: chosen,
-            aiBaseSite: aiSite,
-          ),
+    await context.push(
+      Routes.game.route,
+      extra: GameRouteArgs(
+        scene: GameScene(
+          id: 'draft-${draft.id}',
+          name: draft.name.isEmpty ? 'Untitled Map' : draft.name,
+          briefing: 'Testing your hand-drawn skirmish map.',
+          biome: draft.biome,
+          mode: aiSite != null ? GameMode.skirmish : GameMode.waveDefense,
+          startingGold: draft.startingGold,
+        ),
+        terrainRepository: MapDraftTerrainRepository(
+          draft: draft,
+          preview: preview,
+          humanBaseSite: chosen,
+          aiBaseSite: aiSite,
         ),
       ),
     );

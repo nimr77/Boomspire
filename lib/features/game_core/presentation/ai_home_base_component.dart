@@ -7,17 +7,19 @@ import '../../../core/combat/team.dart';
 import '../../../core/combat/unit.dart';
 import '../domain/models/game_status.dart';
 import 'boomspire_game.dart';
+import 'home_base_sprite.dart';
 
 /// The AI opponent's home base in a [GameMode.skirmish] match - the mirror
-/// of [HomeBaseComponent], but backed by [BoomspireGame.aiEconomy] instead
-/// of the human player's [GameStateRepository]. Destroying it wins the
-/// match for the player (see [takeDamage]).
+/// of [HomeBaseComponent] (same shared art, just tinted in the AI's own
+/// team color), backed by [BoomspireGame.aiEconomy] instead of the human
+/// player's [GameStateRepository]. Destroying it wins the match for the
+/// player (see [takeDamage]).
 class AiHomeBaseComponent extends PositionComponent
     with HasGameReference<BoomspireGame>, Unit
     implements Attackable {
+  late final SpriteComponent _visual;
   int _lastHealth = 0;
   double _pulse = 0;
-  double _idlePhase = 0;
 
   AiHomeBaseComponent({required Vector2 position})
     : super(
@@ -46,52 +48,24 @@ class AiHomeBaseComponent extends PositionComponent
   Team get owner => game.aiTeam ?? Team.aiOpponent;
 
   @override
+  Future<void> onLoad() async {
+    _lastHealth = game.aiEconomy?.health ?? 0;
+    final image = await HomeBaseSprite.forTeam(owner);
+    _visual = SpriteComponent(
+      sprite: Sprite(image),
+      size: size,
+      anchor: Anchor.center,
+      position: size / 2,
+    );
+    await add(_visual);
+  }
+
+  @override
   void render(Canvas canvas) {
-    final accent = owner.color;
-    final center = Offset(size.x / 2, size.y / 2);
-
-    // Base plate + keep silhouette - a simple, readable structure rather
-    // than a fancy sprite (the player's home base has its own bespoke art;
-    // this reuses the same "flat shape + accent glow" language the rest of
-    // the battlefield's structures share).
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center,
-          width: size.x * 0.8,
-          height: size.y * 0.6,
-        ),
-        const Radius.circular(10),
-      ),
-      Paint()..color = const Color(0xFF20242B),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center,
-          width: size.x * 0.8,
-          height: size.y * 0.6,
-        ),
-        const Radius.circular(10),
-      ),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..color = accent.withValues(
-          alpha: 0.75 + 0.15 * (0.5 + 0.5 * _pulseWave()),
-        ),
-    );
-    final breath = 0.5 + 0.5 * _pulseWave();
-    canvas.drawCircle(
-      center,
-      size.x * 0.3 + breath * 2,
-      Paint()..color = accent.withValues(alpha: 0.18 + breath * 0.1),
-    );
-
     if (_pulse > 0) {
       final radius = size.x * (0.55 + (1 - _pulse) * 0.55);
       canvas.drawCircle(
-        center,
+        Offset(size.x / 2, size.y / 2),
         radius,
         Paint()
           ..style = PaintingStyle.stroke
@@ -116,7 +90,7 @@ class AiHomeBaseComponent extends PositionComponent
         Rect.fromLTWH(barX, barY, barWidth * ratio, 6),
         const Radius.circular(3),
       ),
-      Paint()..color = ratio > 0.4 ? accent : const Color(0xFFE53935),
+      Paint()..color = ratio > 0.4 ? owner.color : const Color(0xFFE53935),
     );
   }
 
@@ -133,15 +107,9 @@ class AiHomeBaseComponent extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
-    _idlePhase += dt;
     final health = game.aiEconomy?.health ?? 0;
     if (health < _lastHealth) _pulse = 1;
     _lastHealth = health;
     if (_pulse > 0) _pulse = (_pulse - dt * 1.6).clamp(0, 1);
-  }
-
-  double _pulseWave() {
-    final t = _idlePhase * 2.2 % (3.14159265 * 2);
-    return t < 3.14159265 ? (t / 3.14159265) : (2 - t / 3.14159265);
   }
 }

@@ -358,8 +358,9 @@ void main() {
     );
 
     test(
-      'the AI can build score-gated structures (Training Center, War '
-      'Factory) with zero score - only the human player is score-gated',
+      'score-gated structures (Training Center, War Factory) are '
+      'unlockable by both sides at zero score in skirmish - the score gate '
+      'only applies to wave-defense',
       () async {
         final game = await _bootGame(GameScenes.skirmishes.first);
         final aiTeam = game.aiTeam!;
@@ -381,16 +382,28 @@ void main() {
           isTrue,
         );
 
-        // The human player, at the same zero score, is still gated.
+        // Skirmish has no wave progression to gate on, so the human player
+        // isn't score-gated there either, unlike in wave-defense (see the
+        // dedicated wave-defense assertion below).
         expect(
           game.canBuildTower(
             BuildingType.trainingCenter,
             owner: game.playerTeam,
           ),
-          isFalse,
+          isTrue,
         );
         expect(
           game.canBuildTower(BuildingType.warFactory, owner: game.playerTeam),
+          isTrue,
+        );
+
+        final waveDefenseGame = await _bootGame(GameScenes.all.first);
+        expect(
+          waveDefenseGame.gameState.currentScore,
+          lessThan(GameConfig.trainingCenterUnlockScore),
+        );
+        expect(
+          waveDefenseGame.canBuildTower(BuildingType.trainingCenter),
           isFalse,
         );
       },
@@ -510,6 +523,28 @@ void main() {
         game.update(0);
         aiUnit.takeDamage(blueprint.maxHealth.toDouble());
         expect(game.gameState.gold, greaterThan(playerGoldBefore));
+      },
+    );
+
+    test(
+      'every buildable-roster unit kind pays a non-zero kill bounty '
+      '(regression: skirmish kills used to pay 0 gold either way)',
+      () {
+        final repository = MobileUnitRepositoryImpl();
+        for (final kind in [
+          UnitKind.soldier,
+          UnitKind.tank,
+          UnitKind.lightVehicle,
+          UnitKind.aircraft,
+          UnitKind.rocketBarrage,
+        ]) {
+          final blueprint = repository.blueprintFor(Team.defaultPlayer, kind);
+          expect(
+            blueprint.bounty,
+            greaterThan(0),
+            reason: '$kind must pay a kill bounty in skirmish',
+          );
+        }
       },
     );
   });

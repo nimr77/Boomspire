@@ -37,6 +37,12 @@ _MapDraft _$MapDraftFromJson(Map<String, dynamic> json) => _MapDraft(
           json['environment'] as Map<String, dynamic>,
         ),
   startingGold: (json['startingGold'] as num?)?.toInt() ?? 3000,
+  waveCount: (json['waveCount'] as num?)?.toInt() ?? 10,
+  waveLoadouts:
+      (json['waveLoadouts'] as List<dynamic>?)
+          ?.map((e) => WaveLoadout.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$MapDraftToJson(_MapDraft instance) => <String, dynamic>{
@@ -51,6 +57,8 @@ Map<String, dynamic> _$MapDraftToJson(_MapDraft instance) => <String, dynamic>{
   'homeSites': instance.homeSites.map((e) => e.toJson()).toList(),
   'environment': instance.environment.toJson(),
   'startingGold': instance.startingGold,
+  'waveCount': instance.waveCount,
+  'waveLoadouts': instance.waveLoadouts.map((e) => e.toJson()).toList(),
 };
 
 const _$BiomeEnumMap = {

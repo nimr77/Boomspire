@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:glassmorphism/glassmorphism.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../account/domain/models/account.dart';
@@ -10,7 +12,6 @@ import '../../account/domain/repos/account_repository.dart';
 import '../../game_core/domain/models/game_difficulty.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../game_core/domain/models/game_scenes.dart';
-import '../../game_core/presentation/game_page.dart';
 import '../../progress/domain/models/progress_snapshot.dart';
 import '../../progress/domain/repos/progress_repository.dart';
 import '../../terrain/domain/models/biome.dart';
@@ -274,7 +275,7 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                     color: Colors.white70,
                     size: 20,
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                 ),
               ),
             ),
@@ -306,10 +307,9 @@ class _SceneCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => GamePage(scene: scene, difficulty: difficulty),
-            ),
+          context.push(
+            Routes.game.route,
+            extra: GameRouteArgs(scene: scene, difficulty: difficulty),
           );
         },
         child: ClipRRect(

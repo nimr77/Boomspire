@@ -4,10 +4,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core/di/service_locator.dart';
+import 'core/router/router.dart';
 import 'features/account/domain/models/account.dart';
 import 'features/account/domain/repos/account_repository.dart';
 import 'features/account/presentation/create_account_content.dart';
-import 'features/level_select/presentation/main_menu_page.dart';
 import 'features/messaging/presentation/glass_message.dart';
 import 'generated/l10n.dart';
 
@@ -32,13 +32,12 @@ class BoomspireApp extends StatefulWidget {
 
 class _BoomspireAppState extends State<BoomspireApp> {
   final AccountRepository _accountRepository = getIt<AccountRepository>();
-  final _navigatorKey = GlobalKey<NavigatorState>();
   bool _prompted = false;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: _navigatorKey,
+    return MaterialApp.router(
+      routerConfig: appRouter,
       onGenerateTitle: (context) => S.current.appTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true),
@@ -49,7 +48,6 @@ class _BoomspireAppState extends State<BoomspireApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: S.delegate.supportedLocales,
-      home: const MainMenuPage(),
     );
   }
 
@@ -67,7 +65,7 @@ class _BoomspireAppState extends State<BoomspireApp> {
     if (_prompted) return;
     _prompted = true;
     final existing = await _accountRepository.currentAccount();
-    final navContext = _navigatorKey.currentContext;
+    final navContext = rootNavigatorKey.currentContext;
     if (existing != null || navContext == null || !navContext.mounted) return;
     await showGlassMessage<Account?>(
       navContext,

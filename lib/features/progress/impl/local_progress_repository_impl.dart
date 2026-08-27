@@ -1,13 +1,11 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../../core/storage/app_database.dart';
 import '../domain/models/progress_snapshot.dart';
 import '../domain/repos/progress_repository.dart';
 
-/// On-device progress storage via `shared_preferences` - used whenever the
-/// player is not signed into a cloud account. Stored as a single small JSON
-/// blob (via the freezed-generated `toJson`/`fromJson`) under one key.
+/// On-device progress storage via ToStore's key-value engine - used
+/// whenever the player is not signed into a cloud account. Stored as a
+/// single small JSON blob (via the freezed-generated `toJson`/`fromJson`)
+/// under one key.
 ///
 /// This is intentionally the *only* place that knows about the storage
 /// mechanism; a future `FirebaseProgressRepositoryImpl` implementing the same
@@ -18,11 +16,11 @@ class LocalProgressRepositoryImpl implements ProgressRepository {
 
   @override
   Future<ProgressSnapshot> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
+    final db = await AppDatabase.instance;
+    final raw = await db.getValue(_key);
     if (raw == null) return ProgressSnapshot.empty;
     try {
-      return ProgressSnapshot.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      return ProgressSnapshot.fromJson(Map<String, dynamic>.from(raw as Map));
     } catch (_) {
       // Corrupt/foreign data shouldn't crash the level-select screen.
       return ProgressSnapshot.empty;
@@ -43,7 +41,7 @@ class LocalProgressRepositoryImpl implements ProgressRepository {
       completed: completed,
       score: score,
     );
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, jsonEncode(updated.toJson()));
+    final db = await AppDatabase.instance;
+    await db.setValue(_key, updated.toJson());
   }
 }

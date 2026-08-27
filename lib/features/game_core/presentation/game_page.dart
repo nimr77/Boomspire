@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flame/game.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import '../../../core/combat/mobile_unit_repository.dart';
@@ -40,11 +41,17 @@ class GamePage extends StatefulWidget {
   /// procedurally generated one.
   final TerrainRepository? terrainRepository;
 
+  /// Overrides the DI-registered [WaveRepository] - used by the map editor
+  /// to test-play a draft's own author-controlled wave loadouts instead of
+  /// the built-in procedural wave formula.
+  final WaveRepository? waveRepository;
+
   const GamePage({
     super.key,
     required this.scene,
     this.difficulty = GameDifficulty.normal,
     this.terrainRepository,
+    this.waveRepository,
   });
 
   @override
@@ -220,16 +227,18 @@ class _GamePageState extends State<GamePage> {
       towerRepository: getIt<TowerRepository>(),
       buildingRepository: getIt<BuildingRepository>(),
       unitRepository: getIt<MobileUnitRepository>(),
-      waveRepository: getIt<WaveRepository>(
-        param1: widget.scene.waveCount,
-        param2: widget.scene.biome,
-      ),
+      waveRepository:
+          widget.waveRepository ??
+          getIt<WaveRepository>(
+            param1: widget.scene.waveCount,
+            param2: widget.scene.biome,
+          ),
       audioRepository: getIt<AudioRepository>(),
       gameState: _gameState,
       aiDirector: getIt<AiDirectorRepository>(),
       scene: widget.scene,
       difficulty: widget.difficulty,
-    )..onExitToMenu = () => Navigator.of(context).pop();
+    )..onExitToMenu = () => context.pop();
     _gameState.addListener(_syncOverlays);
   }
 
@@ -261,7 +270,7 @@ class _GamePageState extends State<GamePage> {
         ],
       ),
     );
-    if (confirmed == true && mounted) Navigator.of(context).pop();
+    if (confirmed == true && mounted) context.pop();
   }
 
   /// Converts a middle-mouse-drag's raw Flutter pixel delta into the
