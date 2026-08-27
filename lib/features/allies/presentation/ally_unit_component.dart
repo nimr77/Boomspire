@@ -34,12 +34,6 @@ abstract class AllyUnitComponent extends PositionComponent
     implements Attackable {
   final AllyUnitBlueprint blueprint;
 
-  @override
-  UnitDomain get domain => blueprint.domain;
-
-  @override
-  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
-
   /// Upgrade tier (0-based) of the Training Center/War Factory that
   /// mustered this unit - its stats scale with that building's level so
   /// player investment in the producer, not a flat spawn, is what makes
@@ -47,7 +41,9 @@ abstract class AllyUnitComponent extends PositionComponent
   final int level;
 
   double health;
+
   List<Vector2> _path = [];
+
   int _pathIndex = 0;
   double _repathTimer = 0;
   double _attackCooldown = 0;
@@ -55,7 +51,6 @@ abstract class AllyUnitComponent extends PositionComponent
   double _bobPhase = Random().nextDouble() * pi * 2;
   bool _destroyed = false;
   late final PositionComponent _visual;
-
   AllyUnitComponent({
     required this.blueprint,
     required Vector2 position,
@@ -67,18 +62,23 @@ abstract class AllyUnitComponent extends PositionComponent
          anchor: Anchor.center,
          priority: 9,
        );
-
-  double get _levelMultiplier => pow(1.25, level).toDouble();
-
-  double get effectiveMaxHealth => blueprint.maxHealth * _levelMultiplier;
-
-  double get effectiveAttackDamage => blueprint.attackDamage * _levelMultiplier;
+  @override
+  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
 
   @override
   bool get destroyed => _destroyed;
 
   @override
+  UnitDomain get domain => blueprint.domain;
+
+  double get effectiveAttackDamage => blueprint.attackDamage * _levelMultiplier;
+
+  double get effectiveMaxHealth => blueprint.maxHealth * _levelMultiplier;
+
+  @override
   double get healthRatio => (health / effectiveMaxHealth).clamp(0.0, 1.0);
+
+  double get _levelMultiplier => pow(1.25, level).toDouble();
 
   Future<Sprite> buildSprite();
 

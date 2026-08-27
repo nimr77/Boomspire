@@ -4,6 +4,9 @@ import '../domain/models/unit_blueprint.dart';
 import '../domain/repos/building_repository.dart';
 
 class BuildingRepositoryImpl implements BuildingRepository {
+  @override
+  List<UnitBlueprint> get all => _blueprints.values.toList(growable: false);
+
   Map<BuildingType, UnitBlueprint> get _blueprints =>
       <BuildingType, UnitBlueprint>{
         BuildingType.techLab: UnitBlueprint(
@@ -43,9 +46,6 @@ class BuildingRepositoryImpl implements BuildingRepository {
           maxHp: 140,
         ),
       };
-
-  @override
-  List<UnitBlueprint> get all => _blueprints.values.toList(growable: false);
 
   @override
   UnitBlueprint blueprintFor(BuildingType type) => _blueprints[type]!;

@@ -1,6 +1,6 @@
-export 'unit_domain.dart';
-
 import 'unit_domain.dart';
+
+export 'unit_domain.dart';
 
 /// Common contract + shared behavior for every combat-capable thing in the
 /// game - tower/building blueprints, enemy blueprints, ally unit blueprints,
@@ -15,15 +15,15 @@ import 'unit_domain.dart';
 /// enemy attack plane, since [canAttack] is checked the same way on both
 /// sides of a fight.
 abstract mixin class Unit {
-  UnitDomain get domain;
-
   Set<UnitDomain> get attackDomains;
 
-  bool canAttack(UnitDomain other) => attackDomains.contains(other);
-
-  bool get isGroundUnit => domain == UnitDomain.ground;
+  UnitDomain get domain;
 
   bool get isAirUnit => domain == UnitDomain.air;
 
+  bool get isGroundUnit => domain == UnitDomain.ground;
+
   bool get isSeaUnit => domain == UnitDomain.sea;
+
+  bool canAttack(UnitDomain other) => attackDomains.contains(other);
 }

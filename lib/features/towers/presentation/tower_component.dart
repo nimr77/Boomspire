@@ -51,18 +51,13 @@ abstract class TowerComponent extends PositionComponent
 
   final UnitBlueprint blueprint;
 
-  @override
-  UnitDomain get domain => blueprint.domain;
-
-  @override
-  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
-
   double hp;
+
   double maxHp;
+
   int col = 0;
   int row = 0;
   double _cooldown = 0;
-
   int upgradeLevel = 0;
 
   /// Current shield charges remaining - each charge fully blocks one
@@ -70,6 +65,7 @@ abstract class TowerComponent extends PositionComponent
   /// [hp], then depletes; recharges on its own once the tower stops taking
   /// hits for a bit.
   int shield = 0;
+
   double _shieldRegenDelay = 0;
 
   double _shieldRegenProgress = 0;
@@ -82,14 +78,16 @@ abstract class TowerComponent extends PositionComponent
   /// Point-defense module - when true, this tower shoots down any enemy
   /// rocket/shell that gets within [_antiRocketRange] of it.
   bool antiRocket = false;
+
   double _antiRocketCooldown = 0;
 
   /// Total gold ever invested in this tower (build cost + every upgrade) -
   /// used to compute a fair sell refund.
   int _investedGold;
-
   bool _destroyed = false;
+
   double _idlePhase = Random().nextDouble() * pi * 2;
+
   double _lowHpSmokeTimer = 0;
   late final PositionComponent turret;
   TowerComponent({
@@ -105,6 +103,8 @@ abstract class TowerComponent extends PositionComponent
          anchor: Anchor.center,
          priority: 5,
        );
+  @override
+  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
 
   /// Upgrading is gated behind repair: a damaged tower must be brought back
   /// to full HP first, THEN it becomes eligible for the next tier.
@@ -112,6 +112,9 @@ abstract class TowerComponent extends PositionComponent
 
   @override
   bool get destroyed => _destroyed;
+
+  @override
+  UnitDomain get domain => blueprint.domain;
 
   double get effectiveDamage => blueprint.damage * _upgradeMultiplier;
 

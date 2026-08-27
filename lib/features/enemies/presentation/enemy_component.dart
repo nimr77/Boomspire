@@ -43,17 +43,13 @@ abstract class EnemyComponent extends PositionComponent
 
   final EnemyBlueprint blueprint;
 
-  @override
-  UnitDomain get domain => blueprint.domain;
-
-  @override
-  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
-
   double health;
+
   List<Vector2> _path = [];
 
   int _pathIndex = 0;
   double _repathTimer = 0;
+
   double _attackCooldown = 0;
   Attackable? _engaging;
   double _bobPhase = Random().nextDouble() * pi * 2;
@@ -68,6 +64,10 @@ abstract class EnemyComponent extends PositionComponent
         anchor: Anchor.center,
         priority: 10,
       );
+  @override
+  Set<UnitDomain> get attackDomains => blueprint.attackDomains;
+  @override
+  UnitDomain get domain => blueprint.domain;
 
   /// Hook for subclasses to attach extra always-on visuals (spinning rotors,
   /// blinking lights, etc.) once [_visual] is loaded.

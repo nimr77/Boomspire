@@ -206,10 +206,7 @@ class _GlassTooltip extends StatelessWidget {
                         blueprint.range.toStringAsFixed(0),
                       ),
                     if (blueprint.minRange > 0)
-                      stat(
-                        Icons.block,
-                        blueprint.minRange.toStringAsFixed(0),
-                      ),
+                      stat(Icons.block, blueprint.minRange.toStringAsFixed(0)),
                     if (blueprint.damage > 0)
                       stat(
                         Icons.timer,

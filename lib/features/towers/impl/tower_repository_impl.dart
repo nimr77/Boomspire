@@ -1,10 +1,13 @@
-import '../../../generated/l10n.dart';
 import '../../../core/combat/unit.dart';
+import '../../../generated/l10n.dart';
 import '../domain/models/tower_type.dart';
 import '../domain/models/unit_blueprint.dart';
 import '../domain/repos/tower_repository.dart';
 
 class TowerRepositoryImpl implements TowerRepository {
+  @override
+  List<UnitBlueprint> get all => _blueprints.values.toList(growable: false);
+
   Map<TowerType, UnitBlueprint> get _blueprints => <TowerType, UnitBlueprint>{
     TowerType.machineGun: UnitBlueprint(
       type: TowerType.machineGun,
@@ -103,9 +106,5 @@ class TowerRepositoryImpl implements TowerRepository {
   };
 
   @override
-  List<UnitBlueprint> get all => _blueprints.values.toList(growable: false);
-
-  @override
   UnitBlueprint blueprintFor(TowerType type) => _blueprints[type]!;
 }
-

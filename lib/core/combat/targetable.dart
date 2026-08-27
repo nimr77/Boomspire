@@ -7,8 +7,8 @@ import 'unit.dart';
 /// Extends [Unit] so every targetable thing also carries a [Unit.domain]/
 /// [Unit.attackDomains] pair for domain-aware targeting.
 abstract class Targetable implements Unit {
-  Vector2 get position;
-  bool get isRemoving;
   bool get isMounted;
+  bool get isRemoving;
+  Vector2 get position;
   void takeDamage(double amount);
 }
