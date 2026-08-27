@@ -100,7 +100,9 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
     ),
     // New: a slow, long-range siege unit that heads for the nearest tower
     // and shells it rather than rushing the base - see
-    // `MobileUnitBlueprint.prefersStructures`.
+    // `MobileUnitBlueprint.prefersStructures`. Fires its whole 3-rocket
+    // salvo at once (`projectileCount`) instead of one shell, splitting the
+    // volley's total damage across the 3 rockets.
     UnitKind.artilleryBarrage: MobileUnitBlueprint(
       kind: UnitKind.artilleryBarrage,
       name: 'Artillery Barrage',
@@ -112,8 +114,9 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       attackDamage: 40,
       attackRange: 260,
       attackInterval: 2.4,
+      projectileCount: 3,
       movementStyle: MovementStyle.roll,
-      weaponType: WeaponType.cannon,
+      weaponType: WeaponType.rocket,
       prefersStructures: true,
     ),
     UnitKind.rocketBarrage: MobileUnitBlueprint(

@@ -2,6 +2,8 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
+import 'package:flutter/animation.dart' show Curves;
 
 import '../../../core/combat/attackable.dart';
 import '../../../core/combat/mobile_unit_blueprint.dart';
@@ -261,9 +263,18 @@ abstract class MobileUnitComponent extends PositionComponent
     final startCell = grid.worldToCell(position);
     final goalCell = grid.worldToCell(goal);
     final cells = AStarPathFinder.findPath(grid, startCell, goalCell);
-    _path = (cells ?? [goalCell]).map(grid.cellCenter).toList();
+    final points = (cells ?? [goalCell]).map(grid.cellCenter).toList();
+    // Drop the waypoint for the cell we're already standing in - keeping it
+    // made the unit visibly snap/backtrack to that exact center on every
+    // repath instead of continuing straight on toward the next waypoint,
+    // which was the main source of the "wandering" look.
+    if (points.length > 1 &&
+        points.first.distanceTo(position) < grid.cellSize * 0.5) {
+      points.removeAt(0);
+    }
+    _path = points;
     _pathIndex = 0;
-    _repathTimer = 0.9 + Random().nextDouble() * 0.6;
+    _repathTimer = 0.5 + Random().nextDouble() * 0.3;
   }
 
   void _die() {
@@ -308,76 +319,50 @@ abstract class MobileUnitComponent extends PositionComponent
     return best;
   }
 
+  /// Fires this unit's whole volley (`blueprint.projectileCount` shots) at
+  /// once - a single shot for most units, but a fanned-out multi-round
+  /// barrage (e.g. the Artillery Barrage's 3 rockets) when that's more than
+  /// 1. The volley's total damage is split evenly across the shots so
+  /// changing the round count reshapes the attack instead of buffing it.
   void _fireAt(Attackable target, Vector2 toTarget) {
-    final spawnPos = position + toTarget.normalized() * (size.x / 2);
-    final damage = effectiveAttackDamage;
-    game.shakeCamera(power: damage, origin: position.clone());
+    final dir = toTarget.normalized();
+    final side = Vector2(-dir.y, dir.x);
+    final volleySize = blueprint.projectileCount;
+    final perShotDamage = effectiveAttackDamage / volleySize;
     final accent = team.color;
-    switch (blueprint.weaponType) {
-      case WeaponType.bullet:
-        game.world.spawn(
-          BulletComponent(
-            start: spawnPos,
-            target: target,
-            damage: damage,
-            fromEnemy: team.isEnemy,
-          ),
-        );
-        game.audioRepository.play(
-          team.isEnemy ? SfxType.enemyShot : SfxType.machineGunShot,
-          volume: 0.3,
-        );
-      case WeaponType.cannon:
-        game.world.spawn(
-          RocketComponent(
-            start: spawnPos,
-            target: target,
-            damage: damage,
-            splashRadius: 44,
-            bodyColor: const Color(0xFF6D4C41),
-            tipColor: accent,
-            affectsTowers: team.isEnemy,
-          ),
-        );
-        game.audioRepository.play(SfxType.cannonShot, volume: 0.5);
-      case WeaponType.rocket:
-        game.world.spawn(
-          RocketComponent(
-            start: spawnPos,
-            target: target,
-            damage: damage,
-            splashRadius: 60,
-            bodyColor: const Color(0xFFB0BEC5),
-            tipColor: accent,
-            affectsTowers: team.isEnemy,
-          ),
-        );
-        game.audioRepository.play(SfxType.rocketLaunch, volume: 0.5);
-      case WeaponType.laser:
-        target.takeDamage(damage);
-        game.world.spawn(
-          LaserBeamComponent(
-            start: spawnPos,
-            end: target.position.clone(),
-            color: accent,
-          ),
-        );
-        game.world.spawn(
-          ImpactSparkComponent(
-            position: target.position.clone(),
-            color: accent,
-          ),
-        );
-        game.audioRepository.play(SfxType.laserShot, volume: 0.4);
+
+    game.shakeCamera(power: effectiveAttackDamage, origin: position.clone());
+    // Recoil kick - punchier the bigger the volley, so a 3-round barrage
+    // visibly reads as heavier than a single shot.
+    _visual.add(
+      ScaleEffect.by(
+        Vector2.all(volleySize > 1 ? 0.82 : 0.92),
+        EffectController(
+          duration: 0.05,
+          reverseDuration: 0.12,
+          curve: Curves.easeOut,
+        ),
+      ),
+    );
+
+    for (var i = 0; i < volleySize; i++) {
+      // Fan simultaneous rounds out side-by-side instead of stacking them
+      // on the exact same line, so a multi-round volley reads as a spread
+      // barrage rather than one shot repeated.
+      final spread = volleySize == 1 ? 0.0 : (i - (volleySize - 1) / 2) * 9.0;
+      final spawnPos = position + dir * (size.x / 2) + side * spread;
+      _spawnProjectile(spawnPos, target, perShotDamage, accent);
+      game.world.spawn(MuzzleFlashComponent(position: spawnPos));
     }
-    game.world.spawn(MuzzleFlashComponent(position: spawnPos));
+
+    _playFireSfx();
     game.world.spawn(
       FirePulseComponent(
         position: position.clone(),
         color: accent,
         maxRadius: FirePulseComponent.radiusFor(
           range: blueprint.attackRange,
-          damage: damage,
+          damage: effectiveAttackDamage,
         ),
       ),
     );
@@ -454,5 +439,81 @@ abstract class MobileUnitComponent extends PositionComponent
       _fireAt(target, toTarget);
     }
     return true;
+  }
+
+  void _playFireSfx() {
+    switch (blueprint.weaponType) {
+      case WeaponType.bullet:
+        game.audioRepository.play(
+          team.isEnemy ? SfxType.enemyShot : SfxType.machineGunShot,
+          volume: 0.3,
+        );
+      case WeaponType.cannon:
+        game.audioRepository.play(SfxType.cannonShot, volume: 0.5);
+      case WeaponType.rocket:
+        game.audioRepository.play(SfxType.rocketLaunch, volume: 0.5);
+      case WeaponType.laser:
+        game.audioRepository.play(SfxType.laserShot, volume: 0.4);
+    }
+  }
+
+  /// Spawns a single projectile/effect of [blueprint.weaponType] for one
+  /// shot of a volley - called once per round by [_fireAt].
+  void _spawnProjectile(
+    Vector2 spawnPos,
+    Attackable target,
+    double damage,
+    Color accent,
+  ) {
+    switch (blueprint.weaponType) {
+      case WeaponType.bullet:
+        game.world.spawn(
+          BulletComponent(
+            start: spawnPos,
+            target: target,
+            damage: damage,
+            fromEnemy: team.isEnemy,
+          ),
+        );
+      case WeaponType.cannon:
+        game.world.spawn(
+          RocketComponent(
+            start: spawnPos,
+            target: target,
+            damage: damage,
+            splashRadius: 44,
+            bodyColor: const Color(0xFF6D4C41),
+            tipColor: accent,
+            affectsTowers: team.isEnemy,
+          ),
+        );
+      case WeaponType.rocket:
+        game.world.spawn(
+          RocketComponent(
+            start: spawnPos,
+            target: target,
+            damage: damage,
+            splashRadius: 60,
+            bodyColor: const Color(0xFFB0BEC5),
+            tipColor: accent,
+            affectsTowers: team.isEnemy,
+          ),
+        );
+      case WeaponType.laser:
+        target.takeDamage(damage);
+        game.world.spawn(
+          LaserBeamComponent(
+            start: spawnPos,
+            end: target.position.clone(),
+            color: accent,
+          ),
+        );
+        game.world.spawn(
+          ImpactSparkComponent(
+            position: target.position.clone(),
+            color: accent,
+          ),
+        );
+    }
   }
 }

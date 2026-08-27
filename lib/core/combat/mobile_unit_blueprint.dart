@@ -30,14 +30,28 @@ class MobileUnitBlueprint with Unit {
   @override
   final Set<UnitDomain> attackDomains;
 
-  /// Damage dealt per shot when engaging a target.
+  // --- Attack profile: attack type (`weaponType`), damage, range, rate of
+  // fire, and rounds per volley (`projectileCount`) - the full set a player
+  // or designer needs to reason about how this unit fights, kept together
+  // here so every mobile unit (enemy or ally) states its attack the same
+  // way instead of each component inventing its own firing shape.
+
+  /// Total damage dealt per volley when engaging a target - split evenly
+  /// across [projectileCount] shots if that's more than 1, so raising the
+  /// round count changes the *shape* of an attack (a spread barrage instead
+  /// of one shot) without silently also buffing its total damage.
   final double attackDamage;
 
   /// Range at which this unit will stop to fire.
   final double attackRange;
 
-  /// Seconds between shots.
+  /// Seconds between volleys.
   final double attackInterval;
+
+  /// How many projectiles this unit launches simultaneously per volley -
+  /// 1 for a single shot, more for a spread "barrage" (e.g. the Artillery
+  /// Barrage's 3-rocket salvo). See `MobileUnitComponent._fireAt`.
+  final int projectileCount;
 
   /// How this unit's visual idles while moving.
   final MovementStyle movementStyle;
@@ -74,6 +88,7 @@ class MobileUnitBlueprint with Unit {
     this.attackDamage = 0,
     this.attackRange = 0,
     this.attackInterval = 1,
+    this.projectileCount = 1,
     this.movementStyle = MovementStyle.walk,
     this.isVehicle = false,
     this.weaponType = WeaponType.bullet,
