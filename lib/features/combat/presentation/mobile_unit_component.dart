@@ -33,6 +33,7 @@ import 'muzzle_flash_component.dart';
 import 'rocket_component.dart';
 import 'rotor_component.dart';
 import 'smoke_trail_component.dart';
+import 'target_highlight_component.dart';
 import 'vapor_cone_component.dart';
 
 /// Squared distance within which two same-team, same-domain units push
@@ -96,7 +97,7 @@ class MobileUnitComponent extends PositionComponent
   double _preExplosionTimer = 0;
   bool _destroyed = false;
   late final PositionComponent _visual;
-  late final _TargetHighlightComponent _targetHighlight;
+  late final TargetHighlightComponent _targetHighlight;
 
   MobileUnitComponent({
     required this.blueprint,
@@ -354,7 +355,7 @@ class MobileUnitComponent extends PositionComponent
       );
     }
 
-    _targetHighlight = _TargetHighlightComponent()
+    _targetHighlight = TargetHighlightComponent()
       ..size = size
       ..position = Vector2.zero();
     await add(_targetHighlight);
@@ -719,6 +720,17 @@ class MobileUnitComponent extends PositionComponent
     }
     if (target == null) return false;
 
+    // Only tint the target when this unit is the one selected/tapped -
+    // otherwise every unit on the map would highlight its target at once.
+    if (game.selectedUnit.value == this) {
+      final t = target;
+      if (t is MobileUnitComponent) {
+        t.markTargeted(team.color);
+      } else if (t is TowerComponent) {
+        t.markTargeted(team.color);
+      }
+    }
+
     final toTarget = target.position - position;
     _visual.angle = atan2(toTarget.y, toTarget.x) + pi / 2;
 
@@ -828,37 +840,3 @@ class MobileUnitComponent extends PositionComponent
   }
 }
 
-/// Drawn as the last child of a [MobileUnitComponent] so it renders on top
-/// of the sprite - fills the unit's own silhouette (via
-/// [BlendMode.srcATop]) with the targeting tower's accent color, so "who's
-/// currently being shot at" reads instantly from across the battlefield.
-class _TargetHighlightComponent extends PositionComponent {
-  static const _fadeDuration = 0.35;
-
-  Color _color = const Color(0x00000000);
-  double _timer = 0;
-
-  @override
-  void render(Canvas canvas) {
-    if (_timer <= 0) return;
-    final ratio = _timer / _fadeDuration;
-    canvas.drawCircle(
-      Offset(size.x / 2, size.y / 2),
-      size.x * 0.55,
-      Paint()
-        ..color = _color.withValues(alpha: 0.7 * ratio)
-        ..blendMode = BlendMode.srcATop,
-    );
-  }
-
-  void trigger(Color color) {
-    _color = color;
-    _timer = _fadeDuration;
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    if (_timer > 0) _timer = (_timer - dt).clamp(0, _fadeDuration);
-  }
-}

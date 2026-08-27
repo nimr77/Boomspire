@@ -194,10 +194,19 @@ void main() {
     test('Rocket Silo ignores enemies inside its minimum range', () async {
       final scene = GameScenes.all.first;
       final game = await _bootGame(scene);
-      game.gameState.addGold(1000);
-      final cell = _findOpenCell(game);
+      game.gameState.addGold(3000);
       final grid = game.terrainMap.grid;
 
+      // Rocket Silo requires both Tech Lab and Command Post to be built
+      // first (see `boomspire_game.dart`'s `buildBlockReason`).
+      for (final prereq in [BuildingType.techLab, BuildingType.commandPost]) {
+        final prereqCell = _findOpenCell(game);
+        game.selectTowerType(prereq);
+        game.handleArenaTap(grid.cellCenter(prereqCell));
+        game.handleArenaTap(grid.cellCenter(prereqCell));
+      }
+
+      final cell = _findOpenCell(game);
       game.selectTowerType(TowerType.rocketSilo);
       game.handleArenaTap(grid.cellCenter(cell));
       game.handleArenaTap(grid.cellCenter(cell));

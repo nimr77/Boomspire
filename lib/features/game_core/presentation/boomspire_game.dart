@@ -234,6 +234,10 @@ class BoomspireGame extends FlameGame<GameWorld>
         !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
       return 'Requires Tech Lab & Command Post';
     }
+    if (type == TowerType.rocketSilo &&
+        !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
+      return 'Requires Tech Lab & Command Post';
+    }
     // Score-gated unlocks only make sense for wave-defense's ramping score
     // - skirmish has no wave progression (`currentScore` barely moves), so
     // gating War Factory/Training Center behind it there just permanently
@@ -258,14 +262,15 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   /// Max simultaneous count allowed for [type] per-owner, or null if
   /// unlimited. The Tech Lab, Command Post, Training Center, War Factory,
-  /// Gold Mine and Laser Lance only ever need one; Artillery Bunker rides
-  /// along with however many Command Posts that same owner has standing (so
-  /// it too tops out at one per Command Post); the SAM Site is capped at
-  /// two.
+  /// Gold Mine, Laser Lance and Rocket Silo only ever need one (in either
+  /// game mode); Artillery Bunker rides along with however many Command
+  /// Posts that same owner has standing (so it too tops out at one per
+  /// Command Post); the SAM Site is capped at two.
   int? buildLimitFor(UnitType type, {Team? owner}) => switch (type) {
     TowerType.laser => 1,
     TowerType.artilleryBunker => commandPostCountFor(owner ?? playerTeam),
     TowerType.sam => 2,
+    TowerType.rocketSilo => 1,
     BuildingType.techLab => 1,
     BuildingType.commandPost => 1,
     BuildingType.trainingCenter => 1,
@@ -483,6 +488,20 @@ class BoomspireGame extends FlameGame<GameWorld>
     if (controlled != null && !controlled.destroyed) {
       _handleControlledUnitTap(controlled, point);
       return;
+    }
+
+    final controlledTower = selectedTower.value;
+    if (controlledTower != null && !controlledTower.destroyed) {
+      final tappedEnemyUnit = _unitAt(point);
+      if (tappedEnemyUnit != null &&
+          tappedEnemyUnit.team.relationTo(controlledTower.owner) ==
+              TeamRelation.enemy) {
+        // Force this specific tower onto that enemy instead of the usual
+        // tap-elsewhere-deselects behavior - it'll hold fire on it until
+        // it's actually in range rather than falling back to auto-target.
+        controlledTower.issueAttackOrder(tappedEnemyUnit);
+        return;
+      }
     }
 
     final tappedTower = _towerAt(point);

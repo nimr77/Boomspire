@@ -31,6 +31,13 @@ class GameWorld extends World
   final List<TowerComponent> activeTowers = [];
   final List<ResourceNodeComponent> activeResourceNodes = [];
 
+  /// How many of each team's towers currently have a given mobile unit as
+  /// [TowerComponent.currentTarget], refreshed once per frame (see
+  /// [_refreshTargeterCounts]) from the previous frame's targeting choices.
+  /// A single O(towers) pass shared by every tower's `_acquireTarget`, so
+  /// avoiding target dog-piling never costs an O(towers²) rescan.
+  final Map<MobileUnitComponent, int> targeterCounts = {};
+
   /// The human player's base - always set once [initialize] has run.
   HomeBaseComponent? playerHomeBase;
 
@@ -177,6 +184,7 @@ class GameWorld extends World
   @override
   void update(double dt) {
     super.update(dt);
+    _refreshTargeterCounts();
     _panCamera(dt);
   }
 
@@ -189,6 +197,23 @@ class GameWorld extends World
       (game.terrainMap.arenaWidth - viewport.x).clamp(0.0, double.infinity),
       (game.terrainMap.arenaHeight - viewport.y).clamp(0.0, double.infinity),
     );
+  }
+
+  /// Rebuilds [targeterCounts] from each tower's [TowerComponent.currentTarget]
+  /// as of the end of the previous frame - a single O(towers) pass run once
+  /// at the top of this frame's [update], before any tower re-evaluates its
+  /// own target, so the "how contested is this candidate" check every
+  /// tower's `_acquireTarget` does stays O(1) instead of every tower
+  /// independently rescanning every other tower (which would be
+  /// O(towers²) per frame).
+  void _refreshTargeterCounts() {
+    targeterCounts.clear();
+    for (final tower in activeTowers) {
+      final target = tower.currentTarget;
+      if (target != null) {
+        targeterCounts[target] = (targeterCounts[target] ?? 0) + 1;
+      }
+    }
   }
 
   /// Free-scrolling RTS camera: arrow keys/WASD move [cameraPosition] at a

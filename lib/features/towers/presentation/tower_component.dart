@@ -16,6 +16,7 @@ import '../../combat/presentation/impact_spark_component.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
 import '../../combat/presentation/rocket_component.dart';
 import '../../combat/presentation/smoke_trail_component.dart';
+import '../../combat/presentation/target_highlight_component.dart';
 import '../../enemies/presentation/floating_text_component.dart';
 import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/presentation/boomspire_game.dart';
@@ -99,6 +100,22 @@ abstract class TowerComponent extends PositionComponent
 
   double _lowHpSmokeTimer = 0;
   late final PositionComponent turret;
+  late final TargetHighlightComponent _targetHighlight;
+
+  /// Player-issued "always shoot this specific enemy, even if a closer or
+  /// less-contested one is available" order - see
+  /// `BoomspireGame.handleArenaTap`. Cleared automatically once the target
+  /// dies/despawns. A stationary tower can't chase, so while this is set but
+  /// the target is out of range/domain, the tower simply holds fire instead
+  /// of falling back to auto-acquiring something else.
+  MobileUnitComponent? forcedTarget;
+
+  /// Whatever this tower actually fired at (or tried to) last frame -
+  /// `null` if nothing was in range. Snapshotted once per frame into
+  /// `GameWorld.targeterCounts` so every tower's [_acquireTarget] can see
+  /// how contested a candidate already is without each one re-scanning
+  /// every other tower itself.
+  MobileUnitComponent? currentTarget;
   TowerComponent({
     required Vector2 position,
     required double cellSize,
@@ -174,6 +191,18 @@ abstract class TowerComponent extends PositionComponent
   /// `BoomspireGame.enforceSupportedTowerLimits`) is itself destroyed/sold.
   void destroyBySupportLoss() => _destroy();
 
+  /// Forces this tower to keep shooting [enemy] over whatever it would
+  /// otherwise auto-acquire - see [forcedTarget]. The order itself is
+  /// accepted regardless of current range (matches
+  /// `MobileUnitComponent.issueAttackOrder`'s forgiveness); it only
+  /// actually fires once [enemy] is within [effectiveRange].
+  void issueAttackOrder(MobileUnitComponent enemy) => forcedTarget = enemy;
+
+  /// Lets whoever's currently targeting this tower (a [MobileUnitComponent])
+  /// tint it with their own color while the player has that attacker
+  /// selected - mirrors [MobileUnitComponent.markTargeted].
+  void markTargeted(Color color) => _targetHighlight.trigger(color);
+
   /// Spawns the appropriate projectile/effect toward [target].
   void fire(MobileUnitComponent target);
 
@@ -211,6 +240,11 @@ abstract class TowerComponent extends PositionComponent
           ),
         );
     await add(turret);
+
+    _targetHighlight = TargetHighlightComponent()
+      ..size = size
+      ..position = Vector2.zero();
+    await add(_targetHighlight);
 
     // "Alive" build-in: pop in from nothing instead of just appearing.
     scale = Vector2.zero();
@@ -439,7 +473,8 @@ abstract class TowerComponent extends PositionComponent
       }
     }
 
-    final target = _acquireTarget();
+    final target = _resolveTarget();
+    currentTarget = target;
     if (target == null) {
       _scanAntiRocket();
       return;
@@ -447,7 +482,7 @@ abstract class TowerComponent extends PositionComponent
     // Only tint the target when this tower is the one selected/tapped -
     // otherwise every tower on the map would highlight its target at once.
     if (game.selectedTower.value == this) {
-      target.markTargeted(TowerSpriteFactory.accentColor(blueprint.type));
+      target.markTargeted(owner.color);
     }
 
     final toTarget = target.position - position;
@@ -498,9 +533,66 @@ abstract class TowerComponent extends PositionComponent
     );
   }
 
+  /// How many of a team's towers are allowed to pile onto the same still-
+  /// healthy target before the rest look elsewhere - see
+  /// [_isGoodFocusFireTarget].
+  static const int _maxSharedTargeters = 3;
+
+  /// A target at or below this health fraction is "about to be destroyed" -
+  /// once some other tower already on it can finish it within
+  /// [_finishingBlowShots], every other tower should peel off onto a
+  /// different target instead of contesting/wasting shots on the kill.
+  static const double _nearDeathHealthRatio = 0.3;
+
+  static const int _finishingBlowShots = 5;
+
+  /// Whether [enemy] is a sensible pick for this tower to (re)target this
+  /// frame, given how contested it already is - computed from
+  /// `GameWorld.targeterCounts`, a single per-frame O(towers) snapshot
+  /// (see `GameWorld._refreshTargeterCounts`) rather than each tower
+  /// re-scanning every other tower itself, so this stays cheap even with a
+  /// full battlefield of towers.
+  bool _isGoodFocusFireTarget(MobileUnitComponent enemy) {
+    if (enemy.healthRatio <= _nearDeathHealthRatio) {
+      // Doomed - if another tower already on it can finish it off quickly,
+      // don't contest that kill; go find something else instead.
+      for (final other in game.world.activeTowers) {
+        if (identical(other, this) || other.owner.id != owner.id) continue;
+        if (!identical(other.currentTarget, enemy)) continue;
+        final shotsToKill = (enemy.health / other.effectiveDamage).ceil();
+        if (shotsToKill < _finishingBlowShots) return false;
+      }
+      return true;
+    }
+    final targeters = game.world.targeterCounts[enemy] ?? 0;
+    return targeters < _maxSharedTargeters;
+  }
+
+  /// Picks whatever this tower should actually shoot at this frame: a
+  /// player-issued [forcedTarget] always wins (and locks the tower onto it
+  /// exclusively - it holds fire rather than auto-retargeting while the
+  /// forced target is merely out of range), otherwise falls back to the
+  /// normal focus-fire-aware auto-acquisition.
+  MobileUnitComponent? _resolveTarget() {
+    final forced = forcedTarget;
+    if (forced != null) {
+      if (forced.destroyed || !forced.isMounted) {
+        forcedTarget = null;
+      } else {
+        final d = forced.position.distanceTo(position);
+        final inRange = d <= effectiveRange && d >= blueprint.minRange;
+        return (inRange && canAttack(forced.domain)) ? forced : null;
+      }
+    }
+    return _acquireTarget();
+  }
+
   MobileUnitComponent? _acquireTarget() {
     MobileUnitComponent? closest;
     var closestDist = effectiveRange;
+    MobileUnitComponent? bestSmart;
+    var bestSmartDist = effectiveRange;
+
     for (final enemy in game.world.unitsHostileTo(owner)) {
       if (!canAttack(enemy.domain)) continue;
       final d = enemy.position.distanceTo(position);
@@ -509,12 +601,21 @@ abstract class TowerComponent extends PositionComponent
         closest = enemy;
         closestDist = d;
       }
+      if (d <= bestSmartDist && _isGoodFocusFireTarget(enemy)) {
+        bestSmart = enemy;
+        bestSmartDist = d;
+      }
     }
-    return closest;
+    // Prefer a target that isn't already being dog-piled/isn't about to be
+    // finished off by someone else - but never leave the tower idle just
+    // because every candidate in range failed that bar.
+    return bestSmart ?? closest;
   }
 
   void _destroy() {
     _destroyed = true;
+    forcedTarget = null;
+    currentTarget = null;
     if (game.selectedTower.value == this) game.selectedTower.value = null;
     game.audioRepository.play(SfxType.towerDestroyed, volume: 0.7);
     game.terrainMap.grid.setTowerOccupied(col, row, false);
