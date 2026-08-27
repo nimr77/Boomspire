@@ -32,7 +32,7 @@ class TowerRepositoryImpl implements TowerRepository {
       type: TowerType.cannon,
       name: S.current.towerNameCannon,
       cost: 300,
-      range: 190,
+      range: 260,
       damage: 95,
       fireRate: 2.4,
       splashRadius: 55,
@@ -63,7 +63,7 @@ class TowerRepositoryImpl implements TowerRepository {
     TowerType.rocketSilo: UnitBlueprint(
       type: TowerType.rocketSilo,
       name: S.current.towerNameRocketSilo,
-      range: 340,
+      range: 400,
       // Long-range-only siege weapon: anything that gets inside this radius
       // is under its minimum arc and can't be engaged at all - it relies on
       // other towers to screen it from close-range attackers.
@@ -83,18 +83,18 @@ class TowerRepositoryImpl implements TowerRepository {
       type: TowerType.artilleryBunker,
       name: S.current.towerNameArtilleryBunker,
       cost: 800,
-      range: 240,
+      range: 300,
       damage: 70,
       fireRate: 1.4,
       splashRadius: 40,
-      maxHp: 160,
+      maxHp: 200,
     ),
     TowerType.sam: UnitBlueprint(
       type: TowerType.sam,
       name: S.current.towerNameSam,
       // Longest anti-air range in the game - it's meant to snipe flyers
       // from far away, since it can't survive them getting close.
-      range: 380,
+      range: 400,
       damage: 48,
       fireRate: 1.3,
       splashRadius: 20,
