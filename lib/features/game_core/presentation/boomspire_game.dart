@@ -91,11 +91,6 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   late TerrainMap terrainMap;
 
-  /// True once [terrainMap] has been assigned - the HUD (built as a plain
-  /// Flutter sibling widget, not gated by Flame's own load lifecycle) can
-  /// render before [onLoad] runs and must check this before touching
-  /// [terrainMap].
-  bool get terrainReady => _terrainReady;
   bool _terrainReady = false;
 
   /// Whether each team (keyed by `Team.id`) has built a Tech Lab at least
@@ -109,6 +104,7 @@ class BoomspireGame extends FlameGame<GameWorld>
   /// required (together with a Tech Lab) before that team can build a SAM
   /// Site. Stays true even if every Command Post is later destroyed/sold.
   final Map<int, bool> _hasCommandPostByTeam = {};
+
   final ValueNotifier<UnitType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
 
@@ -121,6 +117,7 @@ class BoomspireGame extends FlameGame<GameWorld>
   /// Pulsing pin shown at [selectedUnit]'s current move-order destination -
   /// kept in sync every frame by [_syncMoveOrderMarker].
   MoveOrderMarkerComponent? _moveOrderMarker;
+
   Vector2? _moveOrderMarkerTarget;
 
   /// Read-only info card for whatever isn't the player's to command (an
@@ -143,14 +140,14 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   /// What the enemy AI director wants enemies to prioritize this wave.
   FocusHint enemyFocusHint = FocusHint.nearestTower;
+
   final Random _shakeRandom = Random();
   double _shakeDuration = 0;
   double _shakeMaxDuration = 0;
-
   double _shakePower = 0;
+
   int _shakeEventCount = 0;
   double _shakeEventWindow = 0;
-
   BoomspireGame({
     required this.terrainRepository,
     required this.towerRepository,
@@ -177,6 +174,12 @@ class BoomspireGame extends FlameGame<GameWorld>
   double get goldMineKillGoldBonus => world.activeTowers
       .whereType<GoldMineComponent>()
       .fold(0.0, (sum, mine) => sum + mine.killGoldBonus);
+
+  /// True once [terrainMap] has been assigned - the HUD (built as a plain
+  /// Flutter sibling widget, not gated by Flame's own load lifecycle) can
+  /// render before [onLoad] runs and must check this before touching
+  /// [terrainMap].
+  bool get terrainReady => _terrainReady;
 
   /// Starting gold for this match - the scene's own override if set,
   /// otherwise the mode-appropriate default (a skirmish base-building war
