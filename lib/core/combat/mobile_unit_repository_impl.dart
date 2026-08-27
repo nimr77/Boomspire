@@ -218,6 +218,38 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       movementStyle: MovementStyle.roll,
       weaponType: WeaponType.rocket,
     ),
+    // Ground-only infantry, mustered from the Training Center alongside the
+    // plain Soldier - hits much harder to justify its steeper cost.
+    UnitKind.antiTankSoldier: MobileUnitBlueprint(
+      kind: UnitKind.antiTankSoldier,
+      name: 'Anti-Tank Soldier',
+      cost: 70,
+      maxHealth: 50,
+      speed: 60,
+      bounty: 25,
+      size: 34,
+      attackDamage: 26,
+      attackRange: 150,
+      attackInterval: 1.6,
+      weaponType: WeaponType.rocket,
+    ),
+    // Infantry whose `attackDomains` includes air (unlike the plain
+    // Soldier), so it can shoot down helicopters/planes - the Training
+    // Center's answer to air threats.
+    UnitKind.antiAirSoldier: MobileUnitBlueprint(
+      kind: UnitKind.antiAirSoldier,
+      name: 'Anti-Air Soldier',
+      cost: 65,
+      maxHealth: 45,
+      speed: 65,
+      bounty: 22,
+      size: 34,
+      attackDamage: 14,
+      attackRange: 190,
+      attackInterval: 1.2,
+      attackDomains: {UnitDomain.ground, UnitDomain.air},
+      weaponType: WeaponType.rocket,
+    ),
   };
 
   @override

@@ -330,15 +330,18 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _ActionButton(
-            icon: Icons.directions_walk,
-            label: ready
-                ? '${tower.soldierCost}g'
-                : '${tower.cooldownRemaining.ceil()}s',
-            color: const Color(0xFF66BB6A),
-            enabled: ready && gold >= tower.soldierCost,
-            onTap: () => tower.produceSoldier(),
-          ),
+          for (final kind in TrainingCenterComponent.producibleKinds) ...[
+            _ActionButton(
+              icon: _unitIcon(kind),
+              label: ready
+                  ? '${tower.costFor(kind)}g'
+                  : '${tower.cooldownRemaining.ceil()}s',
+              color: const Color(0xFF66BB6A),
+              enabled: ready && gold >= tower.costFor(kind),
+              onTap: () => tower.produceUnit(kind),
+            ),
+            const SizedBox(width: 6),
+          ],
         ],
       );
     }
@@ -346,7 +349,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
       final ready = tower.canProduce;
       final buildableKinds = widget.game.unitRepository
           .kindsFor(widget.game.playerTeam)
-          .where((type) => type != UnitKind.soldier);
+          .where((type) => !TrainingCenterComponent.producibleKinds.contains(type));
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -378,6 +381,8 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
     UnitKind.attackPlane => Icons.flight_takeoff,
     UnitKind.gunboat => Icons.directions_boat,
     UnitKind.artilleryBarrage => Icons.gps_fixed,
+    UnitKind.antiTankSoldier => Icons.gps_fixed,
+    UnitKind.antiAirSoldier => Icons.arrow_circle_up,
     _ => Icons.directions_walk,
   };
 }

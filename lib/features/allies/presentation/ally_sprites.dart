@@ -14,6 +14,8 @@ class AllySpriteFactory {
   static Sprite? _lightVehicle;
   static Sprite? _aircraft;
   static Sprite? _rocketBarrage;
+  static Sprite? _antiTank;
+  static Sprite? _antiAir;
   static const _hull = Color(0xFF2B3A42);
 
   static const _hullDark = Color(0xFF172126);
@@ -25,6 +27,20 @@ class AllySpriteFactory {
     if (cached != null) return cached;
     final image = await renderToImage(50, 50, _paintAircraft);
     return _aircraft = Sprite(image);
+  }
+
+  static Future<Sprite> antiAir() async {
+    final cached = _antiAir;
+    if (cached != null) return cached;
+    final image = await renderToImage(48, 48, _paintAntiAir);
+    return _antiAir = Sprite(image);
+  }
+
+  static Future<Sprite> antiTank() async {
+    final cached = _antiTank;
+    if (cached != null) return cached;
+    final image = await renderToImage(48, 48, _paintAntiTank);
+    return _antiTank = Sprite(image);
   }
 
   static Future<Sprite> lightVehicle() async {
@@ -54,6 +70,8 @@ class AllySpriteFactory {
     UnitKind.lightVehicle => lightVehicle(),
     UnitKind.aircraft => aircraft(),
     UnitKind.rocketBarrage => rocketBarrage(),
+    UnitKind.antiTankSoldier => antiTank(),
+    UnitKind.antiAirSoldier => antiAir(),
     _ => throw ArgumentError('No ally sprite for $kind'),
   };
 
@@ -65,7 +83,9 @@ class AllySpriteFactory {
     UnitKind.tank ||
     UnitKind.lightVehicle ||
     UnitKind.aircraft ||
-    UnitKind.rocketBarrage => true,
+    UnitKind.rocketBarrage ||
+    UnitKind.antiTankSoldier ||
+    UnitKind.antiAirSoldier => true,
     _ => false,
   };
 
@@ -136,6 +156,202 @@ class AllySpriteFactory {
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
       );
     }
+  }
+
+  static void _paintAntiAir(Canvas canvas) {
+    const size = 48.0;
+    const center = Offset(size / 2, size / 2);
+    const weaponAccent = Color(0xFFFFB300);
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center.translate(0, size * 0.28),
+        width: size * 0.55,
+        height: size * 0.2,
+      ),
+      Paint()..color = const Color(0x59000000),
+    );
+
+    for (final dx in [-size * 0.12, size * 0.12]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, size * 0.22),
+            width: size * 0.16,
+            height: size * 0.3,
+          ),
+          const Radius.circular(4),
+        ),
+        Paint()..color = _hullDark,
+      );
+    }
+
+    final torsoRect = Rect.fromCenter(
+      center: center.translate(0, -size * 0.02),
+      width: size * 0.5,
+      height: size * 0.42,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(torsoRect, const Radius.circular(8)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [_hull, _hullDark],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(torsoRect),
+    );
+    canvas.drawLine(
+      Offset(center.dx, torsoRect.top + 2),
+      Offset(center.dx, torsoRect.bottom - 2),
+      Paint()
+        ..color = weaponAccent.withValues(alpha: 0.7)
+        ..strokeWidth = 2,
+    );
+
+    // Backpack-mounted launcher, tilted skyward.
+    final launcher = Paint()
+      ..color = const Color(0xFF2b2b2b)
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      center.translate(size * 0.02, size * 0.02),
+      center.translate(size * 0.36, -size * 0.5),
+      launcher,
+    );
+    canvas.drawCircle(
+      center.translate(size * 0.36, -size * 0.5),
+      size * 0.06,
+      Paint()..color = weaponAccent,
+    );
+
+    canvas.drawCircle(
+      center.translate(0, -size * 0.3),
+      size * 0.17,
+      Paint()..color = _hullDark,
+    );
+    canvas.drawCircle(
+      center.translate(0, -size * 0.32),
+      size * 0.15,
+      Paint()..color = _hull,
+    );
+    final visorRect = Rect.fromCenter(
+      center: center.translate(0, -size * 0.3),
+      width: size * 0.22,
+      height: size * 0.05,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(visorRect, const Radius.circular(2)),
+      Paint()..color = const Color(0xFF0d1a1e),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: visorRect.center.translate(-visorRect.width * 0.22, -0.6),
+          width: visorRect.width * 0.32,
+          height: visorRect.height * 0.5,
+        ),
+        const Radius.circular(1),
+      ),
+      Paint()..color = weaponAccent.withValues(alpha: 0.9),
+    );
+  }
+
+  static void _paintAntiTank(Canvas canvas) {
+    const size = 48.0;
+    const center = Offset(size / 2, size / 2);
+    const weaponAccent = Color(0xFFFF5252);
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center.translate(0, size * 0.28),
+        width: size * 0.55,
+        height: size * 0.2,
+      ),
+      Paint()..color = const Color(0x59000000),
+    );
+
+    for (final dx in [-size * 0.12, size * 0.12]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, size * 0.22),
+            width: size * 0.16,
+            height: size * 0.3,
+          ),
+          const Radius.circular(4),
+        ),
+        Paint()..color = _hullDark,
+      );
+    }
+
+    final torsoRect = Rect.fromCenter(
+      center: center.translate(0, -size * 0.02),
+      width: size * 0.5,
+      height: size * 0.42,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(torsoRect, const Radius.circular(8)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [_hull, _hullDark],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(torsoRect),
+    );
+    canvas.drawLine(
+      Offset(center.dx, torsoRect.top + 2),
+      Offset(center.dx, torsoRect.bottom - 2),
+      Paint()
+        ..color = weaponAccent.withValues(alpha: 0.7)
+        ..strokeWidth = 2,
+    );
+
+    // Shoulder-mounted rocket tube, levelled at the ground.
+    final tube = Paint()
+      ..color = const Color(0xFF2b2b2b)
+      ..strokeWidth = 6
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      center.translate(-size * 0.06, -size * 0.06),
+      center.translate(size * 0.44, -size * 0.24),
+      tube,
+    );
+    canvas.drawCircle(
+      center.translate(size * 0.44, -size * 0.24),
+      size * 0.07,
+      Paint()..color = weaponAccent,
+    );
+
+    canvas.drawCircle(
+      center.translate(0, -size * 0.3),
+      size * 0.17,
+      Paint()..color = _hullDark,
+    );
+    canvas.drawCircle(
+      center.translate(0, -size * 0.32),
+      size * 0.15,
+      Paint()..color = _hull,
+    );
+    final visorRect = Rect.fromCenter(
+      center: center.translate(0, -size * 0.3),
+      width: size * 0.22,
+      height: size * 0.05,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(visorRect, const Radius.circular(2)),
+      Paint()..color = const Color(0xFF0d1a1e),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: visorRect.center.translate(-visorRect.width * 0.22, -0.6),
+          width: visorRect.width * 0.32,
+          height: visorRect.height * 0.5,
+        ),
+        const Radius.circular(1),
+      ),
+      Paint()..color = weaponAccent.withValues(alpha: 0.9),
+    );
   }
 
   static void _paintLightVehicle(Canvas canvas) {

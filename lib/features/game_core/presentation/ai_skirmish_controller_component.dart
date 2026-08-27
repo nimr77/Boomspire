@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:flame/components.dart';
 
 import '../../../core/combat/team.dart';
-import '../../../core/combat/unit_kind.dart';
 import '../../../core/combat/unit_objective.dart';
 import '../../ai_director/domain/models/skirmish_directive.dart';
 import '../../towers/domain/models/building_type.dart';
@@ -263,11 +262,16 @@ class AiSkirmishControllerComponent extends Component
     for (final tower in game.world.activeTowers) {
       if (tower.owner.id != aiTeam.id) continue;
       if (tower is TrainingCenterComponent && tower.canProduce) {
-        tower.produceSoldier();
+        final kinds = TrainingCenterComponent.producibleKinds
+            .where((k) => tower.costFor(k) <= game.goldFor(aiTeam))
+            .toList();
+        if (kinds.isNotEmpty) {
+          tower.produceUnit(kinds[_rnd.nextInt(kinds.length)]);
+        }
       } else if (tower is WarFactoryComponent && tower.canProduce) {
         final kinds = game.unitRepository
             .kindsFor(aiTeam)
-            .where((k) => k != UnitKind.soldier)
+            .where((k) => !TrainingCenterComponent.producibleKinds.contains(k))
             .where((k) => tower.costFor(k) <= game.goldFor(aiTeam))
             .toList();
         if (kinds.isNotEmpty) {

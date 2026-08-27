@@ -21,4 +21,13 @@ enum UnitKind {
   /// Mobile rocket launcher - fielded by both sides (enemy AI roster and
   /// player War Factory production).
   rocketBarrage,
+
+  /// Player-only infantry, buildable from the Training Center - ground-only
+  /// but hits harder than a plain [soldier], themed as an anti-armor squad.
+  antiTankSoldier,
+
+  /// Player-only infantry, buildable from the Training Center - unlike a
+  /// plain [soldier] its `attackDomains` include air, so it can shoot down
+  /// helicopters/planes.
+  antiAirSoldier,
 }

@@ -261,9 +261,9 @@ class BoomspireGame extends FlameGame<GameWorld>
   }
 
   /// Max simultaneous count allowed for [type] per-owner, or null if
-  /// unlimited. The Tech Lab, Training Center, Gold Mine, Laser Lance and
-  /// Rocket Silo only ever need one (in either game mode); Command Post and
-  /// War Factory have no cap - a player/AI can build as many as they can
+  /// unlimited. The Tech Lab, Gold Mine, Laser Lance, Rocket Silo and
+  /// Command Post only ever need one (in either game mode); Training Center
+  /// and War Factory have no cap - a player/AI can build as many as they can
   /// afford; Artillery Bunker rides along with however many Command Posts
   /// that same owner has standing (so it too tops out at one per Command
   /// Post); the SAM Site is capped at two.
@@ -273,8 +273,8 @@ class BoomspireGame extends FlameGame<GameWorld>
     TowerType.sam => 2,
     TowerType.rocketSilo => 1,
     BuildingType.techLab => 1,
-    BuildingType.commandPost => null,
-    BuildingType.trainingCenter => 1,
+    BuildingType.commandPost => 1,
+    BuildingType.trainingCenter => null,
     BuildingType.warFactory => null,
     BuildingType.goldMine => 1,
     _ => null,

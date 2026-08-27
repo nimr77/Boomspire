@@ -13,6 +13,15 @@ import 'tower_component.dart';
 /// (see `MobileUnitComponent`/`UnitObjective.huntHostiles`) - or, on a
 /// [GameMode.skirmish] map, marches to assault the AI's base instead.
 class TrainingCenterComponent extends TowerComponent {
+  /// Every [UnitKind] this building can muster - a plain Soldier plus the
+  /// two specialist infantry kinds, all buildable side-by-side from the
+  /// action panel's build row.
+  static const producibleKinds = [
+    UnitKind.soldier,
+    UnitKind.antiTankSoldier,
+    UnitKind.antiAirSoldier,
+  ];
+
   /// Seconds left before another soldier can be queued - starts ready.
   double cooldownRemaining = 0;
 
@@ -24,21 +33,28 @@ class TrainingCenterComponent extends TowerComponent {
 
   bool get canProduce => !destroyed && cooldownRemaining <= 0;
 
-  int get soldierCost =>
-      game.unitRepository.blueprintFor(owner, UnitKind.soldier).cost;
+  int get soldierCost => costFor(UnitKind.soldier);
+
+  int costFor(UnitKind kind) => game.unitRepository.blueprintFor(owner, kind).cost;
 
   @override
   void fire(Attackable target) {}
 
   /// Spends gold to muster a fresh Ally Soldier - called from the action
   /// panel's build menu. Returns whether it actually happened.
-  bool produceSoldier() {
+  bool produceSoldier() => produceUnit(UnitKind.soldier);
+
+  /// Spends gold to muster an Ally unit of the given [kind] (must be one of
+  /// [producibleKinds]) - called from the action panel's build menu.
+  /// Returns whether it actually happened.
+  bool produceUnit(UnitKind kind) {
     if (!canProduce) return false;
-    if (!game.spendGoldFor(owner, soldierCost)) return false;
+    final blueprint = game.unitRepository.blueprintFor(owner, kind);
+    if (!game.spendGoldFor(owner, blueprint.cost)) return false;
     cooldownRemaining = GameConfig.trainingCenterProductionCooldown;
     game.world.spawnUnit(
       MobileUnitComponent(
-        blueprint: game.unitRepository.blueprintFor(owner, UnitKind.soldier),
+        blueprint: blueprint,
         position: position.clone(),
         team: owner,
         objective: game.scene.mode == GameMode.skirmish
@@ -49,6 +65,7 @@ class TrainingCenterComponent extends TowerComponent {
     );
     return true;
   }
+
 
   @override
   void update(double dt) {
