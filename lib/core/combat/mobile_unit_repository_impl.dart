@@ -217,7 +217,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
 
   @override
   MobileUnitBlueprint blueprintFor(Team team, UnitKind kind) {
-    final table = team.isEnemy ? _enemyBlueprints : _playerBlueprints;
+    final table = _tableFor(team.catalog);
     final blueprint = table[kind];
     if (blueprint == null) {
       throw ArgumentError('$kind is not available to ${team.id}');
@@ -226,6 +226,11 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
   }
 
   @override
-  List<UnitKind> kindsFor(Team team) =>
-      (team.isEnemy ? _enemyBlueprints : _playerBlueprints).keys.toList();
+  List<UnitKind> kindsFor(Team team) => _tableFor(team.catalog).keys.toList();
+
+  Map<UnitKind, MobileUnitBlueprint> _tableFor(UnitCatalog catalog) =>
+      switch (catalog) {
+        UnitCatalog.invaderRoster => _enemyBlueprints,
+        UnitCatalog.buildableRoster => _playerBlueprints,
+      };
 }

@@ -104,5 +104,28 @@ class GameScenes {
     ),
   ];
 
+  /// Skirmish scenes: home-vs-home matches where every seat in
+  /// [GameScene.homeSites] builds up and fights to destroy the others'
+  /// homes, instead of surviving scripted waves. Only one seat is AI-owned
+  /// for now (see the multiplayer/team-select plan for more seats).
+  static const List<GameScene> skirmishes = [
+    GameScene(
+      id: 'twin-outposts',
+      name: 'Twin Outposts',
+      briefing:
+          'Home against home across open grassland - build up and strike '
+          'before the AI commander finishes theirs.',
+      biome: Biome.grassPlains,
+      mode: GameMode.skirmish,
+      homeSites: [
+        HomeSite(
+          layout: HomeLayout.southWestCorner,
+          owner: HomeSiteOwner.player,
+        ),
+        HomeSite(layout: HomeLayout.northEastCorner, owner: HomeSiteOwner.ai),
+      ],
+    ),
+  ];
+
   const GameScenes._();
 }
