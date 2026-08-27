@@ -357,57 +357,51 @@ void main() {
       },
     );
 
-    test(
-      'score-gated structures (Training Center, War Factory) are '
-      'unlockable by both sides at zero score in skirmish - the score gate '
-      'only applies to wave-defense',
-      () async {
-        final game = await _bootGame(GameScenes.skirmishes.first);
-        final aiTeam = game.aiTeam!;
-        expect(
-          game.gameState.currentScore,
-          lessThan(GameConfig.trainingCenterUnlockScore),
-        );
-        expect(
-          game.gameState.currentScore,
-          lessThan(GameConfig.warFactoryUnlockScore),
-        );
+    test('score-gated structures (Training Center, War Factory) are '
+        'unlockable by both sides at zero score in skirmish - the score gate '
+        'only applies to wave-defense', () async {
+      final game = await _bootGame(GameScenes.skirmishes.first);
+      final aiTeam = game.aiTeam!;
+      expect(
+        game.gameState.currentScore,
+        lessThan(GameConfig.trainingCenterUnlockScore),
+      );
+      expect(
+        game.gameState.currentScore,
+        lessThan(GameConfig.warFactoryUnlockScore),
+      );
 
-        expect(
-          game.canBuildTower(BuildingType.trainingCenter, owner: aiTeam),
-          isTrue,
-        );
-        expect(
-          game.canBuildTower(BuildingType.warFactory, owner: aiTeam),
-          isTrue,
-        );
+      expect(
+        game.canBuildTower(BuildingType.trainingCenter, owner: aiTeam),
+        isTrue,
+      );
+      expect(
+        game.canBuildTower(BuildingType.warFactory, owner: aiTeam),
+        isTrue,
+      );
 
-        // Skirmish has no wave progression to gate on, so the human player
-        // isn't score-gated there either, unlike in wave-defense (see the
-        // dedicated wave-defense assertion below).
-        expect(
-          game.canBuildTower(
-            BuildingType.trainingCenter,
-            owner: game.playerTeam,
-          ),
-          isTrue,
-        );
-        expect(
-          game.canBuildTower(BuildingType.warFactory, owner: game.playerTeam),
-          isTrue,
-        );
+      // Skirmish has no wave progression to gate on, so the human player
+      // isn't score-gated there either, unlike in wave-defense (see the
+      // dedicated wave-defense assertion below).
+      expect(
+        game.canBuildTower(BuildingType.trainingCenter, owner: game.playerTeam),
+        isTrue,
+      );
+      expect(
+        game.canBuildTower(BuildingType.warFactory, owner: game.playerTeam),
+        isTrue,
+      );
 
-        final waveDefenseGame = await _bootGame(GameScenes.all.first);
-        expect(
-          waveDefenseGame.gameState.currentScore,
-          lessThan(GameConfig.trainingCenterUnlockScore),
-        );
-        expect(
-          waveDefenseGame.canBuildTower(BuildingType.trainingCenter),
-          isFalse,
-        );
-      },
-    );
+      final waveDefenseGame = await _bootGame(GameScenes.all.first);
+      expect(
+        waveDefenseGame.gameState.currentScore,
+        lessThan(GameConfig.trainingCenterUnlockScore),
+      );
+      expect(
+        waveDefenseGame.canBuildTower(BuildingType.trainingCenter),
+        isFalse,
+      );
+    });
 
     test(
       'the AI is bound by the same per-type build limit and Tech Lab '
@@ -526,27 +520,24 @@ void main() {
       },
     );
 
-    test(
-      'every buildable-roster unit kind pays a non-zero kill bounty '
-      '(regression: skirmish kills used to pay 0 gold either way)',
-      () {
-        final repository = MobileUnitRepositoryImpl();
-        for (final kind in [
-          UnitKind.soldier,
-          UnitKind.tank,
-          UnitKind.lightVehicle,
-          UnitKind.aircraft,
-          UnitKind.rocketBarrage,
-        ]) {
-          final blueprint = repository.blueprintFor(Team.defaultPlayer, kind);
-          expect(
-            blueprint.bounty,
-            greaterThan(0),
-            reason: '$kind must pay a kill bounty in skirmish',
-          );
-        }
-      },
-    );
+    test('every buildable-roster unit kind pays a non-zero kill bounty '
+        '(regression: skirmish kills used to pay 0 gold either way)', () {
+      final repository = MobileUnitRepositoryImpl();
+      for (final kind in [
+        UnitKind.soldier,
+        UnitKind.tank,
+        UnitKind.lightVehicle,
+        UnitKind.aircraft,
+        UnitKind.rocketBarrage,
+      ]) {
+        final blueprint = repository.blueprintFor(Team.defaultPlayer, kind);
+        expect(
+          blueprint.bounty,
+          greaterThan(0),
+          reason: '$kind must pay a kill bounty in skirmish',
+        );
+      }
+    });
   });
 
   test('every scene generates a terrain where every spawn can reach base', () {

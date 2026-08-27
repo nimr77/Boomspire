@@ -23,6 +23,8 @@ abstract class WaveLoadout with _$WaveLoadout {
 
   const WaveLoadout._();
 
+  int get totalUnits => unitCounts.values.fold(0, (sum, c) => sum + c);
+
   int countOf(UnitKind kind) => unitCounts[kind.name] ?? 0;
 
   WaveLoadout withCount(UnitKind kind, int count) {
@@ -34,6 +36,4 @@ abstract class WaveLoadout with _$WaveLoadout {
     }
     return copyWith(unitCounts: updated);
   }
-
-  int get totalUnits => unitCounts.values.fold(0, (sum, c) => sum + c);
 }

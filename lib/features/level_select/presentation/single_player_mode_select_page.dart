@@ -55,8 +55,9 @@ class SinglePlayerModeSelectPage extends StatelessWidget {
                       const SizedBox(height: 32),
                       HoverScaleCard(
                             accentColor: Colors.orangeAccent,
-                            onTap: () =>
-                                context.push(Routes.towerDefenseLevelSelect.route),
+                            onTap: () => context.push(
+                              Routes.towerDefenseLevelSelect.route,
+                            ),
                             child: MenuOptionContent(
                               icon: Icons.shield,
                               title: S.current.modeTowerDefenseTitle,

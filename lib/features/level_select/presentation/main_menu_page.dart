@@ -56,8 +56,9 @@ class MainMenuPage extends StatelessWidget {
                       const SizedBox(height: 40),
                       HoverScaleCard(
                             accentColor: Colors.cyanAccent,
-                            onTap: () =>
-                                context.push(Routes.singlePlayerModeSelect.route),
+                            onTap: () => context.push(
+                              Routes.singlePlayerModeSelect.route,
+                            ),
                             child: MenuOptionContent(
                               icon: Icons.person,
                               title: S.current.mainMenuSinglePlayer,

@@ -481,10 +481,6 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
     setState(() => _selectedSlot = Random().nextInt(_siteCount));
   }
 
-  void _selectSlot(int index) {
-    setState(() => _selectedSlot = index);
-  }
-
   /// The scene to actually launch for a built-in (non-draft) map: unchanged
   /// unless the player picked a different site than the one already
   /// flagged [HomeSiteOwner.player] in the scene data, in which case the
@@ -519,6 +515,10 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
       resourceNodeSites: scene.resourceNodeSites,
       startingGold: scene.startingGold,
     );
+  }
+
+  void _selectSlot(int index) {
+    setState(() => _selectedSlot = index);
   }
 
   Future<void> _start() async {

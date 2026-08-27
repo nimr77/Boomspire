@@ -11,9 +11,9 @@ import 'package:tostore/tostore.dart';
 /// storage engine (crash recovery, indexing, etc.) instead of a thin
 /// wrapper over native platform prefs.
 class AppDatabase {
-  AppDatabase._();
-
   static Future<ToStore>? _future;
 
   static Future<ToStore> get instance => _future ??= ToStore.open();
+
+  AppDatabase._();
 }

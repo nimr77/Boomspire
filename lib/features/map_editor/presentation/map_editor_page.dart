@@ -607,9 +607,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                               Expanded(
                                 child: Text(
                                   kind.name,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                  ),
+                                  style: const TextStyle(color: Colors.white70),
                                 ),
                               ),
                               IconButton(
@@ -801,39 +799,6 @@ class _MapEditorPageState extends State<MapEditorPage> {
 
   WaveLoadout _currentLoadout() => _loadoutFor(_selectedWaveNumber);
 
-  bool _hasCustomLoadout(int waveNumber) =>
-      _loadoutFor(waveNumber).unitCounts.isNotEmpty;
-
-  WaveLoadout _loadoutFor(int waveNumber) {
-    for (final loadout in _draft.waveLoadouts) {
-      if (loadout.waveNumber == waveNumber) return loadout;
-    }
-    return WaveLoadout(waveNumber: waveNumber);
-  }
-
-  void _randomizeAllWaves() {
-    _updateDraft(
-      (d) => d.copyWith(waveLoadouts: WaveLoadoutGenerator.randomize(d.waveCount)),
-    );
-  }
-
-  void _randomizeSelectedWave() {
-    _replaceLoadout(WaveLoadoutGenerator.randomizeWave(_selectedWaveNumber));
-  }
-
-  void _replaceLoadout(WaveLoadout loadout) {
-    _updateDraft((d) {
-      final loadouts = [...d.waveLoadouts]
-        ..removeWhere((l) => l.waveNumber == loadout.waveNumber);
-      if (loadout.unitCounts.isNotEmpty) loadouts.add(loadout);
-      return d.copyWith(waveLoadouts: loadouts);
-    });
-  }
-
-  void _setWaveUnitCount(UnitKind kind, int count) {
-    _replaceLoadout(_currentLoadout().withCount(kind, count.clamp(0, 999)));
-  }
-
   void _handlePanEnd(DragEndDetails details) {
     final isWaterTool = _tool == _EditorTool.river || _tool == _EditorTool.lake;
     if (isWaterTool && _activeStroke.length >= 2) {
@@ -880,6 +845,16 @@ class _MapEditorPageState extends State<MapEditorPage> {
       case _EditorTool.homeSite:
         break; // single-tap placement only, handled in onPanStart
     }
+  }
+
+  bool _hasCustomLoadout(int waveNumber) =>
+      _loadoutFor(waveNumber).unitCounts.isNotEmpty;
+
+  WaveLoadout _loadoutFor(int waveNumber) {
+    for (final loadout in _draft.waveLoadouts) {
+      if (loadout.waveNumber == waveNumber) return loadout;
+    }
+    return WaveLoadout(waveNumber: waveNumber);
   }
 
   void _paintAt(Offset local) {
@@ -946,6 +921,17 @@ class _MapEditorPageState extends State<MapEditorPage> {
     );
   }
 
+  void _randomizeAllWaves() {
+    _updateDraft(
+      (d) =>
+          d.copyWith(waveLoadouts: WaveLoadoutGenerator.randomize(d.waveCount)),
+    );
+  }
+
+  void _randomizeSelectedWave() {
+    _replaceLoadout(WaveLoadoutGenerator.randomizeWave(_selectedWaveNumber));
+  }
+
   Future<void> _regenerate() async {
     final generation = ++_generation;
     final preview = await _generator.generate(_draft);
@@ -968,6 +954,15 @@ class _MapEditorPageState extends State<MapEditorPage> {
     });
   }
 
+  void _replaceLoadout(WaveLoadout loadout) {
+    _updateDraft((d) {
+      final loadouts = [...d.waveLoadouts]
+        ..removeWhere((l) => l.waveNumber == loadout.waveNumber);
+      if (loadout.unitCounts.isNotEmpty) loadouts.add(loadout);
+      return d.copyWith(waveLoadouts: loadouts);
+    });
+  }
+
   void _resetZoom() {
     setState(() {
       _zoom = 1.0;
@@ -981,6 +976,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
     if (!mounted) return;
     setState(() => _saving = false);
     _showToast('Saved "${_draft.name}"');
+  }
+
+  void _setWaveUnitCount(UnitKind kind, int count) {
+    _replaceLoadout(_currentLoadout().withCount(kind, count.clamp(0, 999)));
   }
 
   /// Floats a brief glass-styled confirmation over the editor - matches the

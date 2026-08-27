@@ -13,6 +13,23 @@ import '../../features/terrain/domain/repos/terrain_repository.dart';
 import '../../features/waves/domain/repos/wave_repository.dart';
 import 'route_pages.dart';
 
+/// `extra` payload for [Routes.game] - go_router paths are plain strings, so
+/// non-serializable objects (repository overrides used by the map editor's
+/// test-play) are carried this way instead of as query params.
+class GameRouteArgs {
+  final GameScene scene;
+  final GameDifficulty difficulty;
+  final TerrainRepository? terrainRepository;
+  final WaveRepository? waveRepository;
+
+  const GameRouteArgs({
+    required this.scene,
+    this.difficulty = GameDifficulty.normal,
+    this.terrainRepository,
+    this.waveRepository,
+  });
+}
+
 /// Every screen in the app: its path and its widget builder live together
 /// here, driving [appRouter] - add a new screen by adding one case here.
 enum Routes {
@@ -37,8 +54,7 @@ enum Routes {
   static Map<Routes, Widget Function(BuildContext, GoRouterState)>
   get _builder => {
     Routes.mainMenu: (_, _) => const MainMenuPage(),
-    Routes.singlePlayerModeSelect: (_, _) =>
-        const SinglePlayerModeSelectPage(),
+    Routes.singlePlayerModeSelect: (_, _) => const SinglePlayerModeSelectPage(),
     Routes.towerDefenseLevelSelect: (_, _) => const LevelSelectPage(),
     Routes.skirmishLevelSelect: (_, _) => const SkirmishLevelSelectPage(),
     Routes.skirmishPlacement: (_, state) =>
@@ -55,23 +71,6 @@ enum Routes {
   /// [GoRoute].
   Widget build(BuildContext context, GoRouterState state) =>
       _builder[this]!(context, state);
-}
-
-/// `extra` payload for [Routes.game] - go_router paths are plain strings, so
-/// non-serializable objects (repository overrides used by the map editor's
-/// test-play) are carried this way instead of as query params.
-class GameRouteArgs {
-  final GameScene scene;
-  final GameDifficulty difficulty;
-  final TerrainRepository? terrainRepository;
-  final WaveRepository? waveRepository;
-
-  const GameRouteArgs({
-    required this.scene,
-    this.difficulty = GameDifficulty.normal,
-    this.terrainRepository,
-    this.waveRepository,
-  });
 }
 
 /// `extra` payload for [Routes.skirmishPlacement] - provide exactly one of

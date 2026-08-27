@@ -66,7 +66,6 @@ class ResourceNodeComponent extends PositionComponent
     );
   }
 
-
   void _updateCapture(double dt) {
     final nearbyVehicleTeams = <Team>{};
     for (final unit in game.world.activeUnits) {
