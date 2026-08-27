@@ -80,6 +80,146 @@ class S {
     );
   }
 
+  /// `Choose your battle`
+  String get mainMenuSubtitle {
+    return Intl.message(
+      'Choose your battle',
+      name: 'mainMenuSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Single Player`
+  String get mainMenuSinglePlayer {
+    return Intl.message(
+      'Single Player',
+      name: 'mainMenuSinglePlayer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Campaigns and skirmishes, solo or vs AI`
+  String get mainMenuSinglePlayerSubtitle {
+    return Intl.message(
+      'Campaigns and skirmishes, solo or vs AI',
+      name: 'mainMenuSinglePlayerSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Single Player`
+  String get modeSelectTitle {
+    return Intl.message(
+      'Single Player',
+      name: 'modeSelectTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose how you want to fight`
+  String get modeSelectSubtitle {
+    return Intl.message(
+      'Choose how you want to fight',
+      name: 'modeSelectSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tower Defense`
+  String get modeTowerDefenseTitle {
+    return Intl.message(
+      'Tower Defense',
+      name: 'modeTowerDefenseTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Survive escalating waves solo.`
+  String get modeTowerDefenseSubtitle {
+    return Intl.message(
+      'Survive escalating waves solo.',
+      name: 'modeTowerDefenseSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Skirmish`
+  String get modeSkirmishTitle {
+    return Intl.message(
+      'Skirmish',
+      name: 'modeSkirmishTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Build up and fight home vs home against the AI.`
+  String get modeSkirmishSubtitle {
+    return Intl.message(
+      'Build up and fight home vs home against the AI.',
+      name: 'modeSkirmishSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Skirmish`
+  String get skirmishSelectTitle {
+    return Intl.message(
+      'Skirmish',
+      name: 'skirmishSelectTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose a battlefield`
+  String get skirmishSelectSubtitle {
+    return Intl.message(
+      'Choose a battlefield',
+      name: 'skirmishSelectSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Featured`
+  String get skirmishSelectFeatured {
+    return Intl.message(
+      'Featured',
+      name: 'skirmishSelectFeatured',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your Maps`
+  String get skirmishSelectCustomMaps {
+    return Intl.message(
+      'Your Maps',
+      name: 'skirmishSelectCustomMaps',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No custom skirmish maps yet - draw one in the Map Editor.`
+  String get skirmishSelectEmptyCustom {
+    return Intl.message(
+      'No custom skirmish maps yet - draw one in the Map Editor.',
+      name: 'skirmishSelectEmptyCustom',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `{count} WAVES`
   String wavesCount(int count) {
     return Intl.message(

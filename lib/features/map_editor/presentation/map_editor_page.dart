@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../../core/di/service_locator.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../game_core/presentation/game_page.dart';
+import '../../game_core/presentation/player_palette.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../../terrain/domain/models/obstacle_kind.dart';
 import '../domain/models/editor_point.dart';
@@ -220,7 +221,7 @@ class _EditorToastState extends State<_EditorToast>
   }
 }
 
-enum _EditorTool { mountain, dune, erase, river, lake }
+enum _EditorTool { mountain, dune, erase, river, lake, homeSite }
 
 class _MapEditorPageState extends State<MapEditorPage> {
   final MapDraftRepository _draftRepository = getIt<MapDraftRepository>();
@@ -374,6 +375,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                                       arenaHeight: _draft.arenaHeight,
                                       environment: _draft.environment,
                                       previewProgress: _previewProgress,
+                                      homeSites: _draft.homeSites,
                                     ),
                                   ),
                                 ),
@@ -408,13 +410,27 @@ class _MapEditorPageState extends State<MapEditorPage> {
                       runSpacing: 8,
                       children: [
                         for (final tool in _EditorTool.values)
-                          ChoiceChip(
-                            label: Text(tool.label),
-                            selected: _tool == tool,
-                            onSelected: (_) => setState(() => _tool = tool),
-                          ),
+                          if (tool != _EditorTool.homeSite ||
+                              _draft.mode == GameMode.skirmish)
+                            ChoiceChip(
+                              label: Text(tool.label),
+                              selected: _tool == tool,
+                              onSelected: (_) => setState(() => _tool = tool),
+                            ),
                       ],
                     ),
+                    if (_tool == _EditorTool.homeSite) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Home sites: ${_draft.homeSites.length}/'
+                        '${PlayerPalette.colors.length} - tap to place, tap '
+                        'a marker to remove.',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                     if (_tool == _EditorTool.river) ...[
                       const SizedBox(height: 8),
                       Text(
@@ -465,8 +481,18 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         ),
                       ],
                       onChanged: (mode) {
-                        if (mode != null) {
-                          _updateDraft((d) => d.copyWith(mode: mode));
+                        if (mode == null) return;
+                        _updateDraft(
+                          (d) => d.copyWith(
+                            mode: mode,
+                            homeSites: mode == GameMode.skirmish
+                                ? d.homeSites
+                                : const [],
+                          ),
+                        );
+                        if (mode != GameMode.skirmish &&
+                            _tool == _EditorTool.homeSite) {
+                          setState(() => _tool = _EditorTool.mountain);
                         }
                       },
                     ),
@@ -634,6 +660,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
       case _EditorTool.river:
       case _EditorTool.lake:
         setState(() => _activeStroke = [_toWorld(details.localPosition)]);
+      case _EditorTool.homeSite:
+        _toggleHomeSiteAt(details.localPosition);
     }
   }
 
@@ -651,6 +679,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
             _toWorld(details.localPosition),
           ],
         );
+      case _EditorTool.homeSite:
+        break; // single-tap placement only, handled in onPanStart
     }
   }
 
@@ -666,12 +696,43 @@ class _MapEditorPageState extends State<MapEditorPage> {
       _EditorTool.dune => ObstacleKind.dune,
       _EditorTool.erase => null,
       _EditorTool.river || _EditorTool.lake => null,
+      _EditorTool.homeSite => null,
     };
     _updateDraft((d) {
       final cells = [...d.paintedCells]
         ..removeWhere((c) => c.col == col && c.row == row);
       if (kind != null) cells.add(PaintedCell(col: col, row: row, kind: kind));
       return d.copyWith(paintedCells: cells);
+    });
+  }
+
+  /// Places a new numbered home site at the tapped point, or removes an
+  /// existing one if tapped near it - capped at [PlayerPalette.colors]'
+  /// length since that's how many distinct player markers are supported.
+  void _toggleHomeSiteAt(Offset local) {
+    final point = _toWorld(local);
+    const removeRadius = 32.0;
+    final existingIndex = _draft.homeSites.indexWhere(
+      (site) =>
+          (site.x - point.x).abs() < removeRadius &&
+          (site.y - point.y).abs() < removeRadius,
+    );
+    if (existingIndex == -1 &&
+        _draft.homeSites.length >= PlayerPalette.colors.length) {
+      _showToast(
+        'Only ${PlayerPalette.colors.length} home sites supported',
+        icon: Icons.info_outline,
+      );
+      return;
+    }
+    _updateDraft((d) {
+      final sites = [...d.homeSites];
+      if (existingIndex != -1) {
+        sites.removeAt(existingIndex);
+      } else {
+        sites.add(point);
+      }
+      return d.copyWith(homeSites: sites);
     });
   }
 
@@ -800,6 +861,7 @@ class _MapEditorPainter extends CustomPainter {
   final double arenaHeight;
   final EnvironmentSettings environment;
   final double previewProgress;
+  final List<EditorPoint> homeSites;
 
   _MapEditorPainter({
     required this.preview,
@@ -809,6 +871,7 @@ class _MapEditorPainter extends CustomPainter {
     required this.arenaHeight,
     required this.environment,
     required this.previewProgress,
+    required this.homeSites,
   });
 
   @override
@@ -861,6 +924,7 @@ class _MapEditorPainter extends CustomPainter {
 
     _paintSunLight(canvas, rect, size);
     _paintWeather(canvas, rect, size);
+    _paintHomeSites(canvas, size);
 
     if (activeStroke.length >= 2) {
       final path = Path()
@@ -897,7 +961,8 @@ class _MapEditorPainter extends CustomPainter {
         oldDelegate.arenaWidth != arenaWidth ||
         oldDelegate.arenaHeight != arenaHeight ||
         oldDelegate.environment != environment ||
-        oldDelegate.previewProgress != previewProgress;
+        oldDelegate.previewProgress != previewProgress ||
+        oldDelegate.homeSites != homeSites;
   }
 
   Color _colorFor(ObstacleKind kind, BiomePalette palette) => switch (kind) {
@@ -985,6 +1050,50 @@ class _MapEditorPainter extends CustomPainter {
         final y = rnd.nextDouble() * size.height;
         canvas.drawCircle(Offset(x, y), 1.5, paint);
       }
+    }
+  }
+
+  /// Draws each skirmish home site as a numbered, colored marker so a map
+  /// author can see at a glance which player seat sits where - the same
+  /// numbering/coloring the pre-game placement screen will use.
+  void _paintHomeSites(Canvas canvas, Size size) {
+    for (final (index, site) in homeSites.indexed) {
+      final center = Offset(
+        site.x / arenaWidth * size.width,
+        site.y / arenaHeight * size.height,
+      );
+      final color = PlayerPalette.colorFor(index);
+      canvas.drawCircle(
+        center,
+        16,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.35)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 4),
+      );
+      canvas.drawCircle(center, 14, Paint()..color = color);
+      canvas.drawCircle(
+        center,
+        14,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = Colors.white,
+      );
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${index + 1}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      textPainter.paint(
+        canvas,
+        center - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
     }
   }
 }
@@ -1110,5 +1219,6 @@ extension on _EditorTool {
     _EditorTool.erase => 'Erase',
     _EditorTool.river => 'River',
     _EditorTool.lake => 'Lake',
+    _EditorTool.homeSite => 'Home',
   };
 }

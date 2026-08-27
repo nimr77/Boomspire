@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../game_core/domain/models/game_scene.dart';
 import '../../../terrain/domain/models/biome.dart';
+import 'editor_point.dart';
 import 'environment_settings.dart';
 import 'painted_cell.dart';
 import 'water_path.dart';
@@ -11,9 +12,10 @@ part 'map_draft.g.dart';
 
 /// A user-authored map, built in the in-app map editor.
 ///
-/// Purely a data draft - hand-placed home sites and resource nodes (needed
-/// once a draft targets [GameMode.skirmish]) are added by a later editor
-/// pass; this shape only covers terrain, water and environment so far. Use
+/// Purely a data draft - [homeSites] (one per potential skirmish/VS AI
+/// player seat, numbered by list order) are hand-placed in the editor once
+/// a draft targets [GameMode.skirmish]; a later pre-game screen lets the
+/// player pick or randomize which seat plays which site. Use
 /// `EditorTerrainGenerator` to rasterize a draft into a renderable preview.
 @freezed
 abstract class MapDraft with _$MapDraft {
@@ -26,9 +28,11 @@ abstract class MapDraft with _$MapDraft {
     @Default(720.0) double arenaHeight,
     @Default([]) List<PaintedCell> paintedCells,
     @Default([]) List<WaterPath> waterPaths,
+    @Default([]) List<EditorPoint> homeSites,
     @Default(EnvironmentSettings()) EnvironmentSettings environment,
   }) = _MapDraft;
 
   factory MapDraft.fromJson(Map<String, dynamic> json) =>
       _$MapDraftFromJson(json);
 }
+

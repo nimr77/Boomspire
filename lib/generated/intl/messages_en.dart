@@ -90,8 +90,42 @@ class MessageLookup extends MessageLookupByLibrary {
       "Choose a campaign",
     ),
     "levelSelectTitle": MessageLookupByLibrary.simpleMessage("BOOMSPIRE"),
+    "mainMenuSinglePlayer": MessageLookupByLibrary.simpleMessage(
+      "Single Player",
+    ),
+    "mainMenuSinglePlayerSubtitle": MessageLookupByLibrary.simpleMessage(
+      "Campaigns and skirmishes, solo or vs AI",
+    ),
+    "mainMenuSubtitle": MessageLookupByLibrary.simpleMessage(
+      "Choose your battle",
+    ),
+    "modeSelectSubtitle": MessageLookupByLibrary.simpleMessage(
+      "Choose how you want to fight",
+    ),
+    "modeSelectTitle": MessageLookupByLibrary.simpleMessage("Single Player"),
+    "modeSkirmishSubtitle": MessageLookupByLibrary.simpleMessage(
+      "Build up and fight home vs home against the AI.",
+    ),
+    "modeSkirmishTitle": MessageLookupByLibrary.simpleMessage("Skirmish"),
+    "modeTowerDefenseSubtitle": MessageLookupByLibrary.simpleMessage(
+      "Survive escalating waves solo.",
+    ),
+    "modeTowerDefenseTitle": MessageLookupByLibrary.simpleMessage(
+      "Tower Defense",
+    ),
     "playAgain": MessageLookupByLibrary.simpleMessage("PLAY AGAIN"),
     "sceneCompleted": MessageLookupByLibrary.simpleMessage("COMPLETED"),
+    "skirmishSelectCustomMaps": MessageLookupByLibrary.simpleMessage(
+      "Your Maps",
+    ),
+    "skirmishSelectEmptyCustom": MessageLookupByLibrary.simpleMessage(
+      "No custom skirmish maps yet - draw one in the Map Editor.",
+    ),
+    "skirmishSelectFeatured": MessageLookupByLibrary.simpleMessage("Featured"),
+    "skirmishSelectSubtitle": MessageLookupByLibrary.simpleMessage(
+      "Choose a battlefield",
+    ),
+    "skirmishSelectTitle": MessageLookupByLibrary.simpleMessage("Skirmish"),
     "towerMax": MessageLookupByLibrary.simpleMessage("MAX"),
     "towerNameAntiAir": MessageLookupByLibrary.simpleMessage("Flak Battery"),
     "towerNameArtilleryBunker": MessageLookupByLibrary.simpleMessage(

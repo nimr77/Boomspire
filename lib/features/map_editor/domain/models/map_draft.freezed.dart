@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MapDraft {
 
- String get id; String get name; Biome get biome; GameMode get mode; double get arenaWidth; double get arenaHeight; List<PaintedCell> get paintedCells; List<WaterPath> get waterPaths; EnvironmentSettings get environment;
+ String get id; String get name; Biome get biome; GameMode get mode; double get arenaWidth; double get arenaHeight; List<PaintedCell> get paintedCells; List<WaterPath> get waterPaths; List<EditorPoint> get homeSites; EnvironmentSettings get environment;
 /// Create a copy of MapDraft
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $MapDraftCopyWith<MapDraft> get copyWith => _$MapDraftCopyWithImpl<MapDraft>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MapDraft&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.biome, biome) || other.biome == biome)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.arenaWidth, arenaWidth) || other.arenaWidth == arenaWidth)&&(identical(other.arenaHeight, arenaHeight) || other.arenaHeight == arenaHeight)&&const DeepCollectionEquality().equals(other.paintedCells, paintedCells)&&const DeepCollectionEquality().equals(other.waterPaths, waterPaths)&&(identical(other.environment, environment) || other.environment == environment));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MapDraft&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.biome, biome) || other.biome == biome)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.arenaWidth, arenaWidth) || other.arenaWidth == arenaWidth)&&(identical(other.arenaHeight, arenaHeight) || other.arenaHeight == arenaHeight)&&const DeepCollectionEquality().equals(other.paintedCells, paintedCells)&&const DeepCollectionEquality().equals(other.waterPaths, waterPaths)&&const DeepCollectionEquality().equals(other.homeSites, homeSites)&&(identical(other.environment, environment) || other.environment == environment));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,biome,mode,arenaWidth,arenaHeight,const DeepCollectionEquality().hash(paintedCells),const DeepCollectionEquality().hash(waterPaths),environment);
+int get hashCode => Object.hash(runtimeType,id,name,biome,mode,arenaWidth,arenaHeight,const DeepCollectionEquality().hash(paintedCells),const DeepCollectionEquality().hash(waterPaths),const DeepCollectionEquality().hash(homeSites),environment);
 
 @override
 String toString() {
-  return 'MapDraft(id: $id, name: $name, biome: $biome, mode: $mode, arenaWidth: $arenaWidth, arenaHeight: $arenaHeight, paintedCells: $paintedCells, waterPaths: $waterPaths, environment: $environment)';
+  return 'MapDraft(id: $id, name: $name, biome: $biome, mode: $mode, arenaWidth: $arenaWidth, arenaHeight: $arenaHeight, paintedCells: $paintedCells, waterPaths: $waterPaths, homeSites: $homeSites, environment: $environment)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $MapDraftCopyWith<$Res>  {
   factory $MapDraftCopyWith(MapDraft value, $Res Function(MapDraft) _then) = _$MapDraftCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, Biome biome, GameMode mode, double arenaWidth, double arenaHeight, List<PaintedCell> paintedCells, List<WaterPath> waterPaths, EnvironmentSettings environment
+ String id, String name, Biome biome, GameMode mode, double arenaWidth, double arenaHeight, List<PaintedCell> paintedCells, List<WaterPath> waterPaths, List<EditorPoint> homeSites, EnvironmentSettings environment
 });
 
 
@@ -66,7 +66,7 @@ class _$MapDraftCopyWithImpl<$Res>
 
 /// Create a copy of MapDraft
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? biome = null,Object? mode = null,Object? arenaWidth = null,Object? arenaHeight = null,Object? paintedCells = null,Object? waterPaths = null,Object? environment = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? biome = null,Object? mode = null,Object? arenaWidth = null,Object? arenaHeight = null,Object? paintedCells = null,Object? waterPaths = null,Object? homeSites = null,Object? environment = null,}) {
   return _then(MapDraft(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -76,7 +76,8 @@ as GameMode,arenaWidth: null == arenaWidth ? _self.arenaWidth : arenaWidth // ig
 as double,arenaHeight: null == arenaHeight ? _self.arenaHeight : arenaHeight // ignore: cast_nullable_to_non_nullable
 as double,paintedCells: null == paintedCells ? _self.paintedCells : paintedCells // ignore: cast_nullable_to_non_nullable
 as List<PaintedCell>,waterPaths: null == waterPaths ? _self.waterPaths : waterPaths // ignore: cast_nullable_to_non_nullable
-as List<WaterPath>,environment: null == environment ? _self.environment : environment // ignore: cast_nullable_to_non_nullable
+as List<WaterPath>,homeSites: null == homeSites ? _self.homeSites : homeSites // ignore: cast_nullable_to_non_nullable
+as List<EditorPoint>,environment: null == environment ? _self.environment : environment // ignore: cast_nullable_to_non_nullable
 as EnvironmentSettings,
   ));
 }
@@ -171,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  Biome biome,  GameMode mode,  double arenaWidth,  double arenaHeight,  List<PaintedCell> paintedCells,  List<WaterPath> waterPaths,  EnvironmentSettings environment)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  Biome biome,  GameMode mode,  double arenaWidth,  double arenaHeight,  List<PaintedCell> paintedCells,  List<WaterPath> waterPaths,  List<EditorPoint> homeSites,  EnvironmentSettings environment)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MapDraft() when $default != null:
-return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_that.arenaHeight,_that.paintedCells,_that.waterPaths,_that.environment);case _:
+return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_that.arenaHeight,_that.paintedCells,_that.waterPaths,_that.homeSites,_that.environment);case _:
   return orElse();
 
 }
@@ -192,10 +193,10 @@ return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  Biome biome,  GameMode mode,  double arenaWidth,  double arenaHeight,  List<PaintedCell> paintedCells,  List<WaterPath> waterPaths,  EnvironmentSettings environment)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  Biome biome,  GameMode mode,  double arenaWidth,  double arenaHeight,  List<PaintedCell> paintedCells,  List<WaterPath> waterPaths,  List<EditorPoint> homeSites,  EnvironmentSettings environment)  $default,) {final _that = this;
 switch (_that) {
 case _MapDraft():
-return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_that.arenaHeight,_that.paintedCells,_that.waterPaths,_that.environment);case _:
+return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_that.arenaHeight,_that.paintedCells,_that.waterPaths,_that.homeSites,_that.environment);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -212,10 +213,10 @@ return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  Biome biome,  GameMode mode,  double arenaWidth,  double arenaHeight,  List<PaintedCell> paintedCells,  List<WaterPath> waterPaths,  EnvironmentSettings environment)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  Biome biome,  GameMode mode,  double arenaWidth,  double arenaHeight,  List<PaintedCell> paintedCells,  List<WaterPath> waterPaths,  List<EditorPoint> homeSites,  EnvironmentSettings environment)?  $default,) {final _that = this;
 switch (_that) {
 case _MapDraft() when $default != null:
-return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_that.arenaHeight,_that.paintedCells,_that.waterPaths,_that.environment);case _:
+return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_that.arenaHeight,_that.paintedCells,_that.waterPaths,_that.homeSites,_that.environment);case _:
   return null;
 
 }
@@ -227,7 +228,7 @@ return $default(_that.id,_that.name,_that.biome,_that.mode,_that.arenaWidth,_tha
 @JsonSerializable()
 
 class _MapDraft implements MapDraft {
-  const _MapDraft({required this.id, required this.name, this.biome = Biome.grassPlains, this.mode = GameMode.waveDefense, this.arenaWidth = 1280.0, this.arenaHeight = 720.0,  List<PaintedCell> paintedCells = const [],  List<WaterPath> waterPaths = const [], this.environment = const EnvironmentSettings()}): _paintedCells = paintedCells,_waterPaths = waterPaths;
+  const _MapDraft({required this.id, required this.name, this.biome = Biome.grassPlains, this.mode = GameMode.waveDefense, this.arenaWidth = 1280.0, this.arenaHeight = 720.0,  List<PaintedCell> paintedCells = const [],  List<WaterPath> waterPaths = const [],  List<EditorPoint> homeSites = const [], this.environment = const EnvironmentSettings()}): _paintedCells = paintedCells,_waterPaths = waterPaths,_homeSites = homeSites;
   factory _MapDraft.fromJson(Map<String, dynamic> json) => _$MapDraftFromJson(json);
 
 @override final  String id;
@@ -250,6 +251,13 @@ class _MapDraft implements MapDraft {
   return EqualUnmodifiableListView(_waterPaths);
 }
 
+ final  List<EditorPoint> _homeSites;
+@override@JsonKey() List<EditorPoint> get homeSites {
+  if (_homeSites is EqualUnmodifiableListView) return _homeSites;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_homeSites);
+}
+
 @override@JsonKey() final  EnvironmentSettings environment;
 
 /// Create a copy of MapDraft
@@ -265,16 +273,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MapDraft&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.biome, biome) || other.biome == biome)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.arenaWidth, arenaWidth) || other.arenaWidth == arenaWidth)&&(identical(other.arenaHeight, arenaHeight) || other.arenaHeight == arenaHeight)&&const DeepCollectionEquality().equals(other._paintedCells, _paintedCells)&&const DeepCollectionEquality().equals(other._waterPaths, _waterPaths)&&(identical(other.environment, environment) || other.environment == environment));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MapDraft&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.biome, biome) || other.biome == biome)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.arenaWidth, arenaWidth) || other.arenaWidth == arenaWidth)&&(identical(other.arenaHeight, arenaHeight) || other.arenaHeight == arenaHeight)&&const DeepCollectionEquality().equals(other._paintedCells, _paintedCells)&&const DeepCollectionEquality().equals(other._waterPaths, _waterPaths)&&const DeepCollectionEquality().equals(other._homeSites, _homeSites)&&(identical(other.environment, environment) || other.environment == environment));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,biome,mode,arenaWidth,arenaHeight,const DeepCollectionEquality().hash(_paintedCells),const DeepCollectionEquality().hash(_waterPaths),environment);
+int get hashCode => Object.hash(runtimeType,id,name,biome,mode,arenaWidth,arenaHeight,const DeepCollectionEquality().hash(_paintedCells),const DeepCollectionEquality().hash(_waterPaths),const DeepCollectionEquality().hash(_homeSites),environment);
 
 @override
 String toString() {
-  return 'MapDraft(id: $id, name: $name, biome: $biome, mode: $mode, arenaWidth: $arenaWidth, arenaHeight: $arenaHeight, paintedCells: $paintedCells, waterPaths: $waterPaths, environment: $environment)';
+  return 'MapDraft(id: $id, name: $name, biome: $biome, mode: $mode, arenaWidth: $arenaWidth, arenaHeight: $arenaHeight, paintedCells: $paintedCells, waterPaths: $waterPaths, homeSites: $homeSites, environment: $environment)';
 }
 
 
@@ -285,7 +293,7 @@ abstract mixin class _$MapDraftCopyWith<$Res> implements $MapDraftCopyWith<$Res>
   factory _$MapDraftCopyWith(_MapDraft value, $Res Function(_MapDraft) _then) = __$MapDraftCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, Biome biome, GameMode mode, double arenaWidth, double arenaHeight, List<PaintedCell> paintedCells, List<WaterPath> waterPaths, EnvironmentSettings environment
+ String id, String name, Biome biome, GameMode mode, double arenaWidth, double arenaHeight, List<PaintedCell> paintedCells, List<WaterPath> waterPaths, List<EditorPoint> homeSites, EnvironmentSettings environment
 });
 
 
@@ -302,7 +310,7 @@ class __$MapDraftCopyWithImpl<$Res>
 
 /// Create a copy of MapDraft
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? biome = null,Object? mode = null,Object? arenaWidth = null,Object? arenaHeight = null,Object? paintedCells = null,Object? waterPaths = null,Object? environment = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? biome = null,Object? mode = null,Object? arenaWidth = null,Object? arenaHeight = null,Object? paintedCells = null,Object? waterPaths = null,Object? homeSites = null,Object? environment = null,}) {
   return _then(_MapDraft(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -312,7 +320,8 @@ as GameMode,arenaWidth: null == arenaWidth ? _self.arenaWidth : arenaWidth // ig
 as double,arenaHeight: null == arenaHeight ? _self.arenaHeight : arenaHeight // ignore: cast_nullable_to_non_nullable
 as double,paintedCells: null == paintedCells ? _self._paintedCells : paintedCells // ignore: cast_nullable_to_non_nullable
 as List<PaintedCell>,waterPaths: null == waterPaths ? _self._waterPaths : waterPaths // ignore: cast_nullable_to_non_nullable
-as List<WaterPath>,environment: null == environment ? _self.environment : environment // ignore: cast_nullable_to_non_nullable
+as List<WaterPath>,homeSites: null == homeSites ? _self._homeSites : homeSites // ignore: cast_nullable_to_non_nullable
+as List<EditorPoint>,environment: null == environment ? _self.environment : environment // ignore: cast_nullable_to_non_nullable
 as EnvironmentSettings,
   ));
 }
