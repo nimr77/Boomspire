@@ -220,21 +220,48 @@ class MobileUnitComponent extends PositionComponent
   void markTargeted(Color color) => _targetHighlight.trigger(color);
 
   /// Called right after this unit's own death FX are spawned - a
-  /// base-rush unit banks its kill/escape bounty here, a hunter doesn't.
+  /// base-rush unit banks its kill/escape bounty for the player, while a
+  /// skirmish assault unit banks its bounty for whichever side destroyed it
+  /// (the opposing wallet). A hunter unit banks nothing.
   void onDeath() {
-    if (objective != UnitObjective.rushBase) return;
-    final baseReward = blueprint.bounty + (game.gameState.currentWave - 1) * 2;
-    final reward = game.gameState.addKillGold(
-      baseReward,
-      extraBonus: game.goldMineKillGoldBonus,
-    );
-    game.audioRepository.play(SfxType.goldGain, volume: 0.35);
-    game.world.spawn(
-      FloatingTextComponent(
-        text: '+${reward}g',
-        position: position.clone() + Vector2(0, -size.y / 2 - 4),
-      ),
-    );
+    if (objective == UnitObjective.rushBase) {
+      final baseReward =
+          blueprint.bounty + (game.gameState.currentWave - 1) * 2;
+      final reward = game.gameState.addKillGold(
+        baseReward,
+        extraBonus: game.goldMineKillGoldBonus,
+      );
+      game.audioRepository.play(SfxType.goldGain, volume: 0.35);
+      game.world.spawn(
+        FloatingTextComponent(
+          text: '+${reward}g',
+          position: position.clone() + Vector2(0, -size.y / 2 - 4),
+        ),
+      );
+      return;
+    }
+    if (objective != UnitObjective.assaultBase) return;
+    if (team.id == game.playerTeam.id) {
+      // A player-built unit died in a skirmish - the AI opponent gets the
+      // credit (and gold) for the kill.
+      game.aiEconomy?.addGold(blueprint.bounty);
+      return;
+    }
+    if (game.aiTeam != null && team.id == game.aiTeam!.id) {
+      // An AI-built unit died - the player gets the credit, same escalating
+      // streak bonus/Gold Mine bonus as a wave-defense kill.
+      final reward = game.gameState.addKillGold(
+        blueprint.bounty,
+        extraBonus: game.goldMineKillGoldBonus,
+      );
+      game.audioRepository.play(SfxType.goldGain, volume: 0.35);
+      game.world.spawn(
+        FloatingTextComponent(
+          text: '+${reward}g',
+          position: position.clone() + Vector2(0, -size.y / 2 - 4),
+        ),
+      );
+    }
   }
 
   @override

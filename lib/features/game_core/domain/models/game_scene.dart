@@ -50,6 +50,12 @@ class GameScene {
   /// sense at any arena size. Empty for scenes with no capturable economy.
   final List<ResourceNodeSite> resourceNodeSites;
 
+  /// Starting gold for this scene, or null to fall back to
+  /// `GameConfig.startingGold`/`GameConfig.startingSkirmishGold` (picked by
+  /// `mode`) - lets a scene/map draft author a different economy (e.g. the
+  /// map editor's arena-size field) instead of only a single global constant.
+  final int? startingGold;
+
   const GameScene({
     required this.id,
     required this.name,
@@ -62,6 +68,7 @@ class GameScene {
     this.spawnLayout = SpawnLayout.single,
     this.homeSites = const [],
     this.resourceNodeSites = const [],
+    this.startingGold,
   });
 
   factory GameScene.fromJson(Map<String, dynamic> json) => GameScene(
@@ -86,6 +93,7 @@ class GameScene {
     resourceNodeSites: (json['resourceNodeSites'] as List<dynamic>? ?? const [])
         .map((site) => ResourceNodeSite.fromJson(site as Map<String, dynamic>))
         .toList(),
+    startingGold: json['startingGold'] as int?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -102,6 +110,7 @@ class GameScene {
     'resourceNodeSites': resourceNodeSites
         .map((site) => site.toJson())
         .toList(),
+    if (startingGold != null) 'startingGold': startingGold,
   };
 }
 

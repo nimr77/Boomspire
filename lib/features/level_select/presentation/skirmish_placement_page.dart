@@ -457,6 +457,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
             briefing: 'Testing your hand-drawn skirmish map.',
             biome: draft.biome,
             mode: aiSite != null ? GameMode.skirmish : GameMode.waveDefense,
+            startingGold: draft.startingGold,
           ),
           terrainRepository: MapDraftTerrainRepository(
             draft: draft,

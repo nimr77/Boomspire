@@ -89,16 +89,17 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   late TerrainMap terrainMap;
 
-  /// Whether the Tech Lab has been built at least once this run - required
-  /// before the Laser Lance can be built (see [canBuildTower]). Stays true
-  /// even if the lab is later destroyed/sold, so already-built lasers never
-  /// get retroactively locked out.
-  bool hasTechLab = false;
+  /// Whether each team (keyed by `Team.id`) has built a Tech Lab at least
+  /// once this run - required before that team can build a Laser Lance (see
+  /// [canBuildTower]). Stays true even if the lab is later destroyed/sold,
+  /// so already-built lasers never get retroactively locked out. Per-team
+  /// so the AI's own prerequisite chain is independent of the player's.
+  final Map<int, bool> _hasTechLabByTeam = {};
 
-  /// Whether a Command Post has been built at least once this run - required
-  /// (together with [hasTechLab]) before the SAM Site can be built. Stays
-  /// true even if every Command Post is later destroyed/sold.
-  bool hasCommandPost = false;
+  /// Whether each team has built a Command Post at least once this run -
+  /// required (together with a Tech Lab) before that team can build a SAM
+  /// Site. Stays true even if every Command Post is later destroyed/sold.
+  final Map<int, bool> _hasCommandPostByTeam = {};
   final ValueNotifier<UnitType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
 
@@ -143,9 +144,15 @@ class BoomspireGame extends FlameGame<GameWorld>
          ),
        );
 
-  /// How many active Command Posts are standing - each one supports one
-  /// Artillery Bunker (see [buildLimitFor]).
-  int get activeCommandPostCount => towerCountFor(BuildingType.commandPost);
+  /// How many active Command Posts [owner] has standing - each one supports
+  /// one Artillery Bunker for that same owner (see [buildLimitFor]).
+  int commandPostCountFor(Team owner) =>
+      towerCountFor(BuildingType.commandPost, owner: owner);
+
+  bool hasTechLabFor(Team owner) => _hasTechLabByTeam[owner.id] ?? false;
+
+  bool hasCommandPostFor(Team owner) =>
+      _hasCommandPostByTeam[owner.id] ?? false;
 
   /// Sum of every standing Gold Mine's kill-gold bonus (see
   /// `GoldMineComponent.killGoldBonus`) - added on top of the normal
@@ -185,39 +192,52 @@ class BoomspireGame extends FlameGame<GameWorld>
       ? buildingRepository.blueprintFor(type)
       : towerRepository.blueprintFor(type as TowerType);
 
-  /// Why [type] can't be built right now, or null if it's buildable (gold
-  /// permitting) - shown in the build menu's lock overlay/tooltip.
-  String? buildBlockReason(UnitType type) {
-    if (type == TowerType.laser && !hasTechLab) return 'Requires Tech Lab';
-    if (type == TowerType.artilleryBunker && activeCommandPostCount == 0) {
+  /// Why [type] can't be built right now for [owner] (defaults to the human
+  /// player), or null if it's buildable (gold permitting) - shown in the
+  /// build menu's lock overlay/tooltip, and used identically by the AI
+  /// skirmish opponent so both sides are bound by the same rules.
+  String? buildBlockReason(UnitType type, {Team? owner}) {
+    final builder = owner ?? playerTeam;
+    if (type == TowerType.laser && !hasTechLabFor(builder)) {
+      return 'Requires Tech Lab';
+    }
+    if (type == TowerType.artilleryBunker &&
+        commandPostCountFor(builder) == 0) {
       return 'Requires Command Post';
     }
-    if (type == TowerType.sam && !(hasTechLab && hasCommandPost)) {
+    if (type == TowerType.sam &&
+        !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
       return 'Requires Tech Lab & Command Post';
     }
-    if (type == BuildingType.trainingCenter &&
-        gameState.currentScore < GameConfig.trainingCenterUnlockScore) {
-      return 'Requires ${GameConfig.trainingCenterUnlockScore} score';
+    // Score-gated unlocks are a human-player-only concept - the AI has no
+    // "score", so it's bound only by gold, prerequisites and per-type
+    // limits.
+    if (builder.id == playerTeam.id) {
+      if (type == BuildingType.trainingCenter &&
+          gameState.currentScore < GameConfig.trainingCenterUnlockScore) {
+        return 'Requires ${GameConfig.trainingCenterUnlockScore} score';
+      }
+      if (type == BuildingType.warFactory &&
+          gameState.currentScore < GameConfig.warFactoryUnlockScore) {
+        return 'Requires ${GameConfig.warFactoryUnlockScore} score';
+      }
     }
-    if (type == BuildingType.warFactory &&
-        gameState.currentScore < GameConfig.warFactoryUnlockScore) {
-      return 'Requires ${GameConfig.warFactoryUnlockScore} score';
-    }
-    final limit = buildLimitFor(type);
-    if (limit != null && towerCountFor(type) >= limit) {
+    final limit = buildLimitFor(type, owner: builder);
+    if (limit != null && towerCountFor(type, owner: builder) >= limit) {
       return 'Max $limit built';
     }
     return null;
   }
 
-  /// Max simultaneous count allowed for [type], or null if unlimited. The
-  /// Tech Lab, Command Post, Training Center, War Factory, Gold Mine and
-  /// Laser Lance only ever need one; Artillery Bunker rides along with
-  /// however many Command Posts are standing (so it too tops out at one);
-  /// the SAM Site is capped at two.
-  int? buildLimitFor(UnitType type) => switch (type) {
+  /// Max simultaneous count allowed for [type] per-owner, or null if
+  /// unlimited. The Tech Lab, Command Post, Training Center, War Factory,
+  /// Gold Mine and Laser Lance only ever need one; Artillery Bunker rides
+  /// along with however many Command Posts that same owner has standing (so
+  /// it too tops out at one per Command Post); the SAM Site is capped at
+  /// two.
+  int? buildLimitFor(UnitType type, {Team? owner}) => switch (type) {
     TowerType.laser => 1,
-    TowerType.artilleryBunker => activeCommandPostCount,
+    TowerType.artilleryBunker => commandPostCountFor(owner ?? playerTeam),
     TowerType.sam => 2,
     BuildingType.techLab => 1,
     BuildingType.commandPost => 1,
@@ -237,7 +257,68 @@ class BoomspireGame extends FlameGame<GameWorld>
     audioRepository.play(SfxType.buildPlace, volume: 0.6);
   }
 
-  bool canBuildTower(UnitType type) => buildBlockReason(type) == null;
+  bool canBuildTower(UnitType type, {Team? owner}) =>
+      buildBlockReason(type, owner: owner) == null;
+
+  /// How much gold [owner] currently has - the player's `gameState` wallet,
+  /// or the AI's `aiEconomy` wallet (0 if there is none, e.g. outside
+  /// skirmish mode).
+  int goldFor(Team owner) =>
+      owner.id == playerTeam.id ? gameState.gold : (aiEconomy?.gold ?? 0);
+
+  /// Spends [amount] from whichever wallet [owner] draws from (see
+  /// [goldFor]) - returns whether it actually happened.
+  bool spendGoldFor(Team owner, int amount) => owner.id == playerTeam.id
+      ? gameState.spendGold(amount)
+      : (aiEconomy?.spendGold(amount) ?? false);
+
+  /// Attempts to build [type] at [point] for [owner] - the single shared
+  /// path used by both the player's own build menu (via `_buildTower`) and
+  /// [AiSkirmishControllerComponent], so both sides are bound by identical
+  /// cost, prerequisite, per-type limit and reachability rules. Returns the
+  /// built tower, or null if the build was rejected.
+  TowerComponent? buildStructure(Team owner, UnitType type, Vector2 point) {
+    final grid = terrainMap.grid;
+    final cell = grid.worldToCell(point);
+    if (!_isBuildableCell(cell)) return null;
+    if (!canBuildTower(type, owner: owner)) return null;
+
+    final blueprint = blueprintFor(type);
+    if (goldFor(owner) < blueprint.cost) return null;
+
+    // Provisionally occupy the cell and make sure the spawn-to-base
+    // corridor stays open before actually charging gold - never allow a
+    // fully sealed maze, regardless of which side is building.
+    final spawnCells = terrainMap.spawnPoints
+        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
+        .toSet();
+    final baseCell = grid.worldToCell(
+      Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
+    );
+    grid.setTowerOccupied(cell.x, cell.y, true);
+    if (!spawnCells.every((sc) => grid.isReachable(sc, baseCell))) {
+      grid.setTowerOccupied(cell.x, cell.y, false);
+      return null;
+    }
+    if (!spendGoldFor(owner, blueprint.cost)) {
+      grid.setTowerOccupied(cell.x, cell.y, false);
+      return null;
+    }
+
+    final tower = createTower(
+      type,
+      grid.cellCenter(cell),
+      grid.cellSize,
+      blueprint,
+      owner: owner,
+    );
+    world.spawnTower(tower);
+    if (type == BuildingType.techLab) _hasTechLabByTeam[owner.id] = true;
+    if (type == BuildingType.commandPost) {
+      _hasCommandPostByTeam[owner.id] = true;
+    }
+    return tower;
+  }
 
   /// Builds a [TowerComponent] of [type] - shared by the player's own build
   /// menu and [AiSkirmishControllerComponent]. Ownership defaults to the
@@ -339,16 +420,22 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   /// Called whenever a Command Post is destroyed or sold - any Artillery
   /// Bunker built beyond what the remaining Command Posts can still support
-  /// is torn down too (most-recently-built first), rather than left
-  /// orphaned above the new cap.
+  /// is torn down too (most-recently-built first, per owner independently),
+  /// rather than left orphaned above the new cap.
   void enforceSupportedTowerLimits() {
-    final limit = buildLimitFor(TowerType.artilleryBunker) ?? 0;
-    final bunkers = world.activeTowers
-        .where((t) => t.blueprint.type == TowerType.artilleryBunker)
-        .toList();
-    final excess = bunkers.length - limit;
-    for (var i = 0; i < excess; i++) {
-      bunkers[bunkers.length - 1 - i].destroyBySupportLoss();
+    final bunkersByOwner = <int, List<TowerComponent>>{};
+    for (final tower in world.activeTowers) {
+      if (tower.blueprint.type != TowerType.artilleryBunker) continue;
+      bunkersByOwner.putIfAbsent(tower.owner.id, () => []).add(tower);
+    }
+    for (final bunkers in bunkersByOwner.values) {
+      final limit =
+          buildLimitFor(TowerType.artilleryBunker, owner: bunkers.first.owner) ??
+          0;
+      final excess = bunkers.length - limit;
+      for (var i = 0; i < excess; i++) {
+        bunkers[bunkers.length - 1 - i].destroyBySupportLoss();
+      }
     }
   }
 
@@ -362,6 +449,12 @@ class BoomspireGame extends FlameGame<GameWorld>
 
     final tappedTower = _towerAt(point);
     if (tappedTower != null) {
+      // The AI's own towers aren't the player's to inspect/repair/sell -
+      // just cancel any in-progress placement instead of selecting them.
+      if (tappedTower.owner.id != playerTeam.id) {
+        pendingPlacement.value = null;
+        return;
+      }
       selectedTower.value = selectedTower.value == tappedTower
           ? null
           : tappedTower;
@@ -394,6 +487,7 @@ class BoomspireGame extends FlameGame<GameWorld>
   Future<void> onLoad() async {
     terrainMap = terrainRepository.loadTerrain(scene: scene);
     _setupSkirmishState();
+    gameState.reset(startingGold: _resolvedStartingGold);
     camera.viewfinder.anchor = Anchor.topLeft;
     camera.viewfinder.position = Vector2.zero();
     await camera.viewport.add(MinimapComponent());
@@ -410,9 +504,9 @@ class BoomspireGame extends FlameGame<GameWorld>
   }
 
   void restart() {
-    gameState.reset();
     terrainMap = terrainRepository.loadTerrain(scene: scene);
     _setupSkirmishState();
+    gameState.reset(startingGold: _resolvedStartingGold);
     world.activeUnits.clear();
     world.activeTowers.clear();
     for (final child in world.children.toList()) {
@@ -452,8 +546,8 @@ class BoomspireGame extends FlameGame<GameWorld>
     selectedTowerType.value = null;
     selectedTower.value = null;
     pendingPlacement.value = null;
-    hasTechLab = false;
-    hasCommandPost = false;
+    _hasTechLabByTeam.clear();
+    _hasCommandPostByTeam.clear();
     world.cameraPosition = Vector2.zero();
     _shakeEventCount = 0;
     _shakeEventWindow = 0;
@@ -508,9 +602,14 @@ class BoomspireGame extends FlameGame<GameWorld>
     _shakeEventWindow = 0.6;
   }
 
-  /// How many of [type] are currently standing on the battlefield.
-  int towerCountFor(UnitType type) =>
-      world.activeTowers.where((t) => t.blueprint.type == type).length;
+  /// How many of [type] [owner] (defaults to the human player) currently
+  /// has standing on the battlefield.
+  int towerCountFor(UnitType type, {Team? owner}) {
+    final builder = owner ?? playerTeam;
+    return world.activeTowers
+        .where((t) => t.blueprint.type == type && t.owner.id == builder.id)
+        .length;
+  }
 
   @override
   void update(double dt) {
@@ -550,38 +649,8 @@ class BoomspireGame extends FlameGame<GameWorld>
   }
 
   void _buildTower(UnitType type, Vector2 point) {
-    final grid = terrainMap.grid;
-    final cell = grid.worldToCell(point);
-    if (!_isBuildableCell(cell)) return;
-
-    final blueprint = blueprintFor(type);
-    if (gameState.gold < blueprint.cost) return;
-    if (!canBuildTower(type)) return;
-
-    // Provisionally occupy the cell and make sure ground enemies can still
-    // reach the base before actually charging gold - never allow a fully
-    // sealed maze.
-    final spawnCells = terrainMap.spawnPoints
-        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
-        .toSet();
-    final baseCell = grid.worldToCell(
-      Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
-    );
-    grid.setTowerOccupied(cell.x, cell.y, true);
-    if (!spawnCells.every((sc) => grid.isReachable(sc, baseCell))) {
-      grid.setTowerOccupied(cell.x, cell.y, false);
-      return;
-    }
-    if (!gameState.spendGold(blueprint.cost)) {
-      grid.setTowerOccupied(cell.x, cell.y, false);
-      return;
-    }
-
-    world.spawnTower(
-      createTower(type, grid.cellCenter(cell), grid.cellSize, blueprint),
-    );
-    if (type == BuildingType.techLab) hasTechLab = true;
-    if (type == BuildingType.commandPost) hasCommandPost = true;
+    final tower = buildStructure(playerTeam, type, point);
+    if (tower == null) return;
     audioRepository.play(SfxType.buildPlace, volume: 0.7);
     selectedTowerType.value = null;
   }
@@ -616,7 +685,7 @@ class BoomspireGame extends FlameGame<GameWorld>
     if (scene.mode == GameMode.skirmish) {
       aiTeam = Team.aiOpponent;
       aiEconomy = AiEconomy(
-        gold: GameConfig.startingGold,
+        gold: _resolvedStartingGold,
         health: GameConfig.startingHealth,
         maxHealth: GameConfig.startingHealth,
       );
@@ -625,6 +694,16 @@ class BoomspireGame extends FlameGame<GameWorld>
       aiEconomy = null;
     }
   }
+
+  /// Starting gold for this match - the scene's own override if set,
+  /// otherwise the mode-appropriate default (a skirmish base-building war
+  /// needs far more up-front capital than the drip-fed wave-defense mode).
+  /// Shared by both the player's `gameState` and the AI's `aiEconomy`.
+  int get _resolvedStartingGold =>
+      scene.startingGold ??
+      (scene.mode == GameMode.skirmish
+          ? GameConfig.startingSkirmishGold
+          : GameConfig.startingGold);
 
   TowerComponent? _towerAt(Vector2 point) {
     for (final tower in world.activeTowers) {

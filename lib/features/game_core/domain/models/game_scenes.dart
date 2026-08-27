@@ -1,4 +1,5 @@
 import '../../../terrain/domain/models/biome.dart';
+import 'game_config.dart';
 import 'game_scene.dart';
 
 /// The full campaign catalog shown on the level-select screen. Every scene
@@ -117,6 +118,7 @@ class GameScenes {
           'before the AI commander finishes theirs.',
       biome: Biome.grassPlains,
       mode: GameMode.skirmish,
+      startingGold: GameConfig.startingSkirmishGold,
       homeSites: [
         HomeSite(
           layout: HomeLayout.southWestCorner,

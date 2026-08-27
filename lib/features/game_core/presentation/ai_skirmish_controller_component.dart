@@ -3,44 +3,66 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 
-import '../../../core/combat/unit_objective.dart';
+import '../../../core/combat/team.dart';
+import '../../../core/combat/unit_kind.dart';
 import '../../ai_director/domain/models/skirmish_directive.dart';
-import '../../combat/presentation/mobile_unit_component.dart';
+import '../../towers/domain/models/building_type.dart';
 import '../../towers/domain/models/tower_type.dart';
+import '../../towers/domain/models/unit_type.dart';
+import '../../towers/presentation/training_center_component.dart';
+import '../../towers/presentation/war_factory_component.dart';
 import '../domain/models/game_status.dart';
 import 'boomspire_game.dart';
 
-/// The AI opponent's "brain" in a [GameMode.skirmish] match: earns passive
-/// income, periodically asks [BoomspireGame.aiDirector] (Gemini, with a
-/// deterministic local fallback - see [SkirmishDirective.fallback]) how
-/// aggressive to be right now, then spends its own [AiEconomy] wallet on
-/// defensive towers around its base and attack units that march to
-/// assault the player's base ([UnitObjective.assaultBase]).
+/// The AI opponent's "brain" in a [GameMode.skirmish] match: periodically
+/// asks [BoomspireGame.aiDirector] (Gemini, with a deterministic local
+/// fallback - see [SkirmishDirective.fallback]) how aggressive to be right
+/// now, then spends its own `AiEconomy` wallet through the exact same
+/// [BoomspireGame.buildStructure]/[BoomspireGame.canBuildTower] rules the
+/// human player's build menu uses - same gold costs, same per-type limits,
+/// same Tech Lab/Command Post prerequisite chains, same "never seal the
+/// only path between the two bases" guard.
 ///
-/// Deliberately simpler than the player's build menu: it only ever builds
-/// from a small set of towers that need no prerequisite unlocks (no Tech
-/// Lab/Command Post chains to reason about) and produces units directly
-/// from its base rather than through a Training Center/War Factory.
+/// It builds its own Training Center/War Factory before it can produce any
+/// units at all (just like the player has to), and only ever mans those
+/// buildings to actually roll units out - there is no direct "spawn a unit
+/// from the base" shortcut anymore. Its only edge over a literal 1:1
+/// player clone is a generous total-structure soft cap (see
+/// [_maxOwnStructures]) that exists purely to bound an AI that never gets
+/// tired of building, not because it's allowed to build less.
 class AiSkirmishControllerComponent extends Component
     with HasGameReference<BoomspireGame> {
-  static const _incomeInterval = 4.0;
-  static const _incomeAmount = 40;
   static const _directiveInterval = 14.0;
-  static const _buildInterval = 6.0;
-  static const _produceInterval = 5.0;
-  static const _maxOwnTowers = 8;
+  static const _decisionInterval = 3.0;
 
-  static const _buildableTypes = [
+  /// Purely a pacing/performance safety valve (an autonomous AI never gets
+  /// tired of clicking "build"), not a capability nerf - a human player is
+  /// just as free to build this many structures given enough gold and time.
+  static const _maxOwnStructures = 24;
+
+  /// Tried in this order before any combat tower - mirrors a sensible human
+  /// build order (economy/unlocks first, then defense/offense).
+  static const _infrastructureBuildOrder = [
+    BuildingType.commandPost,
+    BuildingType.techLab,
+    BuildingType.trainingCenter,
+    BuildingType.warFactory,
+    BuildingType.goldMine,
+  ];
+
+  static const _combatTowerTypes = [
     TowerType.machineGun,
     TowerType.rocket,
     TowerType.cannon,
     TowerType.antiAir,
+    TowerType.laser,
+    TowerType.rocketSilo,
+    TowerType.artilleryBunker,
+    TowerType.sam,
   ];
 
-  double _incomeTimer = 0;
   double _directiveTimer = _directiveInterval * 0.2;
-  double _buildTimer = _buildInterval * 0.5;
-  double _produceTimer = _produceInterval * 0.6;
+  double _decisionTimer = _decisionInterval * 0.5;
   bool _fetchingDirective = false;
   SkirmishDirective _directive = const SkirmishDirective(
     aggression: 0.35,
@@ -57,28 +79,17 @@ class AiSkirmishControllerComponent extends Component
     if (economy == null || aiTeam == null || economy.isDefeated) return;
     if (game.gameState.status != GameStatus.playing) return;
 
-    _incomeTimer += dt;
-    if (_incomeTimer >= _incomeInterval) {
-      _incomeTimer -= _incomeInterval;
-      economy.addGold(_incomeAmount);
-    }
-
     _directiveTimer += dt;
     if (_directiveTimer >= _directiveInterval && !_fetchingDirective) {
       _directiveTimer = 0;
       unawaited(_refreshDirective());
     }
 
-    _buildTimer += dt;
-    if (_buildTimer >= _buildInterval) {
-      _buildTimer = 0;
-      _tryBuildTower();
-    }
-
-    _produceTimer += dt;
-    if (_produceTimer >= _produceInterval) {
-      _produceTimer = 0;
-      _tryProduceUnit();
+    _decisionTimer += dt;
+    if (_decisionTimer >= _decisionInterval) {
+      _decisionTimer = 0;
+      _tryBuild(aiTeam);
+      _tryProduce(aiTeam);
     }
   }
 
@@ -99,28 +110,30 @@ class AiSkirmishControllerComponent extends Component
     );
   }
 
-  /// Looks for a free, buildable cell in an expanding ring around the AI's
-  /// base - keeps its towers clustered around its own base rather than
-  /// scattered anywhere on the map.
-  Point<int>? _findBuildCell(Vector2 basePosition) {
+  /// Free, buildable cells in an expanding ring around the AI's base,
+  /// nearest-ring-first and shuffled within each ring - keeps its
+  /// structures clustered around its own base rather than scattered
+  /// anywhere on the map. [BoomspireGame.buildStructure] still does its own
+  /// reachability check on whichever candidate is tried, so a cell that
+  /// would seal off the base is simply skipped.
+  Iterable<Point<int>> _candidateCells(Vector2 basePosition) sync* {
     final grid = game.terrainMap.grid;
     final baseCell = grid.worldToCell(basePosition);
     for (var radius = 2; radius <= 6; radius++) {
-      final candidates = <Point<int>>[];
+      final ring = <Point<int>>[];
       for (var dx = -radius; dx <= radius; dx++) {
         for (var dy = -radius; dy <= radius; dy++) {
           if (dx.abs() != radius && dy.abs() != radius) continue;
-          candidates.add(Point(baseCell.x + dx, baseCell.y + dy));
+          ring.add(Point(baseCell.x + dx, baseCell.y + dy));
         }
       }
-      candidates.shuffle(_rnd);
-      for (final cell in candidates) {
+      ring.shuffle(_rnd);
+      for (final cell in ring) {
         if (!grid.inBounds(cell.x, cell.y)) continue;
         if (grid.isBlocked(cell.x, cell.y)) continue;
-        return cell;
+        yield cell;
       }
     }
-    return null;
   }
 
   Future<void> _refreshDirective() async {
@@ -132,90 +145,69 @@ class AiSkirmishControllerComponent extends Component
     }
   }
 
-  void _tryBuildTower() {
-    final economy = game.aiEconomy!;
-    final aiTeam = game.aiTeam!;
+  /// Attempts one build this tick, exactly through the same gate the
+  /// player's build menu uses ([BoomspireGame.canBuildTower]/
+  /// [BoomspireGame.buildStructure]) - infrastructure (Command Post, Tech
+  /// Lab, Training Center, War Factory, Gold Mine) is preferred while any
+  /// of it is still missing and affordable; otherwise a random unlocked
+  /// combat tower is tried, gated by the directive's `buildBias`.
+  void _tryBuild(Team aiTeam) {
     final base = game.world.aiHomeBase;
     if (base == null || !base.isMounted) return;
-
-    final ownTowers = game.world.activeTowers
-        .where((t) => t.owner == aiTeam)
+    final ownStructureCount = game.world.activeTowers
+        .where((t) => t.owner.id == aiTeam.id)
         .length;
-    if (ownTowers >= _maxOwnTowers) return;
+    if (ownStructureCount >= _maxOwnStructures) return;
 
-    // Higher `buildBias` = more likely to spend this tick on defense rather
-    // than saving gold for attack units.
-    if (_rnd.nextDouble() > _directive.buildBias + 0.2) return;
-
-    final type = _buildableTypes[_rnd.nextInt(_buildableTypes.length)];
-    final blueprint = game.towerRepository.blueprintFor(type);
-    if (economy.gold < blueprint.cost) return;
-
-    final cell = _findBuildCell(base.position);
-    if (cell == null) return;
-
-    final grid = game.terrainMap.grid;
-    grid.setTowerOccupied(cell.x, cell.y, true);
-
-    // Mirrors `BoomspireGame._buildTower`'s "never seal the path" guard -
-    // the AI could in theory wall off its own base's only approach just
-    // as easily as the player could wall off the AI's.
-    final spawnCells = game.terrainMap.spawnPoints
-        .map((sp) => grid.worldToCell(Vector2(sp.x, sp.y)))
-        .toSet();
-    final playerBaseCell = grid.worldToCell(
-      Vector2(game.terrainMap.basePoint.x, game.terrainMap.basePoint.y),
-    );
-    if (!spawnCells.every((sc) => grid.isReachable(sc, playerBaseCell))) {
-      grid.setTowerOccupied(cell.x, cell.y, false);
-      return;
-    }
-    if (!economy.spendGold(blueprint.cost)) {
-      grid.setTowerOccupied(cell.x, cell.y, false);
-      return;
+    UnitType? type;
+    for (final candidate in _infrastructureBuildOrder) {
+      if (!game.canBuildTower(candidate, owner: aiTeam)) continue;
+      if (game.goldFor(aiTeam) < game.blueprintFor(candidate).cost) continue;
+      type = candidate;
+      break;
     }
 
-    final tower = game.createTower(
-      type,
-      grid.cellCenter(cell),
-      grid.cellSize,
-      blueprint,
-      owner: aiTeam,
-    );
-    game.world.spawnTower(tower);
+    if (type == null) {
+      // No affordable/unlocked infrastructure left to build right now -
+      // fall back to a random unlocked combat tower, gated by buildBias so
+      // the AI doesn't sink every spare coin into defense.
+      if (_rnd.nextDouble() > _directive.buildBias + 0.2) return;
+      final options = _combatTowerTypes
+          .where(
+            (t) =>
+                game.canBuildTower(t, owner: aiTeam) &&
+                game.goldFor(aiTeam) >= game.blueprintFor(t).cost,
+          )
+          .toList();
+      if (options.isEmpty) return;
+      type = options[_rnd.nextInt(options.length)];
+    }
+
+    for (final cell in _candidateCells(base.position).take(24)) {
+      final point = game.terrainMap.grid.cellCenter(cell);
+      if (game.buildStructure(aiTeam, type, point) != null) return;
+    }
   }
 
-  void _tryProduceUnit() {
-    final economy = game.aiEconomy!;
-    final aiTeam = game.aiTeam!;
-    final base = game.world.aiHomeBase;
-    if (base == null || !base.isMounted) return;
-
-    final kinds = game.unitRepository.kindsFor(aiTeam);
-    if (kinds.isEmpty) return;
-    final affordable = kinds
-        .where(
-          (k) =>
-              game.unitRepository.blueprintFor(aiTeam, k).cost <= economy.gold,
-        )
-        .toList();
-    if (affordable.isEmpty) return;
-
-    // Higher `aggression` = more likely to spend this tick mustering an
-    // attack unit rather than banking gold.
-    if (_rnd.nextDouble() > 0.3 + _directive.aggression * 0.55) return;
-
-    final kind = affordable[_rnd.nextInt(affordable.length)];
-    final blueprint = game.unitRepository.blueprintFor(aiTeam, kind);
-    if (!economy.spendGold(blueprint.cost)) return;
-
-    game.world.spawnUnit(
-      MobileUnitComponent(
-        blueprint: blueprint,
-        position: base.position.clone(),
-        team: aiTeam,
-        objective: UnitObjective.assaultBase,
-      ),
-    );
+  /// Mans whichever production buildings the AI has already built - it
+  /// cannot produce anything at all until it has built a Training
+  /// Center/War Factory of its own, same as the player.
+  void _tryProduce(Team aiTeam) {
+    if (_rnd.nextDouble() > 0.25 + _directive.aggression * 0.6) return;
+    for (final tower in game.world.activeTowers) {
+      if (tower.owner.id != aiTeam.id) continue;
+      if (tower is TrainingCenterComponent && tower.canProduce) {
+        tower.produceSoldier();
+      } else if (tower is WarFactoryComponent && tower.canProduce) {
+        final kinds = game.unitRepository
+            .kindsFor(aiTeam)
+            .where((k) => k != UnitKind.soldier)
+            .where((k) => tower.costFor(k) <= game.goldFor(aiTeam))
+            .toList();
+        if (kinds.isNotEmpty) {
+          tower.produceUnit(kinds[_rnd.nextInt(kinds.length)]);
+        }
+      }
+    }
   }
 }

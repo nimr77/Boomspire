@@ -36,6 +36,7 @@ _MapDraft _$MapDraftFromJson(Map<String, dynamic> json) => _MapDraft(
       : EnvironmentSettings.fromJson(
           json['environment'] as Map<String, dynamic>,
         ),
+  startingGold: (json['startingGold'] as num?)?.toInt() ?? 2000,
 );
 
 Map<String, dynamic> _$MapDraftToJson(_MapDraft instance) => <String, dynamic>{
@@ -49,6 +50,7 @@ Map<String, dynamic> _$MapDraftToJson(_MapDraft instance) => <String, dynamic>{
   'waterPaths': instance.waterPaths.map((e) => e.toJson()).toList(),
   'homeSites': instance.homeSites.map((e) => e.toJson()).toList(),
   'environment': instance.environment.toJson(),
+  'startingGold': instance.startingGold,
 };
 
 const _$BiomeEnumMap = {

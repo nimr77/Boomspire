@@ -37,7 +37,7 @@ class WarFactoryComponent extends TowerComponent {
   bool produceUnit(UnitKind kind) {
     if (!canProduce) return false;
     final blueprint = game.unitRepository.blueprintFor(owner, kind);
-    if (!game.gameState.spendGold(blueprint.cost)) return false;
+    if (!game.spendGoldFor(owner, blueprint.cost)) return false;
     cooldownRemaining = GameConfig.warFactoryProductionCooldown;
     game.world.spawnUnit(
       MobileUnitComponent(

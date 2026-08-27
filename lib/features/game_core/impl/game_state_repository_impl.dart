@@ -64,9 +64,9 @@ class GameStateRepositoryImpl extends GameStateRepository {
   }
 
   @override
-  void reset() {
+  void reset({int? startingGold}) {
     _health = GameConfig.startingHealth;
-    _gold = GameConfig.startingGold;
+    _gold = startingGold ?? GameConfig.startingGold;
     _goldEarned = 0;
     _crystals = 0;
     _currentWave = 1;

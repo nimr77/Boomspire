@@ -401,6 +401,7 @@ class _TowerButtonState extends State<_TowerButton> {
                             BuildingType.commandPost => Icons.cell_tower,
                             BuildingType.trainingCenter => Icons.groups,
                             BuildingType.warFactory => Icons.factory,
+                            BuildingType.goldMine => Icons.diamond,
                             _ => Icons.help_outline,
                           },
                           color: accent,

@@ -2,6 +2,12 @@
 class GameConfig {
   static const startingHealth = 20;
   static const startingGold = 150;
+
+  /// Default starting gold for a [GameMode.skirmish] match (both the
+  /// player and the AI opponent) - a real base-building economy war needs
+  /// far more up-front capital than the drip-fed wave-defense economy.
+  /// Overridable per-scene/per-draft via `GameScene.startingGold`.
+  static const startingSkirmishGold = 2000;
   static const arenaWidth = 1280.0;
   static const arenaHeight = 720.0;
 

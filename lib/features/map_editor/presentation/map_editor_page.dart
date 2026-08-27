@@ -231,6 +231,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
   final _nameController = TextEditingController();
   final _widthController = TextEditingController();
   final _heightController = TextEditingController();
+  final _startingGoldController = TextEditingController();
 
   late MapDraft _draft = widget.initialDraft;
   EditorTerrainPreview? _preview;
@@ -527,6 +528,17 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _startingGoldController,
+                      style: const TextStyle(color: Colors.white),
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Starting gold',
+                      ),
+                      onSubmitted: (_) => _applyStartingGold(),
+                      onEditingComplete: _applyStartingGold,
+                    ),
                     const Divider(color: Colors.white24, height: 32),
                     _SectionLabel('Environment'),
                     SwitchListTile(
@@ -598,6 +610,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
     _nameController.dispose();
     _widthController.dispose();
     _heightController.dispose();
+    _startingGoldController.dispose();
     _viewerController.dispose();
     super.dispose();
   }
@@ -608,6 +621,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
     _nameController.text = _draft.name;
     _widthController.text = _draft.arenaWidth.toStringAsFixed(0);
     _heightController.text = _draft.arenaHeight.toStringAsFixed(0);
+    _startingGoldController.text = _draft.startingGold.toString();
     _regenerate();
   }
 
@@ -636,6 +650,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
         arenaHeight: height.toDouble(),
       ),
     );
+  }
+
+  void _applyStartingGold() {
+    final gold = int.tryParse(_startingGoldController.text)?.clamp(0, 100000);
+    if (gold == null) return;
+    _updateDraft((d) => d.copyWith(startingGold: gold));
   }
 
   void _handlePanEnd(DragEndDetails details) {
@@ -732,6 +752,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
             briefing: 'Testing your hand-drawn map draft.',
             biome: _draft.biome,
             waveCount: 5,
+            startingGold: _draft.startingGold,
           ),
           terrainRepository: MapDraftTerrainRepository(
             draft: _draft,

@@ -30,6 +30,7 @@ abstract class MapDraft with _$MapDraft {
     @Default([]) List<WaterPath> waterPaths,
     @Default([]) List<EditorPoint> homeSites,
     @Default(EnvironmentSettings()) EnvironmentSettings environment,
+    @Default(2000) int startingGold,
   }) = _MapDraft;
 
   factory MapDraft.fromJson(Map<String, dynamic> json) =>

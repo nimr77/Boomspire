@@ -33,7 +33,7 @@ class TrainingCenterComponent extends TowerComponent {
   /// panel's build menu. Returns whether it actually happened.
   bool produceSoldier() {
     if (!canProduce) return false;
-    if (!game.gameState.spendGold(soldierCost)) return false;
+    if (!game.spendGoldFor(owner, soldierCost)) return false;
     cooldownRemaining = GameConfig.trainingCenterProductionCooldown;
     game.world.spawnUnit(
       MobileUnitComponent(

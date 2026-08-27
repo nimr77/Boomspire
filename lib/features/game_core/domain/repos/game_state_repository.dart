@@ -43,7 +43,11 @@ abstract class GameStateRepository extends ChangeNotifier {
   /// it in floating text.
   int addKillGold(int baseAmount, {double extraBonus = 0});
   void damagePlayer(int amount);
-  void reset();
+
+  /// Resets to a fresh run. [startingGold] overrides
+  /// `GameConfig.startingGold` when the active scene specifies its own
+  /// economy (e.g. a skirmish scene's higher starting gold).
+  void reset({int? startingGold});
   void setStatus(GameStatus status);
   void setWave(int waveNumber, {required int totalWaves});
   bool spendGold(int amount);
