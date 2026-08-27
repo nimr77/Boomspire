@@ -15,12 +15,12 @@ class SkirmishLevelSelectState {
 
   ValueListenable<List<MapDraft>?> get drafts => _drafts;
 
+  void dispose() {
+    _drafts.dispose();
+  }
+
   Future<void> load() async {
     final all = await _draftRepository.listDrafts();
     _drafts.value = all.where((d) => d.mode == GameMode.skirmish).toList();
-  }
-
-  void dispose() {
-    _drafts.dispose();
   }
 }

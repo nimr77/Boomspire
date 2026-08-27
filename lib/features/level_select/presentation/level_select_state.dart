@@ -14,11 +14,11 @@ class LevelSelectState {
 
   ValueListenable<ProgressSnapshot?> get progress => _progress;
 
-  Future<void> load() async {
-    _progress.value = await _progressRepository.load();
-  }
-
   void dispose() {
     _progress.dispose();
+  }
+
+  Future<void> load() async {
+    _progress.value = await _progressRepository.load();
   }
 }

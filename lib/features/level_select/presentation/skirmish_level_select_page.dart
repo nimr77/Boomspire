@@ -66,18 +66,6 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
   );
 
   @override
-  void initState() {
-    super.initState();
-    _state.load();
-  }
-
-  @override
-  void dispose() {
-    _state.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E14),
@@ -193,7 +181,9 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                                     draft: draft,
                                     onTap: () => context.push(
                                       Routes.skirmishPlacement.route,
-                                      extra: SkirmishPlacementArgs(draft: draft),
+                                      extra: SkirmishPlacementArgs(
+                                        draft: draft,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -237,6 +227,18 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _state.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _state.load();
   }
 }
 

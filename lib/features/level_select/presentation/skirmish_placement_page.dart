@@ -461,6 +461,12 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   }
 
   @override
+  void dispose() {
+    _placementState?.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     if (_isDraft) {
@@ -473,12 +479,6 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
       );
       _selectedSlot = playerIndex >= 0 ? playerIndex : null;
     }
-  }
-
-  @override
-  void dispose() {
-    _placementState?.dispose();
-    super.dispose();
   }
 
   void _randomize() {

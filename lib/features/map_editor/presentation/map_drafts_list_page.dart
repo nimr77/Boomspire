@@ -24,18 +24,6 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
   late MapDraft _pendingNewDraft = _freshDraft();
 
   @override
-  void initState() {
-    super.initState();
-    _state.refresh();
-  }
-
-  @override
-  void dispose() {
-    _state.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E14),
@@ -117,6 +105,18 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _state.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _state.refresh();
   }
 
   Future<void> _deleteDraft(String id) async {

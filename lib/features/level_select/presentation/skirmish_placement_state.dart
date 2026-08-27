@@ -14,16 +14,15 @@ class SkirmishPlacementState {
 
   ValueListenable<EditorTerrainPreview?> get preview => _preview;
 
-  Future<EditorTerrainPreview> load(MapDraft draft) =>
-      _future ??= _load(draft);
+  void dispose() {
+    _preview.dispose();
+  }
+
+  Future<EditorTerrainPreview> load(MapDraft draft) => _future ??= _load(draft);
 
   Future<EditorTerrainPreview> _load(MapDraft draft) async {
     final result = await EditorTerrainGenerator().generate(draft);
     _preview.value = result;
     return result;
-  }
-
-  void dispose() {
-    _preview.dispose();
   }
 }

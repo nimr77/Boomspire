@@ -14,10 +14,6 @@ class MapDraftsListState {
 
   ValueListenable<List<MapDraft>?> get drafts => _drafts;
 
-  Future<void> refresh() async {
-    _drafts.value = await _draftRepository.listDrafts();
-  }
-
   Future<void> deleteDraft(String id) async {
     await _draftRepository.deleteDraft(id);
     await refresh();
@@ -25,5 +21,9 @@ class MapDraftsListState {
 
   void dispose() {
     _drafts.dispose();
+  }
+
+  Future<void> refresh() async {
+    _drafts.value = await _draftRepository.listDrafts();
   }
 }

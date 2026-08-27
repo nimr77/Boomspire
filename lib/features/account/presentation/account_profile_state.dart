@@ -15,11 +15,11 @@ class AccountProfileState {
 
   ValueListenable<AccountProfile?> get profile => _profile;
 
-  Future<void> refresh() async {
-    _profile.value = await _accountRepository.loadProfile();
-  }
-
   void dispose() {
     _profile.dispose();
+  }
+
+  Future<void> refresh() async {
+    _profile.value = await _accountRepository.loadProfile();
   }
 }
