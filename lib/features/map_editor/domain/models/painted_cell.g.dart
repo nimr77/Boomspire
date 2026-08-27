@@ -24,4 +24,5 @@ const _$ObstacleKindEnumMap = {
   ObstacleKind.dune: 'dune',
   ObstacleKind.river: 'river',
   ObstacleKind.valley: 'valley',
+  ObstacleKind.lake: 'lake',
 };

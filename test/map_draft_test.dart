@@ -128,7 +128,7 @@ void main() {
       expect(preview.obstacleKinds[0][5], ObstacleKind.river);
     });
 
-    test('rasterizes a lake path as filled river cells', () async {
+    test('rasterizes a lake path as filled lake cells', () async {
       const draft = MapDraft(
         id: 'x',
         name: 'x',
@@ -150,7 +150,7 @@ void main() {
       final preview = await EditorTerrainGenerator().generate(draft);
 
       // Center of the lake polygon should be filled...
-      expect(preview.obstacleKinds[5][5], ObstacleKind.river);
+      expect(preview.obstacleKinds[5][5], ObstacleKind.lake);
       // ...but far outside the polygon should stay open ground.
       expect(preview.obstacleKinds[0][0], isNull);
     });

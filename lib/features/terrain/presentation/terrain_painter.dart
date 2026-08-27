@@ -67,28 +67,39 @@ class TerrainPainter {
       );
     }
 
-    // Rivers/valleys are drawn as one continuous winding ribbon (instead of
-    // independent per-cell tiles) so they read as a real, connected feature
-    // rather than a stack of disjoint blocks. The river's banks/bed are
-    // baked here (static); the flowing-water shimmer is drawn live on top
-    // every frame instead - see [paintRiverFlow].
-    final riverPoints = _obstaclePathPoints(
+    // Rivers/valleys are drawn as one continuous winding ribbon per
+    // connected group of cells (instead of independent per-cell tiles) so
+    // they read as a real, connected feature rather than a stack of
+    // disjoint blocks - this works for any hand-drawn shape (not just a
+    // single top-to-bottom crossing), since the ordering is reconstructed
+    // from actual cell adjacency rather than assumed. The river's
+    // banks/bed are baked here (static); the flowing-water shimmer is
+    // drawn live on top every frame instead - see [paintRiverFlow].
+    for (final chain in _obstacleChains(
       grid,
       kinds,
       ObstacleKind.river,
       size.height,
-    );
-    if (riverPoints.length >= 2) {
-      _paintRiverBed(canvas, _smoothPath(riverPoints), grid.cellSize);
+    )) {
+      if (chain.length >= 2) {
+        _paintRiverBed(canvas, _smoothPath(chain), grid.cellSize);
+      }
     }
-    final valleyPoints = _obstaclePathPoints(
+    for (final chain in _obstacleChains(
       grid,
       kinds,
       ObstacleKind.valley,
       size.height,
-    );
-    if (valleyPoints.length >= 2) {
-      _paintValleyPath(canvas, _smoothPath(valleyPoints), grid.cellSize);
+    )) {
+      if (chain.length >= 2) {
+        _paintValleyPath(canvas, _smoothPath(chain), grid.cellSize);
+      }
+    }
+    // Lakes are area fills (not linear features) - each connected blob of
+    // lake cells is unioned into one pond shape instead of ordered into a
+    // ribbon.
+    for (final component in _connectedCells(grid, kinds, ObstacleKind.lake)) {
+      _paintLake(canvas, component, grid.cellSize);
     }
 
     // Pseudo-3D contact shadow pass: every mountain/dune cell drops a soft
@@ -121,7 +132,8 @@ class TerrainPainter {
             _paintDune(canvas, grid, col, row, palette);
           case ObstacleKind.river:
           case ObstacleKind.valley:
-            break; // already painted as a continuous ribbon above
+          case ObstacleKind.lake:
+            break; // already painted as a continuous ribbon/pond above
           case null:
             if (palette.hasTrees && rnd.nextDouble() < 0.05) {
               _paintTree(canvas, grid, col, row, rnd);
@@ -140,10 +152,8 @@ class TerrainPainter {
     double cellSize,
     double phase,
   ) {
-    final metric = path.computeMetrics().firstOrNull;
-    if (metric == null) return;
-    final length = metric.length;
-    if (length <= 0) return;
+    final metrics = path.computeMetrics().toList();
+    if (metrics.isEmpty) return;
 
     const dashLen = 30.0;
     const gapLen = 26.0;
@@ -155,93 +165,240 @@ class TerrainPainter {
       ..strokeJoin = ui.StrokeJoin.round
       ..strokeWidth = cellSize * 0.32
       ..color = const ui.Color(0xFFbfeeff).withValues(alpha: 0.45);
-    for (var dist = -flowOffset; dist < length; dist += period) {
-      final start = dist.clamp(0.0, length);
-      final end = (dist + dashLen).clamp(0.0, length);
-      if (end <= start) continue;
-      final sub = metric.extractPath(start, end).shift(const ui.Offset(-4, -3));
-      canvas.drawPath(sub, highlightPaint);
-    }
-
-    final rippleCount = (length / (cellSize * 1.4)).floor().clamp(0, 200);
-    if (rippleCount == 0) return;
-    final rnd = Random(7);
     final ripplePaint = ui.Paint()
       ..style = ui.PaintingStyle.stroke
       ..strokeWidth = 1
       ..color = const ui.Color(0xFFe8fbff).withValues(alpha: 0.3);
-    final step = length / rippleCount;
-    for (var i = 0; i < rippleCount; i++) {
-      final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
-      final dist = ((i + 0.5) * step + phase * 40) % length;
-      final tangent = metric.getTangentForOffset(dist);
-      if (tangent == null) continue;
-      final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
-      final center = tangent.position + normal * jitter;
-      canvas.drawArc(
-        ui.Rect.fromCenter(
-          center: center,
-          width: cellSize * 0.5,
-          height: cellSize * 0.22,
-        ),
-        0,
-        pi,
-        false,
-        ripplePaint,
-      );
+
+    for (final metric in metrics) {
+      final length = metric.length;
+      if (length <= 0) continue;
+
+      for (var dist = -flowOffset; dist < length; dist += period) {
+        final start = dist.clamp(0.0, length);
+        final end = (dist + dashLen).clamp(0.0, length);
+        if (end <= start) continue;
+        final sub = metric
+            .extractPath(start, end)
+            .shift(const ui.Offset(-4, -3));
+        canvas.drawPath(sub, highlightPaint);
+      }
+
+      final rippleCount = (length / (cellSize * 1.4)).floor().clamp(0, 200);
+      if (rippleCount == 0) continue;
+      final rnd = Random(7);
+      final step = length / rippleCount;
+      for (var i = 0; i < rippleCount; i++) {
+        final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
+        final dist = ((i + 0.5) * step + phase * 40) % length;
+        final tangent = metric.getTangentForOffset(dist);
+        if (tangent == null) continue;
+        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
+        final center = tangent.position + normal * jitter;
+        canvas.drawArc(
+          ui.Rect.fromCenter(
+            center: center,
+            width: cellSize * 0.5,
+            height: cellSize * 0.22,
+          ),
+          0,
+          pi,
+          false,
+          ripplePaint,
+        );
+      }
     }
   }
 
-  /// Centerline points for the river obstacle in [terrainMap], smoothed
-  /// into a [ui.Path] - null if this map has no river (e.g. desert biome,
-  /// which uses a dry valley instead). Used both to bake the static bed
-  /// (see [_paintRiverBed]) and to drive the live [paintRiverFlow] overlay.
+  /// Combined path of every river segment in [terrainMap] (one subpath per
+  /// connected group of river cells), smoothed - null if this map has no
+  /// river (e.g. desert biome, which uses a dry valley instead). Used both
+  /// to bake the static bed (see [_paintRiverBed]) and to drive the live
+  /// [paintRiverFlow] overlay.
   static ui.Path? riverPath(TerrainMap terrainMap, double canvasHeight) {
-    final points = _obstaclePathPoints(
+    final chains = _obstacleChains(
       terrainMap.grid,
       terrainMap.obstacleKinds,
       ObstacleKind.river,
       canvasHeight,
     );
-    if (points.length < 2) return null;
-    return _smoothPath(points);
+    final combined = ui.Path();
+    var hasAny = false;
+    for (final chain in chains) {
+      if (chain.length < 2) continue;
+      combined.addPath(_smoothPath(chain), ui.Offset.zero);
+      hasAny = true;
+    }
+    return hasAny ? combined : null;
   }
 
-  /// One centerline point per row that contains [kind] cells (averaging
-  /// their column if a row has more than one, e.g. a 2-wide crossing), plus
-  /// synthetic points extending straight to the top/bottom canvas edges so
-  /// the ribbon doesn't visibly stop short of the border.
-  static List<ui.Offset> _obstaclePathPoints(
+  /// One ordered point-chain per connected group of [kind] cells, so any
+  /// hand-drawn shape (not just a single top-to-bottom crossing) renders as
+  /// its actual path rather than collapsing to one line - ordering is
+  /// reconstructed from real cell adjacency since [TerrainMap] only stores
+  /// the rasterized grid, not the original drawn stroke. A chain that
+  /// touches the top/bottom grid edge is extended straight to the matching
+  /// canvas edge so it doesn't visibly stop short of the border.
+  static List<List<ui.Offset>> _obstacleChains(
     Grid grid,
     List<List<ObstacleKind?>> kinds,
     ObstacleKind kind,
     double canvasHeight,
   ) {
-    final points = <ui.Offset>[];
+    final chains = <List<ui.Offset>>[];
+    for (final component in _connectedCells(grid, kinds, kind)) {
+      final ordered = _chainCells(component);
+      if (ordered.isEmpty) continue;
+      final points = ordered
+          .map(
+            (c) => ui.Offset(
+              c.x * grid.cellSize + grid.cellSize / 2,
+              c.y * grid.cellSize + grid.cellSize / 2,
+            ),
+          )
+          .toList();
+      if (ordered.first.y == 0) {
+        points.insert(0, ui.Offset(points.first.dx, 0));
+      }
+      if (ordered.last.y == grid.rows - 1) {
+        points.add(ui.Offset(points.last.dx, canvasHeight));
+      }
+      chains.add(points);
+    }
+    return chains;
+  }
+
+  /// Flood-fills [kinds] (8-directional) into groups of adjacent cells that
+  /// all match [kind].
+  static List<List<Point<int>>> _connectedCells(
+    Grid grid,
+    List<List<ObstacleKind?>> kinds,
+    ObstacleKind kind,
+  ) {
+    final visited = List.generate(
+      grid.rows,
+      (_) => List<bool>.filled(grid.cols, false),
+    );
+    final components = <List<Point<int>>>[];
     for (var row = 0; row < grid.rows; row++) {
-      var sum = 0.0;
-      var count = 0;
       for (var col = 0; col < grid.cols; col++) {
-        if (kinds[row][col] == kind) {
-          sum += col;
-          count++;
+        if (visited[row][col] || kinds[row][col] != kind) continue;
+        final component = <Point<int>>[];
+        final queue = <Point<int>>[Point(col, row)];
+        visited[row][col] = true;
+        var head = 0;
+        while (head < queue.length) {
+          final cell = queue[head++];
+          component.add(cell);
+          for (var dy = -1; dy <= 1; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+              if (dx == 0 && dy == 0) continue;
+              final nx = cell.x + dx;
+              final ny = cell.y + dy;
+              if (nx < 0 || ny < 0 || nx >= grid.cols || ny >= grid.rows) {
+                continue;
+              }
+              if (visited[ny][nx] || kinds[ny][nx] != kind) continue;
+              visited[ny][nx] = true;
+              queue.add(Point(nx, ny));
+            }
+          }
+        }
+        components.add(component);
+      }
+    }
+    return components;
+  }
+
+  /// Orders a connected group of cells into a single spatially-coherent
+  /// chain: starts from the lowest-degree cell (a true endpoint for a
+  /// snake-shaped stroke, or an arbitrary cell for a closed loop/blob),
+  /// then greedily walks to the nearest not-yet-visited cell.
+  static List<Point<int>> _chainCells(List<Point<int>> cells) {
+    if (cells.length <= 2) return cells;
+    final set = cells.toSet();
+    int neighborCount(Point<int> c) {
+      var count = 0;
+      for (var dy = -1; dy <= 1; dy++) {
+        for (var dx = -1; dx <= 1; dx++) {
+          if (dx == 0 && dy == 0) continue;
+          if (set.contains(Point(c.x + dx, c.y + dy))) count++;
         }
       }
-      if (count == 0) continue;
-      final avgCol = sum / count;
-      points.add(
-        ui.Offset(
-          avgCol * grid.cellSize + grid.cellSize / 2,
-          row * grid.cellSize + grid.cellSize / 2,
-        ),
-      );
+      return count;
     }
-    if (points.isEmpty) return points;
-    return [
-      ui.Offset(points.first.dx, 0),
-      ...points,
-      ui.Offset(points.last.dx, canvasHeight),
-    ];
+
+    var start = cells.first;
+    var bestDegree = 9;
+    for (final c in cells) {
+      final degree = neighborCount(c);
+      if (degree < bestDegree) {
+        bestDegree = degree;
+        start = c;
+      }
+    }
+
+    final remaining = {...cells}..remove(start);
+    final chain = <Point<int>>[start];
+    var current = start;
+    while (remaining.isNotEmpty) {
+      Point<int>? nearest;
+      var nearestDistSq = 0;
+      for (final c in remaining) {
+        final dx = c.x - current.x;
+        final dy = c.y - current.y;
+        final distSq = dx * dx + dy * dy;
+        if (nearest == null || distSq < nearestDistSq) {
+          nearest = c;
+          nearestDistSq = distSq;
+        }
+      }
+      chain.add(nearest!);
+      remaining.remove(nearest);
+      current = nearest;
+    }
+    return chain;
+  }
+
+  /// Fills a connected blob of lake cells as one unioned pond shape (an
+  /// area feature, unlike the linear river/valley ribbons).
+  static void _paintLake(
+    ui.Canvas canvas,
+    List<Point<int>> cells,
+    double cellSize,
+  ) {
+    if (cells.isEmpty) return;
+    var shape = ui.Path();
+    for (final cell in cells) {
+      final rect = ui.Rect.fromLTWH(
+        cell.x * cellSize - 2,
+        cell.y * cellSize - 2,
+        cellSize + 4,
+        cellSize + 4,
+      );
+      final piece = ui.Path()
+        ..addRRect(
+          ui.RRect.fromRectAndRadius(rect, ui.Radius.circular(cellSize * 0.4)),
+        );
+      shape = ui.Path.combine(ui.PathOperation.union, shape, piece);
+    }
+    final bounds = shape.getBounds();
+    canvas.drawPath(
+      shape,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = cellSize * 0.5
+        ..color = const ui.Color(0xFFd8c48a).withValues(alpha: 0.45),
+    );
+    canvas.drawPath(
+      shape,
+      ui.Paint()
+        ..shader = ui.Gradient.linear(bounds.topCenter, bounds.bottomCenter, [
+          const ui.Color(0xFF0a3450),
+          const ui.Color(0xFF1f7fa8),
+          const ui.Color(0xFF0a3450),
+        ], const [0.0, 0.5, 1.0]),
+    );
   }
 
   static void _paintDune(
@@ -521,10 +678,10 @@ class TerrainPainter {
         ..color = const ui.Color(0xFF120a04).withValues(alpha: 0.5),
     );
 
-    final metric = path.computeMetrics().firstOrNull;
-    if (metric != null) {
-      final rnd = Random(11);
+    final rnd = Random(11);
+    for (final metric in path.computeMetrics()) {
       final rockCount = (metric.length / (cellSize * 1.1)).floor();
+      if (rockCount == 0) continue;
       for (var i = 0; i < rockCount; i++) {
         final dist = (i + 0.5) * (metric.length / rockCount);
         final tangent = metric.getTangentForOffset(dist);
@@ -540,6 +697,7 @@ class TerrainPainter {
       }
     }
   }
+
 
   /// Smooths a polyline into a curved [ui.Path] by quadratic-bezier-ing
   /// through the midpoint of every consecutive pair - a cheap way to avoid

@@ -99,7 +99,7 @@ void _rasterizeWaterPath(
             row * _cellSize + _cellSize / 2,
           );
           if (_pointInPolygon(center, points)) {
-            paint(col, row, ObstacleKind.river);
+            paint(col, row, ObstacleKind.lake);
           }
         }
       }

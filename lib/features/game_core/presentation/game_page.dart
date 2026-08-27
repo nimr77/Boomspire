@@ -30,10 +30,16 @@ class GamePage extends StatefulWidget {
   final GameScene scene;
   final GameDifficulty difficulty;
 
+  /// Overrides the DI-registered [TerrainRepository] - used by the map
+  /// editor to test-play a draft's own painted terrain instead of a
+  /// procedurally generated one.
+  final TerrainRepository? terrainRepository;
+
   const GamePage({
     super.key,
     required this.scene,
     this.difficulty = GameDifficulty.normal,
+    this.terrainRepository,
   });
 
   @override
@@ -132,7 +138,7 @@ class _GamePageState extends State<GamePage> {
     super.initState();
     _gameState = getIt<GameStateRepository>();
     _game = BoomspireGame(
-      terrainRepository: getIt<TerrainRepository>(),
+      terrainRepository: widget.terrainRepository ?? getIt<TerrainRepository>(),
       towerRepository: getIt<TowerRepository>(),
       buildingRepository: getIt<BuildingRepository>(),
       unitRepository: getIt<MobileUnitRepository>(),
