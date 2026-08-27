@@ -96,23 +96,6 @@ class GameScene {
 /// Where a home base sits within the arena.
 enum HomeLayout { eastEdge, center, northEastCorner, southWestCorner }
 
-/// How many directions enemies attack from, relative to the base.
-enum SpawnLayout {
-  /// A single approach, opposite the base.
-  single,
-
-  /// Two opposing approaches.
-  twoSided,
-
-  /// Every open edge around the base.
-  surround,
-}
-
-/// Who claims a [HomeSite] once a [GameMode.skirmish] match starts - a
-/// future lobby/team-select screen assigns a real `Team` to every `player`
-/// seat (and, for now, a scripted opponent to every `ai` seat).
-enum HomeSiteOwner { player, ai }
-
 /// One buildable home site on a skirmish map - a scene lists one per team
 /// seat that can fight in that match.
 class HomeSite {
@@ -127,4 +110,21 @@ class HomeSite {
   );
 
   Map<String, dynamic> toJson() => {'layout': layout.name, 'owner': owner.name};
+}
+
+/// Who claims a [HomeSite] once a [GameMode.skirmish] match starts - a
+/// future lobby/team-select screen assigns a real `Team` to every `player`
+/// seat (and, for now, a scripted opponent to every `ai` seat).
+enum HomeSiteOwner { player, ai }
+
+/// How many directions enemies attack from, relative to the base.
+enum SpawnLayout {
+  /// A single approach, opposite the base.
+  single,
+
+  /// Two opposing approaches.
+  twoSided,
+
+  /// Every open edge around the base.
+  surround,
 }
