@@ -57,7 +57,7 @@ class TowerRepositoryImpl implements TowerRepository {
       fireRate: 0.08,
       // Glass cannon: hits everything at a blistering rate but is fragile
       // enough that a single well-placed enemy rocket can take it out.
-      maxHp: 35,
+      maxHp: 60,
       attackDomains: const {UnitDomain.ground, UnitDomain.air, UnitDomain.sea},
     ),
     TowerType.rocketSilo: UnitBlueprint(
