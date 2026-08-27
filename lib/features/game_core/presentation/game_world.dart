@@ -76,13 +76,14 @@ class GameWorld extends World
   /// Every live mobile unit whose [Team] is allied with (same side as)
   /// [team] - includes [team]'s own units, since a team is always "allied"
   /// with itself.
-  Iterable<MobileUnitComponent> unitsAlliedWith(Team team) => activeUnits
-      .where((u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.ally);
+  Iterable<MobileUnitComponent> unitsAlliedWith(Team team) => activeUnits.where(
+    (u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.ally,
+  );
 
   /// Every live mobile unit whose [Team] is hostile to [team] - this is
   /// what a unit or tower belonging to [team] should be scanning for
   /// targets.
-  Iterable<MobileUnitComponent> unitsHostileTo(Team team) => activeUnits
-      .where((u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.enemy);
+  Iterable<MobileUnitComponent> unitsHostileTo(Team team) => activeUnits.where(
+    (u) => !u.destroyed && team.relationTo(u.team) == TeamRelation.enemy,
+  );
 }
-

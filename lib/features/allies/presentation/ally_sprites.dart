@@ -48,12 +48,14 @@ class AllySpriteFactory {
     return _soldier = Sprite(image);
   }
 
-  static Future<Sprite> tank() async {
-    final cached = _tank;
-    if (cached != null) return cached;
-    final image = await renderToImage(54, 54, _paintTank);
-    return _tank = Sprite(image);
-  }
+  static Future<Sprite> spriteFor(UnitKind kind) => switch (kind) {
+    UnitKind.soldier => soldier(),
+    UnitKind.tank => tank(),
+    UnitKind.lightVehicle => lightVehicle(),
+    UnitKind.aircraft => aircraft(),
+    UnitKind.rocketBarrage => rocketBarrage(),
+    _ => throw ArgumentError('No ally sprite for $kind'),
+  };
 
   /// Every [UnitKind] this factory has art for - lets a merged unit
   /// component fall back to the other side's factory for a kind that was
@@ -67,14 +69,12 @@ class AllySpriteFactory {
     _ => false,
   };
 
-  static Future<Sprite> spriteFor(UnitKind kind) => switch (kind) {
-    UnitKind.soldier => soldier(),
-    UnitKind.tank => tank(),
-    UnitKind.lightVehicle => lightVehicle(),
-    UnitKind.aircraft => aircraft(),
-    UnitKind.rocketBarrage => rocketBarrage(),
-    _ => throw ArgumentError('No ally sprite for $kind'),
-  };
+  static Future<Sprite> tank() async {
+    final cached = _tank;
+    if (cached != null) return cached;
+    final image = await renderToImage(54, 54, _paintTank);
+    return _tank = Sprite(image);
+  }
 
   static void _paintAircraft(Canvas canvas) {
     const size = 50.0;

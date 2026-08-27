@@ -26,40 +26,6 @@ class EnemySpriteFactory {
     return _artilleryBarrage = Sprite(image);
   }
 
-  /// Every [UnitKind] this factory has art for - lets a merged unit
-  /// component fall back to the other side's factory for a kind that was
-  /// only ever painted for one side (e.g. a player-built Helicopter).
-  static bool supports(UnitKind kind) => switch (kind) {
-    UnitKind.soldier ||
-    UnitKind.heavySoldier ||
-    UnitKind.tank ||
-    UnitKind.helicopter ||
-    UnitKind.attackPlane ||
-    UnitKind.gunboat ||
-    UnitKind.artilleryBarrage ||
-    UnitKind.rocketBarrage => true,
-    _ => false,
-  };
-
-  static Future<Sprite> spriteFor(UnitKind kind) => switch (kind) {
-    UnitKind.soldier => soldier(),
-    UnitKind.heavySoldier => heavySoldier(),
-    UnitKind.tank => tank(),
-    UnitKind.helicopter => helicopter(),
-    UnitKind.attackPlane => attackPlane(),
-    UnitKind.gunboat => gunboat(),
-    UnitKind.artilleryBarrage => artilleryBarrage(),
-    UnitKind.rocketBarrage => rocketBarrage(),
-    _ => throw ArgumentError('No enemy sprite for $kind'),
-  };
-
-  static Future<Sprite> rocketBarrage() async {
-    final cached = _rocketBarrage;
-    if (cached != null) return cached;
-    final image = await renderToImage(50, 50, _paintRocketBarrage);
-    return _rocketBarrage = Sprite(image);
-  }
-
   static Future<Sprite> attackPlane() async {
     final cached = _attackPlane;
     if (cached != null) return cached;
@@ -88,12 +54,46 @@ class EnemySpriteFactory {
     return _helicopter = Sprite(image);
   }
 
+  static Future<Sprite> rocketBarrage() async {
+    final cached = _rocketBarrage;
+    if (cached != null) return cached;
+    final image = await renderToImage(50, 50, _paintRocketBarrage);
+    return _rocketBarrage = Sprite(image);
+  }
+
   static Future<Sprite> soldier() async {
     final cached = _soldier;
     if (cached != null) return cached;
     final image = await renderToImage(48, 48, (c) => _paint(c, heavy: false));
     return _soldier = Sprite(image);
   }
+
+  static Future<Sprite> spriteFor(UnitKind kind) => switch (kind) {
+    UnitKind.soldier => soldier(),
+    UnitKind.heavySoldier => heavySoldier(),
+    UnitKind.tank => tank(),
+    UnitKind.helicopter => helicopter(),
+    UnitKind.attackPlane => attackPlane(),
+    UnitKind.gunboat => gunboat(),
+    UnitKind.artilleryBarrage => artilleryBarrage(),
+    UnitKind.rocketBarrage => rocketBarrage(),
+    _ => throw ArgumentError('No enemy sprite for $kind'),
+  };
+
+  /// Every [UnitKind] this factory has art for - lets a merged unit
+  /// component fall back to the other side's factory for a kind that was
+  /// only ever painted for one side (e.g. a player-built Helicopter).
+  static bool supports(UnitKind kind) => switch (kind) {
+    UnitKind.soldier ||
+    UnitKind.heavySoldier ||
+    UnitKind.tank ||
+    UnitKind.helicopter ||
+    UnitKind.attackPlane ||
+    UnitKind.gunboat ||
+    UnitKind.artilleryBarrage ||
+    UnitKind.rocketBarrage => true,
+    _ => false,
+  };
 
   static Future<Sprite> tank() async {
     final cached = _tank;
@@ -230,6 +230,65 @@ class EnemySpriteFactory {
         const Radius.circular(1),
       ),
       Paint()..color = const Color(0xCCBEEFFF),
+    );
+  }
+
+  static void _paintArtilleryBarrage(Canvas canvas) {
+    const size = 52.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.85, height: size * 0.3),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    for (final dx in [-size * 0.28, size * 0.28]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, size * 0.08),
+            width: size * 0.22,
+            height: size * 0.54,
+          ),
+          const Radius.circular(8),
+        ),
+        Paint()..color = const Color(0xFF1a1c20),
+      );
+    }
+
+    final hullRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.6,
+      height: size * 0.4,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(hullRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF5D4037), Color(0xFF2E1A16)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(hullRect),
+    );
+
+    // Three stubby mortar barrels fanned out on the deck.
+    for (final dx in [-size * 0.14, 0.0, size * 0.14]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, -size * 0.26),
+            width: size * 0.1,
+            height: size * 0.3,
+          ),
+          const Radius.circular(2),
+        ),
+        Paint()..color = const Color(0xFF3E2723),
+      );
+    }
+    canvas.drawCircle(
+      center.translate(0, size * 0.02),
+      size * 0.05,
+      Paint()..color = const Color(0xFFE53935),
     );
   }
 
@@ -487,6 +546,58 @@ class EnemySpriteFactory {
     );
   }
 
+  static void _paintRocketBarrage(Canvas canvas) {
+    const size = 50.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.86, height: size * 0.3),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    final bodyRect = Rect.fromCenter(
+      center: center.translate(0, size * 0.1),
+      width: size * 0.62,
+      height: size * 0.56,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bodyRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF5D4037), Color(0xFF2E1A16)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(bodyRect),
+    );
+
+    final podRect = Rect.fromCenter(
+      center: center.translate(0, -size * 0.22),
+      width: size * 0.5,
+      height: size * 0.3,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(podRect, const Radius.circular(4)),
+      Paint()..color = const Color(0xFF37474F),
+    );
+    for (final dx in [-size * 0.16, 0.0, size * 0.16]) {
+      canvas.drawCircle(
+        center.translate(dx, -size * 0.22),
+        size * 0.06,
+        Paint()..color = const Color(0xFFE53935),
+      );
+    }
+
+    for (final dy in [-size * 0.06, size * 0.32]) {
+      for (final dx in [-size * 0.34, size * 0.34]) {
+        canvas.drawCircle(
+          center.translate(dx, dy),
+          size * 0.1,
+          Paint()..color = const Color(0xFF0d0d0d),
+        );
+      }
+    }
+  }
+
   static void _paintTank(Canvas canvas) {
     const size = 54.0;
     const center = Offset(size / 2, size / 2);
@@ -567,116 +678,5 @@ class EnemySpriteFactory {
       size * 0.045,
       Paint()..color = const Color(0xFFFFF59D),
     );
-  }
-
-  static void _paintArtilleryBarrage(Canvas canvas) {
-    const size = 52.0;
-    const center = Offset(size / 2, size / 2);
-
-    canvas.drawOval(
-      Rect.fromCenter(center: center, width: size * 0.85, height: size * 0.3),
-      Paint()..color = const Color(0x40000000),
-    );
-
-    for (final dx in [-size * 0.28, size * 0.28]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center.translate(dx, size * 0.08),
-            width: size * 0.22,
-            height: size * 0.54,
-          ),
-          const Radius.circular(8),
-        ),
-        Paint()..color = const Color(0xFF1a1c20),
-      );
-    }
-
-    final hullRect = Rect.fromCenter(
-      center: center,
-      width: size * 0.6,
-      height: size * 0.4,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(hullRect, const Radius.circular(6)),
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF5D4037), Color(0xFF2E1A16)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ).createShader(hullRect),
-    );
-
-    // Three stubby mortar barrels fanned out on the deck.
-    for (final dx in [-size * 0.14, 0.0, size * 0.14]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center.translate(dx, -size * 0.26),
-            width: size * 0.1,
-            height: size * 0.3,
-          ),
-          const Radius.circular(2),
-        ),
-        Paint()..color = const Color(0xFF3E2723),
-      );
-    }
-    canvas.drawCircle(
-      center.translate(0, size * 0.02),
-      size * 0.05,
-      Paint()..color = const Color(0xFFE53935),
-    );
-  }
-
-  static void _paintRocketBarrage(Canvas canvas) {
-    const size = 50.0;
-    const center = Offset(size / 2, size / 2);
-
-    canvas.drawOval(
-      Rect.fromCenter(center: center, width: size * 0.86, height: size * 0.3),
-      Paint()..color = const Color(0x40000000),
-    );
-
-    final bodyRect = Rect.fromCenter(
-      center: center.translate(0, size * 0.1),
-      width: size * 0.62,
-      height: size * 0.56,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(bodyRect, const Radius.circular(6)),
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF5D4037), Color(0xFF2E1A16)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ).createShader(bodyRect),
-    );
-
-    final podRect = Rect.fromCenter(
-      center: center.translate(0, -size * 0.22),
-      width: size * 0.5,
-      height: size * 0.3,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(podRect, const Radius.circular(4)),
-      Paint()..color = const Color(0xFF37474F),
-    );
-    for (final dx in [-size * 0.16, 0.0, size * 0.16]) {
-      canvas.drawCircle(
-        center.translate(dx, -size * 0.22),
-        size * 0.06,
-        Paint()..color = const Color(0xFFE53935),
-      );
-    }
-
-    for (final dy in [-size * 0.06, size * 0.32]) {
-      for (final dx in [-size * 0.34, size * 0.34]) {
-        canvas.drawCircle(
-          center.translate(dx, dy),
-          size * 0.1,
-          Paint()..color = const Color(0xFF0d0d0d),
-        );
-      }
-    }
   }
 }

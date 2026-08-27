@@ -18,7 +18,8 @@ class RocketSiloTowerComponent extends TowerComponent {
 
   @override
   void fire(MobileUnitComponent target) {
-    final isBigTarget = target.blueprint.isVehicle || target.blueprint.isSeaUnit;
+    final isBigTarget =
+        target.blueprint.isVehicle || target.blueprint.isSeaUnit;
     final dir = (target.position - position).normalized();
     final spawnPos = position + dir * (size.x / 2);
     game.world.spawn(

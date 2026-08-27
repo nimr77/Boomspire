@@ -114,8 +114,7 @@ class MobileUnitComponent extends PositionComponent
   UnitDomain get domain => blueprint.domain;
 
   /// Current attack damage, after the [level] upgrade multiplier.
-  double get effectiveAttackDamage =>
-      blueprint.attackDamage * _levelMultiplier;
+  double get effectiveAttackDamage => blueprint.attackDamage * _levelMultiplier;
 
   /// Current max health, after the [level] upgrade multiplier.
   double get effectiveMaxHealth => blueprint.maxHealth * _levelMultiplier;
@@ -135,6 +134,14 @@ class MobileUnitComponent extends PositionComponent
   bool get showsLowHealthTelegraph => objective == UnitObjective.rushBase;
 
   double get _levelMultiplier => pow(1.25, level).toDouble();
+
+  /// Attaches extra always-on visuals once the model/sprite is loaded -
+  /// today just a spinning rotor for [UnitKind.helicopter].
+  Future<void> addExtraVisuals(PositionComponent visual) async {
+    if (blueprint.kind == UnitKind.helicopter) {
+      await visual.add(RotorComponent(position: visual.size / 2));
+    }
+  }
 
   /// Blends a raw direction with a short-range separation push away from
   /// nearby teammates, so a crowd converging on the same fixed goal (a
@@ -156,14 +163,6 @@ class MobileUnitComponent extends PositionComponent
     if (separation.isZero()) return dir;
     final blended = dir + separation.normalized() * 0.5;
     return blended.isZero() ? dir : blended.normalized();
-  }
-
-  /// Attaches extra always-on visuals once the model/sprite is loaded -
-  /// today just a spinning rotor for [UnitKind.helicopter].
-  Future<void> addExtraVisuals(PositionComponent visual) async {
-    if (blueprint.kind == UnitKind.helicopter) {
-      await visual.add(RotorComponent(position: visual.size / 2));
-    }
   }
 
   /// Resolves this unit's sprite from whichever side's factory has art for
