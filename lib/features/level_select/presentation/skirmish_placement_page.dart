@@ -201,12 +201,6 @@ class _PlacementSurfaceState extends State<_PlacementSurface> {
   final ValueNotifier<int?> _hoveredSlot = ValueNotifier(null);
 
   @override
-  void dispose() {
-    _hoveredSlot.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<int?>(
       valueListenable: _hoveredSlot,
@@ -238,6 +232,12 @@ class _PlacementSurfaceState extends State<_PlacementSurface> {
       },
     );
   }
+
+  @override
+  void dispose() {
+    _hoveredSlot.dispose();
+    super.dispose();
+  }
 }
 
 class _SeatChip extends StatefulWidget {
@@ -254,12 +254,6 @@ class _SeatChipState extends State<_SeatChip> {
   final ValueNotifier<bool> _hovered = ValueNotifier(false);
 
   @override
-  void dispose() {
-    _hovered.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final color = PlayerPalette.colorFor(widget.index);
     return MouseRegion(
@@ -274,10 +268,7 @@ class _SeatChipState extends State<_SeatChip> {
             curve: Curves.easeOutBack,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: widget.isYou ? 0.35 : 0.12),
                 borderRadius: BorderRadius.circular(20),
@@ -308,6 +299,12 @@ class _SeatChipState extends State<_SeatChip> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _hovered.dispose();
+    super.dispose();
+  }
 }
 
 class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
@@ -328,167 +325,180 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
         final selectedSlot = _placementState.selectedSlot.value;
         final launching = _placementState.launching.value;
         return Scaffold(
-      backgroundColor: const Color(0xFF0A0E14),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                          S.current.skirmishPlacementTitle,
+          backgroundColor: const Color(0xFF0A0E14),
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                              S.current.skirmishPlacementTitle,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2,
+                              ),
+                            )
+                            .animate()
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: -0.2, end: 0),
+                        const SizedBox(height: 6),
+                        Text(
+                          _isDraft
+                              ? S.current.skirmishPlacementSubtitleDraft
+                              : S.current.skirmishPlacementSubtitleScene,
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2,
+                            color: Colors.white54,
+                            fontSize: 15,
                           ),
-                        )
-                        .animate()
-                        .fadeIn(duration: 400.ms)
-                        .slideY(begin: -0.2, end: 0),
-                    const SizedBox(height: 6),
-                    Text(
-                      _isDraft
-                          ? S.current.skirmishPlacementSubtitleDraft
-                          : S.current.skirmishPlacementSubtitleScene,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.white24),
-                            ),
-                            child: _isDraft
-                                ? ValueListenableBuilder<EditorTerrainPreview?>(
-                                    valueListenable: _placementState.preview,
-                                    builder: (context, preview, _) {
-                                      if (preview == null) {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      }
-                                      return _PlacementSurface(
-                                        sites: widget.draft!.homeSites
-                                            .map(
-                                              (p) => Offset(
-                                                p.x / widget.draft!.arenaWidth,
-                                                p.y / widget.draft!.arenaHeight,
+                        ),
+                        const SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.white24),
+                                ),
+                                child: _isDraft
+                                    ? ValueListenableBuilder<
+                                        EditorTerrainPreview?
+                                      >(
+                                        valueListenable:
+                                            _placementState.preview,
+                                        builder: (context, preview, _) {
+                                          if (preview == null) {
+                                            return const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            );
+                                          }
+                                          return _PlacementSurface(
+                                            sites: widget.draft!.homeSites
+                                                .map(
+                                                  (p) => Offset(
+                                                    p.x /
+                                                        widget
+                                                            .draft!
+                                                            .arenaWidth,
+                                                    p.y /
+                                                        widget
+                                                            .draft!
+                                                            .arenaHeight,
+                                                  ),
+                                                )
+                                                .toList(),
+                                            selectedSlot: selectedSlot,
+                                            onTapSlot: _selectSlot,
+                                            background: CustomPaint(
+                                              painter: _DraftPreviewPainter(
+                                                preview: preview,
                                               ),
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : _PlacementSurface(
+                                        sites: widget.scene!.homeSites
+                                            .map(
+                                              (s) =>
+                                                  _fractionForLayout(s.layout),
                                             )
                                             .toList(),
                                         selectedSlot: selectedSlot,
                                         onTapSlot: _selectSlot,
-                                        background: CustomPaint(
-                                          painter: _DraftPreviewPainter(
-                                            preview: preview,
-                                          ),
+                                        background: BiomePreview(
+                                          scene: widget.scene!,
                                         ),
-                                      );
-                                    },
-                                  )
-                                : _PlacementSurface(
-                                    sites: widget.scene!.homeSites
-                                        .map(
-                                          (s) => _fractionForLayout(s.layout),
-                                        )
-                                        .toList(),
-                                    selectedSlot: selectedSlot,
-                                    onTapSlot: _selectSlot,
-                                    background: BiomePreview(
-                                      scene: widget.scene!,
-                                    ),
-                                  ),
+                                      ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_siteCount > 0)
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          for (var i = 0; i < _siteCount; i++)
-                            _SeatChip(index: i, isYou: selectedSlot == i),
-                        ],
-                      ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_isDraft)
-                          OutlinedButton.icon(
-                            onPressed: _randomize,
-                            icon: const Icon(Icons.shuffle),
-                            label: Text(S.current.skirmishPlacementRandomize),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(color: Colors.white38),
-                            ),
+                        const SizedBox(height: 16),
+                        if (_siteCount > 0)
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              for (var i = 0; i < _siteCount; i++)
+                                _SeatChip(index: i, isYou: selectedSlot == i),
+                            ],
                           ),
-                        if (_isDraft) const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: launching ? null : _start,
-                          icon: const Icon(Icons.play_arrow),
-                          label: Text(S.current.skirmishPlacementStart),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 14,
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_isDraft)
+                              OutlinedButton.icon(
+                                onPressed: _randomize,
+                                icon: const Icon(Icons.shuffle),
+                                label: Text(
+                                  S.current.skirmishPlacementRandomize,
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  side: const BorderSide(color: Colors.white38),
+                                ),
+                              ),
+                            if (_isDraft) const SizedBox(width: 12),
+                            ElevatedButton.icon(
+                              onPressed: launching ? null : _start,
+                              icon: const Icon(Icons.play_arrow),
+                              label: Text(S.current.skirmishPlacementStart),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 14,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(top: 12, right: 12, child: const WindowControls()),
-            Positioned(
-              top: 12,
-              left: 12,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xB31A1F26),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: IconButton(
-                  tooltip: 'Back',
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white70,
-                    size: 20,
                   ),
-                  onPressed: () => context.pop(),
                 ),
-              ),
+                Positioned(top: 12, right: 12, child: const WindowControls()),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xB31A1F26),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: IconButton(
+                      tooltip: 'Back',
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
+                      onPressed: () => context.pop(),
+                    ),
+                  ),
+                ),
+                if (launching)
+                  const ColoredBox(
+                    color: Color(0x99000000),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+              ],
             ),
-            if (launching)
-              const ColoredBox(
-                color: Color(0x99000000),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-          ],
-        ),
-      ),
+          ),
         );
       },
     );
@@ -561,7 +571,9 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   }
 
   Future<void> _start() async {
-    if (_isDraft && _siteCount > 0 && _placementState.selectedSlot.value == null) {
+    if (_isDraft &&
+        _siteCount > 0 &&
+        _placementState.selectedSlot.value == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(S.current.skirmishPlacementPickHint)),
       );
@@ -583,9 +595,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
 
     final selectedSlot = _placementState.selectedSlot.value;
     final draft = widget.draft!;
-    final chosen = selectedSlot != null
-        ? draft.homeSites[selectedSlot]
-        : null;
+    final chosen = selectedSlot != null ? draft.homeSites[selectedSlot] : null;
     // The AI takes the first other declared site - today's map editor
     // always gives a skirmish-flagged draft at least two home sites (one
     // per seat). If, for whatever reason, there isn't a second site to

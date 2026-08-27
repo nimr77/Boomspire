@@ -9,9 +9,7 @@ import '../domain/repos/map_draft_repository.dart';
 class MapDraftsListState {
   final MapDraftRepository _draftRepository;
   final ValueNotifier<List<MapDraft>?> _drafts = ValueNotifier(null);
-  final ValueNotifier<MapDraft> _pendingNewDraft = ValueNotifier(
-    _freshDraft(),
-  );
+  final ValueNotifier<MapDraft> _pendingNewDraft = ValueNotifier(_freshDraft());
 
   MapDraftsListState(this._draftRepository);
 

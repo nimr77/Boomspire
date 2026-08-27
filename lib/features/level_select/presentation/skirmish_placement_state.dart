@@ -14,12 +14,9 @@ class SkirmishPlacementState {
   final ValueNotifier<int?> _selectedSlot = ValueNotifier(null);
   final ValueNotifier<bool> _launching = ValueNotifier(false);
 
+  ValueListenable<bool> get launching => _launching;
   ValueListenable<EditorTerrainPreview?> get preview => _preview;
   ValueListenable<int?> get selectedSlot => _selectedSlot;
-  ValueListenable<bool> get launching => _launching;
-
-  void selectSlot(int? index) => _selectedSlot.value = index;
-  void setLaunching(bool value) => _launching.value = value;
 
   void dispose() {
     _preview.dispose();
@@ -28,6 +25,10 @@ class SkirmishPlacementState {
   }
 
   Future<EditorTerrainPreview> load(MapDraft draft) => _future ??= _load(draft);
+
+  void selectSlot(int? index) => _selectedSlot.value = index;
+
+  void setLaunching(bool value) => _launching.value = value;
 
   Future<EditorTerrainPreview> _load(MapDraft draft) async {
     final result = await EditorTerrainGenerator().generate(draft);

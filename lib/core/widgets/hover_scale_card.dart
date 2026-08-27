@@ -31,16 +31,17 @@ class _HoverPressState {
   final ValueNotifier<bool> _pressed = ValueNotifier(false);
 
   ValueListenable<bool> get hovering => _hovering;
-  ValueListenable<bool> get pressed => _pressed;
   Listenable get listenable => Listenable.merge([_hovering, _pressed]);
-
-  void setHovering(bool value) => _hovering.value = value;
-  void setPressed(bool value) => _pressed.value = value;
+  ValueListenable<bool> get pressed => _pressed;
 
   void dispose() {
     _hovering.dispose();
     _pressed.dispose();
   }
+
+  void setHovering(bool value) => _hovering.value = value;
+
+  void setPressed(bool value) => _pressed.value = value;
 }
 
 class _HoverScaleCardState extends State<HoverScaleCard> {

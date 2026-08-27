@@ -234,90 +234,6 @@ class _EditorToastState extends State<_EditorToast>
 
 enum _EditorTool { mountain, dune, erase, river, lake, homeSite }
 
-/// Page-owned state for [MapEditorPage]: every mutable piece of editor UI
-/// state (the draft itself, its live terrain preview, brush selection,
-/// in-progress stroke, wave being edited, and save/play/upload/download
-/// busy flags) lives here as private [ValueNotifier]s with read-only
-/// [ValueListenable] getters - instantiated and disposed by the page's own
-/// State, not shared anywhere else.
-class _MapEditorState {
-  final ValueNotifier<MapDraft> _draft;
-  final ValueNotifier<EditorTerrainPreview?> _preview = ValueNotifier(null);
-  final ValueNotifier<_EditorTool> _tool = ValueNotifier(_EditorTool.mountain);
-  final ValueNotifier<double> _riverWidth = ValueNotifier(48);
-  final ValueNotifier<int> _selectedWaveNumber = ValueNotifier(1);
-  final ValueNotifier<List<EditorPoint>> _activeStroke = ValueNotifier(
-    const [],
-  );
-  final ValueNotifier<bool> _saving = ValueNotifier(false);
-  final ValueNotifier<bool> _playing = ValueNotifier(false);
-  final ValueNotifier<bool> _downloading = ValueNotifier(false);
-  final ValueNotifier<bool> _uploading = ValueNotifier(false);
-  final ValueNotifier<double> _zoom = ValueNotifier(1.0);
-  final ValueNotifier<double> _previewProgress = ValueNotifier(0.0);
-
-  _MapEditorState(MapDraft initialDraft) : _draft = ValueNotifier(initialDraft);
-
-  ValueListenable<MapDraft> get draft => _draft;
-  ValueListenable<EditorTerrainPreview?> get preview => _preview;
-  ValueListenable<_EditorTool> get tool => _tool;
-  ValueListenable<double> get riverWidth => _riverWidth;
-  ValueListenable<int> get selectedWaveNumber => _selectedWaveNumber;
-  ValueListenable<List<EditorPoint>> get activeStroke => _activeStroke;
-  ValueListenable<bool> get saving => _saving;
-  ValueListenable<bool> get playing => _playing;
-  ValueListenable<bool> get downloading => _downloading;
-  ValueListenable<bool> get uploading => _uploading;
-  ValueListenable<double> get zoom => _zoom;
-  ValueListenable<double> get previewProgress => _previewProgress;
-
-  /// A single [Listenable] combining every notifier above, so the page can
-  /// rebuild its whole (tightly-coupled) editor tree from one listener
-  /// instead of nesting a builder per field.
-  Listenable get listenable => Listenable.merge([
-    _draft,
-    _preview,
-    _tool,
-    _riverWidth,
-    _selectedWaveNumber,
-    _activeStroke,
-    _saving,
-    _playing,
-    _downloading,
-    _uploading,
-    _zoom,
-    _previewProgress,
-  ]);
-
-  void setDraft(MapDraft value) => _draft.value = value;
-  void setPreview(EditorTerrainPreview? value) => _preview.value = value;
-  void setTool(_EditorTool value) => _tool.value = value;
-  void setRiverWidth(double value) => _riverWidth.value = value;
-  void setSelectedWaveNumber(int value) => _selectedWaveNumber.value = value;
-  void setActiveStroke(List<EditorPoint> value) => _activeStroke.value = value;
-  void setSaving(bool value) => _saving.value = value;
-  void setPlaying(bool value) => _playing.value = value;
-  void setDownloading(bool value) => _downloading.value = value;
-  void setUploading(bool value) => _uploading.value = value;
-  void setZoom(double value) => _zoom.value = value;
-  void setPreviewProgress(double value) => _previewProgress.value = value;
-
-  void dispose() {
-    _draft.dispose();
-    _preview.dispose();
-    _tool.dispose();
-    _riverWidth.dispose();
-    _selectedWaveNumber.dispose();
-    _activeStroke.dispose();
-    _saving.dispose();
-    _playing.dispose();
-    _downloading.dispose();
-    _uploading.dispose();
-    _zoom.dispose();
-    _previewProgress.dispose();
-  }
-}
-
 class _MapEditorPageState extends State<MapEditorPage> {
   final MapDraftRepository _draftRepository = getIt<MapDraftRepository>();
   final _generator = EditorTerrainGenerator();
@@ -1455,6 +1371,92 @@ class _MapEditorPainter extends CustomPainter {
       }
     }
   }
+}
+
+/// Page-owned state for [MapEditorPage]: every mutable piece of editor UI
+/// state (the draft itself, its live terrain preview, brush selection,
+/// in-progress stroke, wave being edited, and save/play/upload/download
+/// busy flags) lives here as private [ValueNotifier]s with read-only
+/// [ValueListenable] getters - instantiated and disposed by the page's own
+/// State, not shared anywhere else.
+class _MapEditorState {
+  final ValueNotifier<MapDraft> _draft;
+  final ValueNotifier<EditorTerrainPreview?> _preview = ValueNotifier(null);
+  final ValueNotifier<_EditorTool> _tool = ValueNotifier(_EditorTool.mountain);
+  final ValueNotifier<double> _riverWidth = ValueNotifier(48);
+  final ValueNotifier<int> _selectedWaveNumber = ValueNotifier(1);
+  final ValueNotifier<List<EditorPoint>> _activeStroke = ValueNotifier(
+    const [],
+  );
+  final ValueNotifier<bool> _saving = ValueNotifier(false);
+  final ValueNotifier<bool> _playing = ValueNotifier(false);
+  final ValueNotifier<bool> _downloading = ValueNotifier(false);
+  final ValueNotifier<bool> _uploading = ValueNotifier(false);
+  final ValueNotifier<double> _zoom = ValueNotifier(1.0);
+  final ValueNotifier<double> _previewProgress = ValueNotifier(0.0);
+
+  _MapEditorState(MapDraft initialDraft) : _draft = ValueNotifier(initialDraft);
+
+  ValueListenable<List<EditorPoint>> get activeStroke => _activeStroke;
+  ValueListenable<bool> get downloading => _downloading;
+  ValueListenable<MapDraft> get draft => _draft;
+
+  /// A single [Listenable] combining every notifier above, so the page can
+  /// rebuild its whole (tightly-coupled) editor tree from one listener
+  /// instead of nesting a builder per field.
+  Listenable get listenable => Listenable.merge([
+    _draft,
+    _preview,
+    _tool,
+    _riverWidth,
+    _selectedWaveNumber,
+    _activeStroke,
+    _saving,
+    _playing,
+    _downloading,
+    _uploading,
+    _zoom,
+    _previewProgress,
+  ]);
+  ValueListenable<bool> get playing => _playing;
+  ValueListenable<EditorTerrainPreview?> get preview => _preview;
+  ValueListenable<double> get previewProgress => _previewProgress;
+  ValueListenable<double> get riverWidth => _riverWidth;
+  ValueListenable<bool> get saving => _saving;
+  ValueListenable<int> get selectedWaveNumber => _selectedWaveNumber;
+  ValueListenable<_EditorTool> get tool => _tool;
+  ValueListenable<bool> get uploading => _uploading;
+
+  ValueListenable<double> get zoom => _zoom;
+
+  void dispose() {
+    _draft.dispose();
+    _preview.dispose();
+    _tool.dispose();
+    _riverWidth.dispose();
+    _selectedWaveNumber.dispose();
+    _activeStroke.dispose();
+    _saving.dispose();
+    _playing.dispose();
+    _downloading.dispose();
+    _uploading.dispose();
+    _zoom.dispose();
+    _previewProgress.dispose();
+  }
+
+  void setActiveStroke(List<EditorPoint> value) => _activeStroke.value = value;
+  void setDownloading(bool value) => _downloading.value = value;
+  void setDraft(MapDraft value) => _draft.value = value;
+  void setPlaying(bool value) => _playing.value = value;
+  void setPreview(EditorTerrainPreview? value) => _preview.value = value;
+  void setPreviewProgress(double value) => _previewProgress.value = value;
+  void setRiverWidth(double value) => _riverWidth.value = value;
+  void setSaving(bool value) => _saving.value = value;
+  void setSelectedWaveNumber(int value) => _selectedWaveNumber.value = value;
+  void setTool(_EditorTool value) => _tool.value = value;
+  void setUploading(bool value) => _uploading.value = value;
+
+  void setZoom(double value) => _zoom.value = value;
 }
 
 class _SectionLabel extends StatelessWidget {
