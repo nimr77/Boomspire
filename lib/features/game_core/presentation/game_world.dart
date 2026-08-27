@@ -53,6 +53,17 @@ class GameWorld extends World
 
   final Set<LogicalKeyboardKey> _pressedKeys = {};
 
+  /// Centers the camera on a world point (clamped to the map's edges) -
+  /// used when the player taps the minimap.
+  void centerCameraOn(Vector2 worldPoint) {
+    final viewport = game.camera.viewport.virtualSize;
+    final bounds = _cameraBounds();
+    cameraPosition = Vector2(
+      (worldPoint.x - viewport.x / 2).clamp(0.0, bounds.x),
+      (worldPoint.y - viewport.y / 2).clamp(0.0, bounds.y),
+    );
+  }
+
   Future<void> initialize() async {
     await add(TerrainComponent(terrainMap: game.terrainMap));
     final skirmish = game.scene.mode == GameMode.skirmish;
@@ -104,6 +115,20 @@ class GameWorld extends World
   @override
   void onTapDown(TapDownEvent event) {
     game.handleArenaTap(event.localPosition);
+  }
+
+  /// Nudges [cameraPosition] by a raw canvas-space delta (already scaled
+  /// into the camera's fixed-resolution coordinate space by the caller),
+  /// clamped to the map's edges. Used by `GamePage`'s middle-mouse-drag
+  /// free-pan handler - subtracting the pointer's delta gives the usual
+  /// "grab the map and drag it" feel (drag right reveals what's to the
+  /// left).
+  void panBy(Vector2 canvasDelta) {
+    final bounds = _cameraBounds();
+    cameraPosition = Vector2(
+      (cameraPosition.x - canvasDelta.x).clamp(0.0, bounds.x),
+      (cameraPosition.y - canvasDelta.y).clamp(0.0, bounds.y),
+    );
   }
 
   void removeTower(TowerComponent tower) {
@@ -160,31 +185,6 @@ class GameWorld extends World
     return Vector2(
       (game.terrainMap.arenaWidth - viewport.x).clamp(0.0, double.infinity),
       (game.terrainMap.arenaHeight - viewport.y).clamp(0.0, double.infinity),
-    );
-  }
-
-  /// Nudges [cameraPosition] by a raw canvas-space delta (already scaled
-  /// into the camera's fixed-resolution coordinate space by the caller),
-  /// clamped to the map's edges. Used by `GamePage`'s middle-mouse-drag
-  /// free-pan handler - subtracting the pointer's delta gives the usual
-  /// "grab the map and drag it" feel (drag right reveals what's to the
-  /// left).
-  void panBy(Vector2 canvasDelta) {
-    final bounds = _cameraBounds();
-    cameraPosition = Vector2(
-      (cameraPosition.x - canvasDelta.x).clamp(0.0, bounds.x),
-      (cameraPosition.y - canvasDelta.y).clamp(0.0, bounds.y),
-    );
-  }
-
-  /// Centers the camera on a world point (clamped to the map's edges) -
-  /// used when the player taps the minimap.
-  void centerCameraOn(Vector2 worldPoint) {
-    final viewport = game.camera.viewport.virtualSize;
-    final bounds = _cameraBounds();
-    cameraPosition = Vector2(
-      (worldPoint.x - viewport.x / 2).clamp(0.0, bounds.x),
-      (worldPoint.y - viewport.y / 2).clamp(0.0, bounds.y),
     );
   }
 

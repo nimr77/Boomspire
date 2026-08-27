@@ -19,9 +19,11 @@ class MinimapComponent extends PositionComponent
   MinimapComponent() : super(size: Vector2.all(_mapSize), priority: 1000);
 
   @override
-  Future<void> onLoad() async {
-    _reposition();
-  }
+  bool containsLocalPoint(Vector2 point) =>
+      point.x >= 0 &&
+      point.x <= _mapSize &&
+      point.y >= 0 &&
+      point.y <= _mapSize;
 
   @override
   void onGameResize(Vector2 size) {
@@ -29,18 +31,20 @@ class MinimapComponent extends PositionComponent
     _reposition();
   }
 
-  void _reposition() {
-    final viewport = game.camera.viewport.virtualSize;
-    position = Vector2(_margin, viewport.y - _mapSize - _margin);
+  @override
+  Future<void> onLoad() async {
+    _reposition();
   }
 
-  Vector2 _worldToMinimap(Vector2 world) {
+  @override
+  void onTapDown(TapDownEvent event) {
     final arenaWidth = game.terrainMap.arenaWidth;
     final arenaHeight = game.terrainMap.arenaHeight;
-    return Vector2(
-      world.x / arenaWidth * _mapSize,
-      world.y / arenaHeight * _mapSize,
+    final tapped = Vector2(
+      event.localPosition.x / _mapSize * arenaWidth,
+      event.localPosition.y / _mapSize * arenaHeight,
     );
+    game.world.centerCameraOn(tapped);
   }
 
   @override
@@ -50,7 +54,10 @@ class MinimapComponent extends PositionComponent
       panelRect,
       const ui.Radius.circular(10),
     );
-    canvas.drawRRect(panelRRect, ui.Paint()..color = const ui.Color(0xCC0F1319));
+    canvas.drawRRect(
+      panelRRect,
+      ui.Paint()..color = const ui.Color(0xCC0F1319),
+    );
 
     void dot(Vector2 worldPosition, ui.Color color, double radius) {
       final p = _worldToMinimap(worldPosition);
@@ -99,18 +106,17 @@ class MinimapComponent extends PositionComponent
     );
   }
 
-  @override
-  bool containsLocalPoint(Vector2 point) =>
-      point.x >= 0 && point.x <= _mapSize && point.y >= 0 && point.y <= _mapSize;
+  void _reposition() {
+    final viewport = game.camera.viewport.virtualSize;
+    position = Vector2(_margin, viewport.y - _mapSize - _margin);
+  }
 
-  @override
-  void onTapDown(TapDownEvent event) {
+  Vector2 _worldToMinimap(Vector2 world) {
     final arenaWidth = game.terrainMap.arenaWidth;
     final arenaHeight = game.terrainMap.arenaHeight;
-    final tapped = Vector2(
-      event.localPosition.x / _mapSize * arenaWidth,
-      event.localPosition.y / _mapSize * arenaHeight,
+    return Vector2(
+      world.x / arenaWidth * _mapSize,
+      world.y / arenaHeight * _mapSize,
     );
-    game.world.centerCameraOn(tapped);
   }
 }

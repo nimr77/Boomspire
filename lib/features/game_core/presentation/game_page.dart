@@ -196,21 +196,6 @@ class _GamePageState extends State<GamePage> {
     super.dispose();
   }
 
-  /// Converts a middle-mouse-drag's raw Flutter pixel delta into the
-  /// camera's fixed-resolution canvas space (see `CameraComponent.
-  /// withFixedResolution` in `BoomspireGame`) before handing it to
-  /// [GameWorld.panBy] - a no-op unless a drag is actually in progress (see
-  /// [GameWorld.freePanning], toggled by this page's `Listener`).
-  void _dragCamera(Offset delta, Size box) {
-    if (!_game.world.freePanning || box.isEmpty) return;
-    final scale = math.min(
-      box.width / GameConfig.arenaWidth,
-      box.height / GameConfig.arenaHeight,
-    );
-    if (scale <= 0) return;
-    _game.world.panBy(Vector2(delta.dx, delta.dy) / scale);
-  }
-
   @override
   void initState() {
     super.initState();
@@ -262,6 +247,21 @@ class _GamePageState extends State<GamePage> {
       ),
     );
     if (confirmed == true && mounted) Navigator.of(context).pop();
+  }
+
+  /// Converts a middle-mouse-drag's raw Flutter pixel delta into the
+  /// camera's fixed-resolution canvas space (see `CameraComponent.
+  /// withFixedResolution` in `BoomspireGame`) before handing it to
+  /// [GameWorld.panBy] - a no-op unless a drag is actually in progress (see
+  /// [GameWorld.freePanning], toggled by this page's `Listener`).
+  void _dragCamera(Offset delta, Size box) {
+    if (!_game.world.freePanning || box.isEmpty) return;
+    final scale = math.min(
+      box.width / GameConfig.arenaWidth,
+      box.height / GameConfig.arenaHeight,
+    );
+    if (scale <= 0) return;
+    _game.world.panBy(Vector2(delta.dx, delta.dy) / scale);
   }
 
   void _recordProgress() {
