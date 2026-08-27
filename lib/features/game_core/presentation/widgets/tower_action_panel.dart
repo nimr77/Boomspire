@@ -349,7 +349,9 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
       final ready = tower.canProduce;
       final buildableKinds = widget.game.unitRepository
           .kindsFor(widget.game.playerTeam)
-          .where((type) => !TrainingCenterComponent.producibleKinds.contains(type));
+          .where(
+            (type) => !TrainingCenterComponent.producibleKinds.contains(type),
+          );
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [

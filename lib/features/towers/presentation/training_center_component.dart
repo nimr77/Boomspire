@@ -35,7 +35,8 @@ class TrainingCenterComponent extends TowerComponent {
 
   int get soldierCost => costFor(UnitKind.soldier);
 
-  int costFor(UnitKind kind) => game.unitRepository.blueprintFor(owner, kind).cost;
+  int costFor(UnitKind kind) =>
+      game.unitRepository.blueprintFor(owner, kind).cost;
 
   @override
   void fire(Attackable target) {}
@@ -65,7 +66,6 @@ class TrainingCenterComponent extends TowerComponent {
     );
     return true;
   }
-
 
   @override
   void update(double dt) {

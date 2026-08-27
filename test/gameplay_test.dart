@@ -123,62 +123,53 @@ void main() {
       );
     });
 
-    test(
-      'Command Post is single-use, but Training Center and War Factory have '
-      'no build cap - more than one of those can be built',
-      () async {
-        final commandPostGame = await _bootGame(GameScenes.all.first);
-        final commandPostGrid = commandPostGame.terrainMap.grid;
-        commandPostGame.gameState.addGold(2000);
+    test('Command Post is single-use, but Training Center and War Factory have '
+        'no build cap - more than one of those can be built', () async {
+      final commandPostGame = await _bootGame(GameScenes.all.first);
+      final commandPostGrid = commandPostGame.terrainMap.grid;
+      commandPostGame.gameState.addGold(2000);
 
-        final firstCell = _findOpenCell(commandPostGame);
-        commandPostGame.selectTowerType(BuildingType.commandPost);
-        commandPostGame.handleArenaTap(
-          commandPostGrid.cellCenter(firstCell),
-        );
-        commandPostGame.handleArenaTap(
-          commandPostGrid.cellCenter(firstCell),
-        );
-        final secondCell = _findOpenCell(commandPostGame);
-        commandPostGame.selectTowerType(BuildingType.commandPost);
-        commandPostGame.handleArenaTap(
-          commandPostGrid.cellCenter(secondCell),
-        );
+      final firstCell = _findOpenCell(commandPostGame);
+      commandPostGame.selectTowerType(BuildingType.commandPost);
+      commandPostGame.handleArenaTap(commandPostGrid.cellCenter(firstCell));
+      commandPostGame.handleArenaTap(commandPostGrid.cellCenter(firstCell));
+      final secondCell = _findOpenCell(commandPostGame);
+      commandPostGame.selectTowerType(BuildingType.commandPost);
+      commandPostGame.handleArenaTap(commandPostGrid.cellCenter(secondCell));
 
-        expect(commandPostGame.towerCountFor(BuildingType.commandPost), 1);
-        expect(
-          commandPostGame.buildBlockReason(BuildingType.commandPost),
-          'Max 1 built',
-          reason:
-              'Command Post should report a lock reason once its 1-build '
-              'cap is hit',
-        );
+      expect(commandPostGame.towerCountFor(BuildingType.commandPost), 1);
+      expect(
+        commandPostGame.buildBlockReason(BuildingType.commandPost),
+        'Max 1 built',
+        reason:
+            'Command Post should report a lock reason once its 1-build '
+            'cap is hit',
+      );
 
-        for (final type in [
-          BuildingType.trainingCenter,
-          BuildingType.warFactory,
-        ]) {
-          final game = await _bootGame(GameScenes.all.first);
-          final grid = game.terrainMap.grid;
-          game.gameState.addGold(5000);
+      for (final type in [
+        BuildingType.trainingCenter,
+        BuildingType.warFactory,
+      ]) {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        game.gameState.addGold(5000);
 
-          for (var i = 0; i < 3; i++) {
-            expect(game.buildBlockReason(type), isNull);
-            final cell = _findOpenCell(game);
-            game.selectTowerType(type);
-            game.handleArenaTap(grid.cellCenter(cell));
-            game.handleArenaTap(grid.cellCenter(cell));
-          }
-
-          expect(game.towerCountFor(type), 3);
-          expect(
-            game.buildBlockReason(type),
-            isNull,
-            reason: '$type should never report a build-limit lock',
-          );
+        for (var i = 0; i < 3; i++) {
+          expect(game.buildBlockReason(type), isNull);
+          final cell = _findOpenCell(game);
+          game.selectTowerType(type);
+          game.handleArenaTap(grid.cellCenter(cell));
+          game.handleArenaTap(grid.cellCenter(cell));
         }
-      },
-    );
+
+        expect(game.towerCountFor(type), 3);
+        expect(
+          game.buildBlockReason(type),
+          isNull,
+          reason: '$type should never report a build-limit lock',
+        );
+      }
+    });
 
     test(
       'Training Center builds an Ally Soldier on demand from its menu',
