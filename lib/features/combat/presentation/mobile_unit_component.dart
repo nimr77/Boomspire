@@ -845,4 +845,3 @@ class MobileUnitComponent extends PositionComponent
     }
   }
 }
-
