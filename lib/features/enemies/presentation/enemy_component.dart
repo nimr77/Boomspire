@@ -29,57 +29,14 @@ abstract class EnemyComponent extends MobileUnitComponent {
   EnemyComponent({required super.blueprint}) : super(team: Team.enemy);
 
   @override
-  bool get ignoresEngagement => game.enemyFocusHint == FocusHint.rushBase;
-
-  @override
   double get detectionRangeMultiplier =>
       game.enemyFocusHint == FocusHint.clearObstacles ? 1.6 : 1.0;
 
   @override
+  bool get ignoresEngagement => game.enemyFocusHint == FocusHint.rushBase;
+
+  @override
   bool get showsLowHealthTelegraph => true;
-
-  /// Called by a tower every frame it has this enemy locked as its current
-  /// target - lights this enemy up fully in the tower's accent color for a
-  /// brief moment so the player can always tell what's being shot at right
-  /// now. Retriggered continuously while targeted, so it stays lit and only
-  /// fades once no tower is aiming at it anymore.
-  void markTargeted(Color color) => _targetHighlight.trigger(color);
-
-  @override
-  Vector2? initialPosition() {
-    final spawnPoints = game.terrainMap.spawnPoints;
-    final sp = spawnPoints[Random().nextInt(spawnPoints.length)];
-    final jitter = (Random().nextDouble() - 0.5) * 60;
-    return Vector2(sp.x, sp.y + jitter);
-  }
-
-  @override
-  Vector2? goalPosition() =>
-      Vector2(game.terrainMap.basePoint.x, game.terrainMap.basePoint.y);
-
-  @override
-  Iterable<Attackable> opposingTargets() => [
-    ...game.world.activeTowers,
-    ...game.world.activeAllies,
-  ];
-
-  /// "Score" is what's minimized: distance for nearest-target targeting,
-  /// remaining HP ratio when the director wants weak targets focused down
-  /// first. A "clear obstacles" directive - or an artillery-style unit that
-  /// always prefers structures - additionally biases hard toward towers
-  /// over ally units, so this unit detours to shell defenses instead of
-  /// just trading fire with whatever's closest.
-  @override
-  double scoreFor(Attackable candidate, double distance) {
-    final hint = game.enemyFocusHint;
-    var score = hint == FocusHint.weakestTower ? candidate.healthRatio : distance;
-    final preferStructures =
-        blueprint.prefersStructures || hint == FocusHint.clearObstacles;
-    if (preferStructures) {
-      score *= candidate is TowerComponent ? 0.4 : 2.2;
-    }
-    return score;
-  }
 
   /// Blends the raw path/beeline direction with a short-range separation
   /// push away from nearby enemies of the same domain (ground vs air don't
@@ -104,11 +61,23 @@ abstract class EnemyComponent extends MobileUnitComponent {
   }
 
   @override
-  void onReachGoal() {
-    game.gameState.damagePlayer(1);
-    game.audioRepository.play(SfxType.enemyEscape, volume: 0.5);
-    removeSelf();
+  Vector2? goalPosition() =>
+      Vector2(game.terrainMap.basePoint.x, game.terrainMap.basePoint.y);
+
+  @override
+  Vector2? initialPosition() {
+    final spawnPoints = game.terrainMap.spawnPoints;
+    final sp = spawnPoints[Random().nextInt(spawnPoints.length)];
+    final jitter = (Random().nextDouble() - 0.5) * 60;
+    return Vector2(sp.x, sp.y + jitter);
   }
+
+  /// Called by a tower every frame it has this enemy locked as its current
+  /// target - lights this enemy up fully in the tower's accent color for a
+  /// brief moment so the player can always tell what's being shot at right
+  /// now. Retriggered continuously while targeted, so it stays lit and only
+  /// fades once no tower is aiming at it anymore.
+  void markTargeted(Color color) => _targetHighlight.trigger(color);
 
   @override
   void onDeath() {
@@ -124,15 +93,48 @@ abstract class EnemyComponent extends MobileUnitComponent {
   }
 
   @override
-  void removeSelf() => game.world.removeEnemy(this);
-
-  @override
   Future<void> onLoad() async {
     await super.onLoad();
     _targetHighlight = _TargetHighlightComponent()
       ..size = size
       ..position = Vector2.zero();
     await add(_targetHighlight);
+  }
+
+  @override
+  void onReachGoal() {
+    game.gameState.damagePlayer(1);
+    game.audioRepository.play(SfxType.enemyEscape, volume: 0.5);
+    removeSelf();
+  }
+
+  @override
+  Iterable<Attackable> opposingTargets() => [
+    ...game.world.activeTowers,
+    ...game.world.activeAllies,
+  ];
+
+  @override
+  void removeSelf() => game.world.removeEnemy(this);
+
+  /// "Score" is what's minimized: distance for nearest-target targeting,
+  /// remaining HP ratio when the director wants weak targets focused down
+  /// first. A "clear obstacles" directive - or an artillery-style unit that
+  /// always prefers structures - additionally biases hard toward towers
+  /// over ally units, so this unit detours to shell defenses instead of
+  /// just trading fire with whatever's closest.
+  @override
+  double scoreFor(Attackable candidate, double distance) {
+    final hint = game.enemyFocusHint;
+    var score = hint == FocusHint.weakestTower
+        ? candidate.healthRatio
+        : distance;
+    final preferStructures =
+        blueprint.prefersStructures || hint == FocusHint.clearObstacles;
+    if (preferStructures) {
+      score *= candidate is TowerComponent ? 0.4 : 2.2;
+    }
+    return score;
   }
 }
 

@@ -8,15 +8,13 @@ import 'dart:ui';
 /// cyan, while still sharing the exact same `MobileUnitComponent`/
 /// `MobileUnitRepository` code path as the enemy side.
 class Team {
-  final String id;
-  final bool isEnemy;
-  final Color color;
-
-  const Team({required this.id, required this.isEnemy, required this.color});
-
   /// The AI-directed invaders - always red, regardless of how many human
   /// player teams end up sharing the map.
-  static const enemy = Team(id: 'enemy', isEnemy: true, color: Color(0xFFE53935));
+  static const enemy = Team(
+    id: 'enemy',
+    isEnemy: true,
+    color: Color(0xFFE53935),
+  );
 
   /// Default color for the (currently single) human player - matches the
   /// home base's original cyan livery. A player color picker/lobby (see the
@@ -27,12 +25,19 @@ class Team {
     isEnemy: false,
     color: Color(0xFF00E5FF),
   );
+  final String id;
 
-  @override
-  bool operator ==(Object other) => other is Team && other.id == id;
+  final bool isEnemy;
+
+  final Color color;
+
+  const Team({required this.id, required this.isEnemy, required this.color});
 
   @override
   int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) => other is Team && other.id == id;
 
   @override
   String toString() => 'Team($id)';

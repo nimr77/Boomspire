@@ -5,12 +5,12 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Color;
 
+import '../../../core/combat/mobile_unit_repository.dart';
+import '../../../core/combat/team.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../audio/domain/repos/audio_repository.dart';
-import '../../../core/combat/mobile_unit_repository.dart';
-import '../../../core/combat/team.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';

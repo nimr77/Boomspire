@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../../../generated/l10n.dart';
 import '../../../../core/combat/unit_kind.dart';
+import '../../../../generated/l10n.dart';
 import '../../../towers/presentation/tower_component.dart';
 import '../../../towers/presentation/tower_sprites.dart';
 import '../../../towers/presentation/training_center_component.dart';

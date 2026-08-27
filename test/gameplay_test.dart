@@ -134,8 +134,9 @@ void main() {
         expect(game.towerCountFor(BuildingType.trainingCenter), 1);
         expect(game.world.activeAllies, isEmpty);
 
-        final trainingCenter =
-            game.world.activeTowers.whereType<TrainingCenterComponent>().first;
+        final trainingCenter = game.world.activeTowers
+            .whereType<TrainingCenterComponent>()
+            .first;
         final startingGold = game.gameState.gold;
         expect(trainingCenter.canProduce, isTrue);
         expect(trainingCenter.produceSoldier(), isTrue);
@@ -166,8 +167,9 @@ void main() {
         expect(game.towerCountFor(BuildingType.warFactory), 1);
         expect(game.world.activeAllies, isEmpty);
 
-        final warFactory =
-            game.world.activeTowers.whereType<WarFactoryComponent>().first;
+        final warFactory = game.world.activeTowers
+            .whereType<WarFactoryComponent>()
+            .first;
         final startingGold = game.gameState.gold;
         expect(warFactory.produceUnit(UnitKind.tank), isTrue);
         await Future<void>.delayed(Duration.zero);
@@ -183,67 +185,64 @@ void main() {
       },
     );
 
-    test(
-      'Rocket Silo ignores enemies inside its minimum range',
-      () async {
-        final scene = GameScenes.all.first;
-        final game = await _bootGame(scene);
-        game.gameState.addGold(1000);
-        final cell = _findOpenCell(game);
-        final grid = game.terrainMap.grid;
+    test('Rocket Silo ignores enemies inside its minimum range', () async {
+      final scene = GameScenes.all.first;
+      final game = await _bootGame(scene);
+      game.gameState.addGold(1000);
+      final cell = _findOpenCell(game);
+      final grid = game.terrainMap.grid;
 
-        game.selectTowerType(TowerType.rocketSilo);
-        game.handleArenaTap(grid.cellCenter(cell));
-        game.handleArenaTap(grid.cellCenter(cell));
-        final silo = game.world.activeTowers
-            .whereType<RocketSiloTowerComponent>()
-            .first;
+      game.selectTowerType(TowerType.rocketSilo);
+      game.handleArenaTap(grid.cellCenter(cell));
+      game.handleArenaTap(grid.cellCenter(cell));
+      final silo = game.world.activeTowers
+          .whereType<RocketSiloTowerComponent>()
+          .first;
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+
+      final blueprint = TowerRepositoryImpl().blueprintFor(
+        TowerType.rocketSilo,
+      );
+      expect(blueprint.minRange, greaterThan(0));
+
+      // Stationary (speed 0) so it can't just wander out of the tower's
+      // reach before the tower has a chance to (not) engage it.
+      const stationarySoldier = MobileUnitBlueprint(
+        kind: UnitKind.soldier,
+        name: 'Test Soldier',
+        maxHealth: 1000,
+        speed: 0,
+        bounty: 0,
+        size: 34,
+      );
+
+      // Enemy well inside the dead zone: should never take damage.
+      // Position is set only after mounting, since EnemyComponent.onLoad
+      // overwrites `position` to a random spawn point.
+      final closeEnemy = GreenSoldierComponent(blueprint: stationarySoldier);
+      game.world.spawnEnemy(closeEnemy);
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+      closeEnemy.position = silo.position + Vector2(blueprint.minRange / 2, 0);
+      for (var i = 0; i < 40; i++) {
         await Future<void>.delayed(Duration.zero);
-        game.update(0);
+        game.update(0.2);
+      }
+      expect(closeEnemy.health, closeEnemy.blueprint.maxHealth);
 
-        final blueprint = TowerRepositoryImpl().blueprintFor(
-          TowerType.rocketSilo,
-        );
-        expect(blueprint.minRange, greaterThan(0));
-
-        // Stationary (speed 0) so it can't just wander out of the tower's
-        // reach before the tower has a chance to (not) engage it.
-        const stationarySoldier = MobileUnitBlueprint(
-          kind: UnitKind.soldier,
-          name: 'Test Soldier',
-          maxHealth: 1000,
-          speed: 0,
-          bounty: 0,
-          size: 34,
-        );
-
-        // Enemy well inside the dead zone: should never take damage.
-        // Position is set only after mounting, since EnemyComponent.onLoad
-        // overwrites `position` to a random spawn point.
-        final closeEnemy = GreenSoldierComponent(blueprint: stationarySoldier);
-        game.world.spawnEnemy(closeEnemy);
+      // Enemy just outside the dead zone but still in range: gets hit.
+      final farEnemy = GreenSoldierComponent(blueprint: stationarySoldier);
+      game.world.spawnEnemy(farEnemy);
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+      farEnemy.position = silo.position + Vector2(blueprint.minRange + 20, 0);
+      for (var i = 0; i < 40; i++) {
         await Future<void>.delayed(Duration.zero);
-        game.update(0);
-        closeEnemy.position = silo.position + Vector2(blueprint.minRange / 2, 0);
-        for (var i = 0; i < 40; i++) {
-          await Future<void>.delayed(Duration.zero);
-          game.update(0.2);
-        }
-        expect(closeEnemy.health, closeEnemy.blueprint.maxHealth);
-
-        // Enemy just outside the dead zone but still in range: gets hit.
-        final farEnemy = GreenSoldierComponent(blueprint: stationarySoldier);
-        game.world.spawnEnemy(farEnemy);
-        await Future<void>.delayed(Duration.zero);
-        game.update(0);
-        farEnemy.position = silo.position + Vector2(blueprint.minRange + 20, 0);
-        for (var i = 0; i < 40; i++) {
-          await Future<void>.delayed(Duration.zero);
-          game.update(0.2);
-        }
-        expect(farEnemy.health, lessThan(farEnemy.blueprint.maxHealth));
-      },
-    );
+        game.update(0.2);
+      }
+      expect(farEnemy.health, lessThan(farEnemy.blueprint.maxHealth));
+    });
   });
 
   test('every scene generates a terrain where every spawn can reach base', () {

@@ -53,30 +53,39 @@ abstract class MobileUnitComponent extends PositionComponent
   bool _destroyed = false;
   late final PositionComponent _visual;
 
-  MobileUnitComponent({required this.blueprint, required this.team, super.position})
-    : health = blueprint.maxHealth,
-      super(
-        size: Vector2.all(blueprint.size),
-        anchor: Anchor.center,
-        priority: team.isEnemy ? 10 : 9,
-      );
+  MobileUnitComponent({
+    required this.blueprint,
+    required this.team,
+    super.position,
+  }) : health = blueprint.maxHealth,
+       super(
+         size: Vector2.all(blueprint.size),
+         anchor: Anchor.center,
+         priority: team.isEnemy ? 10 : 9,
+       );
 
   @override
   Set<UnitDomain> get attackDomains => blueprint.attackDomains;
 
   @override
-  UnitDomain get domain => blueprint.domain;
+  bool get destroyed => _destroyed;
+
+  /// Multiplies [MobileUnitBlueprint.attackRange] when scanning for
+  /// something to engage - used by the enemy side's "clear obstacles"
+  /// directive to make units eager to detour toward a tower that isn't
+  /// directly in their path yet.
+  double get detectionRangeMultiplier => 1.0;
 
   @override
-  bool get destroyed => _destroyed;
+  UnitDomain get domain => blueprint.domain;
+
+  /// Current attack damage, after any side-specific scaling.
+  double get effectiveAttackDamage => blueprint.attackDamage;
 
   /// Current max health, after any side-specific scaling (ally units scale
   /// with the level of the building that produced them - see
   /// `AllyUnitComponent`).
   double get effectiveMaxHealth => blueprint.maxHealth;
-
-  /// Current attack damage, after any side-specific scaling.
-  double get effectiveAttackDamage => blueprint.attackDamage;
 
   @override
   double get healthRatio => (health / effectiveMaxHealth).clamp(0.0, 1.0);
@@ -86,12 +95,6 @@ abstract class MobileUnitComponent extends PositionComponent
   /// engages defenses no matter how close they are.
   bool get ignoresEngagement => false;
 
-  /// Multiplies [MobileUnitBlueprint.attackRange] when scanning for
-  /// something to engage - used by the enemy side's "clear obstacles"
-  /// directive to make units eager to detour toward a tower that isn't
-  /// directly in their path yet.
-  double get detectionRangeMultiplier => 1.0;
-
   /// Vehicles on the enemy side telegraph an impending death with sparking
   /// smoke at low HP - kept off by default (ally vehicles just fight to
   /// the end) since it was never part of the ally side's original design.
@@ -100,6 +103,12 @@ abstract class MobileUnitComponent extends PositionComponent
   /// Hook for subclasses to attach extra always-on visuals (spinning
   /// rotors, blinking lights, etc.) once [_visual] is loaded.
   Future<void> addExtraVisuals(PositionComponent visual) async {}
+
+  /// Blends a raw direction with a short-range separation push away from
+  /// nearby units of the same side/domain, so a crowd converging on the
+  /// same point flows around itself instead of stacking - only the enemy
+  /// side does this today (see `EnemyComponent`).
+  Vector2 applySeparationSteering(Vector2 dir) => dir;
 
   Future<Sprite> buildSprite();
 
@@ -114,35 +123,9 @@ abstract class MobileUnitComponent extends PositionComponent
   /// are placed at their producing building).
   Vector2? initialPosition() => null;
 
-  /// Called once this unit reaches [goalPosition] with nothing left to
-  /// engage - enemies escape past the base and damage the player, allies
-  /// just hold and wait for a new target next frame.
-  void onReachGoal() {}
-
   /// Called right after this unit's own death FX are spawned - enemies
   /// award kill gold here, allies do nothing extra.
   void onDeath() {}
-
-  /// Everything this unit's weapon might stop and engage instead of
-  /// continuing toward [goalPosition] - towers+allies for enemies, enemies
-  /// only for allies.
-  Iterable<Attackable> opposingTargets();
-
-  /// Removes this unit from whichever typed roster (`GameWorld.
-  /// activeEnemies`/`activeAllies`) it was spawned into.
-  void removeSelf();
-
-  /// Lower is better - the "closest wins" default (used by allies and most
-  /// enemy focus hints). Enemy overrides this to chase the weakest tower or
-  /// to strongly prefer towers/structures over ally units when directed to
-  /// clear obstacles.
-  double scoreFor(Attackable candidate, double distance) => distance;
-
-  /// Blends a raw direction with a short-range separation push away from
-  /// nearby units of the same side/domain, so a crowd converging on the
-  /// same point flows around itself instead of stacking - only the enemy
-  /// side does this today (see `EnemyComponent`).
-  Vector2 applySeparationSteering(Vector2 dir) => dir;
 
   @override
   Future<void> onLoad() async {
@@ -176,6 +159,20 @@ abstract class MobileUnitComponent extends PositionComponent
     }
   }
 
+  /// Called once this unit reaches [goalPosition] with nothing left to
+  /// engage - enemies escape past the base and damage the player, allies
+  /// just hold and wait for a new target next frame.
+  void onReachGoal() {}
+
+  /// Everything this unit's weapon might stop and engage instead of
+  /// continuing toward [goalPosition] - towers+allies for enemies, enemies
+  /// only for allies.
+  Iterable<Attackable> opposingTargets();
+
+  /// Removes this unit from whichever typed roster (`GameWorld.
+  /// activeEnemies`/`activeAllies`) it was spawned into.
+  void removeSelf();
+
   @override
   void render(Canvas canvas) {
     if (health >= effectiveMaxHealth) return;
@@ -192,6 +189,12 @@ abstract class MobileUnitComponent extends PositionComponent
       Paint()..color = team.color,
     );
   }
+
+  /// Lower is better - the "closest wins" default (used by allies and most
+  /// enemy focus hints). Enemy overrides this to chase the weakest tower or
+  /// to strongly prefer towers/structures over ally units when directed to
+  /// clear obstacles.
+  double scoreFor(Attackable candidate, double distance) => distance;
 
   @override
   void takeDamage(double amount) {
@@ -287,6 +290,24 @@ abstract class MobileUnitComponent extends PositionComponent
     removeSelf();
   }
 
+  Attackable? _findTargetInRange() {
+    Attackable? best;
+    var bestScore = double.infinity;
+    final maxDist = blueprint.attackRange * detectionRangeMultiplier;
+    for (final candidate in opposingTargets()) {
+      if (candidate.destroyed) continue;
+      if (!canAttack(candidate.domain)) continue;
+      final d = candidate.position.distanceTo(position);
+      if (d > maxDist) continue;
+      final score = scoreFor(candidate, d);
+      if (score < bestScore) {
+        best = candidate;
+        bestScore = score;
+      }
+    }
+    return best;
+  }
+
   void _fireAt(Attackable target, Vector2 toTarget) {
     final spawnPos = position + toTarget.normalized() * (size.x / 2);
     final damage = effectiveAttackDamage;
@@ -342,7 +363,10 @@ abstract class MobileUnitComponent extends PositionComponent
           ),
         );
         game.world.spawn(
-          ImpactSparkComponent(position: target.position.clone(), color: accent),
+          ImpactSparkComponent(
+            position: target.position.clone(),
+            color: accent,
+          ),
         );
         game.audioRepository.play(SfxType.laserShot, volume: 0.4);
     }
@@ -357,24 +381,6 @@ abstract class MobileUnitComponent extends PositionComponent
         ),
       ),
     );
-  }
-
-  Attackable? _findTargetInRange() {
-    Attackable? best;
-    var bestScore = double.infinity;
-    final maxDist = blueprint.attackRange * detectionRangeMultiplier;
-    for (final candidate in opposingTargets()) {
-      if (candidate.destroyed) continue;
-      if (!canAttack(candidate.domain)) continue;
-      final d = candidate.position.distanceTo(position);
-      if (d > maxDist) continue;
-      final score = scoreFor(candidate, d);
-      if (score < bestScore) {
-        best = candidate;
-        bestScore = score;
-      }
-    }
-    return best;
   }
 
   void _flyToward(Vector2 target, double dt) {

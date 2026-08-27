@@ -84,4 +84,3 @@ class WarFactoryComponent extends TowerComponent {
     };
   }
 }
-

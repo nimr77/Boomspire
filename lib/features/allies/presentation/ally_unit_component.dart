@@ -30,22 +30,16 @@ abstract class AllyUnitComponent extends MobileUnitComponent {
     health = effectiveMaxHealth;
   }
 
-  double get _levelMultiplier => pow(1.25, level).toDouble();
-
   @override
   double get effectiveAttackDamage => blueprint.attackDamage * _levelMultiplier;
 
   @override
   double get effectiveMaxHealth => blueprint.maxHealth * _levelMultiplier;
 
+  double get _levelMultiplier => pow(1.25, level).toDouble();
+
   @override
   Vector2? goalPosition() => _nearestEnemy()?.position;
-
-  @override
-  Iterable<Attackable> opposingTargets() => game.world.activeEnemies;
-
-  @override
-  void removeSelf() => game.world.removeAlly(this);
 
   @override
   Future<void> onLoad() async {
@@ -59,6 +53,12 @@ abstract class AllyUnitComponent extends MobileUnitComponent {
       ),
     );
   }
+
+  @override
+  Iterable<Attackable> opposingTargets() => game.world.activeEnemies;
+
+  @override
+  void removeSelf() => game.world.removeAlly(this);
 
   EnemyComponent? _nearestEnemy() {
     EnemyComponent? best;
@@ -75,4 +75,3 @@ abstract class AllyUnitComponent extends MobileUnitComponent {
     return best;
   }
 }
-

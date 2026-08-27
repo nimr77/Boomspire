@@ -2,11 +2,11 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
+import '../../../core/combat/mobile_unit_repository.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
-import '../../../core/combat/mobile_unit_repository.dart';
 import '../../audio/domain/repos/audio_repository.dart';
 import '../../level_select/presentation/biome_preview.dart';
 import '../../progress/domain/repos/progress_repository.dart';
