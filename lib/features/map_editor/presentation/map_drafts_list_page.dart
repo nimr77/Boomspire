@@ -5,6 +5,7 @@ import '../../../core/di/service_locator.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/repos/map_draft_repository.dart';
+import 'map_drafts_list_state.dart';
 import 'map_editor_page.dart';
 
 /// Entry point for the map editor: browse, open, create, or delete
@@ -17,9 +18,22 @@ class MapDraftsListPage extends StatefulWidget {
 }
 
 class _MapDraftsListPageState extends State<MapDraftsListPage> {
-  final MapDraftRepository _draftRepository = getIt<MapDraftRepository>();
-  late Future<List<MapDraft>> _draftsFuture = _draftRepository.listDrafts();
+  final MapDraftsListState _state = MapDraftsListState(
+    getIt<MapDraftRepository>(),
+  );
   late MapDraft _pendingNewDraft = _freshDraft();
+
+  @override
+  void initState() {
+    super.initState();
+    _state.refresh();
+  }
+
+  @override
+  void dispose() {
+    _state.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +59,12 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
         openBuilder: (context, closeContainer) =>
             MapEditorPage(initialDraft: _pendingNewDraft),
       ),
-      body: FutureBuilder<List<MapDraft>>(
-        future: _draftsFuture,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+      body: ValueListenableBuilder<List<MapDraft>?>(
+        valueListenable: _state.drafts,
+        builder: (context, drafts, _) {
+          if (drafts == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          final drafts = snapshot.data!;
           if (drafts.isEmpty) {
             return const Center(
               child: Text(
@@ -107,8 +120,7 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
   }
 
   Future<void> _deleteDraft(String id) async {
-    await _draftRepository.deleteDraft(id);
-    _refresh();
+    await _state.deleteDraft(id);
   }
 
   MapDraft _freshDraft() => MapDraft(
@@ -116,8 +128,8 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
     name: 'New Map',
   );
 
-  void _refresh() => setState(() {
-    _draftsFuture = _draftRepository.listDrafts();
-    _pendingNewDraft = _freshDraft();
-  });
+  void _refresh() {
+    _state.refresh();
+    setState(() => _pendingNewDraft = _freshDraft());
+  }
 }

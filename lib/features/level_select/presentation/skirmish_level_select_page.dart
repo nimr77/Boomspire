@@ -12,6 +12,7 @@ import '../../map_editor/domain/models/map_draft.dart';
 import '../../map_editor/domain/repos/map_draft_repository.dart';
 import '../../terrain/domain/models/biome.dart';
 import 'biome_preview.dart';
+import 'skirmish_level_select_state.dart';
 
 /// Skirmish map picker: lists the built-in "Featured" skirmish scenes plus
 /// any user-authored [MapDraft]s saved in [GameMode.skirmish] mode from the
@@ -60,8 +61,21 @@ class _SkirmishDraftTile extends StatelessWidget {
 }
 
 class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
-  final MapDraftRepository _draftRepository = getIt<MapDraftRepository>();
-  late final Future<List<MapDraft>> _draftsFuture = _loadSkirmishDrafts();
+  final SkirmishLevelSelectState _state = SkirmishLevelSelectState(
+    getIt<MapDraftRepository>(),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _state.load();
+  }
+
+  @override
+  void dispose() {
+    _state.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,10 +166,9 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      FutureBuilder<List<MapDraft>>(
-                        future: _draftsFuture,
-                        builder: (context, snapshot) {
-                          final drafts = snapshot.data;
+                      ValueListenableBuilder<List<MapDraft>?>(
+                        valueListenable: _state.drafts,
+                        builder: (context, drafts, _) {
                           if (drafts == null) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 24),
@@ -224,11 +237,6 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
         ],
       ),
     );
-  }
-
-  Future<List<MapDraft>> _loadSkirmishDrafts() async {
-    final drafts = await _draftRepository.listDrafts();
-    return drafts.where((d) => d.mode == GameMode.skirmish).toList();
   }
 }
 

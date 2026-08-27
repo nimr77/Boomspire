@@ -1,0 +1,29 @@
+import 'package:flutter/foundation.dart';
+
+import '../../map_editor/domain/models/editor_terrain_preview.dart';
+import '../../map_editor/domain/models/map_draft.dart';
+import '../../map_editor/impl/editor_terrain_generator.dart';
+
+/// Page-owned state for [SkirmishPlacementPage]'s draft preview: generates
+/// the [EditorTerrainPreview] for a hand-authored map once and caches the
+/// in-flight future so both the UI and the "Start Battle" launch path await
+/// the same result. Instantiated and disposed by the page's own State.
+class SkirmishPlacementState {
+  Future<EditorTerrainPreview>? _future;
+  final ValueNotifier<EditorTerrainPreview?> _preview = ValueNotifier(null);
+
+  ValueListenable<EditorTerrainPreview?> get preview => _preview;
+
+  Future<EditorTerrainPreview> load(MapDraft draft) =>
+      _future ??= _load(draft);
+
+  Future<EditorTerrainPreview> _load(MapDraft draft) async {
+    final result = await EditorTerrainGenerator().generate(draft);
+    _preview.value = result;
+    return result;
+  }
+
+  void dispose() {
+    _preview.dispose();
+  }
+}

@@ -13,11 +13,11 @@ import '../../game_core/presentation/player_palette.dart';
 import '../../map_editor/domain/models/editor_point.dart';
 import '../../map_editor/domain/models/editor_terrain_preview.dart';
 import '../../map_editor/domain/models/map_draft.dart';
-import '../../map_editor/impl/editor_terrain_generator.dart';
 import '../../map_editor/impl/map_draft_terrain_repository.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../../terrain/presentation/obstacle_color.dart';
 import 'biome_preview.dart';
+import 'skirmish_placement_state.dart';
 
 /// Maps a built-in scene's [HomeLayout] to a fractional position within the
 /// arena - matches the cell math `TerrainRepositoryImpl` uses so the marker
@@ -284,10 +284,7 @@ class _SeatChipState extends State<_SeatChip> {
 }
 
 class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
-  late final Future<EditorTerrainPreview>? _draftPreviewFuture =
-      widget.draft == null
-      ? null
-      : EditorTerrainGenerator().generate(widget.draft!);
+  late final SkirmishPlacementState? _placementState;
 
   int? _selectedSlot;
   bool _launching = false;
@@ -343,10 +340,9 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                               border: Border.all(color: Colors.white24),
                             ),
                             child: _isDraft
-                                ? FutureBuilder<EditorTerrainPreview>(
-                                    future: _draftPreviewFuture,
-                                    builder: (context, snapshot) {
-                                      final preview = snapshot.data;
+                                ? ValueListenableBuilder<EditorTerrainPreview?>(
+                                    valueListenable: _placementState!.preview,
+                                    builder: (context, preview, _) {
                                       if (preview == null) {
                                         return const Center(
                                           child: CircularProgressIndicator(),
@@ -467,13 +463,22 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
   @override
   void initState() {
     super.initState();
-    if (!_isDraft) {
+    if (_isDraft) {
+      _placementState = SkirmishPlacementState()..load(widget.draft!);
+    } else {
+      _placementState = null;
       final sites = widget.scene!.homeSites;
       final playerIndex = sites.indexWhere(
         (s) => s.owner == HomeSiteOwner.player,
       );
       _selectedSlot = playerIndex >= 0 ? playerIndex : null;
     }
+  }
+
+  @override
+  void dispose() {
+    _placementState?.dispose();
+    super.dispose();
   }
 
   void _randomize() {
@@ -538,7 +543,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
     }
 
     setState(() => _launching = true);
-    final preview = await _draftPreviewFuture!;
+    final preview = await _placementState!.load(widget.draft!);
     if (!mounted) return;
     setState(() => _launching = false);
 

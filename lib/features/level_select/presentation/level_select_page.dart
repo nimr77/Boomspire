@@ -16,6 +16,7 @@ import '../../progress/domain/models/progress_snapshot.dart';
 import '../../progress/domain/repos/progress_repository.dart';
 import '../../terrain/domain/models/biome.dart';
 import 'biome_preview.dart';
+import 'level_select_state.dart';
 
 /// Pre-game scene picker: choose a campaign (terrain + wave count +
 /// strategy) before the battle begins.
@@ -104,9 +105,21 @@ class _DifficultySelector extends StatelessWidget {
 }
 
 class _LevelSelectPageState extends State<LevelSelectPage> {
-  final ProgressRepository _progressRepository = getIt<ProgressRepository>();
   final AccountProfileState _accountProfileState = getIt<AccountProfileState>();
+  final LevelSelectState _state = LevelSelectState(getIt<ProgressRepository>());
   GameDifficulty _difficulty = GameDifficulty.normal;
+
+  @override
+  void initState() {
+    super.initState();
+    _state.load();
+  }
+
+  @override
+  void dispose() {
+    _state.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,11 +164,11 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                             .fadeIn(duration: 400.ms, delay: 80.ms)
                             .slideY(begin: -0.2, end: 0),
                         const SizedBox(height: 28),
-                        FutureBuilder<ProgressSnapshot>(
-                          future: _progressRepository.load(),
-                          builder: (context, progressSnapshot) {
+                        ValueListenableBuilder<ProgressSnapshot?>(
+                          valueListenable: _state.progress,
+                          builder: (context, progressValue, _) {
                             final progress =
-                                progressSnapshot.data ?? ProgressSnapshot.empty;
+                                progressValue ?? ProgressSnapshot.empty;
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [

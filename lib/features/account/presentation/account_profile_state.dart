@@ -9,11 +9,17 @@ import '../domain/repos/account_repository.dart';
 /// from [AccountRepository] on every rebuild.
 class AccountProfileState {
   final AccountRepository _accountRepository;
-  final ValueNotifier<AccountProfile?> profile = ValueNotifier(null);
+  final ValueNotifier<AccountProfile?> _profile = ValueNotifier(null);
 
   AccountProfileState(this._accountRepository);
 
+  ValueListenable<AccountProfile?> get profile => _profile;
+
   Future<void> refresh() async {
-    profile.value = await _accountRepository.loadProfile();
+    _profile.value = await _accountRepository.loadProfile();
+  }
+
+  void dispose() {
+    _profile.dispose();
   }
 }
