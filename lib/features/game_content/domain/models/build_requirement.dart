@@ -25,6 +25,39 @@ final class BuildingExistsRequirement extends BuildRequirement {
   };
 }
 
+/// Requires at least one of [buildingIds] (each a [GameObjectDefinition.id])
+/// to already exist for the builder's team - the "OR" counterpart to
+/// [BuildingExistsRequirement]'s implicit "AND" (every requirement in a
+/// [GameObjectDefinition.requirements] list must be satisfied, but this one
+/// requirement itself is satisfied by any single match).
+final class AnyBuildingExistsRequirement extends BuildRequirement {
+  final List<String> buildingIds;
+
+  const AnyBuildingExistsRequirement(this.buildingIds);
+
+  @override
+  int get hashCode => Object.hash(
+    AnyBuildingExistsRequirement,
+    Object.hashAll(buildingIds),
+  );
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! AnyBuildingExistsRequirement) return false;
+    if (other.buildingIds.length != buildingIds.length) return false;
+    for (var i = 0; i < buildingIds.length; i++) {
+      if (other.buildingIds[i] != buildingIds[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'kind': 'anyBuildingExists',
+    'buildingIds': buildingIds,
+  };
+}
+
 /// A single condition gating whether a tower/building/unit can be built -
 /// shared across all three `GameObjectCategory` kinds instead of each one
 /// inventing its own ad-hoc gold/score/count check.
@@ -41,6 +74,9 @@ sealed class BuildRequirement {
       'buildingExists' => BuildingExistsRequirement(
         json['buildingId'] as String,
         minCount: json['minCount'] as int? ?? 1,
+      ),
+      'anyBuildingExists' => AnyBuildingExistsRequirement(
+        (json['buildingIds'] as List<dynamic>).cast<String>(),
       ),
       'maxCount' => MaxCountRequirement(json['max'] as int),
       final other => throw ArgumentError(

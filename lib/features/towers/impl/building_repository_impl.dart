@@ -1,4 +1,6 @@
 import '../../../generated/l10n.dart';
+import '../../game_content/domain/models/build_requirement.dart';
+import '../../game_content/domain/models/default_build_requirements.dart';
 import '../../game_content/domain/models/game_object_definition.dart';
 import '../../game_content/impl/game_object_definition_mapper.dart';
 import '../domain/models/building_type.dart';
@@ -65,6 +67,15 @@ class BuildingRepositoryImpl implements BuildingRepository {
           fireRate: 1,
           maxHp: 200,
         ),
+        BuildingType.powerPlant: UnitBlueprint(
+          type: BuildingType.powerPlant,
+          name: S.current.buildingNamePowerPlant,
+          cost: 350,
+          range: 0,
+          damage: 0,
+          fireRate: 1,
+          maxHp: 200,
+        ),
       };
 
   Map<BuildingType, UnitBlueprint> get _resolvedBlueprints {
@@ -80,4 +91,9 @@ class BuildingRepositoryImpl implements BuildingRepository {
 
   @override
   UnitBlueprint blueprintFor(BuildingType type) => _resolvedBlueprints[type]!;
+
+  @override
+  List<BuildRequirement> requirementsFor(BuildingType type) =>
+      findOverride(overrides, buildingDefinitionId(type))?.requirements ??
+      defaultRequirementsForBuilding(type);
 }

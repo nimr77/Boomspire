@@ -126,6 +126,7 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                                 BuildingType.trainingCenter => Icons.groups,
                                 BuildingType.warFactory => Icons.factory,
                                 BuildingType.goldMine => Icons.diamond,
+                                BuildingType.powerPlant => Icons.bolt,
                                 _ => Icons.help_outline,
                               },
                               color: accent,

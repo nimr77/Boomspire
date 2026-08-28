@@ -78,6 +78,7 @@ class AiSkirmishControllerComponent extends Component
     BuildingType.goldMine,
     BuildingType.trainingCenter,
     BuildingType.warFactory,
+    BuildingType.powerPlant,
     BuildingType.techLab,
     BuildingType.commandPost,
   ];
@@ -129,12 +130,31 @@ class AiSkirmishControllerComponent extends Component
   );
 
   /// Attack units produced this "wave" that are being held near the AI's
-  /// own base (see [_tryProduce]) until [SkirmishDirective.squadSize] of
-  /// them are ready, at which point [_dispatchAttackSquad] sends them all
-  /// at [SkirmishDirective.attackTarget] together - the AI's answer to
-  /// "how many units, attacking where" instead of each one trickling off
-  /// alone the instant it's produced.
+  /// own base (see [_tryProduce]) until [_requiredSquadSize] of them are
+  /// ready, at which point [_dispatchAttackSquad] sends them all at
+  /// [SkirmishDirective.attackTarget] together - the AI's answer to "how
+  /// many units, attacking where" instead of each one trickling off alone
+  /// the instant it's produced.
   final List<MobileUnitComponent> _stagedAttackers = [];
+
+  /// The squad size the AI currently insists on before dispatching an
+  /// attack - starts at [SkirmishDirective.squadSize] each tick, but grows
+  /// (see [_evaluateLastAttack]) once a dispatched squad is wiped out
+  /// without making any real progress against its target, so a repelled
+  /// assault gets rebuilt bigger before trying again instead of throwing
+  /// another same-sized (and equally doomed) squad at the same defenses.
+  int _requiredSquadSize = 0;
+  static const _maxRequiredSquadSize = 12;
+
+  /// Bookkeeping for [_evaluateLastAttack]: the target and units of the
+  /// most recently dispatched squad, and how long to wait before judging
+  /// whether that attack actually accomplished anything. Null/empty once
+  /// there's no outstanding attack to evaluate.
+  Attackable? _pendingAttackTarget;
+  double _pendingAttackTargetHealthRatio = 1.0;
+  List<MobileUnitComponent> _pendingAttackUnits = const [];
+  double _pendingAttackTimer = 0;
+  static const _attackEvaluationDelay = 10.0;
 
   final Random _rnd = Random();
 
@@ -172,6 +192,19 @@ class AiSkirmishControllerComponent extends Component
         // Factory ahead of) a purely-combat production roll.
         _tryCaptureNode(aiTeam);
         _tryProduce(aiTeam);
+      }
+      // Re-evaluate the previous attack's outcome and retry dispatching
+      // whatever's currently staged EVERY decision tick - not just the
+      // instant a fresh unit gets staged. Without this, a squad that
+      // couldn't find a live target the moment it filled up (e.g. the
+      // enemy base was mid-mount, or its only tower target had just been
+      // destroyed) would sit staged forever unless another unit happened
+      // to be produced later; this is what let the AI's first attack also
+      // be its last.
+      _evaluateLastAttack(_decisionInterval);
+      if (_stagedAttackers.isNotEmpty &&
+          _stagedAttackers.length >= _effectiveSquadSize) {
+        _dispatchAttackSquad(aiTeam);
       }
     }
   }
@@ -260,16 +293,62 @@ class AiSkirmishControllerComponent extends Component
       : UnitDomain.ground;
 
   /// Sends every currently-staged unit at [_resolveAttackTarget] together,
-  /// then clears the staging list - the AI's answer to "how to attack with
-  /// what quantity and where".
+  /// then clears the staging list and records the outcome to evaluate later
+  /// (see [_evaluateLastAttack]) - the AI's answer to "how to attack with
+  /// what quantity and where". If no live target can be resolved right now
+  /// the staged units are simply left in place (still defending themselves,
+  /// per [MobileUnitComponent.issueMoveOrder]) and dispatch is retried
+  /// automatically on the next decision tick (see [update]).
   void _dispatchAttackSquad(Team aiTeam) {
     final target = _resolveAttackTarget(aiTeam);
     if (target == null) return;
+    final dispatched = <MobileUnitComponent>[];
     for (final unit in _stagedAttackers) {
       if (unit.destroyed) continue;
       unit.issueAttackOrder(target);
+      dispatched.add(unit);
     }
     _stagedAttackers.clear();
+    if (dispatched.isEmpty) return;
+    _pendingAttackTarget = target;
+    _pendingAttackTargetHealthRatio = target.healthRatio;
+    _pendingAttackUnits = dispatched;
+    _pendingAttackTimer = _attackEvaluationDelay;
+  }
+
+  /// The squad size actually required before [update] dispatches the
+  /// staged attackers - the directive's requested size, or [_requiredSquadSize]
+  /// once a previous attack failed and demanded a bigger follow-up, whichever
+  /// is larger.
+  int get _effectiveSquadSize => max(_directive.squadSize, _requiredSquadSize);
+
+  /// Judges whether the most recently dispatched squad (see
+  /// [_dispatchAttackSquad]) actually accomplished anything, [
+  /// _attackEvaluationDelay] seconds after it was sent - long enough for it
+  /// to have reached and fought at its target. An attack that made no dent
+  /// in its target's health *and* got completely wiped out counts as a
+  /// failure: [_requiredSquadSize] grows so the next squad the AI rebuilds
+  /// is bigger before it tries again ("prepare a stronger strategy after a
+  /// failed attack", per the fix this implements). Any real progress
+  /// (the target took damage or was destroyed) resets the requirement back
+  /// down to the directive's own squad size.
+  void _evaluateLastAttack(double elapsed) {
+    final target = _pendingAttackTarget;
+    if (target == null) return;
+    _pendingAttackTimer -= elapsed;
+    if (_pendingAttackTimer > 0) return;
+
+    final madeProgress =
+        target.destroyed ||
+        target.healthRatio < _pendingAttackTargetHealthRatio - 0.02;
+    final wiped = _pendingAttackUnits.every((u) => u.destroyed);
+    if (wiped && !madeProgress) {
+      _requiredSquadSize = min(_requiredSquadSize + 2, _maxRequiredSquadSize);
+    } else if (madeProgress) {
+      _requiredSquadSize = _directive.squadSize;
+    }
+    _pendingAttackTarget = null;
+    _pendingAttackUnits = const [];
   }
 
   int _ownedCombatTowerCount(Team aiTeam) => game.world.activeTowers
@@ -293,7 +372,8 @@ class AiSkirmishControllerComponent extends Component
   UnitKind _pickKind(
     List<UnitKind> kinds,
     Team aiTeam,
-    ({int air, int vehicle}) enemy,
+    ({int air, int vehicle, int airTowers, int groundTowers, int builders})
+    enemy,
   ) {
     final preferred = _directive.preferredUnitKind;
     if (preferred != null) {
@@ -315,16 +395,60 @@ class AiSkirmishControllerComponent extends Component
     return weighted[_rnd.nextInt(weighted.length)];
   }
 
-  /// A coarse read of what the human player currently has on the field,
-  /// used to bias which unit kind the AI produces next.
-  ({int air, int vehicle}) _playerComposition() {
+  /// A coarse read of what the human player currently has on the field AND
+  /// standing - mobile units, combat towers, and production buildings
+  /// ("builders") - used to bias which unit kind the AI produces next (see
+  /// [_pickKind]) and which combat tower it builds (see
+  /// [_strategicCounterDomain]/[_tryBuild]). Recomputed fresh from live
+  /// state every decision tick, so the AI's strategy keeps adapting as the
+  /// player builds (or loses) any new unit, tower, or production building -
+  /// never a one-time snapshot taken only at the start of the match.
+  ({int air, int vehicle, int airTowers, int groundTowers, int builders})
+  _playerComposition() {
     var air = 0;
     var vehicle = 0;
     for (final unit in game.world.unitsAlliedWith(game.playerTeam)) {
       if (unit.blueprint.domain == UnitDomain.air) air++;
       if (unit.blueprint.isVehicle) vehicle++;
     }
-    return (air: air, vehicle: vehicle);
+    var airTowers = 0;
+    var groundTowers = 0;
+    var builders = 0;
+    for (final tower in game.world.activeTowers) {
+      if (tower.owner.id != game.playerTeam.id || tower.destroyed) continue;
+      final type = tower.blueprint.type;
+      if (type == BuildingType.trainingCenter || type == BuildingType.warFactory) {
+        builders++;
+      } else if (tower.blueprint.damage > 0) {
+        if (tower.blueprint.attackDomains.contains(UnitDomain.air)) {
+          airTowers++;
+        } else {
+          groundTowers++;
+        }
+      }
+    }
+    return (
+      air: air,
+      vehicle: vehicle,
+      airTowers: airTowers,
+      groundTowers: groundTowers,
+      builders: builders,
+    );
+  }
+
+  /// The domain most worth countering given the player's overall fielded
+  /// composition (units AND standing towers, see [_playerComposition]) -
+  /// used to bias which combat tower the AI builds when nothing is
+  /// actively assaulting its base right now (see [_tryBuild]); returns null
+  /// when the player has nothing up yet to react to.
+  UnitDomain? _strategicCounterDomain(
+    ({int air, int vehicle, int airTowers, int groundTowers, int builders})
+    enemy,
+  ) {
+    final airSignal = enemy.air + enemy.airTowers;
+    final groundSignal = enemy.vehicle + enemy.groundTowers;
+    if (airSignal == 0 && groundSignal == 0) return null;
+    return airSignal > groundSignal ? UnitDomain.air : UnitDomain.ground;
   }
 
   Future<void> _refreshDirective() async {
@@ -358,11 +482,11 @@ class AiSkirmishControllerComponent extends Component
   /// auto-fights anything that wanders into range, per [MobileUnitComponent
   /// .issueMoveOrder]) instead of letting it immediately beeline off alone,
   /// and dispatches the whole staged squad together the moment it reaches
-  /// [SkirmishDirective.squadSize].
+  /// [_effectiveSquadSize].
   void _stageAttacker(Team aiTeam, MobileUnitComponent unit) {
     unit.issueMoveOrder(unit.position.clone());
     _stagedAttackers.add(unit);
-    if (_stagedAttackers.length >= _directive.squadSize) {
+    if (_stagedAttackers.length >= _effectiveSquadSize) {
       _dispatchAttackSquad(aiTeam);
     }
   }
@@ -411,11 +535,20 @@ class AiSkirmishControllerComponent extends Component
         _ownedCountOf(aiTeam, BuildingType.trainingCenter) > 0 ||
         _ownedCountOf(aiTeam, BuildingType.warFactory) > 0;
     final unitReserve = hasProduction ? _cheapestUnitCost(aiTeam) : 0;
+    final enemy = _playerComposition();
 
     final threats = _threatsNearBase(aiTeam, base.position);
     final defenseTowerCount = _ownedCombatTowerCount(aiTeam);
+    // The garrison floor rises not just when units are actively approaching
+    // right now, but also when the player is fielding more production
+    // buildings ("builders") than the AI has combat towers to answer with -
+    // a standing signal that a bigger assault is being prepared, worth
+    // getting ahead of instead of only reacting once units are already at
+    // the door.
     final defenseTarget =
-        _baseDefenseTowerTarget + (threats.isNotEmpty ? 2 : 0);
+        _baseDefenseTowerTarget +
+        (threats.isNotEmpty ? 2 : 0) +
+        (enemy.builders > defenseTowerCount ? 1 : 0);
     final needsDefense = defenseTowerCount < defenseTarget;
     final isUrgentDefense = needsDefense && threats.isNotEmpty;
     final skipMoreInfraForNow =
@@ -463,6 +596,25 @@ class AiSkirmishControllerComponent extends Component
             .toList();
         if (countering.isNotEmpty) {
           type = countering[_rnd.nextInt(countering.length)];
+        }
+      } else {
+        // No unit is actually at the gate right now, but the player's
+        // overall fielded composition (units and standing towers alike)
+        // still points at what will matter next time one is - lean toward
+        // building that counter instead of a flat coin toss, so the AI's
+        // tower choices keep adapting to the player's build-out, not just
+        // to an active raid.
+        final strategicDomain = _strategicCounterDomain(enemy);
+        if (strategicDomain != null) {
+          final countering = options
+              .where(
+                (t) =>
+                    game.blueprintFor(t).attackDomains.contains(strategicDomain),
+              )
+              .toList();
+          if (countering.isNotEmpty && _rnd.nextDouble() < 0.7) {
+            type = countering[_rnd.nextInt(countering.length)];
+          }
         }
       }
       type ??= options[_rnd.nextInt(options.length)];

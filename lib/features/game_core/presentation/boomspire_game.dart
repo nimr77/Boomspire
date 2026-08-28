@@ -19,6 +19,8 @@ import '../../audio/domain/models/sfx_type.dart';
 import '../../audio/domain/repos/audio_repository.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
 import '../../combat/presentation/move_order_marker_component.dart';
+import '../../game_content/domain/models/build_requirement.dart';
+import '../../game_content/impl/game_object_definition_mapper.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
@@ -88,17 +90,15 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   bool _terrainReady = false;
 
-  /// Whether each team (keyed by `Team.id`) has built a Tech Lab at least
-  /// once this run - required before that team can build a Laser Lance (see
-  /// [canBuildTower]). Stays true even if the lab is later destroyed/sold,
-  /// so already-built lasers never get retroactively locked out. Per-team
-  /// so the AI's own prerequisite chain is independent of the player's.
-  final Map<int, bool> _hasTechLabByTeam = {};
-
-  /// Whether each team has built a Command Post at least once this run -
-  /// required (together with a Tech Lab) before that team can build a SAM
-  /// Site. Stays true even if every Command Post is later destroyed/sold.
-  final Map<int, bool> _hasCommandPostByTeam = {};
+  /// Sticky per-team "has a structure with this `GameObjectDefinition` id
+  /// (e.g. `"building.techLab"`) ever been built" flag - backs every
+  /// [BuildingExistsRequirement]/[AnyBuildingExistsRequirement] prerequisite
+  /// check in [buildBlockReason]. Stays true even if every instance is
+  /// later destroyed/sold, so an already-unlocked buildable is never
+  /// retroactively re-locked. Populated generically for every successful
+  /// [buildStructure] call, per-team so the AI's own prerequisite chain is
+  /// independent of the player's.
+  final Map<String, Set<int>> _everBuiltByTeam = {};
 
   final ValueNotifier<UnitType?> selectedTowerType = ValueNotifier(null);
   final ValueNotifier<TowerComponent?> selectedTower = ValueNotifier(null);
@@ -213,40 +213,64 @@ class BoomspireGame extends FlameGame<GameWorld>
       ? buildingRepository.blueprintFor(type)
       : towerRepository.blueprintFor(type as TowerType);
 
+  /// The catalog of [BuildRequirement]s gating [type] - a synced server
+  /// override's [GameObjectDefinition.requirements] if one exists (see
+  /// `GameContentSyncService`), otherwise the built-in default table (see
+  /// `default_build_requirements.dart`). This is the single place both
+  /// [buildBlockReason] (prerequisites/score gates) and [buildLimitFor]
+  /// (flat per-type caps, via any [MaxCountRequirement] in the list) read
+  /// from, so every build condition for towers/buildings genuinely comes
+  /// from data rather than a hardcoded per-type `if`.
+  List<BuildRequirement> _requirementsFor(UnitType type) => type is BuildingType
+      ? buildingRepository.requirementsFor(type)
+      : towerRepository.requirementsFor(type as TowerType);
+
+  /// A short, human-readable label for the building identified by
+  /// [buildingId] (e.g. `"building.techLab"`) - reuses the buildable's own
+  /// (already-localized) blueprint name rather than inventing new text.
+  String _buildingLabel(String buildingId) {
+    final name = buildingId.split('.').last;
+    final type = BuildingType.values.byName(name);
+    return buildingRepository.blueprintFor(type).name;
+  }
+
   /// Why [type] can't be built right now for [owner] (defaults to the human
   /// player), or null if it's buildable (gold permitting) - shown in the
   /// build menu's lock overlay/tooltip, and used identically by the AI
-  /// skirmish opponent so both sides are bound by the same rules.
+  /// skirmish opponent so both sides are bound by the same rules. Every
+  /// prerequisite/score check below is driven entirely by [type]'s own
+  /// [BuildRequirement] list (see [_requirementsFor]), NOT hardcoded per
+  /// type, so a synced server override can add/remove/retune any of these
+  /// gates without a client release.
   String? buildBlockReason(UnitType type, {Team? owner}) {
     final builder = owner ?? playerTeam;
-    if (type == TowerType.laser && !hasTechLabFor(builder)) {
-      return 'Requires Tech Lab';
-    }
-    if (type == TowerType.artilleryBunker &&
-        commandPostCountFor(builder) == 0) {
-      return 'Requires Command Post';
-    }
-    if (type == TowerType.sam &&
-        !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
-      return 'Requires Tech Lab & Command Post';
-    }
-    if (type == TowerType.rocketSilo &&
-        !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
-      return 'Requires Tech Lab & Command Post';
-    }
-    // Score-gated unlocks only make sense for wave-defense's ramping score
-    // - skirmish has no wave progression (`currentScore` barely moves), so
-    // gating War Factory/Training Center behind it there just permanently
-    // locks vehicles/soldiers out. Skirmish is bound only by gold,
-    // prerequisites and per-type limits, same as the AI already was.
-    if (builder.id == playerTeam.id && scene.mode != GameMode.skirmish) {
-      if (type == BuildingType.trainingCenter &&
-          gameState.currentScore < GameConfig.trainingCenterUnlockScore) {
-        return 'Requires ${GameConfig.trainingCenterUnlockScore} score';
-      }
-      if (type == BuildingType.warFactory &&
-          gameState.currentScore < GameConfig.warFactoryUnlockScore) {
-        return 'Requires ${GameConfig.warFactoryUnlockScore} score';
+    for (final req in _requirementsFor(type)) {
+      switch (req) {
+        case BuildingExistsRequirement(:final buildingId):
+          if (!_everBuiltByTeam.containsKey(buildingId) ||
+              !_everBuiltByTeam[buildingId]!.contains(builder.id)) {
+            return 'Requires ${_buildingLabel(buildingId)}';
+          }
+        case AnyBuildingExistsRequirement(:final buildingIds):
+          final satisfied = buildingIds.any(
+            (id) => _everBuiltByTeam[id]?.contains(builder.id) ?? false,
+          );
+          if (!satisfied) {
+            return 'Requires ${buildingIds.map(_buildingLabel).join(' or ')}';
+          }
+        case ScoreRequirement(:final minScore):
+          // Score-gated unlocks only make sense for wave-defense's ramping
+          // score - skirmish has no wave progression (`currentScore`
+          // barely moves), so gating a building behind it there just
+          // permanently locks it out. Skirmish is bound only by gold,
+          // prerequisites and per-type limits, same as the AI already was.
+          if (builder.id == playerTeam.id &&
+              scene.mode != GameMode.skirmish &&
+              gameState.currentScore < minScore) {
+            return 'Requires $minScore score';
+          }
+        case MaxCountRequirement():
+          break; // handled by buildLimitFor below.
       }
     }
     final limit = buildLimitFor(type, owner: builder);
@@ -257,24 +281,28 @@ class BoomspireGame extends FlameGame<GameWorld>
   }
 
   /// Max simultaneous count allowed for [type] per-owner, or null if
-  /// unlimited. The Tech Lab, Gold Mine, Laser Lance, Rocket Silo and
-  /// Command Post only ever need one (in either game mode); Training Center
-  /// and War Factory have no cap - a player/AI can build as many as they can
-  /// afford; Artillery Bunker rides along with however many Command Posts
-  /// that same owner has standing (so it too tops out at one per Command
-  /// Post); the SAM Site is capped at two.
-  int? buildLimitFor(UnitType type, {Team? owner}) => switch (type) {
-    TowerType.laser => 1,
-    TowerType.artilleryBunker => commandPostCountFor(owner ?? playerTeam),
-    TowerType.sam => 2,
-    TowerType.rocketSilo => 1,
-    BuildingType.techLab => 1,
-    BuildingType.commandPost => 1,
-    BuildingType.trainingCenter => null,
-    BuildingType.warFactory => null,
-    BuildingType.goldMine => 1,
-    _ => null,
-  };
+  /// unlimited. Artillery Bunker rides along with however many Command
+  /// Posts that same owner has standing (so it too tops out at one per
+  /// Command Post) and Gold Mine's cap depends on the game mode (skirmish's
+  /// longer, base-building matches can support more than wave-defense's
+  /// single mine) - both inherently dynamic, so they stay special-cased
+  /// here rather than living in [_requirementsFor]'s static data. Every
+  /// other type's cap (Tech Lab, Power Plant, Laser Lance, Rocket Silo,
+  /// Command Post, SAM Site, ...) comes from that same type's own
+  /// [MaxCountRequirement] (or is unlimited if it has none, e.g. Training
+  /// Center/War Factory).
+  int? buildLimitFor(UnitType type, {Team? owner}) {
+    if (type == TowerType.artilleryBunker) {
+      return commandPostCountFor(owner ?? playerTeam);
+    }
+    if (type == BuildingType.goldMine) {
+      return scene.mode == GameMode.skirmish ? 4 : 1;
+    }
+    for (final req in _requirementsFor(type)) {
+      if (req is MaxCountRequirement) return req.max;
+    }
+    return null;
+  }
 
   /// Attempts to build [type] at [point] for [owner] - the single shared
   /// path used by both the player's own build menu (via `_buildTower`) and
@@ -317,9 +345,10 @@ class BoomspireGame extends FlameGame<GameWorld>
       owner: owner,
     );
     world.spawnTower(tower);
-    if (type == BuildingType.techLab) _hasTechLabByTeam[owner.id] = true;
-    if (type == BuildingType.commandPost) {
-      _hasCommandPostByTeam[owner.id] = true;
+    if (type is BuildingType) {
+      _everBuiltByTeam
+          .putIfAbsent(buildingDefinitionId(type), () => {})
+          .add(owner.id);
     }
     return tower;
   }
@@ -545,9 +574,20 @@ class BoomspireGame extends FlameGame<GameWorld>
   }
 
   bool hasCommandPostFor(Team owner) =>
-      _hasCommandPostByTeam[owner.id] ?? false;
+      _everBuiltByTeam[buildingDefinitionId(BuildingType.commandPost)]
+          ?.contains(owner.id) ??
+      false;
 
-  bool hasTechLabFor(Team owner) => _hasTechLabByTeam[owner.id] ?? false;
+  bool hasTechLabFor(Team owner) =>
+      _everBuiltByTeam[buildingDefinitionId(BuildingType.techLab)]?.contains(
+        owner.id,
+      ) ??
+      false;
+
+  bool hasPowerPlantFor(Team owner) =>
+      _everBuiltByTeam[buildingDefinitionId(BuildingType.powerPlant)]
+          ?.contains(owner.id) ??
+      false;
 
   @override
   Future<void> onLoad() async {
@@ -625,8 +665,7 @@ class BoomspireGame extends FlameGame<GameWorld>
     selectedTower.value = null;
     inspected.value = null;
     pendingPlacement.value = null;
-    _hasTechLabByTeam.clear();
-    _hasCommandPostByTeam.clear();
+    _everBuiltByTeam.clear();
     world.cameraPosition = Vector2.zero();
     _shakeEventCount = 0;
     _shakeEventWindow = 0;

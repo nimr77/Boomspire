@@ -137,6 +137,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Command Post",
     ),
     "buildingNameGoldMine": MessageLookupByLibrary.simpleMessage("Gold Mine"),
+    "buildingNamePowerPlant": MessageLookupByLibrary.simpleMessage(
+      "Power Plant",
+    ),
     "buildingNameTechLab": MessageLookupByLibrary.simpleMessage("Tech Lab"),
     "buildingNameTrainingCenter": MessageLookupByLibrary.simpleMessage(
       "Training Center",

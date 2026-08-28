@@ -1,5 +1,7 @@
 import '../../../core/combat/unit.dart';
 import '../../../generated/l10n.dart';
+import '../../game_content/domain/models/build_requirement.dart';
+import '../../game_content/domain/models/default_build_requirements.dart';
 import '../../game_content/domain/models/game_object_definition.dart';
 import '../../game_content/impl/game_object_definition_mapper.dart';
 import '../domain/models/tower_type.dart';
@@ -132,4 +134,9 @@ class TowerRepositoryImpl implements TowerRepository {
 
   @override
   UnitBlueprint blueprintFor(TowerType type) => _resolvedBlueprints[type]!;
+
+  @override
+  List<BuildRequirement> requirementsFor(TowerType type) =>
+      findOverride(overrides, towerDefinitionId(type))?.requirements ??
+      defaultRequirementsForTower(type);
 }

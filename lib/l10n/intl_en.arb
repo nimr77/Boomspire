@@ -215,6 +215,8 @@
   "@buildingNameWarFactory": {},
   "buildingNameGoldMine": "Gold Mine",
   "@buildingNameGoldMine": {},
+  "buildingNamePowerPlant": "Power Plant",
+  "@buildingNamePowerPlant": {},
   "goldMinePayoutIn": "+{amount}g in {seconds}s",
   "@goldMinePayoutIn": {
     "placeholders": {

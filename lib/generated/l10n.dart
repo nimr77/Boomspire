@@ -895,6 +895,16 @@ class S {
     );
   }
 
+  /// `Power Plant`
+  String get buildingNamePowerPlant {
+    return Intl.message(
+      'Power Plant',
+      name: 'buildingNamePowerPlant',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `+{amount}g in {seconds}s`
   String goldMinePayoutIn(int amount, int seconds) {
     return Intl.message(

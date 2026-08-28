@@ -5,7 +5,7 @@
     "category": "tower",
     "damage": 7.0,
     "weaponType": "bullet",
-    "fireRate": 0.15,
+    "fireRate": 0.6,
     "range": 150.0,
     "minRange": 0.0,
     "splashRadius": 0.0,
@@ -140,7 +140,7 @@
   },
   {
     "id": "tower.laser",
-    "version": 1,
+    "version": 2,
     "category": "tower",
     "damage": 14.0,
     "weaponType": "bullet",
@@ -148,7 +148,7 @@
     "range": 210.0,
     "minRange": 0.0,
     "splashRadius": 0.0,
-    "maxHp": 60.0,
+    "maxHp": 100.0,
     "domain": "ground",
     "attackDomains": [
       "ground",
@@ -169,6 +169,10 @@
         "kind": "buildingExists",
         "buildingId": "building.techLab",
         "minCount": 1
+      },
+      {
+        "kind": "maxCount",
+        "max": 1
       }
     ],
     "modelView": {
@@ -182,7 +186,7 @@
   },
   {
     "id": "tower.rocketSilo",
-    "version": 1,
+    "version": 2,
     "category": "tower",
     "damage": 90.0,
     "weaponType": "bullet",
@@ -215,6 +219,10 @@
         "kind": "buildingExists",
         "buildingId": "building.commandPost",
         "minCount": 1
+      },
+      {
+        "kind": "maxCount",
+        "max": 1
       }
     ],
     "modelView": {
@@ -269,7 +277,7 @@
   },
   {
     "id": "tower.sam",
-    "version": 1,
+    "version": 2,
     "category": "tower",
     "damage": 48.0,
     "weaponType": "bullet",
@@ -301,6 +309,10 @@
         "kind": "buildingExists",
         "buildingId": "building.commandPost",
         "minCount": 1
+      },
+      {
+        "kind": "maxCount",
+        "max": 2
       }
     ],
     "modelView": {
@@ -314,7 +326,7 @@
   },
   {
     "id": "building.techLab",
-    "version": 1,
+    "version": 2,
     "category": "building",
     "damage": 0.0,
     "weaponType": "bullet",
@@ -336,7 +348,17 @@
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
-    "requirements": [],
+    "requirements": [
+      {
+        "kind": "buildingExists",
+        "buildingId": "building.powerPlant",
+        "minCount": 1
+      },
+      {
+        "kind": "maxCount",
+        "max": 1
+      }
+    ],
     "modelView": {
       "type": "assets",
       "path": "building_techLab"
@@ -348,7 +370,7 @@
   },
   {
     "id": "building.commandPost",
-    "version": 1,
+    "version": 2,
     "category": "building",
     "damage": 0.0,
     "weaponType": "bullet",
@@ -370,7 +392,19 @@
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
-    "requirements": [],
+    "requirements": [
+      {
+        "kind": "anyBuildingExists",
+        "buildingIds": [
+          "building.warFactory",
+          "building.trainingCenter"
+        ]
+      },
+      {
+        "kind": "maxCount",
+        "max": 1
+      }
+    ],
     "modelView": {
       "type": "assets",
       "path": "building_commandPost"
@@ -502,12 +536,51 @@
     }
   },
   {
+    "id": "building.powerPlant",
+    "version": 1,
+    "category": "building",
+    "damage": 0.0,
+    "weaponType": "bullet",
+    "fireRate": 1.0,
+    "range": 0.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 350,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "unitType": "infantry",
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [
+      {
+        "kind": "maxCount",
+        "max": 1
+      }
+    ],
+    "modelView": {
+      "type": "assets",
+      "path": "building_powerPlant"
+    },
+    "sound": {
+      "type": null,
+      "path": null
+    }
+  },
+  {
     "id": "unit.invader.soldier",
     "version": 1,
     "category": "unit",
     "damage": 4.0,
     "weaponType": "bullet",
-    "fireRate": 1.1,
+    "fireRate": 1.0,
     "range": 130.0,
     "minRange": 0.0,
     "splashRadius": 0.0,
@@ -519,7 +592,7 @@
     "cost": 0,
     "speed": 70.0,
     "size": 34.0,
-    "projectileCount": 1,
+    "projectileCount": 5,
     "movementStyle": "walk",
     "unitType": "infantry",
     "bounty": 12,
@@ -610,7 +683,7 @@
     "category": "unit",
     "damage": 20.0,
     "weaponType": "cannon",
-    "fireRate": 1.5,
+    "fireRate": 1.0,
     "range": 160.0,
     "minRange": 0.0,
     "splashRadius": 0.0,
@@ -644,7 +717,7 @@
     "category": "unit",
     "damage": 45.0,
     "weaponType": "rocket",
-    "fireRate": 0.7,
+    "fireRate": 1.4,
     "range": 180.0,
     "minRange": 0.0,
     "splashRadius": 0.0,
@@ -655,9 +728,9 @@
       "air"
     ],
     "cost": 0,
-    "speed": 230.0,
+    "speed": 270.0,
     "size": 40.0,
-    "projectileCount": 1,
+    "projectileCount": 4,
     "movementStyle": "swoop",
     "unitType": "vehicle",
     "bounty": 40,
@@ -778,6 +851,40 @@
     }
   },
   {
+    "id": "unit.invader.stealthBomber",
+    "version": 1,
+    "category": "unit",
+    "damage": 220.0,
+    "weaponType": "rocket",
+    "fireRate": 2.2,
+    "range": 200.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 110.0,
+    "domain": "air",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 0,
+    "speed": 190.0,
+    "size": 54.0,
+    "projectileCount": 1,
+    "movementStyle": "swoop",
+    "unitType": "vehicle",
+    "bounty": 90,
+    "prefersStructures": true,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "modelView": {
+      "type": "assets",
+      "path": "unit_stealthBomber"
+    },
+    "sound": {
+      "type": null,
+      "path": null
+    }
+  },
+  {
     "id": "unit.buildable.soldier",
     "version": 1,
     "category": "unit",
@@ -795,7 +902,7 @@
     "cost": 40,
     "speed": 78.0,
     "size": 34.0,
-    "projectileCount": 1,
+    "projectileCount": 5,
     "movementStyle": "walk",
     "unitType": "infantry",
     "bounty": 15,
@@ -817,7 +924,7 @@
     "category": "unit",
     "damage": 16.0,
     "weaponType": "cannon",
-    "fireRate": 1.6,
+    "fireRate": 1.0,
     "range": 170.0,
     "minRange": 0.0,
     "splashRadius": 0.0,
@@ -885,7 +992,7 @@
     "category": "unit",
     "damage": 10.0,
     "weaponType": "rocket",
-    "fireRate": 0.9,
+    "fireRate": 1.4,
     "range": 200.0,
     "minRange": 0.0,
     "splashRadius": 0.0,
@@ -896,9 +1003,9 @@
       "air"
     ],
     "cost": 120,
-    "speed": 130.0,
+    "speed": 170.0,
     "size": 40.0,
-    "projectileCount": 1,
+    "projectileCount": 4,
     "movementStyle": "swoop",
     "unitType": "vehicle",
     "bounty": 45,
@@ -1012,6 +1119,40 @@
     "modelView": {
       "type": "assets",
       "path": "unit_antiAirSoldier"
+    },
+    "sound": {
+      "type": null,
+      "path": null
+    }
+  },
+  {
+    "id": "unit.buildable.stealthBomber",
+    "version": 1,
+    "category": "unit",
+    "damage": 200.0,
+    "weaponType": "rocket",
+    "fireRate": 2.2,
+    "range": 200.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 100.0,
+    "domain": "air",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 260,
+    "speed": 190.0,
+    "size": 54.0,
+    "projectileCount": 1,
+    "movementStyle": "swoop",
+    "unitType": "vehicle",
+    "bounty": 95,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "modelView": {
+      "type": "assets",
+      "path": "unit_stealthBomber"
     },
     "sound": {
       "type": null,

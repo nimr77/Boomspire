@@ -8,4 +8,5 @@ enum BuildingType implements UnitType {
   trainingCenter,
   warFactory,
   goldMine,
+  powerPlant,
 }

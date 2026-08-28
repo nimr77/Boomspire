@@ -11,6 +11,7 @@ import 'command_post_component.dart';
 import 'gold_mine_component.dart';
 import 'laser_tower_component.dart';
 import 'machine_gun_tower_component.dart';
+import 'power_plant_component.dart';
 import 'rocket_silo_tower_component.dart';
 import 'rocket_tower_component.dart';
 import 'sam_tower_component.dart';
@@ -44,6 +45,7 @@ class StructureFactoryRegistry {
     BuildingType.trainingCenter: TrainingCenterComponent.new,
     BuildingType.warFactory: WarFactoryComponent.new,
     BuildingType.goldMine: GoldMineComponent.new,
+    BuildingType.powerPlant: PowerPlantComponent.new,
   };
 
   static TowerComponent create(

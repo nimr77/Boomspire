@@ -106,8 +106,15 @@ void main() {
     test('single-use Tech Lab locks once built', () async {
       final game = await _bootGame(GameScenes.all.first);
       final grid = game.terrainMap.grid;
-      expect(game.buildBlockReason(BuildingType.techLab), isNull);
       game.gameState.addGold(1000);
+
+      // Tech Lab now requires a Power Plant built first.
+      final powerPlantCell = _findOpenCell(game);
+      game.selectTowerType(BuildingType.powerPlant);
+      game.handleArenaTap(grid.cellCenter(powerPlantCell));
+      game.handleArenaTap(grid.cellCenter(powerPlantCell));
+
+      expect(game.buildBlockReason(BuildingType.techLab), isNull);
 
       final cell = _findOpenCell(game);
       game.selectTowerType(BuildingType.techLab);
@@ -129,6 +136,17 @@ void main() {
       final commandPostGame = await _bootGame(GameScenes.all.first);
       final commandPostGrid = commandPostGame.terrainMap.grid;
       commandPostGame.gameState.addGold(2000);
+
+      // Command Post now requires a War Factory or Training Center built
+      // first.
+      final trainingCenterCell = _findOpenCell(commandPostGame);
+      commandPostGame.selectTowerType(BuildingType.trainingCenter);
+      commandPostGame.handleArenaTap(
+        commandPostGrid.cellCenter(trainingCenterCell),
+      );
+      commandPostGame.handleArenaTap(
+        commandPostGrid.cellCenter(trainingCenterCell),
+      );
 
       final firstCell = _findOpenCell(commandPostGame);
       commandPostGame.selectTowerType(BuildingType.commandPost);
@@ -244,9 +262,15 @@ void main() {
       game.gameState.addGold(3000);
       final grid = game.terrainMap.grid;
 
-      // Rocket Silo requires both Tech Lab and Command Post to be built
-      // first (see `boomspire_game.dart`'s `buildBlockReason`).
-      for (final prereq in [BuildingType.techLab, BuildingType.commandPost]) {
+      // Rocket Silo requires a Power Plant, Tech Lab, a War Factory or
+      // Training Center, and a Command Post to be built first (see
+      // `boomspire_game.dart`'s `buildBlockReason`).
+      for (final prereq in [
+        BuildingType.powerPlant,
+        BuildingType.techLab,
+        BuildingType.trainingCenter,
+        BuildingType.commandPost,
+      ]) {
         final prereqCell = _findOpenCell(game);
         game.selectTowerType(prereq);
         game.handleArenaTap(grid.cellCenter(prereqCell));
@@ -488,10 +512,18 @@ void main() {
         }
 
         final firstCell = cellFor(base.position, 2)!;
+        final powerPlantBuilt = game.buildStructure(
+          aiTeam,
+          BuildingType.powerPlant,
+          game.terrainMap.grid.cellCenter(firstCell),
+        );
+        expect(powerPlantBuilt, isNotNull);
+
+        final techLabCell = cellFor(base.position, 3)!;
         final built = game.buildStructure(
           aiTeam,
           BuildingType.techLab,
-          game.terrainMap.grid.cellCenter(firstCell),
+          game.terrainMap.grid.cellCenter(techLabCell),
         );
         expect(built, isNotNull);
         expect(game.towerCountFor(BuildingType.techLab, owner: aiTeam), 1);
@@ -499,7 +531,7 @@ void main() {
 
         // A second Tech Lab is refused - same "max 1 built" cap the player
         // is bound by.
-        final secondCell = cellFor(base.position, 3)!;
+        final secondCell = cellFor(base.position, 4)!;
         final secondBuild = game.buildStructure(
           aiTeam,
           BuildingType.techLab,
