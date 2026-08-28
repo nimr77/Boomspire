@@ -130,22 +130,6 @@ class WaveDirectorComponent extends Component
     );
   }
 
-  /// True once [_maxUnitsPerSpawnPoint] invaders spawned from this run are
-  /// still within [_spawnClearCells] cells of [point] - i.e. the entry
-  /// point hasn't cleared out enough for another unit to appear there.
-  bool _spawnPointCrowded(Vector2 point) {
-    final clearRadius = game.terrainMap.grid.cellSize * _spawnClearCells;
-    final nearby = game.world.activeUnits.where(
-      (u) => u.team == Team.invaders && u.position.distanceTo(point) < clearRadius,
-    );
-    var count = 0;
-    for (final _ in nearby) {
-      count++;
-      if (count >= _maxUnitsPerSpawnPoint) return true;
-    }
-    return false;
-  }
-
   void _finishWave() {
     _waveActive = false;
     final cleared = game.gameState.currentWave;
@@ -235,6 +219,23 @@ class WaveDirectorComponent extends Component
       }
     }
     return queue;
+  }
+
+  /// True once [_maxUnitsPerSpawnPoint] invaders spawned from this run are
+  /// still within [_spawnClearCells] cells of [point] - i.e. the entry
+  /// point hasn't cleared out enough for another unit to appear there.
+  bool _spawnPointCrowded(Vector2 point) {
+    final clearRadius = game.terrainMap.grid.cellSize * _spawnClearCells;
+    final nearby = game.world.activeUnits.where(
+      (u) =>
+          u.team == Team.invaders && u.position.distanceTo(point) < clearRadius,
+    );
+    var count = 0;
+    for (final _ in nearby) {
+      count++;
+      if (count >= _maxUnitsPerSpawnPoint) return true;
+    }
+    return false;
   }
 }
 
