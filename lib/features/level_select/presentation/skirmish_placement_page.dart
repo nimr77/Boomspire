@@ -112,7 +112,9 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: AppThemeColors.borderSubtle),
+                                  border: Border.all(
+                                    color: AppThemeColors.borderSubtle,
+                                  ),
                                 ),
                                 child: _isDraft
                                     ? ValueListenableBuilder<
@@ -198,7 +200,9 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                 ),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppThemeColors.textPrimary,
-                                  side: const BorderSide(color: AppThemeColors.textFaint),
+                                  side: const BorderSide(
+                                    color: AppThemeColors.textFaint,
+                                  ),
                                 ),
                               ),
                             ElevatedButton.icon(

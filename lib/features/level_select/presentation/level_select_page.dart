@@ -94,7 +94,9 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                                                 _difficulty.value = value,
                                           ),
                                     ),
-                                    const SizedBox(height: AppThemeSpacing.space20),
+                                    const SizedBox(
+                                      height: AppThemeSpacing.space20,
+                                    ),
                                     GridView.count(
                                       shrinkWrap: true,
                                       crossAxisCount: 2,

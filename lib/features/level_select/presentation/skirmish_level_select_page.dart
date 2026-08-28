@@ -138,7 +138,9 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                               padding: AppThemePaddings.v12,
                               child: Text(
                                 S.current.skirmishSelectEmptyCustom,
-                                style: const TextStyle(color: AppThemeColors.textFaint),
+                                style: const TextStyle(
+                                  color: AppThemeColors.textFaint,
+                                ),
                               ),
                             );
                           }

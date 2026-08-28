@@ -87,7 +87,9 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
                     subtitle: Text(
                       '${draft.biome.displayName} · ${draft.mode.name} · '
                       '${draft.arenaWidth.toInt()}x${draft.arenaHeight.toInt()}',
-                      style: const TextStyle(color: AppThemeColors.textSecondary),
+                      style: const TextStyle(
+                        color: AppThemeColors.textSecondary,
+                      ),
                     ),
                     trailing: IconButton(
                       icon: const Icon(

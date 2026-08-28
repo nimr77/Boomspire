@@ -82,10 +82,6 @@ abstract final class AppThemeColors {
   /// Minimap panel background.
   static const Color minimapBackground = Color(0xCC0F1319);
 
-  /// Top stop of the subtle top-to-bottom scrim overlaid on preview-image
-  /// cards (~5% black) so light artwork doesn't wash out overlaid text.
-  static Color get cardOverlayTop => Colors.black.withValues(alpha: 0.05);
-
   /// Bottom stop of the same scrim for cards with a short text block
   /// (~55% black).
   static Color get cardOverlayBottom => Colors.black.withValues(alpha: 0.55);
@@ -93,4 +89,8 @@ abstract final class AppThemeColors {
   /// Bottom stop variant for cards needing stronger legibility (~65% black).
   static Color get cardOverlayBottomStrong =>
       Colors.black.withValues(alpha: 0.65);
+
+  /// Top stop of the subtle top-to-bottom scrim overlaid on preview-image
+  /// cards (~5% black) so light artwork doesn't wash out overlaid text.
+  static Color get cardOverlayTop => Colors.black.withValues(alpha: 0.05);
 }

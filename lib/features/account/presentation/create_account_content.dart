@@ -49,7 +49,10 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
           SizedBox(height: AppThemeSpacing.space8),
           Text(
             S.current.accountWelcomeSubtitle,
-            style: const TextStyle(color: AppThemeColors.textMuted, fontSize: 14),
+            style: const TextStyle(
+              color: AppThemeColors.textMuted,
+              fontSize: 14,
+            ),
           ),
           SizedBox(height: AppThemeSpacing.space22),
           TextFormField(
@@ -107,7 +110,9 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
                       onPressed: submitting ? null : () => widget.onDone(null),
                       child: Text(
                         S.current.accountQuickPlay,
-                        style: const TextStyle(color: AppThemeColors.textSecondary),
+                        style: const TextStyle(
+                          color: AppThemeColors.textSecondary,
+                        ),
                       ),
                     ),
                   ),

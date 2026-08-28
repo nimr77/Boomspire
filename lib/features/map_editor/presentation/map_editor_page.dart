@@ -141,7 +141,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             S.current.zoomPercentEditorPage(
                               (currentZoom * 100).round(),
                             ),
-                            style: const TextStyle(color: AppThemeColors.textMuted),
+                            style: const TextStyle(
+                              color: AppThemeColors.textMuted,
+                            ),
                           ),
                           IconButton(
                             tooltip: S.current.zoomInTooltipEditorPage,
@@ -305,7 +307,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             S.current.riverWidthLabelEditorPage(
                               currentRiverWidth.round(),
                             ),
-                            style: const TextStyle(color: AppThemeColors.textMuted),
+                            style: const TextStyle(
+                              color: AppThemeColors.textMuted,
+                            ),
                           ),
                           Slider(
                             value: currentRiverWidth,
@@ -325,7 +329,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         DropdownButtonFormField<Biome>(
                           initialValue: currentDraft.biome,
                           dropdownColor: AppThemeColors.surfacePanel,
-                          style: const TextStyle(color: AppThemeColors.textPrimary),
+                          style: const TextStyle(
+                            color: AppThemeColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
                             labelText: S.current.biomeLabelEditorPage,
                           ),
@@ -343,7 +349,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         DropdownButtonFormField<GameMode>(
                           initialValue: currentDraft.mode,
                           dropdownColor: AppThemeColors.surfacePanel,
-                          style: const TextStyle(color: AppThemeColors.textPrimary),
+                          style: const TextStyle(
+                            color: AppThemeColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
                             labelText: S.current.modeLabelEditorPage,
                           ),
@@ -368,7 +376,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             Expanded(
                               child: TextField(
                                 controller: _widthController,
-                                style: const TextStyle(color: AppThemeColors.textPrimary),
+                                style: const TextStyle(
+                                  color: AppThemeColors.textPrimary,
+                                ),
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: S.current.widthLabelEditorPage,
@@ -381,7 +391,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             Expanded(
                               child: TextField(
                                 controller: _heightController,
-                                style: const TextStyle(color: AppThemeColors.textPrimary),
+                                style: const TextStyle(
+                                  color: AppThemeColors.textPrimary,
+                                ),
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: S.current.heightLabelEditorPage,
@@ -395,7 +407,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         SizedBox(height: AppThemeSpacing.space12),
                         TextField(
                           controller: _startingGoldController,
-                          style: const TextStyle(color: AppThemeColors.textPrimary),
+                          style: const TextStyle(
+                            color: AppThemeColors.textPrimary,
+                          ),
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             labelText: S.current.startingGoldLabelEditorPage,
@@ -413,7 +427,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           ),
                           TextField(
                             controller: _waveCountController,
-                            style: const TextStyle(color: AppThemeColors.textPrimary),
+                            style: const TextStyle(
+                              color: AppThemeColors.textPrimary,
+                            ),
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                               labelText: S.current.waveCountLabelEditorPage,
@@ -459,7 +475,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                                           ? ''
                                           : S.current.autoSuffixEditorPage),
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(color: AppThemeColors.textMuted),
+                                  style: const TextStyle(
+                                    color: AppThemeColors.textMuted,
+                                  ),
                                 ),
                               ),
                               IconButton(
@@ -568,7 +586,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           contentPadding: EdgeInsets.zero,
                           title: Text(
                             S.current.dynamicWeatherLabelEditorPage,
-                            style: const TextStyle(color: AppThemeColors.textMuted),
+                            style: const TextStyle(
+                              color: AppThemeColors.textMuted,
+                            ),
                           ),
                           value: currentDraft.environment.dynamicWeather,
                           onChanged: (value) =>
@@ -578,7 +598,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           S.current.sunAngleLabelEditorPage(
                             (currentDraft.environment.sunAngle * 100).round(),
                           ),
-                          style: const TextStyle(color: AppThemeColors.textMuted),
+                          style: const TextStyle(
+                            color: AppThemeColors.textMuted,
+                          ),
                         ),
                         Slider(
                           value: currentDraft.environment.sunAngle,
@@ -589,7 +611,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           S.current.previewWeatherLabelEditorPage(
                             (currentPreviewProgress * 100).round(),
                           ),
-                          style: const TextStyle(color: AppThemeColors.textMuted),
+                          style: const TextStyle(
+                            color: AppThemeColors.textMuted,
+                          ),
                         ),
                         Slider(
                           value: currentPreviewProgress,

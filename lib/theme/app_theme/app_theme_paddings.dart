@@ -15,12 +15,7 @@ abstract final class AppThemePaddings {
   static const EdgeInsets all28 = EdgeInsets.all(28);
 
   static const EdgeInsets ltrb0_16_16_16 = EdgeInsets.fromLTRB(0, 16, 16, 16);
-  static const EdgeInsets ltrb16_16_16_96 = EdgeInsets.fromLTRB(
-    16,
-    16,
-    16,
-    96,
-  );
+  static const EdgeInsets ltrb16_16_16_96 = EdgeInsets.fromLTRB(16, 16, 16, 96);
   static const EdgeInsets ltrb16_8_16_0 = EdgeInsets.fromLTRB(16, 8, 16, 0);
 
   static const EdgeInsets top5 = EdgeInsets.only(top: 5);

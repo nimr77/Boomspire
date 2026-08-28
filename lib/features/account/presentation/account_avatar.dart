@@ -28,6 +28,9 @@ class AccountAvatar extends StatelessWidget {
     );
   }
 
-  Widget _fallbackIcon() =>
-      Icon(Icons.account_circle, color: AppThemeColors.textSecondary, size: size);
+  Widget _fallbackIcon() => Icon(
+    Icons.account_circle,
+    color: AppThemeColors.textSecondary,
+    size: size,
+  );
 }
