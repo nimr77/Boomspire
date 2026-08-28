@@ -28,8 +28,10 @@ class SkirmishDirective {
   /// feeding an army it can't win with), while leading on units pushes
   /// aggression up (press the advantage).
   factory SkirmishDirective.fallback(SkirmishSnapshot snapshot) {
-    final towerEdge = (snapshot.aiTowerCount - snapshot.playerTowerCount)
-        .clamp(-3, 3);
+    final towerEdge = (snapshot.aiTowerCount - snapshot.playerTowerCount).clamp(
+      -3,
+      3,
+    );
     final unitEdge = (snapshot.aiUnitCount - snapshot.playerUnitCount).clamp(
       -6,
       6,

@@ -101,6 +101,55 @@ class WaveDirectorComponent extends Component
     unawaited(_planNextWave(waveNumber + 1));
   }
 
+  MobileUnitComponent _createEnemy(UnitKind type, Vector2 spawnPoint) {
+    final blueprint = game.unitRepository.blueprintFor(Team.invaders, type);
+    return MobileUnitComponent(
+      blueprint: blueprint,
+      team: Team.invaders,
+      objective: UnitObjective.rushBase,
+      spawnOverride: spawnPoint,
+    );
+  }
+
+  void _finishWave() {
+    _waveActive = false;
+    final cleared = game.gameState.currentWave;
+    game.gameState.addGold(20 + cleared * 5);
+
+    if (cleared >= game.waveRepository.totalWaves) {
+      game.gameState.setStatus(GameStatus.victory);
+      game.audioRepository.play(SfxType.victory);
+    } else {
+      _nextWaveNumber = cleared + 1;
+      _preWaveTimer = 6;
+    }
+  }
+
+  Future<void> _planNextWave(int waveNumber) async {
+    final towersByType = <String, List<double>>{};
+    for (final tower in game.world.activeTowers) {
+      towersByType
+          .putIfAbsent(tower.blueprint.type.name, () => [])
+          .add(tower.hp / tower.maxHp);
+    }
+    final snapshot = BattlefieldSnapshot(
+      waveNumber: waveNumber,
+      totalWaves: game.waveRepository.totalWaves,
+      playerHealth: game.gameState.health,
+      playerGold: game.gameState.gold,
+      towerSummaries: towersByType.entries
+          .map(
+            (e) => TowerSummary(
+              type: e.key,
+              count: e.value.length,
+              avgHpRatio: e.value.reduce((a, b) => a + b) / e.value.length,
+            ),
+          )
+          .toList(),
+    );
+    _directive = await game.aiDirector.planNextWave(snapshot);
+  }
+
   /// The AI director's entry-point decision for the wave: where the
   /// enemies come from and how many land at each entry, chosen all at
   /// once rather than letting every unit pick its own spawn independently.
@@ -152,55 +201,22 @@ class WaveDirectorComponent extends Component
     }
     return queue;
   }
+}
 
-  MobileUnitComponent _createEnemy(UnitKind type, Vector2 spawnPoint) {
-    final blueprint = game.unitRepository.blueprintFor(Team.invaders, type);
-    return MobileUnitComponent(
-      blueprint: blueprint,
-      team: Team.invaders,
-      objective: UnitObjective.rushBase,
-      spawnOverride: spawnPoint,
-    );
-  }
-
-  void _finishWave() {
-    _waveActive = false;
-    final cleared = game.gameState.currentWave;
-    game.gameState.addGold(20 + cleared * 5);
-
-    if (cleared >= game.waveRepository.totalWaves) {
-      game.gameState.setStatus(GameStatus.victory);
-      game.audioRepository.play(SfxType.victory);
-    } else {
-      _nextWaveNumber = cleared + 1;
-      _preWaveTimer = 6;
-    }
-  }
-
-  Future<void> _planNextWave(int waveNumber) async {
-    final towersByType = <String, List<double>>{};
-    for (final tower in game.world.activeTowers) {
-      towersByType
-          .putIfAbsent(tower.blueprint.type.name, () => [])
-          .add(tower.hp / tower.maxHp);
-    }
-    final snapshot = BattlefieldSnapshot(
-      waveNumber: waveNumber,
-      totalWaves: game.waveRepository.totalWaves,
-      playerHealth: game.gameState.health,
-      playerGold: game.gameState.gold,
-      towerSummaries: towersByType.entries
-          .map(
-            (e) => TowerSummary(
-              type: e.key,
-              count: e.value.length,
-              avgHpRatio: e.value.reduce((a, b) => a + b) / e.value.length,
-            ),
-          )
-          .toList(),
-    );
-    _directive = await game.aiDirector.planNextWave(snapshot);
-  }
+/// A wave-definition spawn entry after aggression/composition-bias scaling,
+/// before it's been split across entry points - see
+/// [WaveDirectorComponent._planSpawnQueue].
+class _ScaledSpawnEntry {
+  final UnitKind type;
+  final int count;
+  final double interval;
+  final double startDelay;
+  _ScaledSpawnEntry({
+    required this.type,
+    required this.count,
+    required this.interval,
+    required this.startDelay,
+  });
 }
 
 class _ScheduledSpawn {
@@ -219,21 +235,5 @@ class _ScheduledSpawn {
     required this.interval,
     required this.timer,
     required this.spawnPoint,
-  });
-}
-
-/// A wave-definition spawn entry after aggression/composition-bias scaling,
-/// before it's been split across entry points - see
-/// [WaveDirectorComponent._planSpawnQueue].
-class _ScaledSpawnEntry {
-  final UnitKind type;
-  final int count;
-  final double interval;
-  final double startDelay;
-  _ScaledSpawnEntry({
-    required this.type,
-    required this.count,
-    required this.interval,
-    required this.startDelay,
   });
 }

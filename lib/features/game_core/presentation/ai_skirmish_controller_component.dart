@@ -216,6 +216,16 @@ class AiSkirmishControllerComponent extends Component
     }
   }
 
+  /// The cheapest unit the AI could ever produce - what it must always
+  /// keep in reserve before spending on another building once it already
+  /// has a way to produce units, so it never buys itself into a corner
+  /// where it owns plenty of buildings but can't actually afford a single
+  /// unit out of any of them.
+  int _cheapestUnitCost(Team aiTeam) => game.unitRepository
+      .kindsFor(aiTeam)
+      .map((k) => game.unitRepository.blueprintFor(aiTeam, k).cost)
+      .reduce(min);
+
   /// The domain most worth countering among a set of threats - air takes
   /// priority since ground-only towers can't hit airborne units at all.
   UnitDomain _counterDomainFor(List<MobileUnitComponent> threats) =>
@@ -234,16 +244,6 @@ class AiSkirmishControllerComponent extends Component
   int _ownedCountOf(Team aiTeam, UnitType type) => game.world.activeTowers
       .where((t) => t.owner.id == aiTeam.id && t.blueprint.type == type)
       .length;
-
-  /// The cheapest unit the AI could ever produce - what it must always
-  /// keep in reserve before spending on another building once it already
-  /// has a way to produce units, so it never buys itself into a corner
-  /// where it owns plenty of buildings but can't actually afford a single
-  /// unit out of any of them.
-  int _cheapestUnitCost(Team aiTeam) => game.unitRepository
-      .kindsFor(aiTeam)
-      .map((k) => game.unitRepository.blueprintFor(aiTeam, k).cost)
-      .reduce(min);
 
   /// Weighted-random pick among [kinds]: a kind that can hit air gets extra
   /// weight while the player has aircraft up, and the dedicated Anti-Tank
@@ -358,7 +358,6 @@ class AiSkirmishControllerComponent extends Component
         break;
       }
     }
-
 
     if (type == null) {
       // Below the defense floor, a counter tower is never optional; beyond
