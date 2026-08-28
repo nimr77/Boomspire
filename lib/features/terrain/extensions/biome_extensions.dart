@@ -6,17 +6,6 @@ import '../domain/enums/obstacle_kind.dart';
 import '../domain/models/biome.dart' show BiomePalette;
 
 extension BiomeExtensions on Biome {
-  String get displayName => switch (this) {
-    Biome.grassPlains => S.current.biomeNameGrassPlains,
-    Biome.snowTundra => S.current.biomeNameSnowTundra,
-    Biome.desertDunes => S.current.biomeNameDesertDunes,
-    Biome.mountainForest => S.current.biomeNameMountainForest,
-    Biome.cityRuins => S.current.biomeNameCityRuins,
-    Biome.savanna => S.current.biomeNameSavanna,
-    Biome.frozenPeaks => S.current.biomeNameFrozenPeaks,
-    Biome.sea => S.current.biomeNameSea,
-  };
-
   String get description => switch (this) {
     Biome.grassPlains => S.current.biomeDescriptionGrassPlains,
     Biome.snowTundra => S.current.biomeDescriptionSnowTundra,
@@ -26,6 +15,17 @@ extension BiomeExtensions on Biome {
     Biome.savanna => S.current.biomeDescriptionSavanna,
     Biome.frozenPeaks => S.current.biomeDescriptionFrozenPeaks,
     Biome.sea => S.current.biomeDescriptionSea,
+  };
+
+  String get displayName => switch (this) {
+    Biome.grassPlains => S.current.biomeNameGrassPlains,
+    Biome.snowTundra => S.current.biomeNameSnowTundra,
+    Biome.desertDunes => S.current.biomeNameDesertDunes,
+    Biome.mountainForest => S.current.biomeNameMountainForest,
+    Biome.cityRuins => S.current.biomeNameCityRuins,
+    Biome.savanna => S.current.biomeNameSavanna,
+    Biome.frozenPeaks => S.current.biomeNameFrozenPeaks,
+    Biome.sea => S.current.biomeNameSea,
   };
 
   BiomePalette get palette => switch (this) {
