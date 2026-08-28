@@ -25,6 +25,19 @@ class WaveDirectorComponent extends Component
   /// all to a single approach - see [_planSpawnQueue].
   static const _splitThreshold = 15;
 
+  /// A single entry point won't spawn a new unit while this many invaders
+  /// it already produced are still loitering nearby - see
+  /// [_spawnPointCrowded]. Keeps a wave from stacking a wall of units on
+  /// top of one entry point instead of them pushing on toward the base.
+  static const _maxUnitsPerSpawnPoint = 12;
+
+  /// How far (in grid cells) a spawned unit has to have moved away from
+  /// its entry point before that point is considered clear again.
+  static const _spawnClearCells = 5;
+
+  /// How long a batch waits before re-checking a crowded entry point.
+  static const _spawnRetryDelay = 0.5;
+
   int _nextWaveNumber = 1;
   bool _waveActive = false;
   double _preWaveTimer = 3;
@@ -50,6 +63,12 @@ class WaveDirectorComponent extends Component
     for (final scheduled in List.of(_queue)) {
       scheduled.timer -= dt;
       if (scheduled.timer <= 0) {
+        if (_spawnPointCrowded(scheduled.spawnPoint)) {
+          // Entry point is full - hold this batch and retry shortly
+          // rather than dropping or force-spawning the unit.
+          scheduled.timer = _spawnRetryDelay;
+          continue;
+        }
         game.world.spawnUnit(
           _createEnemy(scheduled.type, scheduled.spawnPoint),
         );
@@ -109,6 +128,22 @@ class WaveDirectorComponent extends Component
       objective: UnitObjective.rushBase,
       spawnOverride: spawnPoint,
     );
+  }
+
+  /// True once [_maxUnitsPerSpawnPoint] invaders spawned from this run are
+  /// still within [_spawnClearCells] cells of [point] - i.e. the entry
+  /// point hasn't cleared out enough for another unit to appear there.
+  bool _spawnPointCrowded(Vector2 point) {
+    final clearRadius = game.terrainMap.grid.cellSize * _spawnClearCells;
+    final nearby = game.world.activeUnits.where(
+      (u) => u.team == Team.invaders && u.position.distanceTo(point) < clearRadius,
+    );
+    var count = 0;
+    for (final _ in nearby) {
+      count++;
+      if (count >= _maxUnitsPerSpawnPoint) return true;
+    }
+    return false;
   }
 
   void _finishWave() {
