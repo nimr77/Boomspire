@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import 'widgets/messaging_glass_card_widget.dart';
+
 /// Shows a frosted-glass "messaging" surface: forces focus onto its content
 /// by blurring/dimming everything behind it, then presents a rounded,
 /// animated glass card - centered as a dialog on wide/desktop layouts, or
@@ -39,7 +41,7 @@ Future<T?> showGlassMessage<T>(
                 begin: isDesktop ? const Offset(0, 0.04) : const Offset(0, 1),
                 end: Offset.zero,
               ).animate(curved),
-              child: _GlassCard(
+              child: MessagingGlassCardWidget(
                 isDesktop: isDesktop,
                 child: Builder(builder: contentBuilder),
               ),
@@ -49,55 +51,4 @@ Future<T?> showGlassMessage<T>(
       );
     },
   );
-}
-
-class _GlassCard extends StatelessWidget {
-  final bool isDesktop;
-  final Widget child;
-
-  const _GlassCard({required this.isDesktop, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final radius = isDesktop
-        ? const BorderRadius.all(Radius.circular(24))
-        : const BorderRadius.vertical(top: Radius.circular(28));
-    return SafeArea(
-      top: isDesktop,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: isDesktop ? 440 : double.infinity,
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(isDesktop ? 24 : 0),
-          child: ClipRRect(
-            borderRadius: radius,
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(28),
-                decoration: BoxDecoration(
-                  borderRadius: radius,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.16),
-                      Colors.white.withValues(alpha: 0.05),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.35),
-                    width: 1.5,
-                  ),
-                ),
-                child: Material(type: MaterialType.transparency, child: child),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

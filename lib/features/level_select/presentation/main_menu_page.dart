@@ -94,7 +94,7 @@ class MainMenuPage extends StatelessWidget {
                   border: Border.all(color: Colors.white24),
                 ),
                 child: IconButton(
-                  tooltip: 'Map Editor',
+                  tooltip: S.current.mapEditorTooltip,
                   icon: const Icon(
                     Icons.map_outlined,
                     color: Colors.white70,

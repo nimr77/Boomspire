@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:window_manager/window_manager.dart';
 
 import '../../generated/l10n.dart';
+import 'window_controls_fullscreen_button_widget.dart';
 
 /// Small pill of icon buttons for window-level chrome (fullscreen toggle,
 /// and optionally "exit to menu") - meant to float in a screen corner over
@@ -31,7 +31,7 @@ class WindowControls extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (_supportsFullscreen) const _FullscreenButton(),
+          if (_supportsFullscreen) const WindowControlsFullscreenButtonWidget(),
           if (onExit != null)
             IconButton(
               tooltip: S.current.exitToMenuTooltip,
@@ -45,56 +45,5 @@ class WindowControls extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _FullscreenButton extends StatefulWidget {
-  const _FullscreenButton();
-
-  @override
-  State<_FullscreenButton> createState() => _FullscreenButtonState();
-}
-
-class _FullscreenButtonState extends State<_FullscreenButton> {
-  final ValueNotifier<bool> _isFullscreen = ValueNotifier(true);
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _isFullscreen,
-      builder: (context, isFullscreen, _) {
-        return IconButton(
-          tooltip: isFullscreen
-              ? S.current.exitFullscreenTooltip
-              : S.current.enterFullscreenTooltip,
-          icon: Icon(
-            isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-            color: Colors.white70,
-            size: 20,
-          ),
-          onPressed: _toggle,
-        );
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _isFullscreen.dispose();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    windowManager.isFullScreen().then((value) {
-      if (mounted) _isFullscreen.value = value;
-    });
-  }
-
-  Future<void> _toggle() async {
-    final next = !_isFullscreen.value;
-    await windowManager.setFullScreen(next);
-    if (mounted) _isFullscreen.value = next;
   }
 }

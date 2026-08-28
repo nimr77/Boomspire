@@ -10,6 +10,9 @@ import '../../../towers/presentation/tower_sprites.dart';
 import '../../../towers/presentation/training_center_component.dart';
 import '../../../towers/presentation/war_factory_component.dart';
 import '../boomspire_game.dart';
+import 'game_core_tower_action_animated_label_widget.dart';
+import 'game_core_tower_action_button_widget.dart';
+import 'game_core_tower_action_stat_chip_widget.dart';
 
 /// Floating action card shown above the command bar whenever a tower is
 /// selected on the battlefield - lets the player repair, upgrade, or sell it.
@@ -20,125 +23,6 @@ class TowerActionPanel extends StatefulWidget {
 
   @override
   State<TowerActionPanel> createState() => _TowerActionPanelState();
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool enabled;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.enabled,
-    required this.onTap,
-    this.color = Colors.lightBlueAccent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: enabled ? 1 : 0.4,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xB31A1F26),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: color.withValues(alpha: 0.5)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(height: 2),
-              _AnimatedLabel(
-                label: label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Fades/slides a label in whenever its text changes - used so cost/state
-/// text in the action panel (gold costs, "MAX", "Active"...) doesn't just
-/// snap when the underlying tower stat changes.
-class _AnimatedLabel extends StatelessWidget {
-  final String label;
-  final TextStyle style;
-
-  const _AnimatedLabel({required this.label, required this.style});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 180),
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.4),
-            end: Offset.zero,
-          ).animate(animation),
-          child: child,
-        ),
-      ),
-      child: Text(label, key: ValueKey(label), style: style),
-    );
-  }
-}
-
-/// Small icon+text pill for a passive stat readout - used by the Gold
-/// Mine's row since it has no action button, just information.
-class _StatChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _StatChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xB31A1F26),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 14),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _TowerActionPanelState extends State<TowerActionPanel> {
@@ -232,7 +116,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
       spacing: 10,
       runSpacing: 4,
       children: [
-        _StatChip(
+        GameCoreTowerActionStatChipWidget(
           icon: Icons.paid,
           label: S.current.goldMinePayoutIn(
             tower.payoutAmount,
@@ -240,7 +124,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
           ),
           color: const Color(0xFFFFB300),
         ),
-        _StatChip(
+        GameCoreTowerActionStatChipWidget(
           icon: Icons.local_fire_department,
           label: S.current.goldMineKillBonus(
             (tower.killGoldBonus * 100).round(),
@@ -267,7 +151,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            _AnimatedLabel(
+            GameCoreTowerActionAnimatedLabelWidget(
               label:
                   'HP ${tower.hp.ceil()}/${tower.maxHp.ceil()}'
                   '${tower.upgradeLevel > 0 ? '  •  ${S.current.towerTier(tower.upgradeLevel + 1)}' : ''}',
@@ -276,7 +160,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
           ],
         ),
         const SizedBox(width: 12),
-        _ActionButton(
+        GameCoreTowerActionButtonWidget(
           icon: Icons.build,
           label: tower.repairCost > 0 ? '${tower.repairCost}g' : '-',
           enabled:
@@ -285,7 +169,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
           onTap: widget.game.repairSelectedTower,
         ),
         const SizedBox(width: 6),
-        _ActionButton(
+        GameCoreTowerActionButtonWidget(
           icon: Icons.upgrade,
           label: tower.canUpgrade
               ? '${tower.upgradeCost}g'
@@ -296,7 +180,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
           onTap: widget.game.upgradeSelectedTower,
         ),
         const SizedBox(width: 6),
-        _ActionButton(
+        GameCoreTowerActionButtonWidget(
           icon: Icons.gpp_good,
           label: tower.antiRocket ? 'Active' : '${kAntiRocketCost}g',
           color: Colors.cyanAccent,
@@ -306,7 +190,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
           onTap: widget.game.buyAntiRocketForSelectedTower,
         ),
         const SizedBox(width: 6),
-        _ActionButton(
+        GameCoreTowerActionButtonWidget(
           icon: Icons.sell,
           label: '+${tower.sellValue}g',
           enabled: true,
@@ -333,7 +217,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (final kind in TrainingCenterComponent.producibleKinds) ...[
-            _ActionButton(
+            GameCoreTowerActionButtonWidget(
               icon: _unitIcon(kind),
               label: ready
                   ? '${tower.costFor(kind)}g'
@@ -358,7 +242,7 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (final type in buildableKinds) ...[
-            _ActionButton(
+            GameCoreTowerActionButtonWidget(
               icon: _unitIcon(type),
               label: ready
                   ? '${tower.costFor(type)}g'

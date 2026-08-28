@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../features/account/domain/repos/account_repository.dart';
 import '../../features/account/impl/local_account_repository_impl.dart';
-import '../../features/account/presentation/account_profile_state.dart';
+import '../../features/account/presentation/state/account_profile_state.dart';
 import '../../features/ai_director/domain/repos/ai_director_repository.dart';
 import '../../features/ai_director/impl/ai_director_repository_impl.dart';
 import '../../features/audio/domain/repos/audio_repository.dart';

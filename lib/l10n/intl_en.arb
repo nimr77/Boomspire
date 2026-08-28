@@ -50,6 +50,10 @@
   "@skirmishPlacementAi": {},
   "skirmishPlacementPickHint": "Pick a starting site to continue",
   "@skirmishPlacementPickHint": {},
+  "skirmishPlacementSingleBaseNotice": "Testing as single-base - add another home site for a full skirmish.",
+  "@skirmishPlacementSingleBaseNotice": {},
+  "skirmishPlacementTestBriefing": "Testing your hand-drawn skirmish map.",
+  "@skirmishPlacementTestBriefing": {},
   "wavesCount": "{count} WAVES",
   "@wavesCount": {
     "placeholders": {
@@ -192,6 +196,10 @@
       }
     }
   },
+  "backTooltip": "Back",
+  "@backTooltip": {},
+  "mapEditorTooltip": "Map Editor",
+  "@mapEditorTooltip": {},
   "mountainLabelEditorPage": "Mountain",
   "@mountainLabelEditorPage": {},
   "duneLabelEditorPage": "Dune",

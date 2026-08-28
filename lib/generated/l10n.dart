@@ -295,6 +295,26 @@ class S {
     );
   }
 
+  /// `Testing as single-base - add another home site for a full skirmish.`
+  String get skirmishPlacementSingleBaseNotice {
+    return Intl.message(
+      'Testing as single-base - add another home site for a full skirmish.',
+      name: 'skirmishPlacementSingleBaseNotice',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Testing your hand-drawn skirmish map.`
+  String get skirmishPlacementTestBriefing {
+    return Intl.message(
+      'Testing your hand-drawn skirmish map.',
+      name: 'skirmishPlacementTestBriefing',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `{count} WAVES`
   String wavesCount(int count) {
     return Intl.message(
@@ -707,6 +727,21 @@ class S {
       name: 'goldMineKillBonus',
       desc: '',
       args: [percent],
+    );
+  }
+
+  /// `Back`
+  String get backTooltip {
+    return Intl.message('Back', name: 'backTooltip', desc: '', args: []);
+  }
+
+  /// `Map Editor`
+  String get mapEditorTooltip {
+    return Intl.message(
+      'Map Editor',
+      name: 'mapEditorTooltip',
+      desc: '',
+      args: [],
     );
   }
 

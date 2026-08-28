@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../domain/models/account_profile.dart';
-import '../domain/repos/account_repository.dart';
+import '../../domain/models/account_profile.dart';
+import '../../domain/repos/account_repository.dart';
 
 /// App-wide holder for the current [AccountProfile] (account + score),
 /// loaded once on app start and refreshed whenever the account or score

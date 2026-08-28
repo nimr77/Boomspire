@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:glassmorphism/glassmorphism.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/service_locator.dart';
-import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../account/presentation/account_badge.dart';
-import '../../account/presentation/account_profile_state.dart';
+import '../../account/presentation/state/account_profile_state.dart';
 import '../../game_core/domain/models/game_difficulty.dart';
-import '../../game_core/domain/models/game_scene.dart';
 import '../../game_core/domain/models/game_scenes.dart';
 import '../../progress/domain/models/progress_snapshot.dart';
 import '../../progress/domain/repos/progress_repository.dart';
-import '../../terrain/domain/models/biome.dart';
-import 'biome_preview.dart';
-import 'level_select_state.dart';
+import 'state/level_select_state.dart';
+import 'widgets/level_select_difficulty_selector_widget.dart';
+import 'widgets/level_select_scene_card_widget.dart';
 
 /// Pre-game scene picker: choose a campaign (terrain + wave count +
 /// strategy) before the battle begins.
@@ -25,83 +22,6 @@ class LevelSelectPage extends StatefulWidget {
 
   @override
   State<LevelSelectPage> createState() => _LevelSelectPageState();
-}
-
-class _DifficultySegment extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _DifficultySegment({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? Colors.cyanAccent.withValues(alpha: 0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? Colors.cyanAccent : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.cyanAccent : Colors.white54,
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Segmented easy/normal/hard picker - scales AI aggression and rations the
-/// Laser Lance build limit for the run about to start. Styled as a single
-/// HUD panel (matching the build menu's tab strip) rather than loose chips.
-class _DifficultySelector extends StatelessWidget {
-  final GameDifficulty value;
-  final ValueChanged<GameDifficulty> onChanged;
-
-  const _DifficultySelector({required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1F26),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF2A323C), width: 1.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final difficulty in GameDifficulty.values)
-            _DifficultySegment(
-              label: difficulty.label,
-              selected: value == difficulty,
-              onTap: () => onChanged(difficulty),
-            ),
-        ],
-      ),
-    );
-  }
 }
 
 class _LevelSelectPageState extends State<LevelSelectPage> {
@@ -167,7 +87,7 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                                   children: [
                                     AccountBadge(state: _accountProfileState),
                                     Center(
-                                      child: _DifficultySelector(
+                                      child: LevelSelectDifficultySelectorWidget(
                                         value: difficulty,
                                         onChanged: (value) =>
                                             _difficulty.value = value,
@@ -185,7 +105,7 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                                       children: [
                                         for (final (index, scene)
                                             in GameScenes.all.indexed)
-                                          _SceneCard(
+                                          LevelSelectSceneCardWidget(
                                                 scene: scene,
                                                 progress: progress,
                                                 difficulty: difficulty,
@@ -234,7 +154,7 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                   border: Border.all(color: Colors.white24),
                 ),
                 child: IconButton(
-                  tooltip: 'Back',
+                  tooltip: S.current.backTooltip,
                   icon: const Icon(
                     Icons.arrow_back,
                     color: Colors.white70,
@@ -261,149 +181,5 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
   void initState() {
     super.initState();
     _state.load();
-  }
-}
-
-class _SceneCard extends StatelessWidget {
-  final GameScene scene;
-  final ProgressSnapshot progress;
-  final GameDifficulty difficulty;
-  final Future<void> Function() onReturn;
-
-  const _SceneCard({
-    required this.scene,
-    required this.progress,
-    required this.difficulty,
-    required this.onReturn,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = scene.biome.palette;
-    final completed = progress.isCompleted(scene.id);
-    final bestWave = progress.bestWaveFor(scene.id);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () async {
-          await context.push(
-            Routes.game.route,
-            extra: GameRouteArgs(scene: scene, difficulty: difficulty),
-          );
-          await onReturn();
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Hero(
-                tag: 'scene-preview-${scene.id}',
-                child: BiomePreview(scene: scene),
-              ),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return GlassmorphicContainer(
-                    width: constraints.maxWidth,
-                    height: constraints.maxHeight,
-                    borderRadius: 14,
-                    blur: 6,
-                    border: 1.5,
-                    linearGradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.05),
-                        Colors.black.withValues(alpha: 0.55),
-                      ],
-                    ),
-                    borderGradient: LinearGradient(
-                      colors: [
-                        palette.ridgeLight.withValues(alpha: 0.7),
-                        palette.ridgeLight.withValues(alpha: 0.2),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (completed)
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.greenAccent.withValues(
-                                  alpha: 0.2,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: Colors.greenAccent),
-                              ),
-                              child: Text(
-                                S.current.sceneCompleted,
-                                style: const TextStyle(
-                                  color: Colors.greenAccent,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                            ),
-                          Text(
-                            scene.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            scene.briefing,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(
-                                S.current.wavesCount(scene.waveCount),
-                                style: TextStyle(
-                                  color: palette.ridgeLight,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                              if (bestWave > 0) ...[
-                                const SizedBox(width: 10),
-                                Text(
-                                  S.current.bestWaveReached(bestWave),
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

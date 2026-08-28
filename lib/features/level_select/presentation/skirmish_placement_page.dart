@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,15 +8,15 @@ import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../game_core/domain/models/game_scene.dart';
-import '../../game_core/presentation/player_palette.dart';
 import '../../map_editor/domain/models/editor_point.dart';
 import '../../map_editor/domain/models/editor_terrain_preview.dart';
 import '../../map_editor/domain/models/map_draft.dart';
 import '../../map_editor/impl/map_draft_terrain_repository.dart';
-import '../../terrain/domain/models/biome.dart';
-import '../../terrain/presentation/obstacle_color.dart';
 import 'biome_preview.dart';
-import 'skirmish_placement_state.dart';
+import 'state/skirmish_placement_state.dart';
+import 'widgets/skirmish_placement_draft_preview_painter.dart';
+import 'widgets/skirmish_placement_seat_chip_widget.dart';
+import 'widgets/skirmish_placement_surface_widget.dart';
 
 /// Maps a built-in scene's [HomeLayout] to a fractional position within the
 /// arena - matches the cell math `TerrainRepositoryImpl` uses so the marker
@@ -49,262 +48,6 @@ class SkirmishPlacementPage extends StatefulWidget {
 
   @override
   State<SkirmishPlacementPage> createState() => _SkirmishPlacementPageState();
-}
-
-/// Lightweight read-only terrain preview (biome gradient + rasterized
-/// obstacle cells, no sun/weather) - enough to see the map's shape while
-/// picking a starting site.
-class _DraftPreviewPainter extends CustomPainter {
-  final EditorTerrainPreview preview;
-
-  _DraftPreviewPainter({required this.preview});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final palette = preview.biome.palette;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          const Offset(0, 0),
-          Offset(0, size.height),
-          [palette.groundTop, palette.groundMid, palette.groundBottom],
-          const [0.0, 0.5, 1.0],
-        ),
-    );
-
-    final grid = preview.grid;
-    if (grid.cols == 0 || grid.rows == 0) return;
-    final cellW = size.width / grid.cols;
-    final cellH = size.height / grid.rows;
-    for (var row = 0; row < grid.rows; row++) {
-      for (var col = 0; col < grid.cols; col++) {
-        final kind = preview.obstacleKinds[row][col];
-        if (kind == null) continue;
-        canvas.drawRect(
-          Rect.fromLTWH(col * cellW, row * cellH, cellW, cellH),
-          Paint()..color = obstacleColor(kind, palette),
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DraftPreviewPainter oldDelegate) =>
-      oldDelegate.preview != preview;
-}
-
-/// A single numbered, colored home-site marker that glows and scales up on
-/// hover, and reports taps via [onTap].
-class _HomeSiteMarker extends StatelessWidget {
-  static const _radius = 18.0;
-  static const _hitPadding = 10.0;
-
-  final Offset center;
-  final int index;
-  final bool selected;
-  final bool hovered;
-  final ValueChanged<bool> onHoverChanged;
-  final VoidCallback onTap;
-
-  const _HomeSiteMarker({
-    required this.center,
-    required this.index,
-    required this.selected,
-    required this.hovered,
-    required this.onHoverChanged,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = PlayerPalette.colorFor(index);
-    const diameter = _radius * 2;
-    const hitSize = diameter + _hitPadding * 2;
-    return Positioned(
-      left: center.dx - hitSize / 2,
-      top: center.dy - hitSize / 2,
-      width: hitSize,
-      height: hitSize,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => onHoverChanged(true),
-        onExit: (_) => onHoverChanged(false),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: Center(
-            child: AnimatedScale(
-              scale: hovered ? 1.25 : 1.0,
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOutBack,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: diameter,
-                height: diameter,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: selected ? 3 : 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: hovered ? 0.9 : 0.35),
-                      blurRadius: hovered ? 20 : 6,
-                      spreadRadius: hovered ? 4 : 0,
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '${index + 1}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Renders [background] with a numbered/colored marker per fractional site
-/// position, and reports taps near a marker via [onTapSlot]. Each marker is
-/// a real interactive widget (not just painted pixels) so it can glow and
-/// scale up under the mouse.
-class _PlacementSurface extends StatefulWidget {
-  final List<Offset> sites;
-  final int? selectedSlot;
-  final ValueChanged<int> onTapSlot;
-  final Widget background;
-
-  const _PlacementSurface({
-    required this.sites,
-    required this.selectedSlot,
-    required this.onTapSlot,
-    required this.background,
-  });
-
-  @override
-  State<_PlacementSurface> createState() => _PlacementSurfaceState();
-}
-
-class _PlacementSurfaceState extends State<_PlacementSurface> {
-  final ValueNotifier<int?> _hoveredSlot = ValueNotifier(null);
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<int?>(
-      valueListenable: _hoveredSlot,
-      builder: (context, hoveredSlot, _) {
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final size = Size(constraints.maxWidth, constraints.maxHeight);
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                widget.background,
-                for (final (index, fraction) in widget.sites.indexed)
-                  _HomeSiteMarker(
-                    center: Offset(
-                      fraction.dx * size.width,
-                      fraction.dy * size.height,
-                    ),
-                    index: index,
-                    selected: widget.selectedSlot == index,
-                    hovered: hoveredSlot == index,
-                    onHoverChanged: (hovering) =>
-                        _hoveredSlot.value = hovering ? index : null,
-                    onTap: () => widget.onTapSlot(index),
-                  ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _hoveredSlot.dispose();
-    super.dispose();
-  }
-}
-
-class _SeatChip extends StatefulWidget {
-  final int index;
-  final bool isYou;
-
-  const _SeatChip({required this.index, required this.isYou});
-
-  @override
-  State<_SeatChip> createState() => _SeatChipState();
-}
-
-class _SeatChipState extends State<_SeatChip> {
-  final ValueNotifier<bool> _hovered = ValueNotifier(false);
-
-  @override
-  Widget build(BuildContext context) {
-    final color = PlayerPalette.colorFor(widget.index);
-    return MouseRegion(
-      onEnter: (_) => _hovered.value = true,
-      onExit: (_) => _hovered.value = false,
-      child: ValueListenableBuilder<bool>(
-        valueListenable: _hovered,
-        builder: (context, hovered, _) {
-          return AnimatedScale(
-            scale: hovered ? 1.08 : 1.0,
-            duration: const Duration(milliseconds: 160),
-            curve: Curves.easeOutBack,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: widget.isYou ? 0.35 : 0.12),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: color, width: widget.isYou ? 2 : 1),
-                boxShadow: hovered
-                    ? [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.7),
-                          blurRadius: 14,
-                          spreadRadius: 2,
-                        ),
-                      ]
-                    : const [],
-              ),
-              child: Text(
-                '${widget.index + 1} · ${widget.isYou ? S.current.skirmishPlacementYou : S.current.skirmishPlacementAi}',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: widget.isYou
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _hovered.dispose();
-    super.dispose();
-  }
 }
 
 class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
@@ -381,7 +124,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                                   CircularProgressIndicator(),
                                             );
                                           }
-                                          return _PlacementSurface(
+                                          return SkirmishPlacementSurfaceWidget(
                                             sites: widget.draft!.homeSites
                                                 .map(
                                                   (p) => Offset(
@@ -399,14 +142,15 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                             selectedSlot: selectedSlot,
                                             onTapSlot: _selectSlot,
                                             background: CustomPaint(
-                                              painter: _DraftPreviewPainter(
-                                                preview: preview,
-                                              ),
+                                              painter:
+                                                  SkirmishPlacementDraftPreviewPainter(
+                                                    preview: preview,
+                                                  ),
                                             ),
                                           );
                                         },
                                       )
-                                    : _PlacementSurface(
+                                    : SkirmishPlacementSurfaceWidget(
                                         sites: widget.scene!.homeSites
                                             .map(
                                               (s) =>
@@ -431,7 +175,10 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                             alignment: WrapAlignment.center,
                             children: [
                               for (var i = 0; i < _siteCount; i++)
-                                _SeatChip(index: i, isYou: selectedSlot == i),
+                                SkirmishPlacementSeatChipWidget(
+                                  index: i,
+                                  isYou: selectedSlot == i,
+                                ),
                             ],
                           ),
                         const SizedBox(height: 20),
@@ -481,7 +228,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                       border: Border.all(color: Colors.white24),
                     ),
                     child: IconButton(
-                      tooltip: 'Back',
+                      tooltip: S.current.backTooltip,
                       icon: const Icon(
                         Icons.arrow_back,
                         color: Colors.white70,
@@ -610,11 +357,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
     }
     if (aiSite == null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Testing as single-base - add another home site for a full skirmish.',
-          ),
-        ),
+        SnackBar(content: Text(S.current.skirmishPlacementSingleBaseNotice)),
       );
     }
     await context.push(
@@ -622,8 +365,8 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
       extra: GameRouteArgs(
         scene: GameScene(
           id: 'draft-${draft.id}',
-          name: draft.name.isEmpty ? 'Untitled Map' : draft.name,
-          briefing: 'Testing your hand-drawn skirmish map.',
+          name: draft.name.isEmpty ? S.current.untitledMapEditorPage : draft.name,
+          briefing: S.current.skirmishPlacementTestBriefing,
           biome: draft.biome,
           mode: aiSite != null ? GameMode.skirmish : GameMode.waveDefense,
           startingGold: draft.startingGold,

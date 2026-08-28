@@ -111,7 +111,7 @@ class SinglePlayerModeSelectPage extends StatelessWidget {
                   border: Border.all(color: Colors.white24),
                 ),
                 child: IconButton(
-                  tooltip: 'Back',
+                  tooltip: S.current.backTooltip,
                   icon: const Icon(
                     Icons.arrow_back,
                     color: Colors.white70,

@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../../game_core/domain/models/game_scene.dart';
-import '../../map_editor/domain/models/map_draft.dart';
-import '../../map_editor/domain/repos/map_draft_repository.dart';
+import '../../../game_core/domain/models/game_scene.dart';
+import '../../../map_editor/domain/models/map_draft.dart';
+import '../../../map_editor/domain/repos/map_draft_repository.dart';
 
 /// Page-owned state for [SkirmishLevelSelectPage]: loads the user's
 /// skirmish-mode map drafts once and exposes them read-only. Instantiated

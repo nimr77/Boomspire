@@ -80,6 +80,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "appTitle": MessageLookupByLibrary.simpleMessage("Boomspire"),
     "autoSuffixEditorPage": MessageLookupByLibrary.simpleMessage(" (auto)"),
+    "backTooltip": MessageLookupByLibrary.simpleMessage("Back"),
     "baseOverrunSubtitle": MessageLookupByLibrary.simpleMessage(
       "The circuit has been breached.",
     ),
@@ -155,6 +156,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "mainMenuSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose your battle",
     ),
+    "mapEditorTooltip": MessageLookupByLibrary.simpleMessage("Map Editor"),
     "mapLabelEditorPage": MessageLookupByLibrary.simpleMessage("Map"),
     "modeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Mode"),
     "modeSelectSubtitle": MessageLookupByLibrary.simpleMessage(
@@ -209,6 +211,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "skirmishPlacementRandomize": MessageLookupByLibrary.simpleMessage(
       "Randomize",
     ),
+    "skirmishPlacementSingleBaseNotice": MessageLookupByLibrary.simpleMessage(
+      "Testing as single-base - add another home site for a full skirmish.",
+    ),
     "skirmishPlacementStart": MessageLookupByLibrary.simpleMessage(
       "Start Battle",
     ),
@@ -217,6 +222,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "skirmishPlacementSubtitleScene": MessageLookupByLibrary.simpleMessage(
       "Your base and the AI\'s are set for this battlefield",
+    ),
+    "skirmishPlacementTestBriefing": MessageLookupByLibrary.simpleMessage(
+      "Testing your hand-drawn skirmish map.",
     ),
     "skirmishPlacementTitle": MessageLookupByLibrary.simpleMessage(
       "Choose Your Base",

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../progress/domain/models/progress_snapshot.dart';
-import '../../progress/domain/repos/progress_repository.dart';
+import '../../../progress/domain/models/progress_snapshot.dart';
+import '../../../progress/domain/repos/progress_repository.dart';
 
 /// Page-owned state for [LevelSelectPage]: loads campaign progress once and
 /// exposes it read-only. Instantiated and disposed by the page's own

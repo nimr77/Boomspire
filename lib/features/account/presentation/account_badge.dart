@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/models/account_profile.dart';
 import 'account_avatar.dart';
-import 'account_profile_state.dart';
+import 'state/account_profile_state.dart';
 
 /// Small pill showing the current commander's name + total score, or
 /// nothing if no account has been created yet (Quick Play). Listens on the

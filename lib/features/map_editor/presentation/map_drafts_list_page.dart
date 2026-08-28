@@ -5,7 +5,7 @@ import '../../../core/di/service_locator.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/repos/map_draft_repository.dart';
-import 'map_drafts_list_state.dart';
+import 'state/map_drafts_list_state.dart';
 import 'map_editor_page.dart';
 
 /// Entry point for the map editor: browse, open, create, or delete

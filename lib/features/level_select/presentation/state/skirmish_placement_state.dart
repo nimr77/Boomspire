@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../../map_editor/domain/models/editor_terrain_preview.dart';
-import '../../map_editor/domain/models/map_draft.dart';
-import '../../map_editor/impl/editor_terrain_generator.dart';
+import '../../../map_editor/domain/models/editor_terrain_preview.dart';
+import '../../../map_editor/domain/models/map_draft.dart';
+import '../../../map_editor/impl/editor_terrain_generator.dart';
 
 /// Page-owned state for [SkirmishPlacementPage]'s draft preview: generates
 /// the [EditorTerrainPreview] for a hand-authored map once and caches the
