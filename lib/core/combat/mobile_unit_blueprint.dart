@@ -36,22 +36,31 @@ class MobileUnitBlueprint with Unit {
   // here so every mobile unit (enemy or ally) states its attack the same
   // way instead of each component inventing its own firing shape.
 
-  /// Total damage dealt per volley when engaging a target - split evenly
+  /// Total damage dealt per clip when engaging a target - split evenly
   /// across [projectileCount] shots if that's more than 1, so raising the
   /// round count changes the *shape* of an attack (a spread barrage instead
   /// of one shot) without silently also buffing its total damage.
   final double attackDamage;
 
-  /// Range at which this unit will stop to fire.
+  /// Range at which this unit will stop (or, for a strafing plane, start
+  /// its firing pass) to fire.
   final double attackRange;
 
-  /// Seconds between volleys.
+  /// Seconds to reload once a full clip ([projectileCount] shots) has been
+  /// fired - for a 1-round clip (the default) this is just the plain
+  /// per-shot rate of fire, same as before clips existed.
   final double attackInterval;
 
-  /// How many projectiles this unit launches simultaneously per volley -
-  /// 1 for a single shot, more for a spread "barrage" (e.g. the Artillery
-  /// Barrage's 3-rocket salvo). See `MobileUnitComponent._fireAt`.
+  /// How many rounds this unit's clip holds before it must reload - 1 for a
+  /// single shot, more for a burst fired one round at a time, each
+  /// [clipShotInterval] apart, before [attackInterval]'s reload kicks in
+  /// (e.g. a Soldier's 5-round clip, or the Artillery Barrage's 3-round
+  /// salvo). See `MobileUnitComponent._fireOneRound`.
   final int projectileCount;
+
+  /// Seconds between each shot within a clip once [projectileCount] > 1 -
+  /// has no effect for a 1-round clip.
+  final double clipShotInterval;
 
   /// How this unit's visual idles while moving.
   final MovementStyle movementStyle;
@@ -89,6 +98,7 @@ class MobileUnitBlueprint with Unit {
     this.attackRange = 0,
     this.attackInterval = 1,
     this.projectileCount = 1,
+    this.clipShotInterval = 0.12,
     this.movementStyle = MovementStyle.walk,
     this.isVehicle = false,
     this.weaponType = WeaponType.bullet,

@@ -50,6 +50,25 @@ import 'vehicle_tread_component.dart';
 /// [MobileUnitComponent.applySeparationSteering].
 const _separationRadiusSq = 26.0 * 26.0;
 
+/// How far (in grid cells) a strafing plane loops out to while reloading
+/// between passes - see [MobileUnitComponent._updateStrafingRun].
+const _planeLoiterRadiusCells = 12;
+
+/// A strafing plane's current attack phase - see
+/// [MobileUnitComponent._updateStrafingRun].
+enum _PlaneAttackPhase {
+  /// Flying straight at the target, not yet in range to fire.
+  approach,
+
+  /// In range and flying through the target while emptying its clip.
+  pass,
+
+  /// Clip empty - looping out within [_planeLoiterRadiusCells] cells while
+  /// [MobileUnitComponent._loiterTimer] (the reload) counts down, before
+  /// heading back in for another [approach].
+  loiter,
+}
+
 /// A single mobile (non-tower) combat unit. Every team and every
 /// [UnitObjective] shares this one class - an AI-directed wave invader
 /// rushing the player's base and a player-built unit hunting down
@@ -106,6 +125,21 @@ class MobileUnitComponent extends PositionComponent
   int _pathIndex = 0;
   double _repathTimer = 0;
   double _attackCooldown = 0;
+
+  /// Rounds already fired in the current clip - see [_maybeEngage]/
+  /// [_updateStrafingRun]. Resets to 0 (with [_attackCooldown] set to
+  /// [MobileUnitBlueprint.attackInterval], the reload) once it reaches
+  /// [MobileUnitBlueprint.projectileCount].
+  int _clipShotsFired = 0;
+
+  /// A plane-type attacker's current strafing-run phase - see
+  /// [_updateStrafingRun]. Irrelevant for every other unit.
+  _PlaneAttackPhase _planePhase = _PlaneAttackPhase.approach;
+
+  /// Time left in the current loiter loop - see [_updateStrafingRun].
+  double _loiterTimer = 0;
+  double _loiterAngle = 0;
+  Vector2 _loiterCenter = Vector2.zero();
   Attackable? _engaging;
   Attackable? _huntTarget;
   double _bobPhase = Random().nextDouble() * pi * 2;
@@ -203,6 +237,10 @@ class MobileUnitComponent extends PositionComponent
   /// Vehicles rushing the base telegraph an impending death with sparking
   /// smoke at low HP - units hunting hostiles just fight to the end.
   bool get showsLowHealthTelegraph => objective == UnitObjective.rushBase;
+
+  /// True for plane-type attackers (jets), which fly a strafing run instead
+  /// of stopping to trade fire - see [_updateStrafingRun].
+  bool get _isStrafingPlane => blueprint.kind.bodyType == VehicleUnitType.plane;
 
   double get _levelMultiplier => pow(1.25, level).toDouble();
 
@@ -745,43 +783,52 @@ class MobileUnitComponent extends PositionComponent
     return best;
   }
 
-  /// Fires this unit's whole volley (`blueprint.projectileCount` shots) at
-  /// once - a single shot for most units, but a fanned-out multi-round
-  /// barrage (e.g. the Artillery Barrage's 3 rockets) when that's more
-  /// than 1. The volley's total damage is split evenly across the shots
-  /// so changing the round count reshapes the attack instead of buffing
-  /// it.
-  void _fireAt(Attackable target, Vector2 toTarget) {
+  /// Fires a single round of the current clip - `clipIndex` (0-based within
+  /// the clip) and `clipSize` (`blueprint.projectileCount`) fan it out
+  /// side-by-side the same way a simultaneous volley used to, just spread
+  /// over time (one round every [MobileUnitBlueprint.clipShotInterval])
+  /// instead of all landing on the same frame. The clip's total damage is
+  /// split evenly across its rounds so changing the clip size reshapes the
+  /// attack instead of buffing it. Called once per round by [_maybeEngage]
+  /// and [_updateStrafingRun].
+  void _fireOneRound(
+    Attackable target,
+    Vector2 toTarget,
+    int clipIndex,
+    int clipSize,
+  ) {
     final dir = toTarget.normalized();
     final side = Vector2(-dir.y, dir.x);
-    final volleySize = blueprint.projectileCount;
-    final perShotDamage = effectiveAttackDamage / volleySize;
+    final perShotDamage = effectiveAttackDamage / clipSize;
     final accent = team.color;
 
     _limbs?.pulseFire();
-    game.shakeCamera(power: effectiveAttackDamage, origin: position.clone());
-    // Recoil kick - punchier the bigger the volley, so a 3-round barrage
-    // visibly reads as heavier than a single shot.
+    game.shakeCamera(
+      power: effectiveAttackDamage / clipSize,
+      origin: position.clone(),
+    );
+    // Recoil kick - a quick, subtle punch for each round of a multi-shot
+    // clip so rapid bursts don't visibly stack recoil animations on top of
+    // each other; a single-shot clip keeps the old, punchier kick.
     _visual.add(
       ScaleEffect.by(
-        Vector2.all(volleySize > 1 ? 0.82 : 0.92),
+        Vector2.all(clipSize > 1 ? 0.9 : 0.92),
         EffectController(
-          duration: 0.05,
-          reverseDuration: 0.12,
+          duration: clipSize > 1 ? 0.04 : 0.05,
+          reverseDuration: clipSize > 1
+              ? (blueprint.clipShotInterval * 0.6).clamp(0.02, 0.12)
+              : 0.12,
           curve: Curves.easeOut,
         ),
       ),
     );
 
-    for (var i = 0; i < volleySize; i++) {
-      // Fan simultaneous rounds out side-by-side instead of stacking them
-      // on the exact same line, so a multi-round volley reads as a spread
-      // barrage rather than one shot repeated.
-      final spread = volleySize == 1 ? 0.0 : (i - (volleySize - 1) / 2) * 9.0;
-      final spawnPos = position + dir * (size.x / 2) + side * spread;
-      _spawnProjectile(spawnPos, target, perShotDamage, accent);
-      game.world.spawn(MuzzleFlashComponent(position: spawnPos));
-    }
+    // Fan rounds out side-by-side instead of stacking them on the exact
+    // same line, so a multi-round clip still reads as a spread barrage.
+    final spread = clipSize == 1 ? 0.0 : (clipIndex - (clipSize - 1) / 2) * 9.0;
+    final spawnPos = position + dir * (size.x / 2) + side * spread;
+    _spawnProjectile(spawnPos, target, perShotDamage, accent);
+    game.world.spawn(MuzzleFlashComponent(position: spawnPos));
 
     _playFireSfx();
     game.world.spawn(
@@ -886,7 +933,14 @@ class MobileUnitComponent extends PositionComponent
       _engaging ??= _findTargetInRange();
       target = _engaging;
     }
-    if (target == null) return false;
+    if (target == null) {
+      // Reset so the next engagement always starts a fresh approach
+      // instead of resuming mid-loiter/mid-pass against whatever this
+      // unit's new target turns out to be.
+      _planePhase = _PlaneAttackPhase.approach;
+      _clipShotsFired = 0;
+      return false;
+    }
 
     // Only tint the target when this unit is the one selected/tapped -
     // otherwise every unit on the map would highlight its target at once.
@@ -909,13 +963,92 @@ class MobileUnitComponent extends PositionComponent
     // happens.
     if (dt <= 0) return true;
 
+    if (_isStrafingPlane) {
+      _updateStrafingRun(target, toTarget, dt);
+      return true;
+    }
+
     _attackCooldown -= dt;
     if (_attackCooldown <= 0) {
-      _attackCooldown = blueprint.attackInterval;
-      _fireAt(target, toTarget);
+      _fireOneRound(target, toTarget, _clipShotsFired, blueprint.projectileCount);
+      _clipShotsFired++;
+      if (_clipShotsFired >= blueprint.projectileCount) {
+        _clipShotsFired = 0;
+        _attackCooldown = blueprint.attackInterval; // reload
+      } else {
+        _attackCooldown = blueprint.clipShotInterval; // next round in clip
+      }
     }
     return true;
   }
+
+  /// Plane-only "attack while moving" state machine (see [_isStrafingPlane])
+  /// - like a real jet (or a C&C Generals air unit), it never hovers to
+  /// fire: it flies straight through its target emptying a clip, then
+  /// peels off into a loitering loop within [_planeLoiterRadiusCells] cells
+  /// while its clip reloads, before coming back around for another pass.
+  void _updateStrafingRun(Attackable target, Vector2 toTarget, double dt) {
+    switch (_planePhase) {
+      case _PlaneAttackPhase.approach:
+        final dist = toTarget.length;
+        if (dist > 4) {
+          final dir = applySeparationSteering(toTarget / dist);
+          position += dir * blueprint.speed * dt;
+          _facingAngle = atan2(dir.y, dir.x) + pi / 2;
+        }
+        if (dist <= blueprint.attackRange) {
+          _planePhase = _PlaneAttackPhase.pass;
+          _clipShotsFired = 0;
+          _attackCooldown = 0; // fire the first round immediately
+        }
+      case _PlaneAttackPhase.pass:
+        // Keep flying through the target instead of stopping to shoot.
+        final dist = toTarget.length;
+        final dir = dist > 1
+            ? toTarget / dist
+            : Vector2(cos(_facingAngle - pi / 2), sin(_facingAngle - pi / 2));
+        final steered = applySeparationSteering(dir);
+        position += steered * blueprint.speed * dt;
+        _facingAngle = atan2(steered.y, steered.x) + pi / 2;
+
+        _attackCooldown -= dt;
+        if (_attackCooldown <= 0) {
+          _fireOneRound(
+            target,
+            toTarget,
+            _clipShotsFired,
+            blueprint.projectileCount,
+          );
+          _clipShotsFired++;
+          if (_clipShotsFired >= blueprint.projectileCount) {
+            _planePhase = _PlaneAttackPhase.loiter;
+            _loiterTimer = blueprint.attackInterval; // reload while looping
+            _loiterAngle = Random().nextDouble() * pi * 2;
+            _loiterCenter = target.position.clone();
+          } else {
+            _attackCooldown = blueprint.clipShotInterval;
+          }
+        }
+      case _PlaneAttackPhase.loiter:
+        _loiterTimer -= dt;
+        _loiterAngle += dt * 1.6;
+        final radius =
+            _planeLoiterRadiusCells * game.terrainMap.grid.cellSize;
+        final desired =
+            _loiterCenter +
+            Vector2(cos(_loiterAngle), sin(_loiterAngle)) * radius;
+        final toDesired = desired - position;
+        if (toDesired.length > 1) {
+          final dir = applySeparationSteering(toDesired.normalized());
+          position += dir * blueprint.speed * dt;
+          _facingAngle = atan2(dir.y, dir.x) + pi / 2;
+        }
+        if (_loiterTimer <= 0) {
+          _planePhase = _PlaneAttackPhase.approach;
+        }
+    }
+  }
+
 
   Attackable? _nearestOpposing() {
     Attackable? best;

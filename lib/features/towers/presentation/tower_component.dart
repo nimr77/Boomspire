@@ -72,6 +72,12 @@ abstract class TowerComponent extends PositionComponent
 
   double _cooldown = 0;
 
+  /// How many shots have landed in the current clip - reset to 0 (and
+  /// [_cooldown] set to [UnitBlueprint.fireRate], the reload) once it
+  /// reaches [UnitBlueprint.clipSize]; otherwise [_cooldown] is set to
+  /// [UnitBlueprint.clipShotInterval] to fire the next round in the burst.
+  int _clipShotsFired = 0;
+
   int upgradeLevel = 0;
 
   /// Current shield charges remaining - each charge fully blocks one
@@ -528,7 +534,13 @@ abstract class TowerComponent extends PositionComponent
           ),
         ),
       );
-      _cooldown = blueprint.fireRate;
+      _clipShotsFired++;
+      if (_clipShotsFired >= blueprint.clipSize) {
+        _clipShotsFired = 0;
+        _cooldown = blueprint.fireRate;
+      } else {
+        _cooldown = blueprint.clipShotInterval;
+      }
     }
     _scanAntiRocket();
   }

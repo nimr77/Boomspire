@@ -26,7 +26,10 @@ class TowerRepositoryImpl implements TowerRepository {
       cost: 100,
       range: 150,
       damage: 7,
-      fireRate: 0.15,
+      // 10-round clip, 0.05s between shots, 0.6s to reload once it's empty.
+      fireRate: 0.6,
+      clipSize: 10,
+      clipShotInterval: 0.05,
       maxHp: 90,
     ),
     TowerType.rocket: UnitBlueprint(
@@ -66,9 +69,9 @@ class TowerRepositoryImpl implements TowerRepository {
       range: 210,
       damage: 14,
       fireRate: 0.08,
-      // Glass cannon: hits everything at a blistering rate but is fragile
-      // enough that a single well-placed enemy rocket can take it out.
-      maxHp: 60,
+      // Still fragile relative to the tankier splash towers, but no longer
+      // a one-rocket-and-it's-gone glass cannon.
+      maxHp: 100,
       attackDomains: const {UnitDomain.ground, UnitDomain.air, UnitDomain.sea},
     ),
     TowerType.rocketSilo: UnitBlueprint(

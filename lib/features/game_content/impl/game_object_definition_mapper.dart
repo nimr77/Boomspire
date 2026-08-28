@@ -24,6 +24,8 @@ UnitBlueprint applyBuildingOverride(
   maxHp: override.maxHp,
   domain: override.domain,
   attackDomains: override.attackDomains,
+  clipSize: base.clipSize,
+  clipShotInterval: base.clipShotInterval,
 );
 
 MobileUnitBlueprint applyMobileUnitOverride(
@@ -41,6 +43,7 @@ MobileUnitBlueprint applyMobileUnitOverride(
   attackRange: override.range,
   attackInterval: override.fireRate,
   projectileCount: override.projectileCount,
+  clipShotInterval: base.clipShotInterval,
   movementStyle: override.movementStyle,
   isVehicle: override.unitType == MobilityType.vehicle,
   weaponType: override.weaponType,
@@ -67,6 +70,8 @@ UnitBlueprint applyTowerOverride(
   maxHp: override.maxHp,
   domain: override.domain,
   attackDomains: override.attackDomains,
+  clipSize: base.clipSize,
+  clipShotInterval: base.clipShotInterval,
 );
 
 String buildingDefinitionId(BuildingType type) => 'building.${type.name}';

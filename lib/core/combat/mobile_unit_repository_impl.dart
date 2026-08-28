@@ -13,6 +13,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
   // number of human player Teams (future multiplayer seats) all draw from
   // the exact same "player" roster/stats - only their `Team.color` differs.
   static const _enemyBlueprints = <UnitKind, MobileUnitBlueprint>{
+    // 5-round clip, 0.1s between shots, 1s reload once it's empty.
     UnitKind.soldier: MobileUnitBlueprint(
       kind: UnitKind.soldier,
       name: 'Soldier',
@@ -22,7 +23,9 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       size: 34,
       attackDamage: 4,
       attackRange: 130,
-      attackInterval: 1.1,
+      attackInterval: 1.0,
+      projectileCount: 5,
+      clipShotInterval: 0.1,
     ),
     UnitKind.heavySoldier: MobileUnitBlueprint(
       kind: UnitKind.heavySoldier,
@@ -53,7 +56,8 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       weaponType: WeaponType.rocket,
     ),
     // Stronger than before (was 280/14/150) - a deliberate ask to make
-    // enemy armor a real threat once it's in engagement range.
+    // enemy armor a real threat once it's in engagement range. One shot per
+    // clip, 1s to reload.
     UnitKind.tank: MobileUnitBlueprint(
       kind: UnitKind.tank,
       name: 'Tank',
@@ -64,10 +68,15 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       isVehicle: true,
       attackDamage: 20,
       attackRange: 160,
-      attackInterval: 1.5,
+      attackInterval: 1.0,
       movementStyle: MovementStyle.roll,
       weaponType: WeaponType.cannon,
     ),
+    // Strafing-run attacker (see `MobileUnitComponent._updateStrafingRun`):
+    // flies through its target firing a 4-round clip 0.5s apart, then
+    // peels off to loop within 12 cells while its 2s reload runs, before
+    // coming back around for another pass - like a real jet, not a
+    // stationary turret.
     UnitKind.attackPlane: MobileUnitBlueprint(
       kind: UnitKind.attackPlane,
       name: 'Attack Plane',
@@ -80,7 +89,9 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       isVehicle: true,
       attackDamage: 45,
       attackRange: 180,
-      attackInterval: 0.7,
+      attackInterval: 2.0,
+      projectileCount: 4,
+      clipShotInterval: 0.5,
       movementStyle: MovementStyle.swoop,
       weaponType: WeaponType.rocket,
     ),
@@ -101,6 +112,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       attackRange: 260,
       attackInterval: 2.4,
       projectileCount: 3,
+      clipShotInterval: 0.15,
       movementStyle: MovementStyle.roll,
       weaponType: WeaponType.rocket,
       prefersStructures: true,
@@ -134,6 +146,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       isVehicle: true,
       attackDamage: 9,
       projectileCount: 2,
+      clipShotInterval: 0.12,
       attackRange: 210,
       attackInterval: 1.0,
       movementStyle: MovementStyle.roll,
@@ -157,6 +170,8 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       attackDamage: 4,
       attackRange: 130,
       attackInterval: 1.0,
+      projectileCount: 5,
+      clipShotInterval: 0.1,
     ),
     UnitKind.tank: MobileUnitBlueprint(
       kind: UnitKind.tank,
@@ -168,7 +183,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       size: 50,
       attackDamage: 16,
       attackRange: 170,
-      attackInterval: 1.6,
+      attackInterval: 1.0,
       isVehicle: true,
       movementStyle: MovementStyle.roll,
       weaponType: WeaponType.cannon,
@@ -198,7 +213,9 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       size: 40,
       attackDamage: 10,
       attackRange: 200,
-      attackInterval: 0.9,
+      attackInterval: 2.0,
+      projectileCount: 4,
+      clipShotInterval: 0.5,
       domain: UnitDomain.air,
       attackDomains: {UnitDomain.ground, UnitDomain.air},
       isVehicle: true,

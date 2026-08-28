@@ -25,8 +25,18 @@ class UnitBlueprint with Unit {
 
   final double damage;
 
-  /// Seconds between shots.
+  /// Seconds to reload once a full clip ([clipSize] shots) has been fired -
+  /// for a 1-shot clip (the default) this is just the plain rate of fire,
+  /// same as before clips existed.
   final double fireRate;
+
+  /// Shots fired per clip before this tower must reload - 1 (the default)
+  /// means every shot is its own clip. See `TowerComponent.update`.
+  final int clipSize;
+
+  /// Seconds between each shot within a clip once [clipSize] > 1 - unused
+  /// when [clipSize] is 1.
+  final double clipShotInterval;
 
   /// Radius of splash damage on impact, 0 means single-target only.
   final double splashRadius;
@@ -50,6 +60,8 @@ class UnitBlueprint with Unit {
     required this.damage,
     required this.fireRate,
     required this.maxHp,
+    this.clipSize = 1,
+    this.clipShotInterval = 0.1,
     this.splashRadius = 0,
     this.minRange = 0,
     this.domain = UnitDomain.ground,
