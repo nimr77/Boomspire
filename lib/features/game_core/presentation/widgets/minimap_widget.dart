@@ -2,6 +2,7 @@ import 'package:flame/components.dart' show Vector2;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../boomspire_game.dart';
 import 'game_core_minimap_painter.dart';
@@ -56,8 +57,11 @@ class _MinimapWidgetState extends State<MinimapWidget>
             height: size.height,
             decoration: BoxDecoration(
               color: AppThemeColors.minimapBackground,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppThemeColors.borderSubtle, width: 1.5),
+              borderRadius: AppThemeBorders.radius8,
+              border: Border.all(
+                color: AppThemeColors.borderSubtle,
+                width: AppThemeBorders.width1_5,
+              ),
             ),
             clipBehavior: Clip.antiAlias,
             child: CustomPaint(

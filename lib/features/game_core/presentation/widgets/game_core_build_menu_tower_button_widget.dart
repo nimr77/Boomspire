@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -64,7 +65,7 @@ class _GameCoreBuildMenuTowerButtonWidgetState
           },
           child: InkWell(
             onTap: widget.enabled ? widget.onTap : null,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppThemeBorders.radius8,
             child: ValueListenableBuilder<bool>(
               valueListenable: _hovering,
               builder: (context, hovering, _) {
@@ -83,10 +84,12 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                   transformAlignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: AppThemeColors.surfacePanel,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppThemeBorders.radius8,
                     border: Border.all(
                       color: glowing ? accent : AppThemeColors.borderSubtle,
-                      width: selected ? 2.5 : (hovering ? 2 : 1),
+                      width: selected
+                          ? AppThemeBorders.width2_5
+                          : (hovering ? AppThemeBorders.width2 : AppThemeBorders.width1),
                     ),
                     boxShadow: glowing
                         ? [
@@ -148,7 +151,7 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                           padding: AppThemePaddings.h5v1,
                           decoration: BoxDecoration(
                             color: AppThemeColors.overlayChipBackground,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: AppThemeBorders.radius6,
                           ),
                           child: Text(
                             '${blueprint.cost}g',
@@ -168,7 +171,7 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                             padding: AppThemePaddings.h4v1,
                             decoration: BoxDecoration(
                               color: AppThemeColors.overlayChipBackground,
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: AppThemeBorders.radius6,
                             ),
                             child: Text(
                               '${widget.builtCount}/${widget.limit}',
@@ -185,7 +188,7 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                           child: Container(
                             decoration: BoxDecoration(
                               color: AppThemeColors.overlayLockScrim,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: AppThemeBorders.radius8,
                             ),
                             child: const Center(
                               child: Icon(

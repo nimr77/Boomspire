@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../map_editor/domain/models/map_draft.dart';
 import '../../../terrain/extensions/biome_extensions.dart';
@@ -20,13 +21,13 @@ class SkirmishLevelSelectDraftTileWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppThemeColors.surfaceCard,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppThemeBorders.radius14,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppThemeBorders.radius14,
         onTap: onTap,
         child: ListTile(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: AppThemeBorders.radius14,
           ),
           leading: const Icon(
             Icons.map_outlined,

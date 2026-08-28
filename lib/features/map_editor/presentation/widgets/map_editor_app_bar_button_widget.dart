@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -32,13 +33,13 @@ class MapEditorAppBarButtonWidget extends StatelessWidget {
       child: Material(
         color: AppThemeColors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppThemeBorders.radius10,
           onTap: onPressed,
           child: Container(
             padding: AppThemePaddings.h14v8,
             decoration: BoxDecoration(
               color: AppThemeColors.glassPill,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppThemeBorders.radius10,
               border: Border.all(color: tint.withValues(alpha: 0.6)),
             ),
             child: Row(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -30,12 +31,12 @@ class GameCoreTowerActionButtonWidget extends StatelessWidget {
       opacity: enabled ? 1 : 0.4,
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppThemeBorders.radius8,
         child: Container(
           padding: AppThemePaddings.h10v6,
           decoration: BoxDecoration(
             color: AppThemeColors.glassPill,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppThemeBorders.radius8,
             border: Border.all(color: color.withValues(alpha: 0.5)),
           ),
           child: Column(

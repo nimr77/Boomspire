@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -44,14 +45,14 @@ class GameCoreBuildMenuGlassTooltipWidget extends StatelessWidget {
     return Material(
       color: AppThemeColors.transparent,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppThemeBorders.radius12,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
             padding: AppThemePaddings.h12v10,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppThemeBorders.radius12,
               border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
               boxShadow: [
                 BoxShadow(

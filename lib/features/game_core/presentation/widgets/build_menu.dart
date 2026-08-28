@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -33,14 +34,14 @@ class _BuildMenuState extends State<BuildMenu> {
   Widget build(BuildContext context) {
     final game = widget.game;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppThemeBorders.radius14,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           padding: AppThemePaddings.h12v8,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: AppThemeBorders.radius14,
             border: Border.all(color: AppThemeColors.borderSubtle),
           ),
           child: _buildPlacementMenu(game),

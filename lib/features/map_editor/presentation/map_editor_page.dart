@@ -6,6 +6,7 @@ import '../../../core/combat/unit_kind.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/router/routes.dart';
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_borders.dart';
 import '../../../theme/app_theme/app_theme_colors.dart';
 import '../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../theme/app_theme/app_theme_spacing.dart';
@@ -183,10 +184,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
                               return Container(
                                 clipBehavior: Clip.antiAlias,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24),
+                                  borderRadius: AppThemeBorders.radius24,
                                   border: Border.all(
                                     color: AppThemeColors.borderSubtle,
-                                    width: 1.5,
+                                    width: AppThemeBorders.width1_5,
                                   ),
                                   boxShadow: const [
                                     BoxShadow(
@@ -264,10 +265,10 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       color: AppThemeColors.gradientPanelEnd,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: AppThemeBorders.radius20,
                       border: Border.all(
                         color: AppThemeColors.borderSubtle,
-                        width: 1.5,
+                        width: AppThemeBorders.width1_5,
                       ),
                     ),
                     child: ListView(

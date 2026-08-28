@@ -2,6 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../theme/app_theme/app_theme_borders.dart';
 import '../../../theme/app_theme/app_theme_colors.dart';
 import '../../../theme/app_theme/app_theme_paddings.dart';
 import '../../terrain/extensions/biome_extensions.dart';
@@ -73,7 +74,7 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
                   transitionType: ContainerTransitionType.fade,
                   closedElevation: 2,
                   closedShape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: AppThemeBorders.radius14,
                   ),
                   closedColor: AppThemeColors.surfaceCard,
                   openColor: AppThemeColors.background,

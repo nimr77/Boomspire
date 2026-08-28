@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 
@@ -22,7 +23,7 @@ class LevelSelectDifficultySegmentWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: AppThemeBorders.radius8,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
         curve: Curves.easeOut,
@@ -31,12 +32,12 @@ class LevelSelectDifficultySegmentWidget extends StatelessWidget {
           color: selected
               ? AppThemeColors.accentCyan.withValues(alpha: 0.15)
               : AppThemeColors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AppThemeBorders.radius8,
           border: Border.all(
             color: selected
                 ? AppThemeColors.accentCyan
                 : AppThemeColors.transparent,
-            width: 1.5,
+            width: AppThemeBorders.width1_5,
           ),
         ),
         child: Text(

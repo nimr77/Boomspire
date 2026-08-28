@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../game_core/presentation/player_palette.dart';
 
@@ -57,7 +58,7 @@ class SkirmishPlacementHomeSiteMarkerWidget extends StatelessWidget {
                   color: color,
                   border: Border.all(
                     color: AppThemeColors.textPrimary,
-                    width: selected ? 3 : 2,
+                    width: selected ? AppThemeBorders.width3 : AppThemeBorders.width2,
                   ),
                   boxShadow: [
                     BoxShadow(

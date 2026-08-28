@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -34,10 +35,10 @@ class EndScreen extends StatelessWidget {
                 padding: AppThemePaddings.h40v32,
                 decoration: BoxDecoration(
                   color: AppThemeColors.surfacePanel,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppThemeBorders.radius16,
                   border: Border.all(
                     color: accentColor.withValues(alpha: 0.6),
-                    width: 2,
+                    width: AppThemeBorders.width2,
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -75,7 +76,7 @@ class EndScreen extends StatelessWidget {
                         foregroundColor: AppThemeColors.textOnAccent,
                         padding: AppThemePaddings.h28v14,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: AppThemeBorders.radius10,
                         ),
                       ),
                       child: Text(

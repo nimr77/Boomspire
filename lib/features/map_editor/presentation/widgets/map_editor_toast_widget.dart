@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -56,7 +57,7 @@ class _MapEditorToastWidgetState extends State<MapEditorToastWidget>
                 end: Offset.zero,
               ).animate(curved),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppThemeBorders.radius16,
                 child: Material(
                   color: AppThemeColors.transparent,
                   child: BackdropFilter(
@@ -64,7 +65,7 @@ class _MapEditorToastWidgetState extends State<MapEditorToastWidget>
                     child: Container(
                       padding: AppThemePaddings.h20v14,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: AppThemeBorders.radius16,
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -77,7 +78,7 @@ class _MapEditorToastWidgetState extends State<MapEditorToastWidget>
                           color: AppThemeColors.accentCyan.withValues(
                             alpha: 0.4,
                           ),
-                          width: 1.2,
+                          width: AppThemeBorders.width1_2,
                         ),
                       ),
                       child: Row(

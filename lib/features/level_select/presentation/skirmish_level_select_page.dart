@@ -6,6 +6,7 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_borders.dart';
 import '../../../theme/app_theme/app_theme_colors.dart';
 import '../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../theme/app_theme/app_theme_spacing.dart';
@@ -181,7 +182,7 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
               child: Container(
                 decoration: BoxDecoration(
                   color: AppThemeColors.glassPill,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: AppThemeBorders.radius24,
                   border: Border.all(color: AppThemeColors.borderSubtle),
                 ),
                 child: IconButton(

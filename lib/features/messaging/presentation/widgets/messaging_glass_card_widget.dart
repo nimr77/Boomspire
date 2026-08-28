@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 
 /// The rounded, frosted card body used by [showGlassMessage] - centered as
@@ -49,7 +50,7 @@ class MessagingGlassCardWidget extends StatelessWidget {
                   ),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.35),
-                    width: 1.5,
+                    width: AppThemeBorders.width1_5,
                   ),
                 ),
                 child: Material(type: MaterialType.transparency, child: child),

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -42,7 +43,7 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
     return Material(
       color: AppThemeColors.transparent,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppThemeBorders.radius14,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
@@ -50,7 +51,7 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
             padding: AppThemePaddings.h14v10,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: AppThemeBorders.radius14,
               border: Border.all(color: accentColor.withValues(alpha: 0.55)),
               boxShadow: [
                 BoxShadow(
@@ -135,7 +136,7 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
       padding: AppThemePaddings.h8v3,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppThemeBorders.radius6,
         border: Border.all(color: color.withValues(alpha: 0.7)),
       ),
       child: Text(

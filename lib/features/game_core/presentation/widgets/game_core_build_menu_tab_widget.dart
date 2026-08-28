@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 
@@ -20,13 +21,13 @@ class GameCoreBuildMenuTabWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: AppThemeBorders.radius6,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
         padding: AppThemePaddings.h10v5,
         decoration: BoxDecoration(
           color: selected ? Colors.white.withValues(alpha: 0.14) : null,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: AppThemeBorders.radius6,
           border: Border.all(
             color: selected
                 ? AppThemeColors.textMuted

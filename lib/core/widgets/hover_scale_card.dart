@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../theme/app_theme/app_theme_borders.dart';
 import '../../theme/app_theme/app_theme_colors.dart';
 
 /// A tappable card that scales up and brightens its border on mouse hover
@@ -77,7 +78,7 @@ class _HoverScaleCardState extends State<HoverScaleCard> {
                     color: active
                         ? widget.accentColor
                         : widget.accentColor.withValues(alpha: 0.25),
-                    width: active ? 2 : 1.5,
+                    width: active ? AppThemeBorders.width2 : AppThemeBorders.width1_5,
                   ),
                   boxShadow: active
                       ? [

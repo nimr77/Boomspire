@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../generated/l10n.dart';
+import '../../theme/app_theme/app_theme_borders.dart';
 import '../../theme/app_theme/app_theme_colors.dart';
 import '../../theme/app_theme/app_theme_paddings.dart';
 import 'window_controls_fullscreen_button_widget.dart';
@@ -27,7 +28,7 @@ class WindowControls extends StatelessWidget {
       padding: AppThemePaddings.h4v4,
       decoration: BoxDecoration(
         color: AppThemeColors.glassPill,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: AppThemeBorders.radius24,
         border: Border.all(color: AppThemeColors.borderSubtle),
       ),
       child: Row(

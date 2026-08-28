@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_borders.dart';
 import '../../../theme/app_theme/app_theme_colors.dart';
 import '../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../theme/app_theme/app_theme_spacing.dart';
@@ -70,7 +71,7 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.08),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppThemeBorders.radius12,
                 borderSide: BorderSide.none,
               ),
               contentPadding: AppThemePaddings.h16v14,
@@ -92,7 +93,7 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
                         foregroundColor: AppThemeColors.textOnAccent,
                         padding: AppThemePaddings.v14,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: AppThemeBorders.radius12,
                         ),
                       ),
                       child: Text(

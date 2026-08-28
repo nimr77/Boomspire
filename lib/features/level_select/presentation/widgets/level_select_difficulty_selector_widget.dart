@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../game_core/domain/models/game_difficulty.dart';
@@ -25,10 +26,10 @@ class LevelSelectDifficultySelectorWidget extends StatelessWidget {
       padding: AppThemePaddings.all4,
       decoration: BoxDecoration(
         color: AppThemeColors.surfacePanel,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppThemeBorders.radius10,
         border: Border.all(
           color: AppThemeColors.surfacePanelBorder,
-          width: 1.5,
+          width: AppThemeBorders.width1_5,
         ),
       ),
       child: Row(

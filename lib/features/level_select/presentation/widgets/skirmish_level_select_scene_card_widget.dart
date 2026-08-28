@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/routes.dart';
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -22,13 +23,13 @@ class SkirmishLevelSelectSceneCardWidget extends StatelessWidget {
     return Material(
       color: AppThemeColors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppThemeBorders.radius14,
         onTap: () => context.push(
           Routes.skirmishPlacement.route,
           extra: SkirmishPlacementArgs(scene: scene),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppThemeBorders.radius14,
           child: Stack(
             fit: StackFit.expand,
             children: [

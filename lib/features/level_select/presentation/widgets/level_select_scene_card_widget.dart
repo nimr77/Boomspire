@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/routes.dart';
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -37,7 +38,7 @@ class LevelSelectSceneCardWidget extends StatelessWidget {
     return Material(
       color: AppThemeColors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppThemeBorders.radius14,
         onTap: () async {
           await context.push(
             Routes.game.route,
@@ -46,7 +47,7 @@ class LevelSelectSceneCardWidget extends StatelessWidget {
           await onReturn();
         },
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppThemeBorders.radius14,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -90,7 +91,7 @@ class LevelSelectSceneCardWidget extends StatelessWidget {
                                 color: AppThemeColors.accentGreen.withValues(
                                   alpha: 0.2,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: AppThemeBorders.radius6,
                                 border: Border.all(
                                   color: AppThemeColors.accentGreen,
                                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../game_core/presentation/player_palette.dart';
@@ -44,8 +45,11 @@ class _SkirmishPlacementSeatChipWidgetState
               padding: AppThemePaddings.h12v6,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: widget.isYou ? 0.35 : 0.12),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: color, width: widget.isYou ? 2 : 1),
+                borderRadius: AppThemeBorders.radius20,
+                border: Border.all(
+                  color: color,
+                  width: widget.isYou ? AppThemeBorders.width2 : AppThemeBorders.width1,
+                ),
                 boxShadow: hovered
                     ? [
                         BoxShadow(

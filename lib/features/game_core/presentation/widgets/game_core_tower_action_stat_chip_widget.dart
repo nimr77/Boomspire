@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_borders.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../../theme/app_theme/app_theme_spacing.dart';
@@ -25,7 +26,7 @@ class GameCoreTowerActionStatChipWidget extends StatelessWidget {
       padding: AppThemePaddings.h8v5,
       decoration: BoxDecoration(
         color: AppThemeColors.glassPill,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppThemeBorders.radius8,
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
