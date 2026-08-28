@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" width="54" height="54" viewBox="0 0 54 54" version="1.1" inkscape:export-xdpi="96" inkscape:export-ydpi="96" style="fill: none; stroke: none">
+   <defs>
+      <linearGradient x1="27.0" y1="5.399999999999999" x2="27.0" y2="48.6" id="linearGradient_3" gradientUnits="userSpaceOnUse">
+         <stop offset="0.0%" stop-color="rgb(58, 63, 68)" stop-opacity="1"/>
+         <stop offset="100.0%" stop-color="rgb(13, 15, 16)" stop-opacity="1"/>
+      </linearGradient>
+      <linearGradient x1="27.0" y1="5.399999999999999" x2="27.0" y2="48.6" id="linearGradient_4" gradientUnits="userSpaceOnUse">
+         <stop offset="0.0%" stop-color="rgb(58, 63, 68)" stop-opacity="1"/>
+         <stop offset="100.0%" stop-color="rgb(13, 15, 16)" stop-opacity="1"/>
+      </linearGradient>
+   </defs>
+   <sodipodi:namedview inkscape:pagecheckerboard="true" borderlayer="true" bordercolor="#666666" pagecolor="#ffffff"/>
+   <g inkscape:groupmode="layer" id="g_1" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" inkscape:label="ShapeLayer" style="">
+      <g id="g_2" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:url(#linearGradient_3)">
+         <path d="M 27.0,20.52 C 27.0,20.52 52.92,45.36 52.92,45.36 C 52.92,45.36 43.2,48.6 43.2,48.6 C 43.2,48.6 27.0,35.64 27.0,35.64 C 27.0,35.64 10.8,48.6 10.8,48.6 C 10.8,48.6 1.0800000000000018,45.36 1.0800000000000018,45.36 C 1.0800000000000018,45.36 27.0,20.52 27.0,20.52 Z" style="fill-opacity:1.0;fill:url(#linearGradient_4)"/>
+      </g>
+      <g id="g_5" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(26, 28, 30);fill-rule:nonzero">
+         <ellipse rx="2.7" ry="4.32" cx="27.0" cy="25.92" id="ellipse_6" style="fill-opacity:1.0;fill:rgb(26, 28, 30);fill-rule:nonzero"/>
+      </g>
+   </g>
+</svg>

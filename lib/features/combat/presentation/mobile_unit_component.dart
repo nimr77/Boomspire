@@ -53,8 +53,9 @@ import 'vehicle_tread_component.dart';
 const _planeBoostRangeCells = 10;
 
 /// Speed multiplier applied while within [_planeBoostRangeCells] of the
-/// engaged target - a 70% boost.
-const _planeBoostSpeedMultiplier = 1.7;
+/// engaged target - a 120% boost (was 70%): planes should visibly surge in
+/// for an attack run, not just cruise a bit quicker.
+const _planeBoostSpeedMultiplier = 2.2;
 
 /// How far (in grid cells) a strafing plane loops out to while reloading
 /// between passes - see [MobileUnitComponent._updateStrafingRun].
@@ -64,7 +65,7 @@ const _planeLoiterRadiusCells = 12;
 /// new desired direction - replaces an instant snap-to-target facing with
 /// a smooth curved arc, matching a real jet's banking turn. See
 /// [MobileUnitComponent._bankTurnToward].
-const _planeTurnRate = 3.0;
+const _planeTurnRate = 4.2;
 
 /// Squared distance within which two same-team, same-domain units push
 /// apart a bit while converging on the same path/base instead of
@@ -162,6 +163,10 @@ class MobileUnitComponent extends PositionComponent
   double _loiterTimer = 0;
   double _loiterAngle = 0;
   Vector2 _loiterCenter = Vector2.zero();
+
+  /// Heading committed to for the whole "pass" phase, captured once when
+  /// the pass begins - see [_updateStrafingRun].
+  Vector2 _passHeading = Vector2.zero();
   Attackable? _engaging;
   Attackable? _huntTarget;
   double _bobPhase = Random().nextDouble() * pi * 2;
@@ -855,10 +860,27 @@ class MobileUnitComponent extends PositionComponent
     final accent = team.color;
 
     _limbs?.pulseFire();
-    game.shakeCamera(
-      power: effectiveAttackDamage / clipSize,
-      origin: position.clone(),
-    );
+    // Only shake the camera and spawn the shockwave ring on the FIRST round
+    // of a clip - doing it for every round of a fast multi-round burst
+    // (e.g. a 5-round soldier clip or an artillery salvo) stacked up to
+    // `clipSize` near-simultaneous blurred/animated components across
+    // every firing unit on the field, which is what was actually causing
+    // the reported wave-attack/burst-fire lag. A single-shot clip
+    // (clipSize == 1) always has clipIndex == 0, so its behavior is
+    // unchanged.
+    if (clipIndex == 0) {
+      game.shakeCamera(power: effectiveAttackDamage, origin: position.clone());
+      game.world.spawn(
+        FirePulseComponent(
+          position: position.clone(),
+          color: accent,
+          maxRadius: FirePulseComponent.radiusFor(
+            range: blueprint.attackRange,
+            damage: effectiveAttackDamage,
+          ),
+        ),
+      );
+    }
     // Recoil kick - a quick, subtle punch for each round of a multi-shot
     // clip so rapid bursts don't visibly stack recoil animations on top of
     // each other; a single-shot clip keeps the old, punchier kick.
@@ -883,16 +905,6 @@ class MobileUnitComponent extends PositionComponent
     game.world.spawn(MuzzleFlashComponent(position: spawnPos));
 
     _playFireSfx();
-    game.world.spawn(
-      FirePulseComponent(
-        position: position.clone(),
-        color: accent,
-        maxRadius: FirePulseComponent.radiusFor(
-          range: blueprint.attackRange,
-          damage: effectiveAttackDamage,
-        ),
-      ),
-    );
   }
 
   void _flyToward(Vector2 target, double dt) {
@@ -929,6 +941,7 @@ class MobileUnitComponent extends PositionComponent
           JetFlareComponent(
             position: position.clone() - dir * (size.x * 0.5),
             angle: atan2(dir.y, dir.x),
+            color: team.color,
           ),
         );
       }
@@ -1166,6 +1179,7 @@ class MobileUnitComponent extends PositionComponent
         JetFlareComponent(
           position: position.clone() - dir * (size.x * 0.5),
           angle: dirAngle,
+          color: team.color,
           boosted: boosted,
         ),
       );
@@ -1197,18 +1211,26 @@ class MobileUnitComponent extends PositionComponent
         _updateJetFlare(dt, boosted: boosting);
         if (dist <= blueprint.attackRange) {
           _planePhase = _PlaneAttackPhase.pass;
+          // Commit to one straight heading for the whole pass - see the
+          // comment in the `pass` case for why re-aiming every frame broke
+          // this into a tight circle instead of a real flythrough.
+          _passHeading = toTarget.normalized();
           _clipShotsFired = 0;
           _attackCooldown = 0; // fire the first round immediately
         }
       case _PlaneAttackPhase.pass:
-        // Keep flying through the target instead of stopping to shoot.
+        // Fly straight through on the heading captured when the pass
+        // began, instead of continuously re-aiming at the target's live
+        // position - a vector aimed at a point the plane is already right
+        // on top of spins almost instantly as the plane moves, which was
+        // making it spiral in a tight little circle directly over the
+        // target rather than actually flying through and past it.
         final dist = toTarget.length;
         final boosting =
             dist <= _planeBoostRangeCells * game.terrainMap.grid.cellSize;
-        final desired = dist > 1
-            ? toTarget
-            : Vector2(cos(_facingAngle - pi / 2), sin(_facingAngle - pi / 2));
-        final steered = applySeparationSteering(_bankTurnToward(desired, dt));
+        final steered = applySeparationSteering(
+          _bankTurnToward(_passHeading, dt),
+        );
         final speed =
             blueprint.speed * (boosting ? _planeBoostSpeedMultiplier : 1.0);
         position += steered * speed * dt;
@@ -1234,8 +1256,16 @@ class MobileUnitComponent extends PositionComponent
         }
       case _PlaneAttackPhase.loiter:
         _loiterTimer -= dt;
-        _loiterAngle += dt * 1.6;
         final radius = _planeLoiterRadiusCells * game.terrainMap.grid.cellSize;
+        // Orbit the loiter point at (roughly) the same tangential speed the
+        // plane can actually fly at, not a fixed angular rate - a fixed
+        // rate outran the plane at this radius (768px/s vs a ~150-230px/s
+        // flyer), so the desired point on the circle kept sliding away
+        // faster than the plane could ever catch it, which read as "never
+        // actually turns/loops back". Angular speed = linear speed /
+        // radius keeps the target point reachable, so the loop is a real,
+        // visible arc that comes back around for another attack pass.
+        _loiterAngle += (blueprint.speed / radius) * dt;
         final desired =
             _loiterCenter +
             Vector2(cos(_loiterAngle), sin(_loiterAngle)) * radius;

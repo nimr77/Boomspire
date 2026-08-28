@@ -209,3 +209,15 @@ def write_layer(ops: list[dict], w: int, h: int, out_path: str) -> None:
     with open(out_path, "w") as f:
         json.dump(data, f)
     print(f"wrote {out_path}")
+
+
+def write_svg(ops: list[dict], w: int, h: int, out_path: str) -> None:
+    """Exports the same shapes as a plain static SVG - source material for
+    hand-rigging/animating in an external vector tool (e.g. Rive), not
+    consumed by the game at runtime."""
+    from lottie.exporters.svg import export_svg
+
+    anim = objects.Animation.load(build_layer(ops, w, h))
+    with open(out_path, "w") as f:
+        export_svg(anim, f, frame=0)
+    print(f"wrote {out_path}")

@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46" version="1.1" inkscape:export-xdpi="96" inkscape:export-ydpi="96" style="fill: none; stroke: none">
+   <defs>
+      <linearGradient x1="25.759999999999998" y1="15.18" x2="25.759999999999998" y2="30.82" id="linearGradient_8" gradientUnits="userSpaceOnUse">
+         <stop offset="0.0%" stop-color="rgb(97, 97, 97)" stop-opacity="1"/>
+         <stop offset="100.0%" stop-color="rgb(38, 50, 56)" stop-opacity="1"/>
+      </linearGradient>
+      <linearGradient x1="25.759999999999998" y1="15.18" x2="25.759999999999998" y2="30.82" id="linearGradient_10" gradientUnits="userSpaceOnUse">
+         <stop offset="0.0%" stop-color="rgb(97, 97, 97)" stop-opacity="1"/>
+         <stop offset="100.0%" stop-color="rgb(38, 50, 56)" stop-opacity="1"/>
+      </linearGradient>
+   </defs>
+   <sodipodi:namedview inkscape:pagecheckerboard="true" borderlayer="true" bordercolor="#666666" pagecolor="#ffffff"/>
+   <g inkscape:groupmode="layer" id="g_1" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" inkscape:label="ShapeLayer" style="">
+      <g id="g_2" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:0.25098;fill:rgb(0, 0, 0);fill-rule:nonzero">
+         <ellipse rx="20.7" ry="6.44" cx="23.0" cy="23.0" id="ellipse_3" style="fill-opacity:0.25098;fill:rgb(0, 0, 0);fill-rule:nonzero"/>
+      </g>
+      <g id="g_4" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(55, 71, 79);fill-rule:nonzero">
+         <path d="M 18.4,19.32 C 18.4,19.32 1.8399999999999999,21.62 1.8399999999999999,21.62 C 1.8399999999999999,21.62 1.8399999999999999,25.3 1.8399999999999999,25.3 C 1.8399999999999999,25.3 18.4,27.6 18.4,27.6 C 18.4,27.6 18.4,19.32 18.4,19.32 Z" style="fill-opacity:1.0;fill:rgb(55, 71, 79);fill-rule:nonzero"/>
+      </g>
+      <g id="g_5" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="stroke:rgb(176, 190, 197);stroke-opacity:0.6;stroke-width:1.6;stroke-miterlimit:0;stroke-linecap:butt;stroke-linejoin:miter">
+         <ellipse rx="4.6000000000000005" ry="4.6000000000000005" cx="1.8399999999999999" cy="23.0" id="ellipse_6" style=""/>
+      </g>
+      <g id="g_7" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:url(#linearGradient_8)">
+         <rect width="23.0" height="15.64" x="14.259999999999998" y="15.18" rx="14.0" id="rect_9" style="fill-opacity:1.0;fill:url(#linearGradient_10)"/>
+      </g>
+      <g id="g_11" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="stroke:rgb(26, 28, 32);stroke-opacity:1.0;stroke-width:1.6;stroke-miterlimit:0;stroke-linecap:butt;stroke-linejoin:miter">
+         <path d="M 18.4,31.740000000000002 C 18.4,31.740000000000002 34.04,31.740000000000002 34.04,31.740000000000002 " style=""/>
+      </g>
+      <g id="g_12" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="stroke:rgb(26, 28, 32);stroke-opacity:1.0;stroke-width:1.6;stroke-miterlimit:0;stroke-linecap:butt;stroke-linejoin:miter">
+         <path d="M 18.4,34.04 C 18.4,34.04 34.04,34.04 34.04,34.04 " style=""/>
+      </g>
+      <g id="g_13" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(26, 28, 32);fill-rule:nonzero">
+         <ellipse rx="6.8999999999999995" ry="6.8999999999999995" cx="34.96" cy="22.08" id="ellipse_14" style="fill-opacity:1.0;fill:rgb(26, 28, 32);fill-rule:nonzero"/>
+      </g>
+      <g id="g_15" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(229, 57, 53);fill-rule:nonzero">
+         <ellipse rx="5.52" ry="5.52" cx="34.96" cy="22.08" id="ellipse_16" style="fill-opacity:1.0;fill:rgb(229, 57, 53);fill-rule:nonzero"/>
+      </g>
+      <g id="g_17" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="stroke:rgb(158, 158, 158);stroke-opacity:1.0;stroke-width:1.5;stroke-miterlimit:0;stroke-linecap:butt;stroke-linejoin:miter">
+         <ellipse rx="6.8999999999999995" ry="6.8999999999999995" cx="34.96" cy="22.08" id="ellipse_18" style=""/>
+      </g>
+      <g id="g_19" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:0.8;fill:rgb(255, 255, 255);fill-rule:nonzero">
+         <ellipse rx="1.38" ry="1.38" cx="33.12" cy="20.24" id="ellipse_20" style="fill-opacity:0.8;fill:rgb(255, 255, 255);fill-rule:nonzero"/>
+      </g>
+      <g id="g_21" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(26, 28, 32);fill-rule:nonzero">
+         <rect width="2.76" height="6.44" x="21.62" y="12.42" rx="2.0" id="rect_22" style="fill-opacity:1.0;fill:rgb(26, 28, 32);fill-rule:nonzero"/>
+      </g>
+   </g>
+</svg>

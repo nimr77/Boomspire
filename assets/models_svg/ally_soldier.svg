@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" version="1.1" inkscape:export-xdpi="96" inkscape:export-ydpi="96" style="fill: none; stroke: none">
+   <defs>
+      <linearGradient x1="24.0" y1="14.399999999999999" x2="24.0" y2="33.6" id="linearGradient_9" gradientUnits="userSpaceOnUse">
+         <stop offset="0.0%" stop-color="rgb(43, 58, 66)" stop-opacity="1"/>
+         <stop offset="100.0%" stop-color="rgb(23, 33, 38)" stop-opacity="1"/>
+      </linearGradient>
+      <linearGradient x1="24.0" y1="14.399999999999999" x2="24.0" y2="33.6" id="linearGradient_10" gradientUnits="userSpaceOnUse">
+         <stop offset="0.0%" stop-color="rgb(43, 58, 66)" stop-opacity="1"/>
+         <stop offset="100.0%" stop-color="rgb(23, 33, 38)" stop-opacity="1"/>
+      </linearGradient>
+   </defs>
+   <sodipodi:namedview inkscape:pagecheckerboard="true" borderlayer="true" bordercolor="#666666" pagecolor="#ffffff"/>
+   <g inkscape:groupmode="layer" id="g_1" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" inkscape:label="ShapeLayer" style="">
+      <g id="g_2" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:0.34902;fill:rgb(0, 0, 0);fill-rule:nonzero">
+         <ellipse rx="12.0" ry="4.32" cx="24.0" cy="38.4" id="ellipse_3" style="fill-opacity:0.34902;fill:rgb(0, 0, 0);fill-rule:nonzero"/>
+      </g>
+      <g id="g_4" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero">
+         <rect width="4.800000000000001" height="12.48" x="18.0" y="31.199999999999996" rx="3.0" id="rect_5" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero"/>
+      </g>
+      <g id="g_6" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero">
+         <rect width="4.800000000000001" height="12.48" x="25.200000000000003" y="31.199999999999996" rx="3.0" id="rect_7" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero"/>
+      </g>
+      <g id="g_8" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:url(#linearGradient_9)">
+         <path d="M 11.52,14.399999999999999 C 11.52,14.399999999999999 36.480000000000004,14.399999999999999 36.480000000000004,14.399999999999999 C 36.480000000000004,14.399999999999999 32.16,33.6 32.16,33.6 C 32.16,33.6 15.84,33.6 15.84,33.6 C 15.84,33.6 11.52,14.399999999999999 11.52,14.399999999999999 Z" style="fill-opacity:1.0;fill:url(#linearGradient_10)"/>
+      </g>
+      <g id="g_11" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="stroke:rgb(0, 229, 255);stroke-opacity:0.7;stroke-width:2.0;stroke-miterlimit:0;stroke-linecap:butt;stroke-linejoin:miter">
+         <path d="M 24.0,15.36 C 24.0,15.36 24.0,32.64 24.0,32.64 " style=""/>
+      </g>
+      <g id="g_12" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero">
+         <rect width="6.24" height="4.800000000000001" x="9.36" y="12.959999999999999" rx="2.0" id="rect_13" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero"/>
+      </g>
+      <g id="g_14" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero">
+         <rect width="6.24" height="4.800000000000001" x="32.4" y="12.959999999999999" rx="2.0" id="rect_15" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero"/>
+      </g>
+      <g id="g_16" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="stroke:rgb(26, 26, 26);stroke-opacity:1.0;stroke-width:3.0;stroke-miterlimit:0;stroke-linecap:round;stroke-linejoin:miter">
+         <path d="M 30.72,18.240000000000002 C 30.72,18.240000000000002 40.32,1.9199999999999982 40.32,1.9199999999999982 " style=""/>
+      </g>
+      <g id="g_17" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero">
+         <ellipse rx="7.68" ry="7.68" cx="24.0" cy="9.600000000000001" id="ellipse_18" style="fill-opacity:1.0;fill:rgb(23, 33, 38);fill-rule:nonzero"/>
+      </g>
+      <g id="g_19" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(43, 58, 66);fill-rule:nonzero">
+         <ellipse rx="6.720000000000001" ry="6.720000000000001" cx="24.0" cy="8.64" id="ellipse_20" style="fill-opacity:1.0;fill:rgb(43, 58, 66);fill-rule:nonzero"/>
+      </g>
+      <g id="g_21" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(13, 26, 30);fill-rule:nonzero">
+         <rect width="10.56" height="2.4000000000000004" x="18.72" y="8.400000000000002" rx="2.0" id="rect_22" style="fill-opacity:1.0;fill:rgb(13, 26, 30);fill-rule:nonzero"/>
+      </g>
+      <g id="g_23" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:0.9;fill:rgb(0, 229, 255);fill-rule:nonzero">
+         <rect width="3.3792000000000004" height="1.2000000000000002" x="19.9872" y="8.400000000000002" rx="1.0" id="rect_24" style="fill-opacity:0.9;fill:rgb(0, 229, 255);fill-rule:nonzero"/>
+      </g>
+   </g>
+</svg>

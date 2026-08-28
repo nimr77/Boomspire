@@ -523,17 +523,26 @@ abstract class TowerComponent extends PositionComponent
 
     if (_cooldown <= 0) {
       fire(target);
-      game.shakeCamera(power: effectiveDamage, origin: position.clone());
-      game.world.spawn(
-        FirePulseComponent(
-          position: position.clone(),
-          color: TowerSpriteFactory.accentColor(blueprint.type),
-          maxRadius: FirePulseComponent.radiusFor(
-            range: effectiveRange,
-            damage: effectiveDamage,
+      // Only shake the camera and spawn the shockwave ring on the FIRST
+      // round of a clip - doing it for every round of a fast burst (e.g.
+      // the Machine Gun's 10-round clip fired 0.05s apart) stacked up to
+      // `clipSize` near-simultaneous blurred/animated components per
+      // tower, which is what was actually causing the reported burst-fire
+      // lag. A single-shot clip (clipSize == 1) always fires this at
+      // `_clipShotsFired == 0`, so its behavior is unchanged.
+      if (_clipShotsFired == 0) {
+        game.shakeCamera(power: effectiveDamage, origin: position.clone());
+        game.world.spawn(
+          FirePulseComponent(
+            position: position.clone(),
+            color: TowerSpriteFactory.accentColor(blueprint.type),
+            maxRadius: FirePulseComponent.radiusFor(
+              range: effectiveRange,
+              damage: effectiveDamage,
+            ),
           ),
-        ),
-      );
+        );
+      }
       _clipShotsFired++;
       if (_clipShotsFired >= blueprint.clipSize) {
         _clipShotsFired = 0;

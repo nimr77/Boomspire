@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50" version="1.1" inkscape:export-xdpi="96" inkscape:export-ydpi="96" style="fill: none; stroke: none">
+   <defs>
+      <linearGradient x1="25.0" y1="5.0" x2="25.0" y2="45.0" id="linearGradient_5" gradientUnits="userSpaceOnUse">
+         <stop offset="0.0%" stop-color="rgb(176, 190, 197)" stop-opacity="1"/>
+         <stop offset="100.0%" stop-color="rgb(55, 71, 79)" stop-opacity="1"/>
+      </linearGradient>
+      <linearGradient x1="25.0" y1="5.0" x2="25.0" y2="45.0" id="linearGradient_6" gradientUnits="userSpaceOnUse">
+         <stop offset="0.0%" stop-color="rgb(176, 190, 197)" stop-opacity="1"/>
+         <stop offset="100.0%" stop-color="rgb(55, 71, 79)" stop-opacity="1"/>
+      </linearGradient>
+   </defs>
+   <sodipodi:namedview inkscape:pagecheckerboard="true" borderlayer="true" bordercolor="#666666" pagecolor="#ffffff"/>
+   <g inkscape:groupmode="layer" id="g_1" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" inkscape:label="ShapeLayer" style="">
+      <g id="g_2" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:0.25098;fill:rgb(0, 0, 0);fill-rule:nonzero">
+         <ellipse rx="17.5" ry="5.5" cx="25.0" cy="25.0" id="ellipse_3" style="fill-opacity:0.25098;fill:rgb(0, 0, 0);fill-rule:nonzero"/>
+      </g>
+      <g id="g_4" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:url(#linearGradient_5)">
+         <path d="M 25.0,5.0 C 25.0,5.0 48.0,42.0 48.0,42.0 C 48.0,42.0 30.0,35.0 30.0,35.0 C 30.0,35.0 25.0,45.0 25.0,45.0 C 25.0,45.0 20.0,35.0 20.0,35.0 C 20.0,35.0 2.0,42.0 2.0,42.0 C 2.0,42.0 25.0,5.0 25.0,5.0 Z" style="fill-opacity:1.0;fill:url(#linearGradient_6)"/>
+      </g>
+      <g id="g_7" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(26, 28, 32);fill-rule:nonzero">
+         <ellipse rx="3.25" ry="7.000000000000001" cx="25.0" cy="22.0" id="ellipse_8" style="fill-opacity:1.0;fill:rgb(26, 28, 32);fill-rule:nonzero"/>
+      </g>
+      <g id="g_9" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:0.8;fill:rgb(0, 229, 255);fill-rule:nonzero">
+         <ellipse rx="2.0" ry="3.5000000000000004" cx="25.0" cy="20.0" id="ellipse_10" style="fill-opacity:0.8;fill:rgb(0, 229, 255);fill-rule:nonzero"/>
+      </g>
+      <g id="g_11" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(255, 112, 67);fill-rule:nonzero">
+         <ellipse rx="3.5000000000000004" ry="3.5000000000000004" cx="19.0" cy="43.0" id="ellipse_12" style="fill-opacity:1.0;fill:rgb(255, 112, 67);fill-rule:nonzero"/>
+      </g>
+      <g id="g_13" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(255, 243, 196);fill-rule:nonzero">
+         <ellipse rx="1.7500000000000002" ry="1.7500000000000002" cx="19.0" cy="43.0" id="ellipse_14" style="fill-opacity:1.0;fill:rgb(255, 243, 196);fill-rule:nonzero"/>
+      </g>
+      <g id="g_15" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(255, 112, 67);fill-rule:nonzero">
+         <ellipse rx="3.5000000000000004" ry="3.5000000000000004" cx="31.0" cy="43.0" id="ellipse_16" style="fill-opacity:1.0;fill:rgb(255, 112, 67);fill-rule:nonzero"/>
+      </g>
+      <g id="g_17" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" style="fill-opacity:1.0;fill:rgb(255, 243, 196);fill-rule:nonzero">
+         <ellipse rx="1.7500000000000002" ry="1.7500000000000002" cx="31.0" cy="43.0" id="ellipse_18" style="fill-opacity:1.0;fill:rgb(255, 243, 196);fill-rule:nonzero"/>
+      </g>
+   </g>
+</svg>

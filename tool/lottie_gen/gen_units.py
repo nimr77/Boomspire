@@ -23,9 +23,14 @@ from lottie_shapes import (
     rrect,
     stroke,
     write_layer,
+    write_svg,
 )
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "models")
+
+# Plain SVGs, not a runtime asset - source material to hand-import into an
+# external vector/rigging tool (e.g. Rive) and animate from there.
+SVG_OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "models_svg")
 
 # --- shared building blocks ------------------------------------------------
 
@@ -378,9 +383,11 @@ UNITS = {
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(SVG_OUT_DIR, exist_ok=True)
     for key, builder in UNITS.items():
         ops, w, h = builder()
         write_layer(ops, int(w), int(h), os.path.join(OUT_DIR, f"{key}.json"))
+        write_svg(ops, int(w), int(h), os.path.join(SVG_OUT_DIR, f"{key}.svg"))
 
 
 if __name__ == "__main__":
