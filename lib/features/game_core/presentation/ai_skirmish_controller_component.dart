@@ -30,20 +30,27 @@ import 'boomspire_game.dart';
 /// - **Economy**: Gold Mine + resource-node capture (see [_tryCaptureNode])
 ///   fund everything else; a bounded number of Training Centers/War
 ///   Factories (see [_productionBuildingTargets]) are built for production
-///   capacity instead of endlessly re-building more of them.
+///   capacity instead of endlessly re-building more of them, and - once it
+///   has at least one of those - every further building purchase must
+///   leave enough gold to still afford its cheapest unit afterward (see
+///   [_cheapestUnitCost]), so it never buries its whole wallet in
+///   buildings and finds itself unable to actually field a unit.
 /// - **Defense**: a baseline garrison of combat towers (see
 ///   [_baseDefenseTowerTarget]) is kept around its own base at all times,
 ///   reinforced with a domain-appropriate counter tower (e.g. anti-air vs.
 ///   an air raid) whenever hostile units are actually approaching (see
-///   [_threatRadius]).
+///   [_threatRadius]) - the one purchase allowed to dip below the unit
+///   reserve, since an assault in progress is worth reacting to now.
 /// - **Production/attack**: once it has a Training Center/War Factory, it
 ///   mans them every tick it can afford to (see [_tryProduce]), biasing
 ///   which unit kind it rolls out toward whatever currently counters the
 ///   human player's own fielded army (see [_playerComposition]) - e.g. more
 ///   anti-air once the player has aircraft up.
 /// - **Directive**: [SkirmishDirective.aggression]/`buildBias` (Gemini or
-///   the local fallback) still tunes the overall balance between "more
-///   attack units" vs. "more extra towers" beyond the above floors.
+///   the local fallback) tunes the overall balance between "more attack
+///   units" vs. "more extra towers" beyond the above floors, reacting to
+///   both tower count *and* fielded-unit-count disparity against the
+///   player (see [SkirmishSnapshot.aiUnitCount]/`playerUnitCount`).
 ///
 /// It builds its own Training Center/War Factory before it can produce any
 /// units at all (just like the player has to), and only ever mans those
@@ -174,6 +181,12 @@ class AiSkirmishControllerComponent extends Component
       playerTowerCount: game.world.activeTowers
           .where((t) => t.owner == game.playerTeam)
           .length,
+      aiUnitCount: game.world.activeUnits
+          .where((u) => !u.destroyed && u.team.id == aiTeam.id)
+          .length,
+      playerUnitCount: game.world.activeUnits
+          .where((u) => !u.destroyed && u.team.id == game.playerTeam.id)
+          .length,
     );
   }
 
@@ -221,6 +234,16 @@ class AiSkirmishControllerComponent extends Component
   int _ownedCountOf(Team aiTeam, UnitType type) => game.world.activeTowers
       .where((t) => t.owner.id == aiTeam.id && t.blueprint.type == type)
       .length;
+
+  /// The cheapest unit the AI could ever produce - what it must always
+  /// keep in reserve before spending on another building once it already
+  /// has a way to produce units, so it never buys itself into a corner
+  /// where it owns plenty of buildings but can't actually afford a single
+  /// unit out of any of them.
+  int _cheapestUnitCost(Team aiTeam) => game.unitRepository
+      .kindsFor(aiTeam)
+      .map((k) => game.unitRepository.blueprintFor(aiTeam, k).cost)
+      .reduce(min);
 
   /// Weighted-random pick among [kinds]: a kind that can hit air gets extra
   /// weight while the player has aircraft up, and the dedicated Anti-Tank
@@ -279,13 +302,24 @@ class AiSkirmishControllerComponent extends Component
   /// player's build menu uses ([BoomspireGame.canBuildTower]/
   /// [BoomspireGame.buildStructure]). Priority order: (1) an urgent
   /// domain-countering defense tower whenever the base is under active
-  /// threat and below its garrison target (see [_threatsNearBase]); (2)
-  /// infrastructure still missing/under its [_productionBuildingTargets]
-  /// cap; (3) a combat tower - unconditionally while still below the
-  /// baseline defense garrison, otherwise only per the directive's
-  /// `buildBias` coin toss, biased toward whatever domain the nearest
-  /// threats need countering. Returns the type actually placed, or null if
-  /// nothing was built this tick.
+  /// threat and below its garrison target (see [_threatsNearBase]) - the
+  /// one case that may spend down past the unit reserve, since an assault
+  /// in progress is worth reacting to now; (2) infrastructure still
+  /// missing/under its [_productionBuildingTargets] cap; (3) a combat
+  /// tower - unconditionally while still below the baseline defense
+  /// garrison, otherwise only per the directive's `buildBias` coin toss,
+  /// biased toward whatever domain the nearest threats need countering.
+  /// Before it owns a single Training Center or War Factory, (2) rushes
+  /// freely - there's nothing to produce yet anyway, so getting to its
+  /// first production building always wins. Once it has one, though,
+  /// *every* further purchase in (2)/(3) both must leave enough gold to
+  /// still afford its cheapest unit afterward (see [_cheapestUnitCost])
+  /// and is itself only attempted per the same `buildBias` coin toss as
+  /// combat towers - so "build more infrastructure" stops being an
+  /// automatic priority over "produce units" and instead becomes just
+  /// another strategic option the directive weighs, same as everything
+  /// else. Returns the type actually placed, or null if nothing was built
+  /// this tick.
   UnitType? _tryBuild(Team aiTeam) {
     final base = game.world.aiHomeBase;
     if (base == null || !base.isMounted) return null;
@@ -294,25 +328,37 @@ class AiSkirmishControllerComponent extends Component
         .length;
     if (ownStructureCount >= _maxOwnStructures) return null;
 
+    final hasProduction =
+        _ownedCountOf(aiTeam, BuildingType.trainingCenter) > 0 ||
+        _ownedCountOf(aiTeam, BuildingType.warFactory) > 0;
+    final unitReserve = hasProduction ? _cheapestUnitCost(aiTeam) : 0;
+
     final threats = _threatsNearBase(aiTeam, base.position);
     final defenseTowerCount = _ownedCombatTowerCount(aiTeam);
     final defenseTarget =
         _baseDefenseTowerTarget + (threats.isNotEmpty ? 2 : 0);
     final needsDefense = defenseTowerCount < defenseTarget;
+    final isUrgentDefense = needsDefense && threats.isNotEmpty;
+    final skipMoreInfraForNow =
+        hasProduction &&
+        !isUrgentDefense &&
+        _rnd.nextDouble() > _directive.buildBias + 0.2;
 
     UnitType? type;
-    if (!(needsDefense && threats.isNotEmpty)) {
+    if (!isUrgentDefense && !skipMoreInfraForNow) {
       for (final candidate in _infrastructureBuildOrder) {
         final target = _productionBuildingTargets[candidate];
         if (target != null && _ownedCountOf(aiTeam, candidate) >= target) {
           continue;
         }
         if (!game.canBuildTower(candidate, owner: aiTeam)) continue;
-        if (game.goldFor(aiTeam) < game.blueprintFor(candidate).cost) continue;
+        final cost = game.blueprintFor(candidate).cost;
+        if (game.goldFor(aiTeam) - cost < unitReserve) continue;
         type = candidate;
         break;
       }
     }
+
 
     if (type == null) {
       // Below the defense floor, a counter tower is never optional; beyond
@@ -321,11 +367,12 @@ class AiSkirmishControllerComponent extends Component
       if (!needsDefense && _rnd.nextDouble() > _directive.buildBias + 0.2) {
         return null;
       }
+      final reserve = isUrgentDefense ? 0 : unitReserve;
       final options = _combatTowerTypes
           .where(
             (t) =>
                 game.canBuildTower(t, owner: aiTeam) &&
-                game.goldFor(aiTeam) >= game.blueprintFor(t).cost,
+                game.goldFor(aiTeam) - game.blueprintFor(t).cost >= reserve,
           )
           .toList();
       if (options.isEmpty) return null;
@@ -397,13 +444,14 @@ class AiSkirmishControllerComponent extends Component
 
   /// Mans whichever production buildings the AI has already built - it
   /// cannot produce anything at all until it has built a Training
-  /// Center/War Factory of its own, same as the player. Which kind gets
-  /// produced is weighted toward whatever currently counters the human
-  /// player's own fielded army (see [_playerComposition]/[_pickKind])
-  /// instead of a flat random choice, so the AI's attacks actually adapt
-  /// to what it's fighting.
+  /// Center/War Factory of its own, same as the player. Always tries to
+  /// produce when it can afford to (no RNG skip) so gold reliably turns
+  /// into units instead of piling up toward the next building purchase.
+  /// Which kind gets produced is weighted toward whatever currently
+  /// counters the human player's own fielded army (see
+  /// [_playerComposition]/[_pickKind]) instead of a flat random choice, so
+  /// the AI's attacks actually adapt to what it's fighting.
   void _tryProduce(Team aiTeam) {
-    if (_rnd.nextDouble() > 0.25 + _directive.aggression * 0.6) return;
     final enemy = _playerComposition();
     for (final tower in game.world.activeTowers) {
       if (tower.owner.id != aiTeam.id) continue;

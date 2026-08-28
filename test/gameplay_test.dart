@@ -651,6 +651,42 @@ void main() {
         );
       },
     );
+
+    test(
+      'the AI produces its first unit within a reasonable number of '
+      'decision ticks using only its default starting gold, instead of '
+      'spending everything on buildings first (regression: the AI used to '
+      'burn through its whole wallet on infrastructure/towers before it '
+      'could ever afford to produce anything)',
+      () async {
+        final game = await _bootGame(GameScenes.skirmishes.first);
+        final aiTeam = game.aiTeam!;
+
+        for (var i = 0; i < 300; i++) {
+          game.update(0.1);
+        }
+
+        final hasProduction = game.world.activeTowers.any(
+          (t) =>
+              t.owner.id == aiTeam.id &&
+              (t is TrainingCenterComponent || t is WarFactoryComponent),
+        );
+        expect(
+          hasProduction,
+          isTrue,
+          reason:
+              'the AI should have built its first production building '
+              'within default starting gold and this many decision ticks',
+        );
+        expect(
+          game.world.activeUnits.where((u) => u.team.id == aiTeam.id),
+          isNotEmpty,
+          reason:
+              'the AI should have actually produced a unit by now instead '
+              'of pouring every coin into more buildings',
+        );
+      },
+    );
   });
 
   group('combat damage fixes', () {
@@ -849,6 +885,154 @@ void main() {
       // Arrived and holding - not reverted to auto-hunting anywhere else.
       expect(ally.moveOrderTarget, isNull);
     });
+
+    test(
+      'after arriving at a move order, a fresh move order actually moves the '
+      'unit again (regression: the stale exhausted path from the first '
+      'order used to silently cancel the very next order before it could '
+      'compute a new path, leaving the unit stuck forever)',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        final grid = game.terrainMap.grid;
+        final cell = _findOpenCell(game);
+        final cellCenter = grid.cellCenter(cell);
+        const blueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 40,
+          speed: 80,
+          bounty: 0,
+          size: 34,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: blueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        ally.position = cellCenter.clone();
+
+        game.handleArenaTap(ally.position);
+        final firstOrder = cellCenter + Vector2(18, 0);
+        game.handleArenaTap(firstOrder);
+        for (var i = 0; i < 10; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.1);
+        }
+        expect(ally.moveOrderTarget, isNull); // arrived and holding
+
+        final restingSpot = ally.position.clone();
+        final secondOrder = cellCenter + Vector2(-18, 0);
+        game.handleArenaTap(secondOrder);
+        expect(ally.moveOrderTarget, isNotNull);
+
+        for (var i = 0; i < 10; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.1);
+        }
+
+        // Must have actually left where it was resting and reached the new
+        // order point - not frozen in place.
+        expect(ally.position.distanceTo(restingSpot), greaterThan(5));
+        expect(ally.position.distanceTo(secondOrder), lessThan(5));
+        expect(ally.moveOrderTarget, isNull);
+      },
+    );
+
+    test(
+      'after destroying an attack-ordered target, the unit automatically '
+      'presses on to the next hostile within its radius instead of '
+      'freezing in place once it arrives',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        const allyBlueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 40,
+          speed: 80,
+          bounty: 0,
+          size: 34,
+          attackDamage: 200,
+          attackRange: 150,
+          attackInterval: 0.1,
+          weaponType: WeaponType.laser,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: allyBlueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        ally.position = Vector2(300, 300);
+
+        const nearEnemyBlueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Enemy Near',
+          maxHealth: 10,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final nearEnemy = MobileUnitComponent(
+          blueprint: nearEnemyBlueprint,
+          team: Team.invaders,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(nearEnemy);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        nearEnemy.position = Vector2(340, 300);
+
+        const farEnemyBlueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Enemy Far',
+          maxHealth: 200,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final farEnemy = MobileUnitComponent(
+          blueprint: farEnemyBlueprint,
+          team: Team.invaders,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(farEnemy);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        // Outside attack range (150) but well inside the auto-continue
+        // radius (attackRange * 3 = 450), so the unit must walk toward it.
+        // Kept far enough away (400) that, even after nearEnemy dies and
+        // the ally spends the first assertion loop (10 * 0.2s = 2s)
+        // closing the gap at its 80 units/s speed, it still can't have
+        // covered enough ground to already be in range and one-shot it
+        // before the first checkpoint below - it must still be alive and
+        // merely "being hunted" at that point.
+        farEnemy.position = Vector2(700, 300);
+
+        game.handleArenaTap(ally.position);
+        game.handleArenaTap(nearEnemy.position);
+        expect(ally.forcedTarget, nearEnemy);
+
+        for (var i = 0; i < 10; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.2);
+        }
+
+        expect(nearEnemy.destroyed, isTrue);
+        expect(ally.forcedTarget, farEnemy);
+
+        for (var i = 0; i < 30; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.2);
+        }
+
+        expect(farEnemy.health, lessThan(farEnemy.blueprint.maxHealth));
+      },
+    );
 
     test(
       'tapping an enemy while a unit is selected issues an attack order',

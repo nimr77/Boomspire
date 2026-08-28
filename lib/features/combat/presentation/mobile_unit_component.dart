@@ -6,6 +6,9 @@ import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart' show Curves;
 
 import '../../../core/combat/attackable.dart';
+import '../../../core/combat/enums/unit_body_type.dart';
+import '../../../core/combat/enums/vehicle_unit_type.dart';
+import '../../../core/combat/extensions/unit_kind_extensions.dart';
 import '../../../core/combat/mobile_unit_blueprint.dart';
 import '../../../core/combat/movement_style.dart';
 import '../../../core/combat/team.dart';
@@ -25,16 +28,22 @@ import '../../game_core/presentation/boomspire_game.dart';
 import '../../towers/presentation/tower_component.dart';
 import 'bullet_component.dart';
 import 'cartoon_poof_component.dart';
+import 'dust_puff_component.dart';
 import 'explosion_component.dart';
 import 'fire_pulse_component.dart';
+import 'human_limbs_component.dart';
 import 'impact_spark_component.dart';
+import 'jet_flare_component.dart';
 import 'laser_beam_component.dart';
 import 'muzzle_flash_component.dart';
 import 'rocket_component.dart';
 import 'rotor_component.dart';
 import 'smoke_trail_component.dart';
 import 'target_highlight_component.dart';
+import 'track_mark_component.dart';
 import 'vapor_cone_component.dart';
+import 'vehicle_tread_component.dart';
+import 'vehicle_turret_component.dart';
 
 /// Squared distance within which two same-team, same-domain units push
 /// apart a bit while converging on the same path/base instead of
@@ -69,6 +78,13 @@ class MobileUnitComponent extends PositionComponent
   /// producer, not a flat spawn, is what makes built units stronger.
   /// Always 0 for units not built by a player structure (e.g. invaders).
   final int level;
+
+  /// A specific world point to spawn at, assigned by the wave director's
+  /// entry-point plan (see `WaveDirectorComponent._planSpawnQueue`) - only
+  /// meaningful for [UnitObjective.rushBase]. Null falls back to picking a
+  /// uniformly random point from [BoomspireGame.terrainMap]'s
+  /// `spawnPoints`, same as before this field existed.
+  final Vector2? spawnOverride;
 
   @override
   double health;
@@ -107,8 +123,29 @@ class MobileUnitComponent extends PositionComponent
   /// once the unit stopped moving (nothing was left to reset it).
   double _facingAngle = 0;
   double _vaporTimer = 0;
+  double _jetFlareTimer = 0;
   double _preExplosionTimer = 0;
   bool _destroyed = false;
+
+  /// Whether this unit actually traveled this frame - gates every
+  /// [UnitBodyType]-driven "while moving" visual (engine smoke, tread
+  /// scroll, ground track/dust), set fresh in [update] every frame rather
+  /// than inferred after the fact.
+  bool _wasMoving = false;
+  double _engineSmokeTimer = 0;
+  double _groundEffectTimer = 0;
+
+  /// Independently-rotating weapon overlay for ground vehicles - null for
+  /// infantry, air units, and unarmed vehicles. See [addExtraVisuals].
+  VehicleTurretComponent? _turret;
+
+  /// Leg/arm animation overlay for infantry - null for every vehicle. See
+  /// [addExtraVisuals].
+  HumanLimbsComponent? _limbs;
+
+  /// Scrolling wheel/tread-tick overlay for ground vehicles - null for
+  /// infantry and air units. See [addExtraVisuals].
+  VehicleTreadComponent? _tread;
   late final PositionComponent _visual;
   late final TargetHighlightComponent _targetHighlight;
 
@@ -118,6 +155,7 @@ class MobileUnitComponent extends PositionComponent
     required this.objective,
     this.level = 0,
     this.captureTarget,
+    this.spawnOverride,
     super.position,
   }) : health = blueprint.maxHealth,
        super(
@@ -169,11 +207,38 @@ class MobileUnitComponent extends PositionComponent
 
   double get _levelMultiplier => pow(1.25, level).toDouble();
 
+  /// How far (world units) an attack-ordered unit will look for a new
+  /// hostile to press on toward once its current [forcedTarget] dies -
+  /// see [_clearForcedTargetAndMaybeContinueHunting]. Scales with the
+  /// unit's own attack range so longer-ranged units also scan wider.
+  double get _postKillHuntRadius => blueprint.attackRange * 3;
+
   /// Attaches extra always-on visuals once the model/sprite is loaded -
-  /// today just a spinning rotor for [UnitKind.helicopter].
+  /// a spinning rotor for [UnitKind.helicopter], or a [UnitBodyType]-driven
+  /// overlay: leg/arm animation for infantry, and a scrolling tread plus
+  /// (if armed) an independently-aiming turret for ground vehicles. Air
+  /// vehicles other than the helicopter get their jet-flare/vapor-cone
+  /// treatment purely in [_flyToward], with no extra child component.
   Future<void> addExtraVisuals(PositionComponent visual) async {
     if (blueprint.kind == UnitKind.helicopter) {
       await visual.add(RotorComponent(position: visual.size / 2));
+    }
+
+    final body = blueprint.kind.bodyType;
+    if (body is Human) {
+      _limbs = HumanLimbsComponent(hullSize: visual.size, accent: team.color);
+      await visual.add(_limbs!);
+    } else if (body == VehicleUnitType.heavyVehicle ||
+        body == VehicleUnitType.lightVehicle) {
+      _tread = VehicleTreadComponent(hullSize: visual.size);
+      await visual.add(_tread!);
+      if (blueprint.attackDamage > 0) {
+        _turret = VehicleTurretComponent(
+          hullSize: visual.size,
+          accent: team.color,
+        );
+        await visual.add(_turret!);
+      }
     }
   }
 
@@ -234,7 +299,8 @@ class MobileUnitComponent extends PositionComponent
       if (!forcedTarget!.destroyed && forcedTarget!.isMounted) {
         return forcedTarget!.position;
       }
-      forcedTarget = null;
+      _clearForcedTargetAndMaybeContinueHunting();
+      if (forcedTarget != null) return forcedTarget!.position;
     }
     if (underManualControl) return moveOrderTarget;
     return switch (objective) {
@@ -250,13 +316,17 @@ class MobileUnitComponent extends PositionComponent
 
   /// Forces this unit onto a specific starting position before its first
   /// path is computed - base-rushers spawn at a random terrain spawn
-  /// point; null means "keep whatever position it was constructed with"
-  /// (hunters are placed at their producing building).
+  /// point (or [spawnOverride], if the wave director assigned one); null
+  /// means "keep whatever position it was constructed with" (hunters are
+  /// placed at their producing building).
   Vector2? initialPosition() {
     if (objective != UnitObjective.rushBase) return null;
+    final jitter = (Random().nextDouble() - 0.5) * 60;
+    if (spawnOverride != null) {
+      return Vector2(spawnOverride!.x, spawnOverride!.y + jitter);
+    }
     final spawnPoints = game.terrainMap.spawnPoints;
     final sp = spawnPoints[Random().nextInt(spawnPoints.length)];
-    final jitter = (Random().nextDouble() - 0.5) * 60;
     return Vector2(sp.x, sp.y + jitter);
   }
 
@@ -267,6 +337,12 @@ class MobileUnitComponent extends PositionComponent
     underManualControl = true;
     moveOrderTarget = null;
     forcedTarget = enemy;
+    // Force an immediate repath instead of waiting on the leftover
+    // throttle timer from whatever this unit was doing before - without
+    // this, a stale/already-exhausted `_path` from a just-completed order
+    // makes `_followPath` think the (brand new) goal was already reached
+    // this same tick, silently cancelling the fresh order.
+    _repathTimer = 0;
   }
 
   /// Orders this unit to walk to [point] and hold there once it arrives -
@@ -278,6 +354,7 @@ class MobileUnitComponent extends PositionComponent
     underManualControl = true;
     forcedTarget = null;
     moveOrderTarget = point.clone();
+    _repathTimer = 0;
   }
 
   /// Called by a tower every frame it has this unit locked as its current
@@ -522,11 +599,14 @@ class MobileUnitComponent extends PositionComponent
     }
 
     if (_maybeEngage(dt)) {
+      _wasMoving = false;
       _applyBob(dt);
+      _updateVisualExtras(dt);
       return;
     }
 
     final goal = goalPosition();
+    _wasMoving = goal != null;
     if (goal != null) {
       if (isAirUnit) {
         _flyToward(goal, dt);
@@ -537,6 +617,7 @@ class MobileUnitComponent extends PositionComponent
       }
     }
     _applyBob(dt);
+    _updateVisualExtras(dt);
   }
 
   /// Keeps chasing the same hostile it already committed to instead of
@@ -580,6 +661,20 @@ class MobileUnitComponent extends PositionComponent
     }
   }
 
+  /// Called whenever [forcedTarget] turns out to be stale (destroyed or
+  /// unmounted). If this unit was under a player attack order (not just a
+  /// plain move order), immediately looks for another nearby hostile
+  /// within [_postKillHuntRadius] and keeps fighting - "after destroying
+  /// the enemy, move to the next enemy in its radius". Finding none, the
+  /// unit simply holds position and waits for the player's next order,
+  /// same as finishing a plain move order.
+  void _clearForcedTargetAndMaybeContinueHunting() {
+    forcedTarget = null;
+    if (!underManualControl) return;
+    forcedTarget = _nearestOpposingWithin(_postKillHuntRadius);
+    if (forcedTarget != null) _repathTimer = 0;
+  }
+
   void _computePath(Vector2 goal) {
     final grid = game.terrainMap.grid;
     final startCell = grid.worldToCell(position);
@@ -594,6 +689,16 @@ class MobileUnitComponent extends PositionComponent
         points.first.distanceTo(position) < grid.cellSize * 0.5) {
       points.removeAt(0);
     }
+    // The last waypoint always snaps to the goal cell's *center*, not the
+    // literal requested point - fine for a long path (a cell-width of
+    // slop at the very end is invisible), but when start and goal share a
+    // single cell (a short move order well under one cell in length) that
+    // center can already be within one frame's movement of where the unit
+    // is standing right now, so it "arrives" and holds instantly without
+    // ever actually walking toward the point the player tapped. Snapping
+    // the final waypoint to the exact goal fixes that without changing
+    // anything about longer, multi-cell paths.
+    if (points.isNotEmpty) points[points.length - 1] = goal.clone();
     _path = points;
     _pathIndex = 0;
     _repathTimer = 0.5 + Random().nextDouble() * 0.3;
@@ -656,6 +761,7 @@ class MobileUnitComponent extends PositionComponent
     final perShotDamage = effectiveAttackDamage / volleySize;
     final accent = team.color;
 
+    _limbs?.pulseFire();
     game.shakeCamera(power: effectiveAttackDamage, origin: position.clone());
     // Recoil kick - punchier the bigger the volley, so a 3-round barrage
     // visibly reads as heavier than a single shot.
@@ -718,6 +824,19 @@ class MobileUnitComponent extends PositionComponent
         );
       }
     }
+
+    if (blueprint.kind.bodyType == VehicleUnitType.plane) {
+      _jetFlareTimer -= dt;
+      if (_jetFlareTimer <= 0) {
+        _jetFlareTimer = 0.05;
+        game.world.spawn(
+          JetFlareComponent(
+            position: position.clone() - dir * (size.x * 0.5),
+            angle: atan2(dir.y, dir.x),
+          ),
+        );
+      }
+    }
   }
 
   void _followPath(double dt) {
@@ -753,7 +872,7 @@ class MobileUnitComponent extends PositionComponent
     }
     if (forcedTarget != null &&
         (forcedTarget!.destroyed || !forcedTarget!.isMounted)) {
-      forcedTarget = null;
+      _clearForcedTargetAndMaybeContinueHunting();
     }
 
     Attackable? target;
@@ -786,6 +905,13 @@ class MobileUnitComponent extends PositionComponent
     final toTarget = target.position - position;
     _facingAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
 
+    // A zero-length tick (e.g. the single `update(0)` frame used to mount
+    // a just-spawned unit) must never resolve a shot - otherwise simply
+    // spawning a new hostile near an idle, already-engaged unit can
+    // insta-kill it before any real simulation time or player order ever
+    // happens.
+    if (dt <= 0) return true;
+
     _attackCooldown -= dt;
     if (_attackCooldown <= 0) {
       _attackCooldown = blueprint.attackInterval;
@@ -805,6 +931,22 @@ class MobileUnitComponent extends PositionComponent
         best = candidate;
         bestDist = d;
       }
+    }
+    return best;
+  }
+
+  /// Closest live, attackable hostile within [radius] - used to auto-chain
+  /// an attack order onto the next nearby enemy once the current one dies.
+  Attackable? _nearestOpposingWithin(double radius) {
+    Attackable? best;
+    var bestDist = double.infinity;
+    for (final candidate in opposingTargets()) {
+      if (candidate.isRemoving || candidate.destroyed) continue;
+      if (!canAttack(candidate.domain)) continue;
+      final d = candidate.position.distanceTo(position);
+      if (d > radius || d >= bestDist) continue;
+      best = candidate;
+      bestDist = d;
     }
     return best;
   }
@@ -888,6 +1030,69 @@ class MobileUnitComponent extends PositionComponent
             color: accent,
           ),
         );
+    }
+  }
+
+  /// Shortest-path angle interpolation, shared by [_turret]'s aim - same
+  /// idea as `TowerComponent._turnToward`.
+  double _turnToward(double current, double target, double maxDelta) {
+    var diff = (target - current) % (2 * pi);
+    if (diff > pi) diff -= 2 * pi;
+    if (diff < -pi) diff += 2 * pi;
+    if (diff.abs() <= maxDelta) return target;
+    return current + maxDelta * diff.sign;
+  }
+
+  /// Per-frame upkeep for the [UnitBodyType]-specific visuals attached in
+  /// [addExtraVisuals]: continuous engine smoke + turret aim for vehicles,
+  /// ground track/dust + tread scroll for wheeled/tracked vehicles, and leg
+  /// animation for infantry - layered on top of [_applyBob] rather than
+  /// replacing it, so the existing per-[MovementStyle] wobble is untouched.
+  void _updateVisualExtras(double dt) {
+    _limbs?.setPhase(_bobPhase);
+
+    final body = blueprint.kind.bodyType;
+    if (body is Human) return;
+
+    if (_turret != null) {
+      final aimTarget = _engaging ?? forcedTarget;
+      final aimAngle = (aimTarget != null && !aimTarget.destroyed)
+          ? atan2(
+                  aimTarget.position.y - position.y,
+                  aimTarget.position.x - position.x,
+                ) +
+                pi / 2
+          : _facingAngle;
+      _turret!.angle = _turnToward(_turret!.angle, aimAngle, dt * 8);
+    }
+
+    _tread?.moving = _wasMoving;
+    if (!_wasMoving) return;
+
+    _engineSmokeTimer -= dt;
+    if (_engineSmokeTimer <= 0) {
+      _engineSmokeTimer = 0.5;
+      game.world.spawn(
+        SmokeTrailComponent(position: position.clone() + Vector2(0, -6)),
+      );
+    }
+
+    if (isAirUnit) return;
+    _groundEffectTimer -= dt;
+    if (_groundEffectTimer <= 0) {
+      if (body == VehicleUnitType.heavyVehicle) {
+        _groundEffectTimer = 0.3;
+        game.world.spawn(
+          TrackMarkComponent(position: position.clone(), angle: _facingAngle),
+        );
+      } else if (body == VehicleUnitType.lightVehicle) {
+        _groundEffectTimer = 0.18;
+        game.world.spawn(
+          DustPuffComponent(
+            position: position.clone() + Vector2(0, size.y * 0.3),
+          ),
+        );
+      }
     }
   }
 }

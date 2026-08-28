@@ -20,6 +20,11 @@ import '../../game_core/presentation/boomspire_game.dart';
 /// prioritize attacking.
 class WaveDirectorComponent extends Component
     with HasGameReference<BoomspireGame> {
+  /// Above this many total enemies in a wave, the AI director fans the
+  /// wave out across more than one entry point instead of committing it
+  /// all to a single approach - see [_planSpawnQueue].
+  static const _splitThreshold = 15;
+
   int _nextWaveNumber = 1;
   bool _waveActive = false;
   double _preWaveTimer = 3;
@@ -45,7 +50,9 @@ class WaveDirectorComponent extends Component
     for (final scheduled in List.of(_queue)) {
       scheduled.timer -= dt;
       if (scheduled.timer <= 0) {
-        game.world.spawnUnit(_createEnemy(scheduled.type));
+        game.world.spawnUnit(
+          _createEnemy(scheduled.type, scheduled.spawnPoint),
+        );
         scheduled.remaining--;
         scheduled.timer = scheduled.interval;
         if (scheduled.remaining <= 0) _queue.remove(scheduled);
@@ -73,34 +80,86 @@ class WaveDirectorComponent extends Component
     game.enemyFocusHint = directive.focusHint;
     game.commanderNote.value = directive.commanderNote;
     game.audioRepository.play(SfxType.waveStart, volume: 0.7);
+    final scaledEntries = def.spawns.map((e) {
+      final bias = directive.compositionBias[e.type.name] ?? 1.0;
+      final scaledCount = (e.count * (1 + aggression * 0.35) * bias)
+          .round()
+          .clamp(1, 60);
+      return _ScaledSpawnEntry(
+        type: e.type,
+        count: scaledCount,
+        interval: e.interval / (1 + aggression * 0.2),
+        startDelay: e.startDelay,
+      );
+    }).toList();
     _queue
       ..clear()
-      ..addAll(
-        def.spawns.map((e) {
-          final bias = directive.compositionBias[e.type.name] ?? 1.0;
-          final scaledCount = (e.count * (1 + aggression * 0.35) * bias)
-              .round()
-              .clamp(1, 60);
-          return _ScheduledSpawn(
-            type: e.type,
-            remaining: scaledCount,
-            interval: e.interval / (1 + aggression * 0.2),
-            timer: e.startDelay,
-          );
-        }),
-      );
+      ..addAll(_planSpawnQueue(scaledEntries, aggression));
     _waveActive = true;
     // Kick off planning for the wave after next while this one plays out, so
     // the Gemini call (if reachable) has the whole wave to complete.
     unawaited(_planNextWave(waveNumber + 1));
   }
 
-  MobileUnitComponent _createEnemy(UnitKind type) {
+  /// The AI director's entry-point decision for the wave: where the
+  /// enemies come from and how many land at each entry, chosen all at
+  /// once rather than letting every unit pick its own spawn independently.
+  /// Entry points always come from [BoomspireGame.terrainMap]'s
+  /// `spawnPoints` - a perimeter of edges/corners around the base, never
+  /// the center. A wave with [_splitThreshold] enemies or fewer still
+  /// commits to a single (freshly-chosen) entry point; above that, the
+  /// wave is fanned out across multiple entry points at once, scaling
+  /// with both the wave's size and its aggression - a big wave under high
+  /// aggression can hit from most/every open approach simultaneously.
+  List<_ScheduledSpawn> _planSpawnQueue(
+    List<_ScaledSpawnEntry> entries,
+    double aggression,
+  ) {
+    final totalEnemies = entries.fold<int>(0, (sum, e) => sum + e.count);
+    final availablePoints = List.of(game.terrainMap.spawnPoints)..shuffle();
+    final desiredGroups = totalEnemies > _splitThreshold
+        ? 2 +
+              (aggression * 2).round() +
+              ((totalEnemies - _splitThreshold) / 15).ceil()
+        : 1;
+    final groupCount = desiredGroups.clamp(1, availablePoints.length);
+    final groupPoints = availablePoints.take(groupCount).toList();
+
+    final queue = <_ScheduledSpawn>[];
+    for (final entry in entries) {
+      final perGroup = entry.count ~/ groupCount;
+      var remainder = entry.count % groupCount;
+      for (var i = 0; i < groupCount; i++) {
+        var count = perGroup;
+        if (remainder > 0) {
+          count++;
+          remainder--;
+        }
+        if (count <= 0) continue;
+        final point = groupPoints[i];
+        queue.add(
+          _ScheduledSpawn(
+            type: entry.type,
+            remaining: count,
+            interval: entry.interval,
+            // Slight per-group offset so simultaneous entry points don't
+            // all pop their first unit on the exact same frame.
+            timer: entry.startDelay + i * 0.4,
+            spawnPoint: Vector2(point.x, point.y),
+          ),
+        );
+      }
+    }
+    return queue;
+  }
+
+  MobileUnitComponent _createEnemy(UnitKind type, Vector2 spawnPoint) {
     final blueprint = game.unitRepository.blueprintFor(Team.invaders, type);
     return MobileUnitComponent(
       blueprint: blueprint,
       team: Team.invaders,
       objective: UnitObjective.rushBase,
+      spawnOverride: spawnPoint,
     );
   }
 
@@ -150,10 +209,31 @@ class _ScheduledSpawn {
   int remaining;
   final double interval;
   double timer;
+
+  /// The world point this scheduled batch spawns at - assigned once by
+  /// [WaveDirectorComponent._planSpawnQueue], not re-rolled per unit.
+  final Vector2 spawnPoint;
   _ScheduledSpawn({
     required this.type,
     required this.remaining,
     required this.interval,
     required this.timer,
+    required this.spawnPoint,
+  });
+}
+
+/// A wave-definition spawn entry after aggression/composition-bias scaling,
+/// before it's been split across entry points - see
+/// [WaveDirectorComponent._planSpawnQueue].
+class _ScaledSpawnEntry {
+  final UnitKind type;
+  final int count;
+  final double interval;
+  final double startDelay;
+  _ScaledSpawnEntry({
+    required this.type,
+    required this.count,
+    required this.interval,
+    required this.startDelay,
   });
 }

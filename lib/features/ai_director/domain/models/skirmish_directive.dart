@@ -22,13 +22,26 @@ class SkirmishDirective {
   /// skirmish match is always fully playable offline. Leans defensive early
   /// (while [aiGold] is still building up) and steadily more aggressive as
   /// [aiTowerCount] grows, mirroring [StrategyDirective.fallback]'s
-  /// escalating-difficulty shape for wave-defense.
+  /// escalating-difficulty shape for wave-defense. Also reacts to the
+  /// player's actual fielded army size, not just their tower count: falling
+  /// behind on units pushes buildBias up (turtle behind towers instead of
+  /// feeding an army it can't win with), while leading on units pushes
+  /// aggression up (press the advantage).
   factory SkirmishDirective.fallback(SkirmishSnapshot snapshot) {
     final towerEdge = (snapshot.aiTowerCount - snapshot.playerTowerCount)
         .clamp(-3, 3);
-    final aggression = (0.35 + snapshot.aiTowerCount * 0.08 - towerEdge * 0.05)
-        .clamp(0.15, 0.9);
-    final buildBias = (0.6 - snapshot.aiTowerCount * 0.08).clamp(0.15, 0.6);
+    final unitEdge = (snapshot.aiUnitCount - snapshot.playerUnitCount).clamp(
+      -6,
+      6,
+    );
+    final aggression =
+        (0.35 +
+                snapshot.aiTowerCount * 0.08 -
+                towerEdge * 0.05 +
+                unitEdge * 0.04)
+            .clamp(0.15, 0.9);
+    final buildBias = (0.6 - snapshot.aiTowerCount * 0.08 - unitEdge * 0.03)
+        .clamp(0.15, 0.6);
     return SkirmishDirective(aggression: aggression, buildBias: buildBias);
   }
 
@@ -64,6 +77,8 @@ class SkirmishSnapshot {
   final int playerHealth;
   final int aiTowerCount;
   final int playerTowerCount;
+  final int aiUnitCount;
+  final int playerUnitCount;
   const SkirmishSnapshot({
     required this.aiGold,
     required this.aiHealth,
@@ -71,6 +86,8 @@ class SkirmishSnapshot {
     required this.playerHealth,
     required this.aiTowerCount,
     required this.playerTowerCount,
+    this.aiUnitCount = 0,
+    this.playerUnitCount = 0,
   });
 
   Map<String, dynamic> toJson() => {
@@ -80,5 +97,7 @@ class SkirmishSnapshot {
     'playerHealth': playerHealth,
     'aiTowerCount': aiTowerCount,
     'playerTowerCount': playerTowerCount,
+    'aiUnitCount': aiUnitCount,
+    'playerUnitCount': playerUnitCount,
   };
 }

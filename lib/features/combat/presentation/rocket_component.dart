@@ -9,6 +9,7 @@ import '../../../core/combat/unit.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 import 'explosion_component.dart';
+import 'fire_component.dart';
 import 'smoke_trail_component.dart';
 
 /// Slower homing rocket/shell that leaves a smoke trail and detonates into a
@@ -97,6 +98,11 @@ class RocketComponent extends PositionComponent
     );
     game.world.spawn(
       ExplosionComponent(position: position.clone(), radius: splashRadius),
+    );
+    // A rocket/shell impact leaves a lingering fire behind, on top of the
+    // instantaneous explosion flash above.
+    game.world.spawn(
+      FireComponent(position: position.clone(), radius: splashRadius * 0.5),
     );
     // A splash hits every hostile thing in range at once - a mobile unit
     // caught in a shell meant for a tower still gets hurt, and vice versa -

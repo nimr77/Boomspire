@@ -255,6 +255,8 @@ SkirmishSnapshot _snapshotFromJson(Map<String, dynamic> json) =>
       playerHealth: (json['playerHealth'] as num?)?.toInt() ?? 0,
       aiTowerCount: (json['aiTowerCount'] as num?)?.toInt() ?? 0,
       playerTowerCount: (json['playerTowerCount'] as num?)?.toInt() ?? 0,
+      aiUnitCount: (json['aiUnitCount'] as num?)?.toInt() ?? 0,
+      playerUnitCount: (json['playerUnitCount'] as num?)?.toInt() ?? 0,
     );
 
 String _stripCodeFence(String text) {
