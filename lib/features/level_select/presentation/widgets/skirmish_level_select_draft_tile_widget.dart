@@ -26,9 +26,7 @@ class SkirmishLevelSelectDraftTileWidget extends StatelessWidget {
         borderRadius: AppThemeBorders.radius14,
         onTap: onTap,
         child: ListTile(
-          shape: RoundedRectangleBorder(
-            borderRadius: AppThemeBorders.radius14,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: AppThemeBorders.radius14),
           leading: const Icon(
             Icons.map_outlined,
             color: AppThemeColors.accentRed,

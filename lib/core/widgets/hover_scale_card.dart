@@ -78,7 +78,9 @@ class _HoverScaleCardState extends State<HoverScaleCard> {
                     color: active
                         ? widget.accentColor
                         : widget.accentColor.withValues(alpha: 0.25),
-                    width: active ? AppThemeBorders.width2 : AppThemeBorders.width1_5,
+                    width: active
+                        ? AppThemeBorders.width2
+                        : AppThemeBorders.width1_5,
                   ),
                   boxShadow: active
                       ? [

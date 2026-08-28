@@ -48,7 +48,9 @@ class _SkirmishPlacementSeatChipWidgetState
                 borderRadius: AppThemeBorders.radius20,
                 border: Border.all(
                   color: color,
-                  width: widget.isYou ? AppThemeBorders.width2 : AppThemeBorders.width1,
+                  width: widget.isYou
+                      ? AppThemeBorders.width2
+                      : AppThemeBorders.width1,
                 ),
                 boxShadow: hovered
                     ? [

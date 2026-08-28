@@ -58,7 +58,9 @@ class SkirmishPlacementHomeSiteMarkerWidget extends StatelessWidget {
                   color: color,
                   border: Border.all(
                     color: AppThemeColors.textPrimary,
-                    width: selected ? AppThemeBorders.width3 : AppThemeBorders.width2,
+                    width: selected
+                        ? AppThemeBorders.width3
+                        : AppThemeBorders.width2,
                   ),
                   boxShadow: [
                     BoxShadow(

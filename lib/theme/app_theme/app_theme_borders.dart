@@ -13,28 +13,12 @@ abstract final class AppThemeBorders {
   static const double width2_5 = 2.5;
   static const double width3 = 3;
 
-  static const BorderRadius radius6 = BorderRadius.all(
-    Radius.circular(6),
-  );
-  static const BorderRadius radius8 = BorderRadius.all(
-    Radius.circular(8),
-  );
-  static const BorderRadius radius10 = BorderRadius.all(
-    Radius.circular(10),
-  );
-  static const BorderRadius radius12 = BorderRadius.all(
-    Radius.circular(12),
-  );
-  static const BorderRadius radius14 = BorderRadius.all(
-    Radius.circular(14),
-  );
-  static const BorderRadius radius16 = BorderRadius.all(
-    Radius.circular(16),
-  );
-  static const BorderRadius radius20 = BorderRadius.all(
-    Radius.circular(20),
-  );
-  static const BorderRadius radius24 = BorderRadius.all(
-    Radius.circular(24),
-  );
+  static const BorderRadius radius6 = BorderRadius.all(Radius.circular(6));
+  static const BorderRadius radius8 = BorderRadius.all(Radius.circular(8));
+  static const BorderRadius radius10 = BorderRadius.all(Radius.circular(10));
+  static const BorderRadius radius12 = BorderRadius.all(Radius.circular(12));
+  static const BorderRadius radius14 = BorderRadius.all(Radius.circular(14));
+  static const BorderRadius radius16 = BorderRadius.all(Radius.circular(16));
+  static const BorderRadius radius20 = BorderRadius.all(Radius.circular(20));
+  static const BorderRadius radius24 = BorderRadius.all(Radius.circular(24));
 }

@@ -89,7 +89,9 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                       color: glowing ? accent : AppThemeColors.borderSubtle,
                       width: selected
                           ? AppThemeBorders.width2_5
-                          : (hovering ? AppThemeBorders.width2 : AppThemeBorders.width1),
+                          : (hovering
+                                ? AppThemeBorders.width2
+                                : AppThemeBorders.width1),
                     ),
                     boxShadow: glowing
                         ? [
