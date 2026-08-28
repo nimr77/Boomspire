@@ -191,5 +191,195 @@
         "type": "int"
       }
     }
-  }
+  },
+  "mountainLabelEditorPage": "Mountain",
+  "@mountainLabelEditorPage": {},
+  "duneLabelEditorPage": "Dune",
+  "@duneLabelEditorPage": {},
+  "eraseLabelEditorPage": "Erase",
+  "@eraseLabelEditorPage": {},
+  "riverLabelEditorPage": "River",
+  "@riverLabelEditorPage": {},
+  "lakeLabelEditorPage": "Lake",
+  "@lakeLabelEditorPage": {},
+  "homeLabelEditorPage": "Home",
+  "@homeLabelEditorPage": {},
+  "playLabelEditorPage": "Play",
+  "@playLabelEditorPage": {},
+  "saveLabelEditorPage": "Save",
+  "@saveLabelEditorPage": {},
+  "downloadLabelEditorPage": "Download",
+  "@downloadLabelEditorPage": {},
+  "uploadLabelEditorPage": "Upload",
+  "@uploadLabelEditorPage": {},
+  "zoomOutTooltipEditorPage": "Zoom out",
+  "@zoomOutTooltipEditorPage": {},
+  "zoomInTooltipEditorPage": "Zoom in",
+  "@zoomInTooltipEditorPage": {},
+  "resetZoomTooltipEditorPage": "Reset zoom",
+  "@resetZoomTooltipEditorPage": {},
+  "zoomPercentEditorPage": "{percent}%",
+  "@zoomPercentEditorPage": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "brushLabelEditorPage": "Brush",
+  "@brushLabelEditorPage": {},
+  "homeSitesHintEditorPage": "Home sites: {count}/{max} - tap to place, tap a marker to remove.",
+  "@homeSitesHintEditorPage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "riverWidthLabelEditorPage": "River width: {width}",
+  "@riverWidthLabelEditorPage": {
+    "placeholders": {
+      "width": {
+        "type": "int"
+      }
+    }
+  },
+  "mapLabelEditorPage": "Map",
+  "@mapLabelEditorPage": {},
+  "biomeLabelEditorPage": "Biome",
+  "@biomeLabelEditorPage": {},
+  "modeLabelEditorPage": "Mode",
+  "@modeLabelEditorPage": {},
+  "waveDefenseOptionEditorPage": "Wave Defense",
+  "@waveDefenseOptionEditorPage": {},
+  "skirmishOptionEditorPage": "Skirmish",
+  "@skirmishOptionEditorPage": {},
+  "widthLabelEditorPage": "Width",
+  "@widthLabelEditorPage": {},
+  "heightLabelEditorPage": "Height",
+  "@heightLabelEditorPage": {},
+  "startingGoldLabelEditorPage": "Starting gold",
+  "@startingGoldLabelEditorPage": {},
+  "wavesLabelEditorPage": "Waves",
+  "@wavesLabelEditorPage": {},
+  "waveCountLabelEditorPage": "Number of waves",
+  "@waveCountLabelEditorPage": {},
+  "randomizeAllWavesLabelEditorPage": "Randomize all {count} waves",
+  "@randomizeAllWavesLabelEditorPage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "previousWaveTooltipEditorPage": "Previous wave",
+  "@previousWaveTooltipEditorPage": {},
+  "nextWaveTooltipEditorPage": "Next wave",
+  "@nextWaveTooltipEditorPage": {},
+  "waveHeaderEditorPage": "Wave {current} / {total}",
+  "@waveHeaderEditorPage": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "autoSuffixEditorPage": " (auto)",
+  "@autoSuffixEditorPage": {},
+  "fewerTooltipEditorPage": "Fewer",
+  "@fewerTooltipEditorPage": {},
+  "moreTooltipEditorPage": "More",
+  "@moreTooltipEditorPage": {},
+  "randomizeWaveLabelEditorPage": "Randomize",
+  "@randomizeWaveLabelEditorPage": {},
+  "resetToAutoLabelEditorPage": "Reset to auto",
+  "@resetToAutoLabelEditorPage": {},
+  "environmentLabelEditorPage": "Environment",
+  "@environmentLabelEditorPage": {},
+  "dynamicWeatherLabelEditorPage": "Dynamic weather over match",
+  "@dynamicWeatherLabelEditorPage": {},
+  "sunAngleLabelEditorPage": "Sun angle: {percent}%",
+  "@sunAngleLabelEditorPage": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "previewWeatherLabelEditorPage": "Preview weather at: {percent}% of match",
+  "@previewWeatherLabelEditorPage": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "weatherTimelineLabelEditorPage": "Weather timeline",
+  "@weatherTimelineLabelEditorPage": {},
+  "addKeyframeLabelEditorPage": "Add keyframe",
+  "@addKeyframeLabelEditorPage": {},
+  "keyframeAtProgressLabelEditorPage": "At {percent}% of match",
+  "@keyframeAtProgressLabelEditorPage": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "windLabelEditorPage": "Wind",
+  "@windLabelEditorPage": {},
+  "rainLabelEditorPage": "Rain",
+  "@rainLabelEditorPage": {},
+  "snowLabelEditorPage": "Snow",
+  "@snowLabelEditorPage": {},
+  "fogLabelEditorPage": "Fog",
+  "@fogLabelEditorPage": {},
+  "cloudLabelEditorPage": "Cloud",
+  "@cloudLabelEditorPage": {},
+  "onlyHomeSitesSupportedEditorPage": "Only {max} home sites supported",
+  "@onlyHomeSitesSupportedEditorPage": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadedMapEditorPage": "Downloaded \"{name}\"",
+  "@downloadedMapEditorPage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skirmishPlaytestComingSoonEditorPage": "Testing as wave defense - skirmish playtesting is coming soon.",
+  "@skirmishPlaytestComingSoonEditorPage": {},
+  "savedMapEditorPage": "Saved \"{name}\"",
+  "@savedMapEditorPage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importedMapEditorPage": "Imported \"{name}\"",
+  "@importedMapEditorPage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotReadMapEditorPage": "Could not read that file as a map",
+  "@couldNotReadMapEditorPage": {},
+  "untitledMapEditorPage": "Untitled Map",
+  "@untitledMapEditorPage": {},
+  "testingHandDrawnMapBriefingEditorPage": "Testing your hand-drawn map draft.",
+  "@testingHandDrawnMapBriefingEditorPage": {}
 }

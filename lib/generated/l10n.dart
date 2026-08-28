@@ -709,6 +709,556 @@ class S {
       args: [percent],
     );
   }
+
+  /// `Mountain`
+  String get mountainLabelEditorPage {
+    return Intl.message(
+      'Mountain',
+      name: 'mountainLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dune`
+  String get duneLabelEditorPage {
+    return Intl.message(
+      'Dune',
+      name: 'duneLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Erase`
+  String get eraseLabelEditorPage {
+    return Intl.message(
+      'Erase',
+      name: 'eraseLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `River`
+  String get riverLabelEditorPage {
+    return Intl.message(
+      'River',
+      name: 'riverLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Lake`
+  String get lakeLabelEditorPage {
+    return Intl.message(
+      'Lake',
+      name: 'lakeLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Home`
+  String get homeLabelEditorPage {
+    return Intl.message(
+      'Home',
+      name: 'homeLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Play`
+  String get playLabelEditorPage {
+    return Intl.message(
+      'Play',
+      name: 'playLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Save`
+  String get saveLabelEditorPage {
+    return Intl.message(
+      'Save',
+      name: 'saveLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download`
+  String get downloadLabelEditorPage {
+    return Intl.message(
+      'Download',
+      name: 'downloadLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Upload`
+  String get uploadLabelEditorPage {
+    return Intl.message(
+      'Upload',
+      name: 'uploadLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Zoom out`
+  String get zoomOutTooltipEditorPage {
+    return Intl.message(
+      'Zoom out',
+      name: 'zoomOutTooltipEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Zoom in`
+  String get zoomInTooltipEditorPage {
+    return Intl.message(
+      'Zoom in',
+      name: 'zoomInTooltipEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset zoom`
+  String get resetZoomTooltipEditorPage {
+    return Intl.message(
+      'Reset zoom',
+      name: 'resetZoomTooltipEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{percent}%`
+  String zoomPercentEditorPage(int percent) {
+    return Intl.message(
+      '$percent%',
+      name: 'zoomPercentEditorPage',
+      desc: '',
+      args: [percent],
+    );
+  }
+
+  /// `Brush`
+  String get brushLabelEditorPage {
+    return Intl.message(
+      'Brush',
+      name: 'brushLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Home sites: {count}/{max} - tap to place, tap a marker to remove.`
+  String homeSitesHintEditorPage(int count, int max) {
+    return Intl.message(
+      'Home sites: $count/$max - tap to place, tap a marker to remove.',
+      name: 'homeSitesHintEditorPage',
+      desc: '',
+      args: [count, max],
+    );
+  }
+
+  /// `River width: {width}`
+  String riverWidthLabelEditorPage(int width) {
+    return Intl.message(
+      'River width: $width',
+      name: 'riverWidthLabelEditorPage',
+      desc: '',
+      args: [width],
+    );
+  }
+
+  /// `Map`
+  String get mapLabelEditorPage {
+    return Intl.message('Map', name: 'mapLabelEditorPage', desc: '', args: []);
+  }
+
+  /// `Biome`
+  String get biomeLabelEditorPage {
+    return Intl.message(
+      'Biome',
+      name: 'biomeLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mode`
+  String get modeLabelEditorPage {
+    return Intl.message(
+      'Mode',
+      name: 'modeLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wave Defense`
+  String get waveDefenseOptionEditorPage {
+    return Intl.message(
+      'Wave Defense',
+      name: 'waveDefenseOptionEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Skirmish`
+  String get skirmishOptionEditorPage {
+    return Intl.message(
+      'Skirmish',
+      name: 'skirmishOptionEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Width`
+  String get widthLabelEditorPage {
+    return Intl.message(
+      'Width',
+      name: 'widthLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Height`
+  String get heightLabelEditorPage {
+    return Intl.message(
+      'Height',
+      name: 'heightLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Starting gold`
+  String get startingGoldLabelEditorPage {
+    return Intl.message(
+      'Starting gold',
+      name: 'startingGoldLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Waves`
+  String get wavesLabelEditorPage {
+    return Intl.message(
+      'Waves',
+      name: 'wavesLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Number of waves`
+  String get waveCountLabelEditorPage {
+    return Intl.message(
+      'Number of waves',
+      name: 'waveCountLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Randomize all {count} waves`
+  String randomizeAllWavesLabelEditorPage(int count) {
+    return Intl.message(
+      'Randomize all $count waves',
+      name: 'randomizeAllWavesLabelEditorPage',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Previous wave`
+  String get previousWaveTooltipEditorPage {
+    return Intl.message(
+      'Previous wave',
+      name: 'previousWaveTooltipEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Next wave`
+  String get nextWaveTooltipEditorPage {
+    return Intl.message(
+      'Next wave',
+      name: 'nextWaveTooltipEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wave {current} / {total}`
+  String waveHeaderEditorPage(int current, int total) {
+    return Intl.message(
+      'Wave $current / $total',
+      name: 'waveHeaderEditorPage',
+      desc: '',
+      args: [current, total],
+    );
+  }
+
+  /// ` (auto)`
+  String get autoSuffixEditorPage {
+    return Intl.message(
+      ' (auto)',
+      name: 'autoSuffixEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fewer`
+  String get fewerTooltipEditorPage {
+    return Intl.message(
+      'Fewer',
+      name: 'fewerTooltipEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `More`
+  String get moreTooltipEditorPage {
+    return Intl.message(
+      'More',
+      name: 'moreTooltipEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Randomize`
+  String get randomizeWaveLabelEditorPage {
+    return Intl.message(
+      'Randomize',
+      name: 'randomizeWaveLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset to auto`
+  String get resetToAutoLabelEditorPage {
+    return Intl.message(
+      'Reset to auto',
+      name: 'resetToAutoLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Environment`
+  String get environmentLabelEditorPage {
+    return Intl.message(
+      'Environment',
+      name: 'environmentLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dynamic weather over match`
+  String get dynamicWeatherLabelEditorPage {
+    return Intl.message(
+      'Dynamic weather over match',
+      name: 'dynamicWeatherLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sun angle: {percent}%`
+  String sunAngleLabelEditorPage(int percent) {
+    return Intl.message(
+      'Sun angle: $percent%',
+      name: 'sunAngleLabelEditorPage',
+      desc: '',
+      args: [percent],
+    );
+  }
+
+  /// `Preview weather at: {percent}% of match`
+  String previewWeatherLabelEditorPage(int percent) {
+    return Intl.message(
+      'Preview weather at: $percent% of match',
+      name: 'previewWeatherLabelEditorPage',
+      desc: '',
+      args: [percent],
+    );
+  }
+
+  /// `Weather timeline`
+  String get weatherTimelineLabelEditorPage {
+    return Intl.message(
+      'Weather timeline',
+      name: 'weatherTimelineLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add keyframe`
+  String get addKeyframeLabelEditorPage {
+    return Intl.message(
+      'Add keyframe',
+      name: 'addKeyframeLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `At {percent}% of match`
+  String keyframeAtProgressLabelEditorPage(int percent) {
+    return Intl.message(
+      'At $percent% of match',
+      name: 'keyframeAtProgressLabelEditorPage',
+      desc: '',
+      args: [percent],
+    );
+  }
+
+  /// `Wind`
+  String get windLabelEditorPage {
+    return Intl.message(
+      'Wind',
+      name: 'windLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rain`
+  String get rainLabelEditorPage {
+    return Intl.message(
+      'Rain',
+      name: 'rainLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Snow`
+  String get snowLabelEditorPage {
+    return Intl.message(
+      'Snow',
+      name: 'snowLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fog`
+  String get fogLabelEditorPage {
+    return Intl.message('Fog', name: 'fogLabelEditorPage', desc: '', args: []);
+  }
+
+  /// `Cloud`
+  String get cloudLabelEditorPage {
+    return Intl.message(
+      'Cloud',
+      name: 'cloudLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only {max} home sites supported`
+  String onlyHomeSitesSupportedEditorPage(int max) {
+    return Intl.message(
+      'Only $max home sites supported',
+      name: 'onlyHomeSitesSupportedEditorPage',
+      desc: '',
+      args: [max],
+    );
+  }
+
+  /// `Downloaded "{name}"`
+  String downloadedMapEditorPage(String name) {
+    return Intl.message(
+      'Downloaded "$name"',
+      name: 'downloadedMapEditorPage',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `Testing as wave defense - skirmish playtesting is coming soon.`
+  String get skirmishPlaytestComingSoonEditorPage {
+    return Intl.message(
+      'Testing as wave defense - skirmish playtesting is coming soon.',
+      name: 'skirmishPlaytestComingSoonEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Saved "{name}"`
+  String savedMapEditorPage(String name) {
+    return Intl.message(
+      'Saved "$name"',
+      name: 'savedMapEditorPage',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `Imported "{name}"`
+  String importedMapEditorPage(String name) {
+    return Intl.message(
+      'Imported "$name"',
+      name: 'importedMapEditorPage',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `Could not read that file as a map`
+  String get couldNotReadMapEditorPage {
+    return Intl.message(
+      'Could not read that file as a map',
+      name: 'couldNotReadMapEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Untitled Map`
+  String get untitledMapEditorPage {
+    return Intl.message(
+      'Untitled Map',
+      name: 'untitledMapEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Testing your hand-drawn map draft.`
+  String get testingHandDrawnMapBriefingEditorPage {
+    return Intl.message(
+      'Testing your hand-drawn map draft.',
+      name: 'testingHandDrawnMapBriefingEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

@@ -24,17 +24,42 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m1(waves) => "All ${waves} waves repelled!";
 
-  static String m2(percent) => "+${percent}% kill gold";
+  static String m2(name) => "Downloaded \"${name}\"";
 
-  static String m3(amount, seconds) => "+${amount}g in ${seconds}s";
+  static String m3(percent) => "+${percent}% kill gold";
 
-  static String m4(health) => "AI BASE ${health}";
+  static String m4(amount, seconds) => "+${amount}g in ${seconds}s";
 
-  static String m5(current, total) => "WAVE ${current} / ${total}";
+  static String m5(count, max) =>
+      "Home sites: ${count}/${max} - tap to place, tap a marker to remove.";
 
-  static String m6(tier) => "Tier ${tier}";
+  static String m6(health) => "AI BASE ${health}";
 
-  static String m7(count) => "${count} WAVES";
+  static String m7(current, total) => "WAVE ${current} / ${total}";
+
+  static String m8(name) => "Imported \"${name}\"";
+
+  static String m9(percent) => "At ${percent}% of match";
+
+  static String m10(max) => "Only ${max} home sites supported";
+
+  static String m11(percent) => "Preview weather at: ${percent}% of match";
+
+  static String m12(count) => "Randomize all ${count} waves";
+
+  static String m13(width) => "River width: ${width}";
+
+  static String m14(name) => "Saved \"${name}\"";
+
+  static String m15(percent) => "Sun angle: ${percent}%";
+
+  static String m16(tier) => "Tier ${tier}";
+
+  static String m17(current, total) => "Wave ${current} / ${total}";
+
+  static String m18(count) => "${count} WAVES";
+
+  static String m19(percent) => "${percent}%";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -50,12 +75,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "accountWelcomeTitle": MessageLookupByLibrary.simpleMessage(
       "Welcome, Commander",
     ),
+    "addKeyframeLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Add keyframe",
+    ),
     "appTitle": MessageLookupByLibrary.simpleMessage("Boomspire"),
+    "autoSuffixEditorPage": MessageLookupByLibrary.simpleMessage(" (auto)"),
     "baseOverrunSubtitle": MessageLookupByLibrary.simpleMessage(
       "The circuit has been breached.",
     ),
     "baseOverrunTitle": MessageLookupByLibrary.simpleMessage("BASE OVERRUN"),
     "bestWaveReached": m0,
+    "biomeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Biome"),
+    "brushLabelEditorPage": MessageLookupByLibrary.simpleMessage("Brush"),
     "buildMenuBuildingsTab": MessageLookupByLibrary.simpleMessage("Buildings"),
     "buildMenuTowersTab": MessageLookupByLibrary.simpleMessage("Towers"),
     "buildingNameCommandPost": MessageLookupByLibrary.simpleMessage(
@@ -70,11 +101,25 @@ class MessageLookup extends MessageLookupByLibrary {
       "War Factory",
     ),
     "changeMap": MessageLookupByLibrary.simpleMessage("CHANGE MAP"),
+    "cloudLabelEditorPage": MessageLookupByLibrary.simpleMessage("Cloud"),
+    "couldNotReadMapEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Could not read that file as a map",
+    ),
     "defenseHoldsSubtitle": m1,
     "defenseHoldsTitle": MessageLookupByLibrary.simpleMessage("DEFENSE HOLDS"),
+    "downloadLabelEditorPage": MessageLookupByLibrary.simpleMessage("Download"),
+    "downloadedMapEditorPage": m2,
+    "duneLabelEditorPage": MessageLookupByLibrary.simpleMessage("Dune"),
+    "dynamicWeatherLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Dynamic weather over match",
+    ),
     "enterFullscreenTooltip": MessageLookupByLibrary.simpleMessage(
       "Enter fullscreen",
     ),
+    "environmentLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Environment",
+    ),
+    "eraseLabelEditorPage": MessageLookupByLibrary.simpleMessage("Erase"),
     "exitConfirmBody": MessageLookupByLibrary.simpleMessage(
       "Your current run will be lost.",
     ),
@@ -85,10 +130,18 @@ class MessageLookup extends MessageLookupByLibrary {
       "Exit fullscreen",
     ),
     "exitToMenuTooltip": MessageLookupByLibrary.simpleMessage("Exit to menu"),
-    "goldMineKillBonus": m2,
-    "goldMinePayoutIn": m3,
-    "hudAiBaseLabel": m4,
-    "hudWaveLabel": m5,
+    "fewerTooltipEditorPage": MessageLookupByLibrary.simpleMessage("Fewer"),
+    "fogLabelEditorPage": MessageLookupByLibrary.simpleMessage("Fog"),
+    "goldMineKillBonus": m3,
+    "goldMinePayoutIn": m4,
+    "heightLabelEditorPage": MessageLookupByLibrary.simpleMessage("Height"),
+    "homeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Home"),
+    "homeSitesHintEditorPage": m5,
+    "hudAiBaseLabel": m6,
+    "hudWaveLabel": m7,
+    "importedMapEditorPage": m8,
+    "keyframeAtProgressLabelEditorPage": m9,
+    "lakeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Lake"),
     "levelSelectSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose a campaign",
     ),
@@ -102,6 +155,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "mainMenuSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose your battle",
     ),
+    "mapLabelEditorPage": MessageLookupByLibrary.simpleMessage("Map"),
+    "modeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Mode"),
     "modeSelectSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose how you want to fight",
     ),
@@ -116,8 +171,37 @@ class MessageLookup extends MessageLookupByLibrary {
     "modeTowerDefenseTitle": MessageLookupByLibrary.simpleMessage(
       "Tower Defense",
     ),
+    "moreTooltipEditorPage": MessageLookupByLibrary.simpleMessage("More"),
+    "mountainLabelEditorPage": MessageLookupByLibrary.simpleMessage("Mountain"),
+    "nextWaveTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Next wave",
+    ),
+    "onlyHomeSitesSupportedEditorPage": m10,
     "playAgain": MessageLookupByLibrary.simpleMessage("PLAY AGAIN"),
+    "playLabelEditorPage": MessageLookupByLibrary.simpleMessage("Play"),
+    "previewWeatherLabelEditorPage": m11,
+    "previousWaveTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Previous wave",
+    ),
+    "rainLabelEditorPage": MessageLookupByLibrary.simpleMessage("Rain"),
+    "randomizeAllWavesLabelEditorPage": m12,
+    "randomizeWaveLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Randomize",
+    ),
+    "resetToAutoLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Reset to auto",
+    ),
+    "resetZoomTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Reset zoom",
+    ),
+    "riverLabelEditorPage": MessageLookupByLibrary.simpleMessage("River"),
+    "riverWidthLabelEditorPage": m13,
+    "saveLabelEditorPage": MessageLookupByLibrary.simpleMessage("Save"),
+    "savedMapEditorPage": m14,
     "sceneCompleted": MessageLookupByLibrary.simpleMessage("COMPLETED"),
+    "skirmishOptionEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Skirmish",
+    ),
     "skirmishPlacementAi": MessageLookupByLibrary.simpleMessage("AI"),
     "skirmishPlacementPickHint": MessageLookupByLibrary.simpleMessage(
       "Pick a starting site to continue",
@@ -138,6 +222,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Choose Your Base",
     ),
     "skirmishPlacementYou": MessageLookupByLibrary.simpleMessage("You"),
+    "skirmishPlaytestComingSoonEditorPage":
+        MessageLookupByLibrary.simpleMessage(
+          "Testing as wave defense - skirmish playtesting is coming soon.",
+        ),
     "skirmishSelectCustomMaps": MessageLookupByLibrary.simpleMessage(
       "Your Maps",
     ),
@@ -152,6 +240,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "skirmishVictorySubtitle": MessageLookupByLibrary.simpleMessage(
       "The enemy base has fallen!",
     ),
+    "snowLabelEditorPage": MessageLookupByLibrary.simpleMessage("Snow"),
+    "startingGoldLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Starting gold",
+    ),
+    "sunAngleLabelEditorPage": m15,
+    "testingHandDrawnMapBriefingEditorPage":
+        MessageLookupByLibrary.simpleMessage(
+          "Testing your hand-drawn map draft.",
+        ),
     "towerMax": MessageLookupByLibrary.simpleMessage("MAX"),
     "towerNameAntiAir": MessageLookupByLibrary.simpleMessage("Flak Battery"),
     "towerNameArtilleryBunker": MessageLookupByLibrary.simpleMessage(
@@ -165,7 +262,29 @@ class MessageLookup extends MessageLookupByLibrary {
     "towerNameRocket": MessageLookupByLibrary.simpleMessage("Rocket Battery"),
     "towerNameRocketSilo": MessageLookupByLibrary.simpleMessage("Rocket Silo"),
     "towerNameSam": MessageLookupByLibrary.simpleMessage("SAM Site"),
-    "towerTier": m6,
-    "wavesCount": m7,
+    "towerTier": m16,
+    "untitledMapEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Untitled Map",
+    ),
+    "uploadLabelEditorPage": MessageLookupByLibrary.simpleMessage("Upload"),
+    "waveCountLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Number of waves",
+    ),
+    "waveDefenseOptionEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Wave Defense",
+    ),
+    "waveHeaderEditorPage": m17,
+    "wavesCount": m18,
+    "wavesLabelEditorPage": MessageLookupByLibrary.simpleMessage("Waves"),
+    "weatherTimelineLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Weather timeline",
+    ),
+    "widthLabelEditorPage": MessageLookupByLibrary.simpleMessage("Width"),
+    "windLabelEditorPage": MessageLookupByLibrary.simpleMessage("Wind"),
+    "zoomInTooltipEditorPage": MessageLookupByLibrary.simpleMessage("Zoom in"),
+    "zoomOutTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Zoom out",
+    ),
+    "zoomPercentEditorPage": m19,
   };
 }
