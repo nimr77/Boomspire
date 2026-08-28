@@ -2,7 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/di/service_locator.dart';
-import '../../terrain/domain/models/biome.dart';
+import '../../terrain/extensions/biome_extensions.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/repos/map_draft_repository.dart';
 import 'map_editor_page.dart';

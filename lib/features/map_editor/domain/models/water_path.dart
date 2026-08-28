@@ -1,13 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../enums/water_feature_kind.dart';
 import 'editor_point.dart';
+
+export '../enums/water_feature_kind.dart';
 
 part 'water_path.freezed.dart';
 part 'water_path.g.dart';
-
-/// Whether a hand-drawn water feature is an open flowing channel or a
-/// closed body of water.
-enum WaterFeatureKind { river, lake }
 
 /// A freehand-drawn river or lake from the map editor's water tool.
 ///

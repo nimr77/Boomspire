@@ -86,7 +86,47 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "baseOverrunTitle": MessageLookupByLibrary.simpleMessage("BASE OVERRUN"),
     "bestWaveReached": m0,
+    "biomeDescriptionCityRuins": MessageLookupByLibrary.simpleMessage(
+      "Collapsed towers and rubble-choked streets.",
+    ),
+    "biomeDescriptionDesertDunes": MessageLookupByLibrary.simpleMessage(
+      "Sun-scorched dunes carved by a dry canyon.",
+    ),
+    "biomeDescriptionFrozenPeaks": MessageLookupByLibrary.simpleMessage(
+      "Sheer ice-clad summits above a frozen crevasse.",
+    ),
+    "biomeDescriptionGrassPlains": MessageLookupByLibrary.simpleMessage(
+      "Open fields, rocky ridges, a winding river.",
+    ),
+    "biomeDescriptionMountainForest": MessageLookupByLibrary.simpleMessage(
+      "Dense pine-covered peaks and a rushing river.",
+    ),
+    "biomeDescriptionSavanna": MessageLookupByLibrary.simpleMessage(
+      "Golden grassland, acacia stands, a dry river.",
+    ),
+    "biomeDescriptionSea": MessageLookupByLibrary.simpleMessage(
+      "Open water studded with reefs - the fleet closes in.",
+    ),
+    "biomeDescriptionSnowTundra": MessageLookupByLibrary.simpleMessage(
+      "Frozen ground, snow-capped peaks, an icy river.",
+    ),
     "biomeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Biome"),
+    "biomeNameCityRuins": MessageLookupByLibrary.simpleMessage("City Ruins"),
+    "biomeNameDesertDunes": MessageLookupByLibrary.simpleMessage(
+      "Desert Dunes",
+    ),
+    "biomeNameFrozenPeaks": MessageLookupByLibrary.simpleMessage(
+      "Frozen Peaks",
+    ),
+    "biomeNameGrassPlains": MessageLookupByLibrary.simpleMessage(
+      "Grass Plains",
+    ),
+    "biomeNameMountainForest": MessageLookupByLibrary.simpleMessage(
+      "Mountain Forest",
+    ),
+    "biomeNameSavanna": MessageLookupByLibrary.simpleMessage("Savanna"),
+    "biomeNameSea": MessageLookupByLibrary.simpleMessage("Open Sea"),
+    "biomeNameSnowTundra": MessageLookupByLibrary.simpleMessage("Snow Tundra"),
     "brushLabelEditorPage": MessageLookupByLibrary.simpleMessage("Brush"),
     "buildMenuBuildingsTab": MessageLookupByLibrary.simpleMessage("Buildings"),
     "buildMenuTowersTab": MessageLookupByLibrary.simpleMessage("Towers"),
@@ -108,6 +148,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "defenseHoldsSubtitle": m1,
     "defenseHoldsTitle": MessageLookupByLibrary.simpleMessage("DEFENSE HOLDS"),
+    "difficultyLabelEasy": MessageLookupByLibrary.simpleMessage("Easy"),
+    "difficultyLabelHard": MessageLookupByLibrary.simpleMessage("Hard"),
+    "difficultyLabelNormal": MessageLookupByLibrary.simpleMessage("Normal"),
     "downloadLabelEditorPage": MessageLookupByLibrary.simpleMessage("Download"),
     "downloadedMapEditorPage": m2,
     "duneLabelEditorPage": MessageLookupByLibrary.simpleMessage("Dune"),

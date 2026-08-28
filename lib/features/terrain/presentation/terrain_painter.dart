@@ -5,6 +5,7 @@ import '../../../core/pathfinding/grid.dart';
 import '../domain/models/biome.dart';
 import '../domain/models/obstacle_kind.dart';
 import '../domain/models/terrain_map.dart';
+import '../extensions/biome_extensions.dart';
 
 /// Pure procedural terrain rendering, shared by the in-game [TerrainComponent]
 /// (baked once to a full-size cached image) and the level-select biome

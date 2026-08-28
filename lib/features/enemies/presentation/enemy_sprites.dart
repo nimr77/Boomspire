@@ -14,7 +14,6 @@ class EnemySpriteFactory {
   static Sprite? _helicopter;
   static Sprite? _tank;
   static Sprite? _attackPlane;
-  static Sprite? _gunboat;
   static Sprite? _artilleryBarrage;
   static Sprite? _rocketBarrage;
   static Sprite? _antiAirVehicle;
@@ -39,13 +38,6 @@ class EnemySpriteFactory {
     if (cached != null) return cached;
     final image = await renderToImage(50, 50, _paintAttackPlane);
     return _attackPlane = Sprite(image);
-  }
-
-  static Future<Sprite> gunboat() async {
-    final cached = _gunboat;
-    if (cached != null) return cached;
-    final image = await renderToImage(70, 70, _paintGunboat);
-    return _gunboat = Sprite(image);
   }
 
   static Future<Sprite> heavySoldier() async {
@@ -82,7 +74,6 @@ class EnemySpriteFactory {
     UnitKind.tank => tank(),
     UnitKind.helicopter => helicopter(),
     UnitKind.attackPlane => attackPlane(),
-    UnitKind.gunboat => gunboat(),
     UnitKind.artilleryBarrage => artilleryBarrage(),
     UnitKind.rocketBarrage => rocketBarrage(),
     UnitKind.antiAirVehicle => antiAirVehicle(),
@@ -98,7 +89,6 @@ class EnemySpriteFactory {
     UnitKind.tank ||
     UnitKind.helicopter ||
     UnitKind.attackPlane ||
-    UnitKind.gunboat ||
     UnitKind.artilleryBarrage ||
     UnitKind.rocketBarrage ||
     UnitKind.antiAirVehicle => true,
@@ -120,92 +110,92 @@ class EnemySpriteFactory {
 
     canvas.drawOval(
       Rect.fromCenter(
-        center: center.translate(0, size * 0.28),
-        width: size * 0.55,
-        height: size * 0.2,
+        center: center.translate(0, size * 0.3),
+        width: size * 0.5,
+        height: size * 0.18,
       ),
       Paint()..color = const Color(0x59000000),
     );
 
-    if (heavy) {
+    // Legs - narrow, close-set rectangles directly under the torso instead
+    // of a pair of splayed-out ovals (which read as bug legs).
+    for (final dx in [-size * 0.075, size * 0.075]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: center.translate(0, size * 0.08),
-            width: size * 0.34,
-            height: size * 0.4,
+            center: center.translate(dx, size * 0.28),
+            width: size * 0.1,
+            height: size * 0.26,
           ),
-          const Radius.circular(6),
+          const Radius.circular(3),
         ),
-        Paint()..color = const Color(0xFF263A17),
+        Paint()..color = darkColor,
       );
     }
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center.translate(-size * 0.12, size * 0.22),
-          width: size * 0.16,
-          height: size * 0.3,
-        ),
-        const Radius.circular(4),
-      ),
-      Paint()..color = darkColor,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center.translate(size * 0.12, size * 0.22),
-          width: size * 0.16,
-          height: size * 0.3,
-        ),
-        const Radius.circular(4),
-      ),
-      Paint()..color = darkColor,
-    );
-
-    final torsoRect = Rect.fromCenter(
-      center: center.translate(0, -size * 0.02),
-      width: size * 0.5,
-      height: size * 0.42,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(torsoRect, const Radius.circular(8)),
+    // Torso - shoulders-wider-than-hips trapezoid, reads as a person
+    // instead of a uniform blob.
+    final torsoPath = Path()
+      ..moveTo(center.dx - size * 0.26, center.dy - size * 0.2)
+      ..lineTo(center.dx + size * 0.26, center.dy - size * 0.2)
+      ..lineTo(center.dx + size * 0.17, center.dy + size * 0.2)
+      ..lineTo(center.dx - size * 0.17, center.dy + size * 0.2)
+      ..close();
+    canvas.drawPath(
+      torsoPath,
       Paint()
         ..shader = LinearGradient(
           colors: [bodyColor, darkColor],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-        ).createShader(torsoRect),
+        ).createShader(torsoPath.getBounds()),
     );
+    if (heavy) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(0, size * 0.02),
+            width: size * 0.22,
+            height: size * 0.24,
+          ),
+          const Radius.circular(4),
+        ),
+        Paint()..color = const Color(0xFF263A17),
+      );
+    }
     canvas.drawLine(
-      Offset(center.dx, torsoRect.top + 2),
-      Offset(center.dx, torsoRect.bottom - 2),
+      Offset(center.dx, center.dy - size * 0.18),
+      Offset(center.dx, center.dy + size * 0.18),
       Paint()
         ..color = darkColor
         ..strokeWidth = 2,
     );
 
-    if (heavy) {
-      canvas.drawCircle(
-        center.translate(-size * 0.26, -size * 0.14),
-        size * 0.11,
-        Paint()..color = const Color(0xFFB71C1C),
-      );
-      canvas.drawCircle(
-        center.translate(size * 0.26, -size * 0.14),
-        size * 0.11,
-        Paint()..color = const Color(0xFFB71C1C),
+    // Shoulder pads - rectangular armor plates instead of round dots (round
+    // "spots" on a rounded green body read as insect markings).
+    for (final dx in [-size * 0.24, size * 0.24]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, -size * 0.18),
+            width: size * 0.13,
+            height: size * 0.1,
+          ),
+          const Radius.circular(2),
+        ),
+        Paint()..color = heavy ? const Color(0xFFB71C1C) : darkColor,
       );
     }
 
+    // Rifle - shouldered, angled forward from near one shoulder instead of
+    // slicing across the whole body like a stray limb.
     final riflePaint = Paint()
       ..color = const Color(0xFF1a1a1a)
       ..strokeWidth = heavy ? 4 : 3
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
-      center.translate(-size * 0.2, size * 0.22),
-      center.translate(size * 0.14, -size * 0.42),
+      center.translate(size * 0.14, -size * 0.12),
+      center.translate(size * 0.34, -size * 0.46),
       riflePaint,
     );
 
@@ -243,6 +233,83 @@ class EnemySpriteFactory {
     );
   }
 
+  static void _paintAntiAirVehicle(Canvas canvas) {
+    const size = 52.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.85, height: size * 0.3),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    // Flush tracks along the hull's edges - narrow rectangles instead of
+    // round pods, so they read as treads rather than a pair of bug legs.
+    for (final dx in [-size * 0.3, size * 0.3]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, size * 0.06),
+            width: size * 0.13,
+            height: size * 0.6,
+          ),
+          const Radius.circular(3),
+        ),
+        Paint()..color = const Color(0xFF1a1c20),
+      );
+    }
+
+    // Hull.
+    final hullRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.58,
+      height: size * 0.4,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(hullRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF78909C), Color(0xFF263238)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(hullRect),
+    );
+
+    // Twin flak barrels, angled skyward instead of a tank's single
+    // forward-pointed barrel - the visual cue that this vehicle shoots air
+    // targets too.
+    for (final dx in [-size * 0.08, size * 0.08]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, -size * 0.3),
+            width: size * 0.07,
+            height: size * 0.32,
+          ),
+          const Radius.circular(2),
+        ),
+        Paint()..color = const Color(0xFF2b2f36),
+      );
+    }
+
+    // Radar dish on the deck.
+    canvas.drawCircle(
+      center.translate(0, -size * 0.02),
+      size * 0.13,
+      Paint()..color = const Color(0xFF37474F),
+    );
+    canvas.drawCircle(
+      center.translate(0, -size * 0.02),
+      size * 0.08,
+      Paint()..color = const Color(0xFFFFCA28).withValues(alpha: 0.85),
+    );
+
+    canvas.drawCircle(
+      center.translate(0, size * 0.16),
+      size * 0.045,
+      Paint()..color = const Color(0xFFFFF59D),
+    );
+  }
+
   static void _paintArtilleryBarrage(Canvas canvas) {
     const size = 52.0;
     const center = Offset(size / 2, size / 2);
@@ -252,15 +319,17 @@ class EnemySpriteFactory {
       Paint()..color = const Color(0x40000000),
     );
 
-    for (final dx in [-size * 0.28, size * 0.28]) {
+    // Flush tracks along the hull's edges - narrow rectangles instead of
+    // round pods, so they read as treads rather than a pair of bug legs.
+    for (final dx in [-size * 0.3, size * 0.3]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(
             center: center.translate(dx, size * 0.08),
-            width: size * 0.22,
-            height: size * 0.54,
+            width: size * 0.14,
+            height: size * 0.58,
           ),
-          const Radius.circular(8),
+          const Radius.circular(3),
         ),
         Paint()..color = const Color(0xFF1a1c20),
       );
@@ -281,14 +350,26 @@ class EnemySpriteFactory {
         ).createShader(hullRect),
     );
 
+    // Mortar deck - a mounting plate the barrels visibly sit on, instead
+    // of bare tubes sprouting straight off the hull like antennae.
+    final deckRect = Rect.fromCenter(
+      center: center.translate(0, -size * 0.16),
+      width: size * 0.5,
+      height: size * 0.16,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(deckRect, const Radius.circular(3)),
+      Paint()..color = const Color(0xFF3E2723),
+    );
+
     // Three stubby mortar barrels fanned out on the deck.
     for (final dx in [-size * 0.14, 0.0, size * 0.14]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: center.translate(dx, -size * 0.26),
+            center: center.translate(dx, -size * 0.24),
             width: size * 0.1,
-            height: size * 0.3,
+            height: size * 0.22,
           ),
           const Radius.circular(2),
         ),
@@ -363,100 +444,6 @@ class EnemySpriteFactory {
         Paint()..color = const Color(0xFFFFF3C4),
       );
     }
-  }
-
-  static void _paintGunboat(Canvas canvas) {
-    const size = 70.0;
-    const center = Offset(size / 2, size / 2);
-
-    // Wake shadow beneath the hull.
-    canvas.drawOval(
-      Rect.fromCenter(center: center, width: size * 0.95, height: size * 0.4),
-      Paint()..color = const Color(0x40000000),
-    );
-
-    // Hull - a wide boat-shaped silhouette (pointed bow, flat stern).
-    final hull = Path()
-      ..moveTo(center.dx, center.dy - size * 0.46)
-      ..lineTo(center.dx + size * 0.28, center.dy + size * 0.3)
-      ..lineTo(center.dx + size * 0.24, center.dy + size * 0.42)
-      ..lineTo(center.dx - size * 0.24, center.dy + size * 0.42)
-      ..lineTo(center.dx - size * 0.28, center.dy + size * 0.3)
-      ..close();
-    canvas.drawPath(
-      hull,
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF546E7A), Color(0xFF263238)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ).createShader(Rect.fromCircle(center: center, radius: size * 0.46)),
-    );
-    canvas.drawPath(
-      hull,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = const Color(0xFF2E7D8C),
-    );
-
-    // Waterline stripe.
-    canvas.drawLine(
-      center.translate(-size * 0.26, size * 0.22),
-      center.translate(size * 0.26, size * 0.22),
-      Paint()
-        ..color = const Color(0xFF2E7D8C)
-        ..strokeWidth = 2,
-    );
-
-    // Deckhouse.
-    final deckhouse = Rect.fromCenter(
-      center: center.translate(0, size * 0.02),
-      width: size * 0.24,
-      height: size * 0.3,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(deckhouse, const Radius.circular(4)),
-      Paint()..color = const Color(0xFF37474F),
-    );
-
-    // Forward deck cannon - the weapon this unit fires at towers.
-    final cannonCenter = center.translate(0, -size * 0.16);
-    canvas.drawCircle(
-      cannonCenter,
-      size * 0.13,
-      Paint()
-        ..shader =
-            const LinearGradient(colors: [Color(0xFF8d8060), Color(0xFF2b2f36)])
-                .createShader(
-                  Rect.fromCircle(center: cannonCenter, radius: size * 0.13),
-                ),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center.translate(0, -size * 0.32),
-          width: size * 0.08,
-          height: size * 0.26,
-        ),
-        const Radius.circular(2),
-      ),
-      Paint()..color = const Color(0xFF23262b),
-    );
-
-    // Radar mast + warning light, so it reads as a crewed hostile vessel.
-    canvas.drawLine(
-      center.translate(0, -size * 0.02),
-      center.translate(0, -size * 0.24),
-      Paint()
-        ..color = const Color(0xFF1a1c20)
-        ..strokeWidth = 1.6,
-    );
-    canvas.drawCircle(
-      center.translate(0, size * 0.02),
-      size * 0.03,
-      Paint()..color = const Color(0xFFE53935),
-    );
   }
 
   static void _paintHelicopter(Canvas canvas) {
@@ -597,11 +584,19 @@ class EnemySpriteFactory {
       );
     }
 
+    // Wheel-wells - flush rectangles instead of free-floating circles, so
+    // the chassis reads as a vehicle rather than a bug's legs.
     for (final dy in [-size * 0.06, size * 0.32]) {
-      for (final dx in [-size * 0.34, size * 0.34]) {
-        canvas.drawCircle(
-          center.translate(dx, dy),
-          size * 0.1,
+      for (final dx in [-size * 0.32, size * 0.32]) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: center.translate(dx, dy),
+              width: size * 0.14,
+              height: size * 0.22,
+            ),
+            const Radius.circular(2),
+          ),
           Paint()..color = const Color(0xFF0d0d0d),
         );
       }
@@ -617,16 +612,17 @@ class EnemySpriteFactory {
       Paint()..color = const Color(0x40000000),
     );
 
-    // Treads - a dark track loop on either side of the hull.
-    for (final dx in [-size * 0.28, size * 0.28]) {
+    // Flush tracks along the hull's edges - narrow rectangles instead of
+    // round pods, so they read as treads rather than a pair of bug legs.
+    for (final dx in [-size * 0.3, size * 0.3]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(
             center: center.translate(dx, size * 0.06),
-            width: size * 0.22,
-            height: size * 0.56,
+            width: size * 0.13,
+            height: size * 0.6,
           ),
-          const Radius.circular(8),
+          const Radius.circular(3),
         ),
         Paint()..color = const Color(0xFF1a1c20),
       );
@@ -683,82 +679,6 @@ class EnemySpriteFactory {
 
     // Headlight - small warm beacon on the hull front, doubles as the
     // "alive" light other vehicle types also carry.
-    canvas.drawCircle(
-      center.translate(0, size * 0.16),
-      size * 0.045,
-      Paint()..color = const Color(0xFFFFF59D),
-    );
-  }
-
-  static void _paintAntiAirVehicle(Canvas canvas) {
-    const size = 52.0;
-    const center = Offset(size / 2, size / 2);
-
-    canvas.drawOval(
-      Rect.fromCenter(center: center, width: size * 0.85, height: size * 0.3),
-      Paint()..color = const Color(0x40000000),
-    );
-
-    // Treads.
-    for (final dx in [-size * 0.28, size * 0.28]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center.translate(dx, size * 0.06),
-            width: size * 0.22,
-            height: size * 0.56,
-          ),
-          const Radius.circular(8),
-        ),
-        Paint()..color = const Color(0xFF1a1c20),
-      );
-    }
-
-    // Hull.
-    final hullRect = Rect.fromCenter(
-      center: center,
-      width: size * 0.58,
-      height: size * 0.4,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(hullRect, const Radius.circular(6)),
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF78909C), Color(0xFF263238)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ).createShader(hullRect),
-    );
-
-    // Twin flak barrels, angled skyward instead of a tank's single
-    // forward-pointed barrel - the visual cue that this vehicle shoots air
-    // targets too.
-    for (final dx in [-size * 0.08, size * 0.08]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: center.translate(dx, -size * 0.3),
-            width: size * 0.07,
-            height: size * 0.32,
-          ),
-          const Radius.circular(2),
-        ),
-        Paint()..color = const Color(0xFF2b2f36),
-      );
-    }
-
-    // Radar dish on the deck.
-    canvas.drawCircle(
-      center.translate(0, -size * 0.02),
-      size * 0.13,
-      Paint()..color = const Color(0xFF37474F),
-    );
-    canvas.drawCircle(
-      center.translate(0, -size * 0.02),
-      size * 0.08,
-      Paint()..color = const Color(0xFFFFCA28).withValues(alpha: 0.85),
-    );
-
     canvas.drawCircle(
       center.translate(0, size * 0.16),
       size * 0.045,

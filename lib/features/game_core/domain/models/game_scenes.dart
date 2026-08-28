@@ -95,8 +95,8 @@ class GameScenes {
       id: 'coastal-blockade',
       name: 'Coastal Blockade',
       briefing:
-          'A sea platform under blockade - gunboats shell the base from '
-          'both open flanks across the water.',
+          'A sea platform under blockade - armored landing forces shell the '
+          'base from both open flanks across the water.',
       biome: Biome.sea,
       waveCount: 8,
       aggressionBias: 0.1,

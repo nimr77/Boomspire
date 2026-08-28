@@ -46,21 +46,13 @@ class WaveRepositoryImpl implements WaveRepository {
     }
 
     if (n >= 4) {
-      // Tanks can't sail - swap them for gunboats on sea maps.
       spawns.add(
-        biome == Biome.sea
-            ? SpawnEntry(
-                type: UnitKind.gunboat,
-                count: (1 + (n - 4) * 0.5).round(),
-                interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
-                startDelay: 4,
-              )
-            : SpawnEntry(
-                type: UnitKind.tank,
-                count: (1 + (n - 4) * 0.5).round(),
-                interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
-                startDelay: 4,
-              ),
+        SpawnEntry(
+          type: UnitKind.tank,
+          count: (1 + (n - 4) * 0.5).round(),
+          interval: (2.6 - n * 0.05).clamp(1.6, 2.6),
+          startDelay: 4,
+        ),
       );
     }
 

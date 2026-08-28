@@ -77,7 +77,7 @@ class AllySpriteFactory {
 
   /// Every [UnitKind] this factory has art for - lets a merged unit
   /// component fall back to the other side's factory for a kind that was
-  /// only ever painted for one side (e.g. an invader-only Gunboat).
+  /// only ever painted for one side (e.g. an invader-only Attack Plane).
   static bool supports(UnitKind kind) => switch (kind) {
     UnitKind.soldier ||
     UnitKind.tank ||
@@ -165,48 +165,68 @@ class AllySpriteFactory {
 
     canvas.drawOval(
       Rect.fromCenter(
-        center: center.translate(0, size * 0.28),
-        width: size * 0.55,
-        height: size * 0.2,
+        center: center.translate(0, size * 0.3),
+        width: size * 0.5,
+        height: size * 0.18,
       ),
       Paint()..color = const Color(0x59000000),
     );
 
-    for (final dx in [-size * 0.12, size * 0.12]) {
+    // Legs - narrow, close-set rectangles directly under the torso instead
+    // of a pair of splayed-out ovals (which read as bug legs).
+    for (final dx in [-size * 0.075, size * 0.075]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: center.translate(dx, size * 0.22),
-            width: size * 0.16,
-            height: size * 0.3,
+            center: center.translate(dx, size * 0.28),
+            width: size * 0.1,
+            height: size * 0.26,
           ),
-          const Radius.circular(4),
+          const Radius.circular(3),
         ),
         Paint()..color = _hullDark,
       );
     }
 
-    final torsoRect = Rect.fromCenter(
-      center: center.translate(0, -size * 0.02),
-      width: size * 0.5,
-      height: size * 0.42,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(torsoRect, const Radius.circular(8)),
+    // Torso - shoulders-wider-than-hips trapezoid, reads as a person
+    // instead of a uniform blob.
+    final torsoPath = Path()
+      ..moveTo(center.dx - size * 0.26, center.dy - size * 0.2)
+      ..lineTo(center.dx + size * 0.26, center.dy - size * 0.2)
+      ..lineTo(center.dx + size * 0.17, center.dy + size * 0.2)
+      ..lineTo(center.dx - size * 0.17, center.dy + size * 0.2)
+      ..close();
+    canvas.drawPath(
+      torsoPath,
       Paint()
         ..shader = const LinearGradient(
           colors: [_hull, _hullDark],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-        ).createShader(torsoRect),
+        ).createShader(torsoPath.getBounds()),
     );
     canvas.drawLine(
-      Offset(center.dx, torsoRect.top + 2),
-      Offset(center.dx, torsoRect.bottom - 2),
+      Offset(center.dx, center.dy - size * 0.18),
+      Offset(center.dx, center.dy + size * 0.18),
       Paint()
         ..color = weaponAccent.withValues(alpha: 0.7)
         ..strokeWidth = 2,
     );
+
+    // Shoulder pads instead of flanking circles.
+    for (final dx in [-size * 0.24, size * 0.24]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, -size * 0.18),
+            width: size * 0.13,
+            height: size * 0.1,
+          ),
+          const Radius.circular(2),
+        ),
+        Paint()..color = _hullDark,
+      );
+    }
 
     // Backpack-mounted launcher, tilted skyward.
     final launcher = Paint()
@@ -214,7 +234,7 @@ class AllySpriteFactory {
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
-      center.translate(size * 0.02, size * 0.02),
+      center.translate(size * 0.04, -size * 0.12),
       center.translate(size * 0.36, -size * 0.5),
       launcher,
     );
@@ -226,12 +246,12 @@ class AllySpriteFactory {
 
     canvas.drawCircle(
       center.translate(0, -size * 0.3),
-      size * 0.17,
+      size * 0.16,
       Paint()..color = _hullDark,
     );
     canvas.drawCircle(
       center.translate(0, -size * 0.32),
-      size * 0.15,
+      size * 0.14,
       Paint()..color = _hull,
     );
     final visorRect = Rect.fromCenter(
@@ -263,48 +283,68 @@ class AllySpriteFactory {
 
     canvas.drawOval(
       Rect.fromCenter(
-        center: center.translate(0, size * 0.28),
-        width: size * 0.55,
-        height: size * 0.2,
+        center: center.translate(0, size * 0.3),
+        width: size * 0.5,
+        height: size * 0.18,
       ),
       Paint()..color = const Color(0x59000000),
     );
 
-    for (final dx in [-size * 0.12, size * 0.12]) {
+    // Legs - narrow, close-set rectangles directly under the torso instead
+    // of a pair of splayed-out ovals (which read as bug legs).
+    for (final dx in [-size * 0.075, size * 0.075]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: center.translate(dx, size * 0.22),
-            width: size * 0.16,
-            height: size * 0.3,
+            center: center.translate(dx, size * 0.28),
+            width: size * 0.1,
+            height: size * 0.26,
           ),
-          const Radius.circular(4),
+          const Radius.circular(3),
         ),
         Paint()..color = _hullDark,
       );
     }
 
-    final torsoRect = Rect.fromCenter(
-      center: center.translate(0, -size * 0.02),
-      width: size * 0.5,
-      height: size * 0.42,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(torsoRect, const Radius.circular(8)),
+    // Torso - shoulders-wider-than-hips trapezoid, reads as a person
+    // instead of a uniform blob.
+    final torsoPath = Path()
+      ..moveTo(center.dx - size * 0.26, center.dy - size * 0.2)
+      ..lineTo(center.dx + size * 0.26, center.dy - size * 0.2)
+      ..lineTo(center.dx + size * 0.17, center.dy + size * 0.2)
+      ..lineTo(center.dx - size * 0.17, center.dy + size * 0.2)
+      ..close();
+    canvas.drawPath(
+      torsoPath,
       Paint()
         ..shader = const LinearGradient(
           colors: [_hull, _hullDark],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-        ).createShader(torsoRect),
+        ).createShader(torsoPath.getBounds()),
     );
     canvas.drawLine(
-      Offset(center.dx, torsoRect.top + 2),
-      Offset(center.dx, torsoRect.bottom - 2),
+      Offset(center.dx, center.dy - size * 0.18),
+      Offset(center.dx, center.dy + size * 0.18),
       Paint()
         ..color = weaponAccent.withValues(alpha: 0.7)
         ..strokeWidth = 2,
     );
+
+    // Shoulder pads instead of flanking circles.
+    for (final dx in [-size * 0.24, size * 0.24]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, -size * 0.18),
+            width: size * 0.13,
+            height: size * 0.1,
+          ),
+          const Radius.circular(2),
+        ),
+        Paint()..color = _hullDark,
+      );
+    }
 
     // Shoulder-mounted rocket tube, levelled at the ground.
     final tube = Paint()
@@ -312,7 +352,7 @@ class AllySpriteFactory {
       ..strokeWidth = 6
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
-      center.translate(-size * 0.06, -size * 0.06),
+      center.translate(-size * 0.02, -size * 0.14),
       center.translate(size * 0.44, -size * 0.24),
       tube,
     );
@@ -324,12 +364,12 @@ class AllySpriteFactory {
 
     canvas.drawCircle(
       center.translate(0, -size * 0.3),
-      size * 0.17,
+      size * 0.16,
       Paint()..color = _hullDark,
     );
     canvas.drawCircle(
       center.translate(0, -size * 0.32),
-      size * 0.15,
+      size * 0.14,
       Paint()..color = _hull,
     );
     final visorRect = Rect.fromCenter(
@@ -411,12 +451,19 @@ class AllySpriteFactory {
       Paint()..color = const Color(0xFF1a1c20),
     );
 
-    // Wheels.
-    for (final dy in [-size * 0.24, size * 0.24]) {
-      for (final dx in [-size * 0.32, size * 0.32]) {
-        canvas.drawCircle(
-          center.translate(dx, dy),
-          size * 0.1,
+    // Wheels - small flush rectangles tucked against the body's edge,
+    // instead of free-floating circles bulging past the silhouette.
+    for (final dy in [-size * 0.22, size * 0.22]) {
+      for (final dx in [-size * 0.3, size * 0.3]) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: center.translate(dx, dy),
+              width: size * 0.12,
+              height: size * 0.2,
+            ),
+            const Radius.circular(2),
+          ),
           Paint()..color = const Color(0xFF0d0d0d),
         );
       }
@@ -472,12 +519,19 @@ class AllySpriteFactory {
       );
     }
 
-    // Wheels.
+    // Wheel-wells - flush rectangles instead of free-floating circles, so
+    // the chassis reads as a vehicle rather than a bug's legs.
     for (final dy in [-size * 0.06, size * 0.32]) {
-      for (final dx in [-size * 0.34, size * 0.34]) {
-        canvas.drawCircle(
-          center.translate(dx, dy),
-          size * 0.1,
+      for (final dx in [-size * 0.32, size * 0.32]) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: center.translate(dx, dy),
+              width: size * 0.14,
+              height: size * 0.22,
+            ),
+            const Radius.circular(2),
+          ),
           Paint()..color = const Color(0xFF0d0d0d),
         );
       }
@@ -490,67 +544,89 @@ class AllySpriteFactory {
 
     canvas.drawOval(
       Rect.fromCenter(
-        center: center.translate(0, size * 0.28),
-        width: size * 0.55,
-        height: size * 0.2,
+        center: center.translate(0, size * 0.3),
+        width: size * 0.5,
+        height: size * 0.18,
       ),
       Paint()..color = const Color(0x59000000),
     );
 
-    for (final dx in [-size * 0.12, size * 0.12]) {
+    // Legs - narrow, close-set rectangles directly under the torso instead
+    // of a pair of splayed-out ovals (which read as bug legs).
+    for (final dx in [-size * 0.075, size * 0.075]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: center.translate(dx, size * 0.22),
-            width: size * 0.16,
-            height: size * 0.3,
+            center: center.translate(dx, size * 0.28),
+            width: size * 0.1,
+            height: size * 0.26,
           ),
-          const Radius.circular(4),
+          const Radius.circular(3),
         ),
         Paint()..color = _hullDark,
       );
     }
 
-    final torsoRect = Rect.fromCenter(
-      center: center.translate(0, -size * 0.02),
-      width: size * 0.5,
-      height: size * 0.42,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(torsoRect, const Radius.circular(8)),
+    // Torso - shoulders-wider-than-hips trapezoid, reads as a person
+    // instead of a uniform blob.
+    final torsoPath = Path()
+      ..moveTo(center.dx - size * 0.26, center.dy - size * 0.2)
+      ..lineTo(center.dx + size * 0.26, center.dy - size * 0.2)
+      ..lineTo(center.dx + size * 0.17, center.dy + size * 0.2)
+      ..lineTo(center.dx - size * 0.17, center.dy + size * 0.2)
+      ..close();
+    canvas.drawPath(
+      torsoPath,
       Paint()
         ..shader = const LinearGradient(
           colors: [_hull, _hullDark],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-        ).createShader(torsoRect),
+        ).createShader(torsoPath.getBounds()),
     );
     canvas.drawLine(
-      Offset(center.dx, torsoRect.top + 2),
-      Offset(center.dx, torsoRect.bottom - 2),
+      Offset(center.dx, center.dy - size * 0.18),
+      Offset(center.dx, center.dy + size * 0.18),
       Paint()
         ..color = _accent.withValues(alpha: 0.7)
         ..strokeWidth = 2,
     );
 
+    // Shoulder pads instead of flanking circles.
+    for (final dx in [-size * 0.24, size * 0.24]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, -size * 0.18),
+            width: size * 0.13,
+            height: size * 0.1,
+          ),
+          const Radius.circular(2),
+        ),
+        Paint()..color = _hullDark,
+      );
+    }
+
+    // Rifle - shouldered, angled forward from near one shoulder instead of
+    // slicing across the whole body like a stray limb.
     final rifle = Paint()
       ..color = const Color(0xFF1a1a1a)
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
-      center.translate(-size * 0.2, size * 0.22),
-      center.translate(size * 0.14, -size * 0.42),
+      center.translate(size * 0.14, -size * 0.12),
+      center.translate(size * 0.34, -size * 0.46),
       rifle,
     );
 
     canvas.drawCircle(
       center.translate(0, -size * 0.3),
-      size * 0.17,
+      size * 0.16,
       Paint()..color = _hullDark,
     );
     canvas.drawCircle(
       center.translate(0, -size * 0.32),
-      size * 0.15,
+      size * 0.14,
       Paint()..color = _hull,
     );
     final visorRect = Rect.fromCenter(
@@ -584,14 +660,21 @@ class AllySpriteFactory {
       Paint()..color = const Color(0x40000000),
     );
 
-    // Treads.
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: center, width: size * 0.9, height: size * 0.62),
-        const Radius.circular(10),
-      ),
-      Paint()..color = const Color(0xFF1a1c20),
-    );
+    // Flush tracks along the hull's edges instead of one big rounded band
+    // (which read as a pair of circles peeking out past the sides).
+    for (final dx in [-size * 0.36, size * 0.36]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center.translate(dx, 0),
+            width: size * 0.14,
+            height: size * 0.66,
+          ),
+          const Radius.circular(3),
+        ),
+        Paint()..color = const Color(0xFF1a1c20),
+      );
+    }
 
     // Hull.
     final hullRect = Rect.fromCenter(

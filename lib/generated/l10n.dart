@@ -285,6 +285,191 @@ class S {
     return Intl.message('AI', name: 'skirmishPlacementAi', desc: '', args: []);
   }
 
+  /// `Easy`
+  String get difficultyLabelEasy {
+    return Intl.message(
+      'Easy',
+      name: 'difficultyLabelEasy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Normal`
+  String get difficultyLabelNormal {
+    return Intl.message(
+      'Normal',
+      name: 'difficultyLabelNormal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Hard`
+  String get difficultyLabelHard {
+    return Intl.message(
+      'Hard',
+      name: 'difficultyLabelHard',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Grass Plains`
+  String get biomeNameGrassPlains {
+    return Intl.message(
+      'Grass Plains',
+      name: 'biomeNameGrassPlains',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Snow Tundra`
+  String get biomeNameSnowTundra {
+    return Intl.message(
+      'Snow Tundra',
+      name: 'biomeNameSnowTundra',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Desert Dunes`
+  String get biomeNameDesertDunes {
+    return Intl.message(
+      'Desert Dunes',
+      name: 'biomeNameDesertDunes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mountain Forest`
+  String get biomeNameMountainForest {
+    return Intl.message(
+      'Mountain Forest',
+      name: 'biomeNameMountainForest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `City Ruins`
+  String get biomeNameCityRuins {
+    return Intl.message(
+      'City Ruins',
+      name: 'biomeNameCityRuins',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Savanna`
+  String get biomeNameSavanna {
+    return Intl.message(
+      'Savanna',
+      name: 'biomeNameSavanna',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Frozen Peaks`
+  String get biomeNameFrozenPeaks {
+    return Intl.message(
+      'Frozen Peaks',
+      name: 'biomeNameFrozenPeaks',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open Sea`
+  String get biomeNameSea {
+    return Intl.message('Open Sea', name: 'biomeNameSea', desc: '', args: []);
+  }
+
+  /// `Open fields, rocky ridges, a winding river.`
+  String get biomeDescriptionGrassPlains {
+    return Intl.message(
+      'Open fields, rocky ridges, a winding river.',
+      name: 'biomeDescriptionGrassPlains',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Frozen ground, snow-capped peaks, an icy river.`
+  String get biomeDescriptionSnowTundra {
+    return Intl.message(
+      'Frozen ground, snow-capped peaks, an icy river.',
+      name: 'biomeDescriptionSnowTundra',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sun-scorched dunes carved by a dry canyon.`
+  String get biomeDescriptionDesertDunes {
+    return Intl.message(
+      'Sun-scorched dunes carved by a dry canyon.',
+      name: 'biomeDescriptionDesertDunes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dense pine-covered peaks and a rushing river.`
+  String get biomeDescriptionMountainForest {
+    return Intl.message(
+      'Dense pine-covered peaks and a rushing river.',
+      name: 'biomeDescriptionMountainForest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Collapsed towers and rubble-choked streets.`
+  String get biomeDescriptionCityRuins {
+    return Intl.message(
+      'Collapsed towers and rubble-choked streets.',
+      name: 'biomeDescriptionCityRuins',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Golden grassland, acacia stands, a dry river.`
+  String get biomeDescriptionSavanna {
+    return Intl.message(
+      'Golden grassland, acacia stands, a dry river.',
+      name: 'biomeDescriptionSavanna',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sheer ice-clad summits above a frozen crevasse.`
+  String get biomeDescriptionFrozenPeaks {
+    return Intl.message(
+      'Sheer ice-clad summits above a frozen crevasse.',
+      name: 'biomeDescriptionFrozenPeaks',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open water studded with reefs - the fleet closes in.`
+  String get biomeDescriptionSea {
+    return Intl.message(
+      'Open water studded with reefs - the fleet closes in.',
+      name: 'biomeDescriptionSea',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Pick a starting site to continue`
   String get skirmishPlacementPickHint {
     return Intl.message(

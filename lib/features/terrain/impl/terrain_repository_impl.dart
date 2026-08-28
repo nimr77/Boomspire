@@ -3,10 +3,10 @@ import 'dart:math';
 import '../../../core/pathfinding/grid.dart';
 import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/domain/models/game_scene.dart';
-import '../domain/models/biome.dart';
 import '../domain/models/obstacle_kind.dart';
 import '../domain/models/terrain_map.dart';
 import '../domain/repos/terrain_repository.dart';
+import '../extensions/biome_extensions.dart';
 
 /// Builds a scene-flavored terrain: scattered high-ground obstacles
 /// (mountains or dunes) plus a winding impassable crossing (river or dry

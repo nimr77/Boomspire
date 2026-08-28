@@ -7,7 +7,7 @@ import '../../../../generated/l10n.dart';
 import '../../../game_core/domain/models/game_difficulty.dart';
 import '../../../game_core/domain/models/game_scene.dart';
 import '../../../progress/domain/models/progress_snapshot.dart';
-import '../../../terrain/domain/models/biome.dart';
+import '../../../terrain/extensions/biome_extensions.dart';
 import '../biome_preview.dart';
 
 /// One campaign scene tile in the [LevelSelectPage] grid - live terrain

@@ -267,7 +267,6 @@ class _TowerActionPanelState extends State<TowerActionPanel> {
     UnitKind.heavySoldier => Icons.security,
     UnitKind.helicopter => Icons.airline_seat_recline_extra,
     UnitKind.attackPlane => Icons.flight_takeoff,
-    UnitKind.gunboat => Icons.directions_boat,
     UnitKind.artilleryBarrage => Icons.gps_fixed,
     UnitKind.antiTankSoldier => Icons.gps_fixed,
     UnitKind.antiAirSoldier => Icons.arrow_circle_up,

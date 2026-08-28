@@ -1,9 +1,13 @@
 import '../../../terrain/domain/models/biome.dart';
+import '../enums/game_mode.dart';
+import '../enums/home_layout.dart';
+import '../enums/home_site_owner.dart';
+import '../enums/spawn_layout.dart';
 
-/// Which game loop a scene plays: the original single-base wave survival,
-/// or a skirmish where every seat in [GameScene.homeSites] builds up and
-/// fights to destroy the others' homes.
-enum GameMode { waveDefense, skirmish }
+export '../enums/game_mode.dart';
+export '../enums/home_layout.dart';
+export '../enums/home_site_owner.dart';
+export '../enums/spawn_layout.dart';
 
 /// A playable scene: a terrain flavor (biome) paired with its own campaign
 /// length, opening strategy, and the shape of its base/attack layout. Each
@@ -114,9 +118,6 @@ class GameScene {
   };
 }
 
-/// Where a home base sits within the arena.
-enum HomeLayout { eastEdge, center, northEastCorner, southWestCorner }
-
 /// One buildable home site on a skirmish map - a scene lists one per team
 /// seat that can fight in that match.
 class HomeSite {
@@ -132,11 +133,6 @@ class HomeSite {
 
   Map<String, dynamic> toJson() => {'layout': layout.name, 'owner': owner.name};
 }
-
-/// Who claims a [HomeSite] once a [GameMode.skirmish] match starts - a
-/// future lobby/team-select screen assigns a real `Team` to every `player`
-/// seat (and, for now, a scripted opponent to every `ai` seat).
-enum HomeSiteOwner { player, ai }
 
 /// A capturable resource node's placement on a scene's map, as a fraction of
 /// the arena size (0,0 = top-left, 1,1 = bottom-right) so the same scene
@@ -154,16 +150,4 @@ class ResourceNodeSite {
       );
 
   Map<String, dynamic> toJson() => {'dx': dx, 'dy': dy};
-}
-
-/// How many directions enemies attack from, relative to the base.
-enum SpawnLayout {
-  /// A single approach, opposite the base.
-  single,
-
-  /// Two opposing approaches.
-  twoSided,
-
-  /// Every open edge around the base.
-  surround,
 }

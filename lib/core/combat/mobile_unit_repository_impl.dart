@@ -82,22 +82,6 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       movementStyle: MovementStyle.swoop,
       weaponType: WeaponType.rocket,
     ),
-    UnitKind.gunboat: MobileUnitBlueprint(
-      kind: UnitKind.gunboat,
-      name: 'Gunboat',
-      maxHealth: 340,
-      speed: 30,
-      bounty: 55,
-      size: 58,
-      domain: UnitDomain.sea,
-      attackDomains: {UnitDomain.ground, UnitDomain.sea},
-      isVehicle: true,
-      attackDamage: 18,
-      attackRange: 210,
-      attackInterval: 1.8,
-      movementStyle: MovementStyle.sail,
-      weaponType: WeaponType.cannon,
-    ),
     // New: a slow, long-range siege unit that heads for the nearest tower
     // and shells it rather than rushing the base - see
     // `MobileUnitBlueprint.prefersStructures`. Fires its whole 3-rocket

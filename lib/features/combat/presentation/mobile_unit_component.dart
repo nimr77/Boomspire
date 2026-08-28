@@ -203,7 +203,7 @@ class MobileUnitComponent extends PositionComponent
   /// [blueprint.kind] - prefers the factory matching [team]'s relation to
   /// the player, falling back to the other one for a kind that was only
   /// ever painted for one side (e.g. a player-built Helicopter, or an
-  /// invader-only Gunboat).
+  /// invader-only Attack Plane).
   Future<Sprite> buildSprite() {
     final kind = blueprint.kind;
     final alliedWithPlayer =

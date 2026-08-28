@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../map_editor/domain/models/map_draft.dart';
-import '../../../terrain/domain/models/biome.dart';
+import '../../../terrain/extensions/biome_extensions.dart';
 
 /// One user-authored skirmish [MapDraft] row in [SkirmishLevelSelectPage]'s
 /// "Custom Maps" list - name, biome, home-site count, tap to place & play.

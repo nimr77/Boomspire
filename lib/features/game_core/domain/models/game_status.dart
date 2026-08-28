@@ -1,1 +1,1 @@
-enum GameStatus { playing, gameOver, victory }
+export '../enums/game_status.dart';

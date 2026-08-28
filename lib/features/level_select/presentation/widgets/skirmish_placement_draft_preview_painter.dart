@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../map_editor/domain/models/editor_terrain_preview.dart';
-import '../../../terrain/domain/models/biome.dart';
+import '../../../terrain/extensions/biome_extensions.dart';
 import '../../../terrain/presentation/obstacle_color.dart';
 
 /// Lightweight read-only terrain preview (biome gradient + rasterized

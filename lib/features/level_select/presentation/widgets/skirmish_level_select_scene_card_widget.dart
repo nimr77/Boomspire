@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/routes.dart';
 import '../../../game_core/domain/models/game_scene.dart';
-import '../../../terrain/domain/models/biome.dart';
+import '../../../terrain/extensions/biome_extensions.dart';
 import '../biome_preview.dart';
 
 /// A featured skirmish scene tile in [SkirmishLevelSelectPage] - live

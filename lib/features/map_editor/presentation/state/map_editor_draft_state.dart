@@ -11,6 +11,7 @@ import '../../../terrain/domain/models/biome.dart';
 import '../../../terrain/domain/models/obstacle_kind.dart';
 import '../../../waves/domain/models/wave_loadout.dart';
 import '../../../waves/impl/wave_loadout_generator.dart';
+import '../../domain/enums/editor_tool.dart';
 import '../../domain/models/editor_point.dart';
 import '../../domain/models/editor_terrain_preview.dart';
 import '../../domain/models/environment_settings.dart';
@@ -21,24 +22,7 @@ import '../../domain/models/weather_keyframe.dart';
 import '../../impl/editor_terrain_generator.dart';
 import 'map_editor_notice.dart';
 
-/// Brush/placement tool the canvas gestures are currently dispatched to.
-enum EditorTool {
-  mountain,
-  dune,
-  erase,
-  river,
-  lake,
-  homeSite;
-
-  String get label => switch (this) {
-    EditorTool.mountain => S.current.mountainLabelEditorPage,
-    EditorTool.dune => S.current.duneLabelEditorPage,
-    EditorTool.erase => S.current.eraseLabelEditorPage,
-    EditorTool.river => S.current.riverLabelEditorPage,
-    EditorTool.lake => S.current.lakeLabelEditorPage,
-    EditorTool.homeSite => S.current.homeLabelEditorPage,
-  };
-}
+export '../../domain/enums/editor_tool.dart';
 
 /// Owns the map editor's draft-editing flow: the [MapDraft] itself, its
 /// live terrain preview, brush selection, in-progress stroke, wave being

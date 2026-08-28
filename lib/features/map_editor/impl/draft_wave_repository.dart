@@ -11,7 +11,6 @@ const Map<UnitKind, double> _intervalFor = {
   UnitKind.soldier: 0.8,
   UnitKind.heavySoldier: 1.3,
   UnitKind.helicopter: 1.7,
-  UnitKind.gunboat: 2.0,
   UnitKind.tank: 2.0,
   UnitKind.attackPlane: 1.9,
   UnitKind.lightVehicle: 1.6,
