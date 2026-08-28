@@ -9,6 +9,7 @@ import 'package:flutter/material.dart' show Color;
 import '../../../core/combat/attackable.dart';
 import '../../../core/combat/mobile_unit_repository.dart';
 import '../../../core/combat/team.dart';
+import '../../../core/rendering/domain/repos/unit_render_repository.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
 import '../../audio/domain/models/sfx_type.dart';
@@ -25,20 +26,9 @@ import '../../towers/domain/models/unit_blueprint.dart';
 import '../../towers/domain/models/unit_type.dart';
 import '../../towers/domain/repos/building_repository.dart';
 import '../../towers/domain/repos/tower_repository.dart';
-import '../../towers/presentation/anti_air_tower_component.dart';
-import '../../towers/presentation/artillery_bunker_component.dart';
-import '../../towers/presentation/cannon_tower_component.dart';
-import '../../towers/presentation/command_post_component.dart';
 import '../../towers/presentation/gold_mine_component.dart';
-import '../../towers/presentation/laser_tower_component.dart';
-import '../../towers/presentation/machine_gun_tower_component.dart';
-import '../../towers/presentation/rocket_silo_tower_component.dart';
-import '../../towers/presentation/rocket_tower_component.dart';
-import '../../towers/presentation/sam_tower_component.dart';
-import '../../towers/presentation/tech_lab_component.dart';
+import '../../towers/presentation/structure_factory_registry.dart';
 import '../../towers/presentation/tower_component.dart';
-import '../../towers/presentation/training_center_component.dart';
-import '../../towers/presentation/war_factory_component.dart';
 import '../../waves/domain/repos/wave_repository.dart';
 import '../../waves/presentation/wave_director_component.dart';
 import '../domain/models/ai_economy.dart';
@@ -72,6 +62,7 @@ class BoomspireGame extends FlameGame<GameWorld>
   final MobileUnitRepository unitRepository;
   final WaveRepository waveRepository;
   final AudioRepository audioRepository;
+  final UnitRenderRepository unitRenderRepository;
   final GameStateRepository gameState;
   final AiDirectorRepository aiDirector;
   final GameScene scene;
@@ -155,6 +146,7 @@ class BoomspireGame extends FlameGame<GameWorld>
     required this.unitRepository,
     required this.waveRepository,
     required this.audioRepository,
+    required this.unitRenderRepository,
     required this.gameState,
     required this.aiDirector,
     required this.scene,
@@ -356,74 +348,12 @@ class BoomspireGame extends FlameGame<GameWorld>
     UnitBlueprint blueprint, {
     Team? owner,
   }) {
-    final tower = switch (type) {
-      TowerType.machineGun => MachineGunTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.rocket => RocketTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.cannon => CannonTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.antiAir => AntiAirTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.laser => LaserTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.rocketSilo => RocketSiloTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.artilleryBunker => ArtilleryBunkerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      TowerType.sam => SamTowerComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.techLab => TechLabComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.commandPost => CommandPostComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.trainingCenter => TrainingCenterComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.warFactory => WarFactoryComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      BuildingType.goldMine => GoldMineComponent(
-        position: position,
-        cellSize: cellSize,
-        blueprint: blueprint,
-      ),
-      _ => throw ArgumentError('Unknown unit type: $type'),
-    };
+    final tower = StructureFactoryRegistry.create(
+      type,
+      position: position,
+      cellSize: cellSize,
+      blueprint: blueprint,
+    );
     tower.owner = owner ?? playerTeam;
     return tower;
   }

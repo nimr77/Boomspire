@@ -8,7 +8,6 @@ import 'package:flutter/animation.dart' show Curves;
 import '../../../core/combat/attackable.dart';
 import '../../../core/combat/team.dart';
 import '../../../core/combat/unit.dart';
-import '../../../core/rendering/model_loader.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/explosion_component.dart';
 import '../../combat/presentation/fire_pulse_component.dart';
@@ -232,7 +231,7 @@ abstract class TowerComponent extends PositionComponent
     col = cell.x;
     row = cell.y;
 
-    final baseSprite = await ModelLoader.loadOrFallback(
+    final baseSprite = await game.unitRenderRepository.render(
       key: 'tower_${blueprint.type.name}',
       size: size,
       fallback: () async => SpriteComponent(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../core/combat/unit_kind.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../generated/l10n.dart';
 import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../../theme/app_theme/app_theme_paddings.dart';
@@ -15,6 +16,7 @@ import '../../../towers/presentation/training_center_component.dart';
 import '../../../towers/presentation/war_factory_component.dart';
 import '../../domain/models/inspected_info.dart';
 import '../boomspire_game.dart';
+import '../state/game_core_production_state.dart';
 import 'game_core_entity_panel_shell_widget.dart';
 import 'game_core_tower_action_button_widget.dart';
 import 'game_core_tower_action_stat_chip_widget.dart';
@@ -40,6 +42,7 @@ class GameCoreEntityPanelWidget extends StatefulWidget {
 class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
   Timer? _pollTimer;
   final ValueNotifier<int> _tick = ValueNotifier(0);
+  late final GameCoreProductionState _productionState;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +85,7 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
   @override
   void initState() {
     super.initState();
+    _productionState = getIt<GameCoreProductionState>();
     // A tower's HP and a unit's health both change continuously from
     // combat (Flame components, not Listenables) - poll at a modest rate
     // so the card stays live without wiring a full ChangeNotifier through
@@ -266,38 +270,16 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
   }
 
   List<Widget> _produceButtons(BoomspireGame game, TowerComponent tower) {
-    final gold = game.gameState.gold;
-    final bool ready;
-    final Iterable<UnitKind> kinds;
-    final int Function(UnitKind) costFor;
-    final double cooldownRemaining;
-    final void Function(UnitKind) produceUnit;
-    if (tower is TrainingCenterComponent) {
-      ready = tower.canProduce;
-      kinds = TrainingCenterComponent.producibleKinds;
-      costFor = tower.costFor;
-      cooldownRemaining = tower.cooldownRemaining;
-      produceUnit = tower.produceUnit;
-    } else {
-      final factory = tower as WarFactoryComponent;
-      ready = factory.canProduce;
-      kinds = game.unitRepository
-          .kindsFor(game.playerTeam)
-          .where(
-            (type) => !TrainingCenterComponent.producibleKinds.contains(type),
-          );
-      costFor = factory.costFor;
-      cooldownRemaining = factory.cooldownRemaining;
-      produceUnit = factory.produceUnit;
-    }
     return [
-      for (final kind in kinds)
+      for (final option in _productionState.optionsFor(game, tower))
         GameCoreTowerActionButtonWidget(
-          icon: _unitIcon(kind),
-          label: ready ? '${costFor(kind)}g' : '${cooldownRemaining.ceil()}s',
+          icon: _unitIcon(option.kind),
+          label: option.ready
+              ? '${option.cost}g'
+              : '${option.cooldownRemaining.ceil()}s',
           color: AppThemeColors.accentEmerald,
-          enabled: ready && gold >= costFor(kind),
-          onTap: () => produceUnit(kind),
+          enabled: option.affordable,
+          onTap: () => _productionState.produce(tower, option.kind),
         ),
     ];
   }

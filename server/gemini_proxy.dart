@@ -149,7 +149,7 @@ aggression: 0 = stockpile gold and turtle, 1 = spend gold immediately on attack 
 Future<void> _handle(HttpRequest request, String? apiKey) async {
   request.response.headers
     ..set('Access-Control-Allow-Origin', '*')
-    ..set('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    ..set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     ..set('Access-Control-Allow-Headers', 'Content-Type');
 
   if (request.method == 'OPTIONS') {
@@ -160,6 +160,11 @@ Future<void> _handle(HttpRequest request, String? apiKey) async {
 
   if (request.method == 'POST' && request.uri.path == '/skirmish') {
     await _handleSkirmish(request, apiKey);
+    return;
+  }
+
+  if (request.method == 'GET' && request.uri.path == '/content-manifest') {
+    await _handleContentManifest(request);
     return;
   }
 
@@ -221,6 +226,25 @@ Future<void> _handleSkirmish(HttpRequest request, String? apiKey) async {
   } finally {
     await request.response.close();
   }
+}
+
+/// Serves the versioned game-object manifest straight from disk - a plain
+/// JSON file for now (see `tool/generate_content_manifest.dart`), until a
+/// real database backs it.
+Future<void> _handleContentManifest(HttpRequest request) async {
+  final scriptDir = File(Platform.script.toFilePath()).parent;
+  final file = File('${scriptDir.path}/content_manifest.json');
+  if (!file.existsSync()) {
+    request.response.statusCode = HttpStatus.notFound;
+    await request.response.close();
+    return;
+  }
+
+  request.response
+    ..statusCode = HttpStatus.ok
+    ..headers.contentType = ContentType.json
+    ..write(await file.readAsString());
+  await request.response.close();
 }
 
 /// Minimal KEY=VALUE parser for `server/.env`, resolved relative to this

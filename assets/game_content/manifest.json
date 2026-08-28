@@ -1,0 +1,1021 @@
+[
+  {
+    "id": "tower.machineGun",
+    "version": 1,
+    "category": "tower",
+    "damage": 7.0,
+    "weaponType": "bullet",
+    "fireRate": 0.15,
+    "range": 150.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 90.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "sea"
+    ],
+    "cost": 100,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "tower_machineGun",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "tower.rocket",
+    "version": 1,
+    "category": "tower",
+    "damage": 60.0,
+    "weaponType": "bullet",
+    "fireRate": 1.7,
+    "range": 230.0,
+    "minRange": 0.0,
+    "splashRadius": 75.0,
+    "maxHp": 120.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "sea"
+    ],
+    "cost": 250,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "tower_rocket",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "tower.cannon",
+    "version": 1,
+    "category": "tower",
+    "damage": 95.0,
+    "weaponType": "bullet",
+    "fireRate": 2.4,
+    "range": 260.0,
+    "minRange": 0.0,
+    "splashRadius": 55.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "sea"
+    ],
+    "cost": 300,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "tower_cannon",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "tower.antiAir",
+    "version": 1,
+    "category": "tower",
+    "damage": 26.0,
+    "weaponType": "bullet",
+    "fireRate": 0.5,
+    "range": 300.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 100.0,
+    "domain": "ground",
+    "attackDomains": [
+      "air"
+    ],
+    "cost": 150,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "tower_antiAir",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "tower.laser",
+    "version": 1,
+    "category": "tower",
+    "damage": 14.0,
+    "weaponType": "bullet",
+    "fireRate": 0.08,
+    "range": 210.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 60.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "air",
+      "sea"
+    ],
+    "cost": 1000,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [
+      {
+        "kind": "buildingExists",
+        "buildingId": "building.techLab",
+        "minCount": 1
+      }
+    ],
+    "asset": {
+      "modelKey": "tower_laser",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "tower.rocketSilo",
+    "version": 1,
+    "category": "tower",
+    "damage": 90.0,
+    "weaponType": "bullet",
+    "fireRate": 4.5,
+    "range": 450.0,
+    "minRange": 130.0,
+    "splashRadius": 90.0,
+    "maxHp": 150.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "sea"
+    ],
+    "cost": 500,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [
+      {
+        "kind": "buildingExists",
+        "buildingId": "building.techLab",
+        "minCount": 1
+      },
+      {
+        "kind": "buildingExists",
+        "buildingId": "building.commandPost",
+        "minCount": 1
+      }
+    ],
+    "asset": {
+      "modelKey": "tower_rocketSilo",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "tower.artilleryBunker",
+    "version": 1,
+    "category": "tower",
+    "damage": 70.0,
+    "weaponType": "bullet",
+    "fireRate": 1.4,
+    "range": 300.0,
+    "minRange": 0.0,
+    "splashRadius": 40.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "sea"
+    ],
+    "cost": 800,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [
+      {
+        "kind": "buildingExists",
+        "buildingId": "building.commandPost",
+        "minCount": 1
+      }
+    ],
+    "asset": {
+      "modelKey": "tower_artilleryBunker",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "tower.sam",
+    "version": 1,
+    "category": "tower",
+    "damage": 48.0,
+    "weaponType": "bullet",
+    "fireRate": 1.3,
+    "range": 400.0,
+    "minRange": 0.0,
+    "splashRadius": 20.0,
+    "maxHp": 40.0,
+    "domain": "ground",
+    "attackDomains": [
+      "air"
+    ],
+    "cost": 900,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [
+      {
+        "kind": "buildingExists",
+        "buildingId": "building.techLab",
+        "minCount": 1
+      },
+      {
+        "kind": "buildingExists",
+        "buildingId": "building.commandPost",
+        "minCount": 1
+      }
+    ],
+    "asset": {
+      "modelKey": "tower_sam",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "building.techLab",
+    "version": 1,
+    "category": "building",
+    "damage": 0.0,
+    "weaponType": "bullet",
+    "fireRate": 1.0,
+    "range": 0.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 500,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "building_techLab",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "building.commandPost",
+    "version": 1,
+    "category": "building",
+    "damage": 0.0,
+    "weaponType": "bullet",
+    "fireRate": 1.0,
+    "range": 0.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 600,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "building_commandPost",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "building.trainingCenter",
+    "version": 1,
+    "category": "building",
+    "damage": 0.0,
+    "weaponType": "bullet",
+    "fireRate": 1.0,
+    "range": 0.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 550,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [
+      "unit.buildable.soldier",
+      "unit.buildable.antiTankSoldier",
+      "unit.buildable.antiAirSoldier"
+    ],
+    "requirements": [
+      {
+        "kind": "score",
+        "minScore": 250
+      }
+    ],
+    "asset": {
+      "modelKey": "building_trainingCenter",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "building.warFactory",
+    "version": 1,
+    "category": "building",
+    "damage": 0.0,
+    "weaponType": "bullet",
+    "fireRate": 1.0,
+    "range": 0.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 700,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [
+      "unit.buildable.tank",
+      "unit.buildable.lightVehicle",
+      "unit.buildable.aircraft",
+      "unit.buildable.rocketBarrage"
+    ],
+    "requirements": [
+      {
+        "kind": "score",
+        "minScore": 500
+      }
+    ],
+    "asset": {
+      "modelKey": "building_warFactory",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "building.goldMine",
+    "version": 1,
+    "category": "building",
+    "damage": 0.0,
+    "weaponType": "bullet",
+    "fireRate": 1.0,
+    "range": 0.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 250,
+    "speed": 0.0,
+    "size": 0.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 0,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "building_goldMine",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.invader.soldier",
+    "version": 1,
+    "category": "unit",
+    "damage": 4.0,
+    "weaponType": "bullet",
+    "fireRate": 1.1,
+    "range": 130.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 45.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 0,
+    "speed": 70.0,
+    "size": 34.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 12,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_soldier",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.invader.heavySoldier",
+    "version": 1,
+    "category": "unit",
+    "damage": 10.0,
+    "weaponType": "cannon",
+    "fireRate": 1.4,
+    "range": 140.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 150.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 0,
+    "speed": 40.0,
+    "size": 46.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 30,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_heavySoldier",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.invader.helicopter",
+    "version": 1,
+    "category": "unit",
+    "damage": 6.0,
+    "weaponType": "rocket",
+    "fireRate": 0.9,
+    "range": 160.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 60.0,
+    "domain": "air",
+    "attackDomains": [
+      "ground",
+      "air"
+    ],
+    "cost": 0,
+    "speed": 95.0,
+    "size": 38.0,
+    "projectileCount": 1,
+    "movementStyle": "hover",
+    "isVehicle": true,
+    "bounty": 22,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_helicopter",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.invader.tank",
+    "version": 1,
+    "category": "unit",
+    "damage": 20.0,
+    "weaponType": "cannon",
+    "fireRate": 1.5,
+    "range": 160.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 360.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 0,
+    "speed": 30.0,
+    "size": 50.0,
+    "projectileCount": 1,
+    "movementStyle": "roll",
+    "isVehicle": true,
+    "bounty": 60,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_tank",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.invader.attackPlane",
+    "version": 1,
+    "category": "unit",
+    "damage": 45.0,
+    "weaponType": "rocket",
+    "fireRate": 0.7,
+    "range": 180.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 65.0,
+    "domain": "air",
+    "attackDomains": [
+      "ground",
+      "air"
+    ],
+    "cost": 0,
+    "speed": 230.0,
+    "size": 40.0,
+    "projectileCount": 1,
+    "movementStyle": "swoop",
+    "isVehicle": true,
+    "bounty": 40,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_attackPlane",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.invader.artilleryBarrage",
+    "version": 1,
+    "category": "unit",
+    "damage": 40.0,
+    "weaponType": "rocket",
+    "fireRate": 2.4,
+    "range": 260.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 200.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 0,
+    "speed": 26.0,
+    "size": 52.0,
+    "projectileCount": 3,
+    "movementStyle": "roll",
+    "isVehicle": true,
+    "bounty": 70,
+    "prefersStructures": true,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_artilleryBarrage",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.invader.rocketBarrage",
+    "version": 1,
+    "category": "unit",
+    "damage": 30.0,
+    "weaponType": "rocket",
+    "fireRate": 2.0,
+    "range": 240.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 180.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "air"
+    ],
+    "cost": 0,
+    "speed": 34.0,
+    "size": 50.0,
+    "projectileCount": 1,
+    "movementStyle": "roll",
+    "isVehicle": true,
+    "bounty": 65,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_rocketBarrage",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.invader.antiAirVehicle",
+    "version": 1,
+    "category": "unit",
+    "damage": 9.0,
+    "weaponType": "cannon",
+    "fireRate": 1.0,
+    "range": 210.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 160.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "air"
+    ],
+    "cost": 0,
+    "speed": 45.0,
+    "size": 46.0,
+    "projectileCount": 2,
+    "movementStyle": "roll",
+    "isVehicle": true,
+    "bounty": 48,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_antiAirVehicle",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.buildable.soldier",
+    "version": 1,
+    "category": "unit",
+    "damage": 4.0,
+    "weaponType": "bullet",
+    "fireRate": 1.0,
+    "range": 130.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 40.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 40,
+    "speed": 78.0,
+    "size": 34.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 15,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_soldier",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.buildable.tank",
+    "version": 1,
+    "category": "unit",
+    "damage": 16.0,
+    "weaponType": "cannon",
+    "fireRate": 1.6,
+    "range": 170.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 170.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 150,
+    "speed": 34.0,
+    "size": 50.0,
+    "projectileCount": 1,
+    "movementStyle": "roll",
+    "isVehicle": true,
+    "bounty": 55,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_tank",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.buildable.lightVehicle",
+    "version": 1,
+    "category": "unit",
+    "damage": 8.0,
+    "weaponType": "rocket",
+    "fireRate": 0.8,
+    "range": 150.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 80.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 90,
+    "speed": 96.0,
+    "size": 38.0,
+    "projectileCount": 1,
+    "movementStyle": "roll",
+    "isVehicle": true,
+    "bounty": 35,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_lightVehicle",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.buildable.aircraft",
+    "version": 1,
+    "category": "unit",
+    "damage": 10.0,
+    "weaponType": "rocket",
+    "fireRate": 0.9,
+    "range": 200.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 60.0,
+    "domain": "air",
+    "attackDomains": [
+      "ground",
+      "air"
+    ],
+    "cost": 120,
+    "speed": 130.0,
+    "size": 40.0,
+    "projectileCount": 1,
+    "movementStyle": "swoop",
+    "isVehicle": true,
+    "bounty": 45,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_aircraft",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.buildable.rocketBarrage",
+    "version": 1,
+    "category": "unit",
+    "damage": 22.0,
+    "weaponType": "rocket",
+    "fireRate": 1.6,
+    "range": 230.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 140.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "air"
+    ],
+    "cost": 220,
+    "speed": 30.0,
+    "size": 50.0,
+    "projectileCount": 1,
+    "movementStyle": "roll",
+    "isVehicle": true,
+    "bounty": 80,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_rocketBarrage",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.buildable.antiTankSoldier",
+    "version": 1,
+    "category": "unit",
+    "damage": 26.0,
+    "weaponType": "rocket",
+    "fireRate": 1.6,
+    "range": 150.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 50.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground"
+    ],
+    "cost": 70,
+    "speed": 60.0,
+    "size": 34.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 25,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_antiTankSoldier",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  },
+  {
+    "id": "unit.buildable.antiAirSoldier",
+    "version": 1,
+    "category": "unit",
+    "damage": 14.0,
+    "weaponType": "rocket",
+    "fireRate": 1.2,
+    "range": 190.0,
+    "minRange": 0.0,
+    "splashRadius": 0.0,
+    "maxHp": 45.0,
+    "domain": "ground",
+    "attackDomains": [
+      "ground",
+      "air"
+    ],
+    "cost": 65,
+    "speed": 65.0,
+    "size": 34.0,
+    "projectileCount": 1,
+    "movementStyle": "walk",
+    "isVehicle": false,
+    "bounty": 22,
+    "prefersStructures": false,
+    "producibleUnitIds": [],
+    "requirements": [],
+    "asset": {
+      "modelKey": "unit_antiAirSoldier",
+      "remoteUrl": null
+    },
+    "sound": {
+      "builtIn": null,
+      "remoteUrl": null
+    }
+  }
+]

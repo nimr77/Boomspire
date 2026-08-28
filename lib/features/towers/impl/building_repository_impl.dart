@@ -1,11 +1,21 @@
 import '../../../generated/l10n.dart';
+import '../../game_content/domain/models/game_object_definition.dart';
+import '../../game_content/impl/game_object_definition_mapper.dart';
 import '../domain/models/building_type.dart';
 import '../domain/models/unit_blueprint.dart';
 import '../domain/repos/building_repository.dart';
 
 class BuildingRepositoryImpl implements BuildingRepository {
+  /// Synced game-content overrides (see `GameContentSyncService`) - empty
+  /// by default, so every existing call site (including every test) gets
+  /// today's hardcoded stats unchanged unless a successful sync supplied
+  /// something newer.
+  final List<GameObjectDefinition> overrides;
+
+  BuildingRepositoryImpl({this.overrides = const []});
+
   @override
-  List<UnitBlueprint> get all => _blueprints.values.toList(growable: false);
+  List<UnitBlueprint> get all => _resolvedBlueprints.values.toList(growable: false);
 
   Map<BuildingType, UnitBlueprint> get _blueprints =>
       <BuildingType, UnitBlueprint>{
@@ -56,6 +66,17 @@ class BuildingRepositoryImpl implements BuildingRepository {
         ),
       };
 
+  Map<BuildingType, UnitBlueprint> get _resolvedBlueprints {
+    final blueprints = _blueprints;
+    for (final type in BuildingType.values) {
+      final override = findOverride(overrides, buildingDefinitionId(type));
+      if (override != null) {
+        blueprints[type] = applyBuildingOverride(blueprints[type]!, override);
+      }
+    }
+    return blueprints;
+  }
+
   @override
-  UnitBlueprint blueprintFor(BuildingType type) => _blueprints[type]!;
+  UnitBlueprint blueprintFor(BuildingType type) => _resolvedBlueprints[type]!;
 }

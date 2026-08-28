@@ -1,3 +1,5 @@
+import '../../features/game_content/domain/models/game_object_definition.dart';
+import '../../features/game_content/impl/game_object_definition_mapper.dart';
 import 'mobile_unit_blueprint.dart';
 import 'mobile_unit_repository.dart';
 import 'movement_style.dart';
@@ -7,6 +9,14 @@ import 'unit_kind.dart';
 import 'weapon_type.dart';
 
 class MobileUnitRepositoryImpl implements MobileUnitRepository {
+  /// Synced game-content overrides (see `GameContentSyncService`) - empty
+  /// by default, so every existing call site (including every test) gets
+  /// today's hardcoded stats unchanged unless a successful sync supplied
+  /// something newer.
+  final List<GameObjectDefinition> overrides;
+
+  MobileUnitRepositoryImpl({this.overrides = const []});
+
   // Keyed by `isEnemy` rather than a specific Team instance, since any
   // number of human player Teams (future multiplayer seats) all draw from
   // the exact same "player" roster/stats - only their `Team.color` differs.
@@ -261,7 +271,11 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
     if (blueprint == null) {
       throw ArgumentError('$kind is not available to ${team.id}');
     }
-    return blueprint;
+    final override = findOverride(
+      overrides,
+      unitDefinitionId(team.catalog, kind.name),
+    );
+    return override == null ? blueprint : applyMobileUnitOverride(blueprint, override);
   }
 
   @override

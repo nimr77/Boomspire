@@ -8,6 +8,7 @@ import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import '../../../core/combat/mobile_unit_repository.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/rendering/domain/repos/unit_render_repository.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
 import '../../../theme/app_theme/app_theme_colors.dart';
@@ -220,6 +221,7 @@ class _GamePageState extends State<GamePage> {
             param2: widget.scene.biome,
           ),
       audioRepository: getIt<AudioRepository>(),
+      unitRenderRepository: getIt<UnitRenderRepository>(),
       gameState: _gameState,
       aiDirector: getIt<AiDirectorRepository>(),
       scene: widget.scene,

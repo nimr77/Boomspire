@@ -26,10 +26,15 @@ repo-specific conventions:
 
 - Default art is **procedural** (`core/rendering/procedural_image.dart` +
   per-feature `*_sprites.dart` factories) - no bundled binary art assets.
-- Optional animated models: `core/rendering/model_loader.dart` transparently
-  swaps in a Rive (`.riv`) or Lottie (`.json`) file from `assets/models/`
-  if present, falling back to procedural sprites otherwise. Don't invent or
-  fetch third-party binary asset files - only wire the loading plumbing.
+- Optional animated models: `UnitRenderRepository`
+  (`core/rendering/domain/repos/`), implemented by
+  `CompositeUnitRenderRepositoryImpl` (`core/rendering/impl/`),
+  transparently swaps in a Rive (`.riv`) or Lottie (`.json`) file from
+  `assets/models/` if present, falling back to the caller-supplied
+  procedural sprite otherwise. `tool/lottie_gen/` generates the Lottie
+  files by porting the procedural paint recipes - see
+  `assets/models/README.md`. Don't invent or fetch third-party binary
+  asset files by hand - only the loading/generation plumbing is provided.
 
 ## Audio
 

@@ -17,7 +17,6 @@ import '../../../core/combat/unit_kind.dart';
 import '../../../core/combat/unit_objective.dart';
 import '../../../core/combat/weapon_type.dart';
 import '../../../core/pathfinding/astar.dart';
-import '../../../core/rendering/model_loader.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../allies/presentation/ally_sprites.dart';
 import '../../audio/domain/models/sfx_type.dart';
@@ -423,7 +422,7 @@ class MobileUnitComponent extends PositionComponent
 
     final alliedWithPlayer =
         team.relationTo(game.playerTeam) == TeamRelation.ally;
-    _visual = await ModelLoader.loadOrFallback(
+    _visual = await game.unitRenderRepository.render(
       key: '${alliedWithPlayer ? 'ally' : 'enemy'}_${blueprint.kind.name}',
       size: size,
       fallback: () async => SpriteComponent(

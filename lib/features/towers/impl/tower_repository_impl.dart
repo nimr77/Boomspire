@@ -1,12 +1,22 @@
 import '../../../core/combat/unit.dart';
 import '../../../generated/l10n.dart';
+import '../../game_content/domain/models/game_object_definition.dart';
+import '../../game_content/impl/game_object_definition_mapper.dart';
 import '../domain/models/tower_type.dart';
 import '../domain/models/unit_blueprint.dart';
 import '../domain/repos/tower_repository.dart';
 
 class TowerRepositoryImpl implements TowerRepository {
+  /// Synced game-content overrides (see `GameContentSyncService`) - empty by
+  /// default, so every existing call site (including every test) gets
+  /// today's hardcoded stats unchanged unless a successful sync supplied
+  /// something newer.
+  final List<GameObjectDefinition> overrides;
+
+  TowerRepositoryImpl({this.overrides = const []});
+
   @override
-  List<UnitBlueprint> get all => _blueprints.values.toList(growable: false);
+  List<UnitBlueprint> get all => _resolvedBlueprints.values.toList(growable: false);
 
   Map<TowerType, UnitBlueprint> get _blueprints => <TowerType, UnitBlueprint>{
     TowerType.machineGun: UnitBlueprint(
@@ -105,6 +115,17 @@ class TowerRepositoryImpl implements TowerRepository {
     ),
   };
 
+  Map<TowerType, UnitBlueprint> get _resolvedBlueprints {
+    final blueprints = _blueprints;
+    for (final type in TowerType.values) {
+      final override = findOverride(overrides, towerDefinitionId(type));
+      if (override != null) {
+        blueprints[type] = applyTowerOverride(blueprints[type]!, override);
+      }
+    }
+    return blueprints;
+  }
+
   @override
-  UnitBlueprint blueprintFor(TowerType type) => _blueprints[type]!;
+  UnitBlueprint blueprintFor(TowerType type) => _resolvedBlueprints[type]!;
 }

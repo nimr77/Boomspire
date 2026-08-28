@@ -9,6 +9,8 @@ import '../../features/audio/domain/repos/audio_repository.dart';
 import '../../features/audio/impl/audio_repository_impl.dart';
 import '../../features/game_core/domain/repos/game_state_repository.dart';
 import '../../features/game_core/impl/game_state_repository_impl.dart';
+import '../../features/game_content/domain/models/game_object_definition.dart';
+import '../../features/game_core/presentation/state/game_core_production_state.dart';
 import '../../features/map_editor/domain/repos/map_draft_repository.dart';
 import '../../features/map_editor/impl/local_map_draft_repository_impl.dart';
 import '../../features/progress/domain/repos/progress_repository.dart';
@@ -24,6 +26,8 @@ import '../../features/waves/domain/repos/wave_repository.dart';
 import '../../features/waves/impl/wave_repository_impl.dart';
 import '../combat/mobile_unit_repository.dart';
 import '../combat/mobile_unit_repository_impl.dart';
+import '../rendering/domain/repos/unit_render_repository.dart';
+import '../rendering/impl/composite_unit_render_repository_impl.dart';
 
 /// App-wide service locator - the single composition root for every
 /// repository. Call [setupServiceLocator] once, before `runApp`.
@@ -31,7 +35,14 @@ final GetIt getIt = GetIt.instance;
 
 /// Registers every repository binding. Idempotent: a second call (e.g. a
 /// widget test that pumps the app more than once) is a no-op.
-void setupServiceLocator() {
+///
+/// [gameContentOverrides] is whatever `GameContentSyncService` resolved at
+/// boot (empty by default - no sync has happened, e.g. every existing
+/// test), layered on top of `TowerRepositoryImpl`/`BuildingRepositoryImpl`/
+/// `MobileUnitRepositoryImpl`'s own hardcoded fallback stats.
+void setupServiceLocator({
+  List<GameObjectDefinition> gameContentOverrides = const [],
+}) {
   if (getIt.isRegistered<AccountRepository>()) return;
 
   // Stateless/shared services - one instance for the whole app lifetime.
@@ -47,16 +58,26 @@ void setupServiceLocator() {
     ..registerLazySingleton<AccountProfileState>(
       () => AccountProfileState(getIt<AccountRepository>()),
     )
+    ..registerLazySingleton<GameCoreProductionState>(
+      () => GameCoreProductionState(),
+    )
     ..registerLazySingleton<MapDraftRepository>(
       () => LocalMapDraftRepositoryImpl(),
     )
     ..registerLazySingleton<TerrainRepository>(() => TerrainRepositoryImpl())
-    ..registerLazySingleton<TowerRepository>(() => TowerRepositoryImpl())
-    ..registerLazySingleton<BuildingRepository>(() => BuildingRepositoryImpl())
+    ..registerLazySingleton<TowerRepository>(
+      () => TowerRepositoryImpl(overrides: gameContentOverrides),
+    )
+    ..registerLazySingleton<BuildingRepository>(
+      () => BuildingRepositoryImpl(overrides: gameContentOverrides),
+    )
     ..registerLazySingleton<MobileUnitRepository>(
-      () => MobileUnitRepositoryImpl(),
+      () => MobileUnitRepositoryImpl(overrides: gameContentOverrides),
     )
     ..registerLazySingleton<AudioRepository>(() => AudioRepositoryImpl())
+    ..registerLazySingleton<UnitRenderRepository>(
+      () => CompositeUnitRenderRepositoryImpl(),
+    )
     ..registerLazySingleton<AiDirectorRepository>(
       () => AiDirectorRepositoryImpl(),
     )
