@@ -135,6 +135,21 @@ class WaveDirectorComponent extends Component
     );
   }
 
+  /// Entry points at least [_minHomeDistanceCells] cells from the player's
+  /// home base - keeps the AI from ever spawning right on top of the base
+  /// it's supposed to be rushing. Falls back to every entry point if the
+  /// home base isn't up yet or none clear the distance (small maps).
+  List<PathPoint> _eligibleSpawnPoints() {
+    final home = game.world.playerHomeBase?.position;
+    final allPoints = List.of(game.terrainMap.spawnPoints);
+    if (home == null) return allPoints;
+    final minDistance = game.terrainMap.grid.cellSize * _minHomeDistanceCells;
+    final far = allPoints.where((p) {
+      return Vector2(p.x, p.y).distanceTo(home) >= minDistance;
+    }).toList();
+    return far.isEmpty ? allPoints : far;
+  }
+
   void _finishWave() {
     _waveActive = false;
     final cleared = game.gameState.currentWave;
@@ -224,21 +239,6 @@ class WaveDirectorComponent extends Component
       }
     }
     return queue;
-  }
-
-  /// Entry points at least [_minHomeDistanceCells] cells from the player's
-  /// home base - keeps the AI from ever spawning right on top of the base
-  /// it's supposed to be rushing. Falls back to every entry point if the
-  /// home base isn't up yet or none clear the distance (small maps).
-  List<PathPoint> _eligibleSpawnPoints() {
-    final home = game.world.playerHomeBase?.position;
-    final allPoints = List.of(game.terrainMap.spawnPoints);
-    if (home == null) return allPoints;
-    final minDistance = game.terrainMap.grid.cellSize * _minHomeDistanceCells;
-    final far = allPoints.where((p) {
-      return Vector2(p.x, p.y).distanceTo(home) >= minDistance;
-    }).toList();
-    return far.isEmpty ? allPoints : far;
   }
 
   /// True once [_maxUnitsPerSpawnPoint] invaders spawned from this run are
