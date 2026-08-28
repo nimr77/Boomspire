@@ -5,14 +5,6 @@ import 'package:flame/components.dart';
 
 import '../domain/enums/biome.dart';
 
-WindStyle? _windStyleFor(Biome biome) => switch (biome) {
-  Biome.grassPlains || Biome.savanna => WindStyle.grass,
-  Biome.mountainForest => WindStyle.autumn,
-  Biome.snowTundra || Biome.frozenPeaks => WindStyle.snow,
-  Biome.desertDunes => WindStyle.sand,
-  Biome.cityRuins || Biome.sea => null,
-};
-
 // Leaf colors for [WindStyle.autumn] - a wider mixed autumn palette (gold,
 // olive green, burnt orange, brick red, maroon, umber) picked per-particle
 // so a gust reads as a real mixed-color leaf fall, not just 2-3 repeats.
@@ -24,6 +16,14 @@ const _autumnLeafColors = [
   ui.Color(0xFF8B3A2B),
   ui.Color(0xFFB8860B),
 ];
+
+WindStyle? _windStyleFor(Biome biome) => switch (biome) {
+  Biome.grassPlains || Biome.savanna => WindStyle.grass,
+  Biome.mountainForest => WindStyle.autumn,
+  Biome.snowTundra || Biome.frozenPeaks => WindStyle.snow,
+  Biome.desertDunes => WindStyle.sand,
+  Biome.cityRuins || Biome.sea => null,
+};
 
 /// Biome-flavored blown particles (grass clippings, snow flurries, blown
 /// sand, or tumbling autumn leaves) drifting sideways across the arena - a
@@ -130,8 +130,9 @@ class WindEffectComponent extends PositionComponent {
               height: leafSize,
             ),
             ui.Paint()
-              ..color = _autumnLeafColors[p.colorIndex]
-                  .withValues(alpha: p.opacity),
+              ..color = _autumnLeafColors[p.colorIndex].withValues(
+                alpha: p.opacity,
+              ),
           );
           canvas.restore();
       }
@@ -190,4 +191,3 @@ class _WindParticle {
     required this.colorIndex,
   });
 }
-
