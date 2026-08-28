@@ -146,6 +146,18 @@ class GameScenes {
       homeLayout: HomeLayout.southWestCorner,
       spawnLayout: SpawnLayout.surround,
     ),
+    GameScene(
+      id: 'amber-canopy',
+      name: 'Amber Canopy',
+      briefing:
+          'A steady wind strips the mountain canopy bare, filling the air '
+          'with a constant fall of gold, red and brown leaves.',
+      biome: Biome.mountainForest,
+      waveCount: 6,
+      aggressionBias: 0.05,
+      homeLayout: HomeLayout.eastEdge,
+      spawnLayout: SpawnLayout.single,
+    ),
   ];
 
   /// Skirmish scenes: home-vs-home matches where every seat in
@@ -206,6 +218,28 @@ class GameScenes {
           'Home against home across a wind-scoured dune field - stinging '
           'blown sand covers whichever side pushes out first.',
       biome: Biome.desertDunes,
+      mode: GameMode.skirmish,
+      startingGold: GameConfig.startingSkirmishGold,
+      homeSites: [
+        HomeSite(
+          layout: HomeLayout.southWestCorner,
+          owner: HomeSiteOwner.player,
+        ),
+        HomeSite(layout: HomeLayout.northEastCorner, owner: HomeSiteOwner.ai),
+      ],
+      resourceNodeSites: [
+        ResourceNodeSite(dx: 0.5, dy: 0.5),
+        ResourceNodeSite(dx: 0.25, dy: 0.7),
+        ResourceNodeSite(dx: 0.75, dy: 0.3),
+      ],
+    ),
+    GameScene(
+      id: 'russet-woods-duel',
+      name: 'Russet Woods Duel',
+      briefing:
+          'Home against home in a windblown mountain forest - drifting '
+          'autumn leaves cover the ground between the two camps.',
+      biome: Biome.mountainForest,
       mode: GameMode.skirmish,
       startingGold: GameConfig.startingSkirmishGold,
       homeSites: [

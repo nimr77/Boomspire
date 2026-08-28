@@ -154,6 +154,20 @@
     "version": 1
   },
   {
+    "id": "amber-canopy",
+    "name": "Amber Canopy",
+    "briefing": "A steady wind strips the mountain canopy bare, filling the air with a constant fall of gold, red and brown leaves.",
+    "biome": "mountainForest",
+    "mode": "waveDefense",
+    "waveCount": 6,
+    "aggressionBias": 0.05,
+    "homeLayout": "eastEdge",
+    "spawnLayout": "single",
+    "homeSites": [],
+    "resourceNodeSites": [],
+    "version": 1
+  },
+  {
     "id": "twin-outposts",
     "name": "Twin Outposts",
     "briefing": "Home against home across open grassland - build up and strike before the AI commander finishes theirs.",
@@ -202,6 +216,28 @@
     "name": "Dust Bowl Duel",
     "briefing": "Home against home across a wind-scoured dune field - stinging blown sand covers whichever side pushes out first.",
     "biome": "desertDunes",
+    "mode": "skirmish",
+    "waveCount": 0,
+    "aggressionBias": 0.0,
+    "homeLayout": "eastEdge",
+    "spawnLayout": "single",
+    "homeSites": [
+      { "layout": "southWestCorner", "owner": "player" },
+      { "layout": "northEastCorner", "owner": "ai" }
+    ],
+    "resourceNodeSites": [
+      { "dx": 0.5, "dy": 0.5 },
+      { "dx": 0.25, "dy": 0.7 },
+      { "dx": 0.75, "dy": 0.3 }
+    ],
+    "startingGold": 3000,
+    "version": 1
+  },
+  {
+    "id": "russet-woods-duel",
+    "name": "Russet Woods Duel",
+    "briefing": "Home against home in a windblown mountain forest - drifting autumn leaves cover the ground between the two camps.",
+    "biome": "mountainForest",
     "mode": "skirmish",
     "waveCount": 0,
     "aggressionBias": 0.0,
