@@ -9,6 +9,14 @@ export '../enums/home_layout.dart';
 export '../enums/home_site_owner.dart';
 export '../enums/spawn_layout.dart';
 
+/// Pure version comparison - mirrors `GameObjectDefinition`'s `needsUpdate`
+/// so a server-served [GameScene] only replaces a cached/built-in one when
+/// it's actually newer.
+bool sceneNeedsUpdate({
+  required GameScene cached,
+  required GameScene incoming,
+}) => incoming.version > cached.version;
+
 /// A playable scene: a terrain flavor (biome) paired with its own campaign
 /// length, opening strategy, and the shape of its base/attack layout. Each
 /// scene is a full, self-contained mission rather than just a re-skinned
@@ -125,12 +133,6 @@ class GameScene {
     'version': version,
   };
 }
-
-/// Pure version comparison - mirrors `GameObjectDefinition`'s `needsUpdate`
-/// so a server-served [GameScene] only replaces a cached/built-in one when
-/// it's actually newer.
-bool sceneNeedsUpdate({required GameScene cached, required GameScene incoming}) =>
-    incoming.version > cached.version;
 
 /// One buildable home site on a skirmish map - a scene lists one per team
 /// seat that can fight in that match.

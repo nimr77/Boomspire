@@ -150,6 +150,8 @@ class GameScenes {
 
   static List<GameScene> get skirmishes => _skirmishes;
 
+  const GameScenes._();
+
   /// Layers server/cache-synced scenes (see `SceneSyncService`) on top of
   /// the built-in defaults - called once at boot, mirroring how
   /// `setupServiceLocator(gameContentOverrides:)` overrides tower/unit
@@ -185,6 +187,4 @@ class GameScenes {
     }
     return byId.values.toList(growable: false);
   }
-
-  const GameScenes._();
 }

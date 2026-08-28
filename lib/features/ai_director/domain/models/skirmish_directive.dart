@@ -118,41 +118,6 @@ class SkirmishDirective {
   };
 }
 
-/// One buildable unit kind the AI director is told about in a
-/// [SkirmishSnapshot] - lets it (Gemini, or a smarter future fallback)
-/// reason about *what to build* from the real roster instead of a fixed
-/// local heuristic always making that call alone.
-class UnitRosterEntry {
-  /// Matches a `UnitKind`'s `.name` - round-tripped back via
-  /// [SkirmishDirective.preferredUnitKind].
-  final String kind;
-  final int cost;
-  final bool isVehicle;
-  final bool attacksAir;
-
-  const UnitRosterEntry({
-    required this.kind,
-    required this.cost,
-    required this.isVehicle,
-    required this.attacksAir,
-  });
-
-  factory UnitRosterEntry.fromJson(Map<String, dynamic> json) =>
-      UnitRosterEntry(
-        kind: json['kind'] as String? ?? '',
-        cost: (json['cost'] as num?)?.toInt() ?? 0,
-        isVehicle: json['isVehicle'] as bool? ?? false,
-        attacksAir: json['attacksAir'] as bool? ?? false,
-      );
-
-  Map<String, dynamic> toJson() => {
-    'kind': kind,
-    'cost': cost,
-    'isVehicle': isVehicle,
-    'attacksAir': attacksAir,
-  };
-}
-
 /// A compact summary of a skirmish match sent to the AI director so it can
 /// decide how the AI opponent should be playing right now, without needing
 /// the full game state.
@@ -195,5 +160,40 @@ class SkirmishSnapshot {
     'aiUnitCount': aiUnitCount,
     'playerUnitCount': playerUnitCount,
     'availableUnits': availableUnits.map((u) => u.toJson()).toList(),
+  };
+}
+
+/// One buildable unit kind the AI director is told about in a
+/// [SkirmishSnapshot] - lets it (Gemini, or a smarter future fallback)
+/// reason about *what to build* from the real roster instead of a fixed
+/// local heuristic always making that call alone.
+class UnitRosterEntry {
+  /// Matches a `UnitKind`'s `.name` - round-tripped back via
+  /// [SkirmishDirective.preferredUnitKind].
+  final String kind;
+  final int cost;
+  final bool isVehicle;
+  final bool attacksAir;
+
+  const UnitRosterEntry({
+    required this.kind,
+    required this.cost,
+    required this.isVehicle,
+    required this.attacksAir,
+  });
+
+  factory UnitRosterEntry.fromJson(Map<String, dynamic> json) =>
+      UnitRosterEntry(
+        kind: json['kind'] as String? ?? '',
+        cost: (json['cost'] as num?)?.toInt() ?? 0,
+        isVehicle: json['isVehicle'] as bool? ?? false,
+        attacksAir: json['attacksAir'] as bool? ?? false,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'kind': kind,
+    'cost': cost,
+    'isVehicle': isVehicle,
+    'attacksAir': attacksAir,
   };
 }

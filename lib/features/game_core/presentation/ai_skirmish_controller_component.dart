@@ -176,6 +176,22 @@ class AiSkirmishControllerComponent extends Component
     }
   }
 
+  /// The AI's full buildable roster right now (see
+  /// `MobileUnitRepositoryImpl.kindsFor`) - not just what it happens to
+  /// already own a production building for - so the director (Gemini, via
+  /// [SkirmishDirective.preferredUnitKind]) always gets to reason about
+  /// every unit kind it could ever choose to build, not a subset.
+  List<UnitRosterEntry> _availableUnitRoster(Team aiTeam) =>
+      game.unitRepository.kindsFor(aiTeam).map((kind) {
+        final blueprint = game.unitRepository.blueprintFor(aiTeam, kind);
+        return UnitRosterEntry(
+          kind: kind.name,
+          cost: blueprint.cost,
+          isVehicle: blueprint.isVehicle,
+          attacksAir: blueprint.attackDomains.contains(UnitDomain.air),
+        );
+      }).toList();
+
   SkirmishSnapshot _buildSnapshot() {
     final economy = game.aiEconomy!;
     final aiTeam = game.aiTeam!;
@@ -199,25 +215,6 @@ class AiSkirmishControllerComponent extends Component
       availableUnits: _availableUnitRoster(aiTeam),
     );
   }
-
-  /// The AI's full buildable roster right now (see
-  /// `MobileUnitRepositoryImpl.kindsFor`) - not just what it happens to
-  /// already own a production building for - so the director (Gemini, via
-  /// [SkirmishDirective.preferredUnitKind]) always gets to reason about
-  /// every unit kind it could ever choose to build, not a subset.
-  List<UnitRosterEntry> _availableUnitRoster(Team aiTeam) =>
-      game.unitRepository
-          .kindsFor(aiTeam)
-          .map((kind) {
-            final blueprint = game.unitRepository.blueprintFor(aiTeam, kind);
-            return UnitRosterEntry(
-              kind: kind.name,
-              cost: blueprint.cost,
-              isVehicle: blueprint.isVehicle,
-              attacksAir: blueprint.attackDomains.contains(UnitDomain.air),
-            );
-          })
-          .toList();
 
   /// Free, buildable cells in an expanding ring around the AI's base,
   /// nearest-ring-first and shuffled within each ring - keeps its
@@ -261,6 +258,19 @@ class AiSkirmishControllerComponent extends Component
       threats.any((u) => u.blueprint.domain == UnitDomain.air)
       ? UnitDomain.air
       : UnitDomain.ground;
+
+  /// Sends every currently-staged unit at [_resolveAttackTarget] together,
+  /// then clears the staging list - the AI's answer to "how to attack with
+  /// what quantity and where".
+  void _dispatchAttackSquad(Team aiTeam) {
+    final target = _resolveAttackTarget(aiTeam);
+    if (target == null) return;
+    for (final unit in _stagedAttackers) {
+      if (unit.destroyed) continue;
+      unit.issueAttackOrder(target);
+    }
+    _stagedAttackers.clear();
+  }
 
   int _ownedCombatTowerCount(Team aiTeam) => game.world.activeTowers
       .where(
@@ -323,6 +333,37 @@ class AiSkirmishControllerComponent extends Component
       _directive = await game.aiDirector.planSkirmish(_buildSnapshot());
     } finally {
       _fetchingDirective = false;
+    }
+  }
+
+  /// Where the current directive wants a completed attack squad sent - the
+  /// player's weakest (lowest health-fraction) tower for [AttackTargetKind
+  /// .weakestEnemyTower], falling back to the player's base whenever there
+  /// are no player towers to focus on, or for [AttackTargetKind.enemyBase]
+  /// outright.
+  Attackable? _resolveAttackTarget(Team aiTeam) {
+    if (_directive.attackTarget == AttackTargetKind.weakestEnemyTower) {
+      final playerTowers = game.world.activeTowers
+          .where((t) => t.owner.id == game.playerTeam.id && !t.destroyed)
+          .toList();
+      if (playerTowers.isNotEmpty) {
+        playerTowers.sort((a, b) => a.healthRatio.compareTo(b.healthRatio));
+        return playerTowers.first;
+      }
+    }
+    return game.enemyHomeBaseFor(aiTeam);
+  }
+
+  /// Holds a freshly-produced attack unit in place near base (it still
+  /// auto-fights anything that wanders into range, per [MobileUnitComponent
+  /// .issueMoveOrder]) instead of letting it immediately beeline off alone,
+  /// and dispatches the whole staged squad together the moment it reaches
+  /// [SkirmishDirective.squadSize].
+  void _stageAttacker(Team aiTeam, MobileUnitComponent unit) {
+    unit.issueMoveOrder(unit.position.clone());
+    _stagedAttackers.add(unit);
+    if (_stagedAttackers.length >= _directive.squadSize) {
+      _dispatchAttackSquad(aiTeam);
     }
   }
 
@@ -517,51 +558,4 @@ class AiSkirmishControllerComponent extends Component
       }
     }
   }
-
-  /// Holds a freshly-produced attack unit in place near base (it still
-  /// auto-fights anything that wanders into range, per [MobileUnitComponent
-  /// .issueMoveOrder]) instead of letting it immediately beeline off alone,
-  /// and dispatches the whole staged squad together the moment it reaches
-  /// [SkirmishDirective.squadSize].
-  void _stageAttacker(Team aiTeam, MobileUnitComponent unit) {
-    unit.issueMoveOrder(unit.position.clone());
-    _stagedAttackers.add(unit);
-    if (_stagedAttackers.length >= _directive.squadSize) {
-      _dispatchAttackSquad(aiTeam);
-    }
-  }
-
-  /// Sends every currently-staged unit at [_resolveAttackTarget] together,
-  /// then clears the staging list - the AI's answer to "how to attack with
-  /// what quantity and where".
-  void _dispatchAttackSquad(Team aiTeam) {
-    final target = _resolveAttackTarget(aiTeam);
-    if (target == null) return;
-    for (final unit in _stagedAttackers) {
-      if (unit.destroyed) continue;
-      unit.issueAttackOrder(target);
-    }
-    _stagedAttackers.clear();
-  }
-
-  /// Where the current directive wants a completed attack squad sent - the
-  /// player's weakest (lowest health-fraction) tower for [AttackTargetKind
-  /// .weakestEnemyTower], falling back to the player's base whenever there
-  /// are no player towers to focus on, or for [AttackTargetKind.enemyBase]
-  /// outright.
-  Attackable? _resolveAttackTarget(Team aiTeam) {
-    if (_directive.attackTarget == AttackTargetKind.weakestEnemyTower) {
-      final playerTowers = game.world.activeTowers
-          .where((t) => t.owner.id == game.playerTeam.id && !t.destroyed)
-          .toList();
-      if (playerTowers.isNotEmpty) {
-        playerTowers.sort(
-          (a, b) => a.healthRatio.compareTo(b.healthRatio),
-        );
-        return playerTowers.first;
-      }
-    }
-    return game.enemyHomeBaseFor(aiTeam);
-  }
 }
-

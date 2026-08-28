@@ -14,9 +14,8 @@ import 'package:boomspire/features/game_core/domain/models/game_scenes.dart';
 void main() {
   final scenes = [...GameScenes.all, ...GameScenes.skirmishes];
 
-  final json = const JsonEncoder.withIndent(
-    '  ',
-  ).convert(scenes.map((s) => s.toJson()).toList());
+  final json = const JsonEncoder.withIndent('  ')
+      .convert(scenes.map((s) => s.toJson()).toList());
 
   File('server/scene_manifest.json').writeAsStringSync('$json\n');
 
