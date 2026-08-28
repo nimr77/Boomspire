@@ -1,3 +1,34 @@
+/// Requires at least one of [buildingIds] (each a [GameObjectDefinition.id])
+/// to already exist for the builder's team - the "OR" counterpart to
+/// [BuildingExistsRequirement]'s implicit "AND" (every requirement in a
+/// [GameObjectDefinition.requirements] list must be satisfied, but this one
+/// requirement itself is satisfied by any single match).
+final class AnyBuildingExistsRequirement extends BuildRequirement {
+  final List<String> buildingIds;
+
+  const AnyBuildingExistsRequirement(this.buildingIds);
+
+  @override
+  int get hashCode =>
+      Object.hash(AnyBuildingExistsRequirement, Object.hashAll(buildingIds));
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! AnyBuildingExistsRequirement) return false;
+    if (other.buildingIds.length != buildingIds.length) return false;
+    for (var i = 0; i < buildingIds.length; i++) {
+      if (other.buildingIds[i] != buildingIds[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'kind': 'anyBuildingExists',
+    'buildingIds': buildingIds,
+  };
+}
+
 /// Requires at least [minCount] of the building identified by
 /// [buildingId] (a [GameObjectDefinition.id], e.g. `"building.techLab"`)
 /// to already exist for the builder's team.
@@ -22,39 +53,6 @@ final class BuildingExistsRequirement extends BuildRequirement {
     'kind': 'buildingExists',
     'buildingId': buildingId,
     'minCount': minCount,
-  };
-}
-
-/// Requires at least one of [buildingIds] (each a [GameObjectDefinition.id])
-/// to already exist for the builder's team - the "OR" counterpart to
-/// [BuildingExistsRequirement]'s implicit "AND" (every requirement in a
-/// [GameObjectDefinition.requirements] list must be satisfied, but this one
-/// requirement itself is satisfied by any single match).
-final class AnyBuildingExistsRequirement extends BuildRequirement {
-  final List<String> buildingIds;
-
-  const AnyBuildingExistsRequirement(this.buildingIds);
-
-  @override
-  int get hashCode => Object.hash(
-    AnyBuildingExistsRequirement,
-    Object.hashAll(buildingIds),
-  );
-
-  @override
-  bool operator ==(Object other) {
-    if (other is! AnyBuildingExistsRequirement) return false;
-    if (other.buildingIds.length != buildingIds.length) return false;
-    for (var i = 0; i < buildingIds.length; i++) {
-      if (other.buildingIds[i] != buildingIds[i]) return false;
-    }
-    return true;
-  }
-
-  @override
-  Map<String, dynamic> toJson() => {
-    'kind': 'anyBuildingExists',
-    'buildingIds': buildingIds,
   };
 }
 

@@ -20,7 +20,7 @@ class TeamStripeMarkerComponent extends PositionComponent {
       super(
         position: hullSize / 2,
         anchor: Anchor.center,
-        size: Vector2.all(hullSize.y * 0.4),
+        size: Vector2.all(hullSize.y * 0.22),
         priority: 6,
       );
 

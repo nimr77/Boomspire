@@ -18,48 +18,6 @@ import '../../towers/presentation/war_factory_component.dart';
 import '../domain/models/game_status.dart';
 import 'boomspire_game.dart';
 
-/// The AI opponent's "brain" in a [GameMode.skirmish] match: periodically
-/// asks [BoomspireGame.aiDirector] (Gemini, with a deterministic local
-/// fallback - see [SkirmishDirective.fallback]) how aggressive to be right
-/// now, then spends its own `AiEconomy` wallet through the exact same
-/// [BoomspireGame.buildStructure]/[BoomspireGame.canBuildTower] rules the
-/// human player's build menu uses - same gold costs, same per-type limits,
-/// same Tech Lab/Command Post prerequisite chains, same "never seal the
-/// only path between the two bases" guard.
-///
-/// Four cooperating strategies, evaluated every [_decisionInterval]:
-/// - **Economy**: Gold Mine + resource-node capture (see [_tryCaptureNode])
-///   fund everything else; a bounded number of Training Centers/War
-///   Factories (see [_productionBuildingTargets]) are built for production
-///   capacity instead of endlessly re-building more of them, and - once it
-///   has at least one of those - every further building purchase must
-///   leave enough gold to still afford its cheapest unit afterward (see
-///   [_cheapestUnitCost]), so it never buries its whole wallet in
-///   buildings and finds itself unable to actually field a unit.
-/// - **Defense**: a baseline garrison of combat towers (see
-///   [_baseDefenseTowerTarget]) is kept around its own base at all times,
-///   reinforced with a domain-appropriate counter tower (e.g. anti-air vs.
-///   an air raid) whenever hostile units are actually approaching (see
-///   [_threatRadius]) - the one purchase allowed to dip below the unit
-///   reserve, since an assault in progress is worth reacting to now.
-/// - **Production/attack**: once it has a Training Center/War Factory, it
-///   mans them every tick it can afford to (see [_tryProduce]), biasing
-///   which unit kind it rolls out toward whatever currently counters the
-///   human player's own fielded army (see [_playerComposition]) - e.g. more
-///   anti-air once the player has aircraft up.
-/// - **Directive**: [SkirmishDirective.aggression]/`buildBias` (Gemini or
-///   the local fallback) tunes the overall balance between "more attack
-///   units" vs. "more extra towers" beyond the above floors, reacting to
-///   both tower count *and* fielded-unit-count disparity against the
-///   player (see [SkirmishSnapshot.aiUnitCount]/`playerUnitCount`).
-///
-/// It builds its own Training Center/War Factory before it can produce any
-/// units at all (just like the player has to), and only ever mans those
-/// buildings to actually roll units out - there is no direct "spawn a unit
-/// from the base" shortcut anymore. Its only edge over a literal 1:1
-/// player clone is a generous total-structure soft cap (see
-/// [_maxOwnStructures]) that exists purely to bound an AI that never gets
-/// tired of building, not because it's allowed to build less.
 class AiSkirmishControllerComponent extends Component
     with HasGameReference<BoomspireGame> {
   static const _directiveInterval = 14.0;
@@ -73,7 +31,10 @@ class AiSkirmishControllerComponent extends Component
   /// Tried in this order before any combat tower - economy/production first
   /// (a Gold Mine and a Training Center/War Factory are what actually let
   /// the AI field units and snowball its income), Tech Lab/Command Post
-  /// last since those only unlock optional extra towers.
+  /// last since those only unlock optional extra towers. This is the
+  /// [_CommanderPersona.infantry]/[_CommanderPersona.balanced] order; see
+  /// [_infrastructureOrder] for the [_CommanderPersona.rushesWarFactory]
+  /// swap.
   static const _infrastructureBuildOrder = [
     BuildingType.goldMine,
     BuildingType.trainingCenter,
@@ -121,9 +82,19 @@ class AiSkirmishControllerComponent extends Component
   /// of a coin toss.
   static const _threatRadius = 420.0;
 
+  static const _maxRequiredSquadSize = 12;
+
+  static const _attackEvaluationDelay = 10.0;
+
+  /// This match's persona (see [_CommanderPersona]) - rolled once when the
+  /// controller is created and held for the whole skirmish, same as a
+  /// human wouldn't change their whole strategic identity mid-match.
+  final _CommanderPersona _persona = _CommanderPersona
+      .values[Random().nextInt(_CommanderPersona.values.length)];
   double _directiveTimer = _directiveInterval * 0.2;
   double _decisionTimer = _decisionInterval * 0.5;
   bool _fetchingDirective = false;
+
   SkirmishDirective _directive = const SkirmishDirective(
     aggression: 0.35,
     buildBias: 0.5,
@@ -144,19 +115,40 @@ class AiSkirmishControllerComponent extends Component
   /// assault gets rebuilt bigger before trying again instead of throwing
   /// another same-sized (and equally doomed) squad at the same defenses.
   int _requiredSquadSize = 0;
-  static const _maxRequiredSquadSize = 12;
 
   /// Bookkeeping for [_evaluateLastAttack]: the target and units of the
   /// most recently dispatched squad, and how long to wait before judging
   /// whether that attack actually accomplished anything. Null/empty once
   /// there's no outstanding attack to evaluate.
   Attackable? _pendingAttackTarget;
+
   double _pendingAttackTargetHealthRatio = 1.0;
   List<MobileUnitComponent> _pendingAttackUnits = const [];
   double _pendingAttackTimer = 0;
-  static const _attackEvaluationDelay = 10.0;
-
   final Random _rnd = Random();
+
+  /// The squad size actually required before [update] dispatches the
+  /// staged attackers - the directive's requested size, or [_requiredSquadSize]
+  /// once a previous attack failed and demanded a bigger follow-up, whichever
+  /// is larger.
+  int get _effectiveSquadSize => max(_directive.squadSize, _requiredSquadSize);
+
+  /// [_infrastructureBuildOrder], with the Training Center/War Factory
+  /// swapped for a persona (see [_CommanderPersona]) that rushes vehicles
+  /// or aircraft - both only ever come out of a War Factory, so an
+  /// [_CommanderPersona.armored]/[_CommanderPersona.airborne] AI wants that
+  /// building first instead of infantry's Training Center.
+  List<BuildingType> get _infrastructureOrder {
+    if (!_persona.rushesWarFactory) return _infrastructureBuildOrder;
+    return const [
+      BuildingType.goldMine,
+      BuildingType.warFactory,
+      BuildingType.trainingCenter,
+      BuildingType.powerPlant,
+      BuildingType.techLab,
+      BuildingType.commandPost,
+    ];
+  }
 
   @override
   void update(double dt) {
@@ -275,6 +267,17 @@ class AiSkirmishControllerComponent extends Component
     }
   }
 
+  /// The broad category a unit kind falls into for persona-lean and
+  /// combined-arms-diversity purposes (see [_pickKind]) - not the same as
+  /// [UnitDomain]: a ground vehicle and a plane are both non-infantry, but
+  /// only the plane counts as `air`.
+  String _categoryOf(Team aiTeam, UnitKind kind) {
+    final blueprint = game.unitRepository.blueprintFor(aiTeam, kind);
+    if (blueprint.domain == UnitDomain.air) return 'air';
+    if (blueprint.isVehicle) return 'vehicle';
+    return 'infantry';
+  }
+
   /// The cheapest unit the AI could ever produce - what it must always
   /// keep in reserve before spending on another building once it already
   /// has a way to produce units, so it never buys itself into a corner
@@ -315,12 +318,6 @@ class AiSkirmishControllerComponent extends Component
     _pendingAttackUnits = dispatched;
     _pendingAttackTimer = _attackEvaluationDelay;
   }
-
-  /// The squad size actually required before [update] dispatches the
-  /// staged attackers - the directive's requested size, or [_requiredSquadSize]
-  /// once a previous attack failed and demanded a bigger follow-up, whichever
-  /// is larger.
-  int get _effectiveSquadSize => max(_directive.squadSize, _requiredSquadSize);
 
   /// Judges whether the most recently dispatched squad (see
   /// [_dispatchAttackSquad]) actually accomplished anything, [
@@ -366,9 +363,14 @@ class AiSkirmishControllerComponent extends Component
   /// The director's explicit pick (see [SkirmishDirective.preferredUnitKind])
   /// if it named one of [kinds] - otherwise a weighted-random pick among
   /// [kinds]: a kind that can hit air gets extra weight while the player
-  /// has aircraft up, and the dedicated Anti-Tank soldier gets extra weight
-  /// while the player leans on vehicles - a plain random pick otherwise, so
-  /// this never fully locks out variety.
+  /// has aircraft up, the dedicated Anti-Tank soldier gets extra weight
+  /// while the player leans on vehicles, this match's persona (see
+  /// [_CommanderPersona]) leans the pick toward its favored category, and -
+  /// the combined-arms tweak that keeps a persona's lean from becoming a
+  /// single-kind army - a category that already dominates the squad
+  /// currently staging near base (see [_stagedAttackers]) gets eased off so
+  /// a second/third category still gets a look-in. Never a plain random
+  /// pick, so variety is always still possible.
   UnitKind _pickKind(
     List<UnitKind> kinds,
     Team aiTeam,
@@ -382,14 +384,29 @@ class AiSkirmishControllerComponent extends Component
       }
     }
 
+    final staged = _stagedAttackers.where((u) => !u.destroyed).toList();
+    final stagedCounts = <String, int>{};
+    for (final unit in staged) {
+      final category = unit.blueprint.domain == UnitDomain.air
+          ? 'air'
+          : (unit.blueprint.isVehicle ? 'vehicle' : 'infantry');
+      stagedCounts[category] = (stagedCounts[category] ?? 0) + 1;
+    }
+
     final weighted = <UnitKind>[];
     for (final kind in kinds) {
       final blueprint = game.unitRepository.blueprintFor(aiTeam, kind);
+      final category = _categoryOf(aiTeam, kind);
       var weight = 1;
       if (enemy.air > 0 && blueprint.attackDomains.contains(UnitDomain.air)) {
         weight += 2;
       }
       if (enemy.vehicle > 0 && kind == UnitKind.antiTankSoldier) weight += 2;
+      if (_persona.favoredCategory == category) weight += 2;
+      final dominance = staged.isEmpty
+          ? 0.0
+          : (stagedCounts[category] ?? 0) / staged.length;
+      if (staged.length >= 2 && dominance > 0.6) weight = max(1, weight - 1);
       weighted.addAll(List.filled(weight, kind));
     }
     return weighted[_rnd.nextInt(weighted.length)];
@@ -417,7 +434,8 @@ class AiSkirmishControllerComponent extends Component
     for (final tower in game.world.activeTowers) {
       if (tower.owner.id != game.playerTeam.id || tower.destroyed) continue;
       final type = tower.blueprint.type;
-      if (type == BuildingType.trainingCenter || type == BuildingType.warFactory) {
+      if (type == BuildingType.trainingCenter ||
+          type == BuildingType.warFactory) {
         builders++;
       } else if (tower.blueprint.damage > 0) {
         if (tower.blueprint.attackDomains.contains(UnitDomain.air)) {
@@ -434,21 +452,6 @@ class AiSkirmishControllerComponent extends Component
       groundTowers: groundTowers,
       builders: builders,
     );
-  }
-
-  /// The domain most worth countering given the player's overall fielded
-  /// composition (units AND standing towers, see [_playerComposition]) -
-  /// used to bias which combat tower the AI builds when nothing is
-  /// actively assaulting its base right now (see [_tryBuild]); returns null
-  /// when the player has nothing up yet to react to.
-  UnitDomain? _strategicCounterDomain(
-    ({int air, int vehicle, int airTowers, int groundTowers, int builders})
-    enemy,
-  ) {
-    final airSignal = enemy.air + enemy.airTowers;
-    final groundSignal = enemy.vehicle + enemy.groundTowers;
-    if (airSignal == 0 && groundSignal == 0) return null;
-    return airSignal > groundSignal ? UnitDomain.air : UnitDomain.ground;
   }
 
   Future<void> _refreshDirective() async {
@@ -489,6 +492,21 @@ class AiSkirmishControllerComponent extends Component
     if (_stagedAttackers.length >= _effectiveSquadSize) {
       _dispatchAttackSquad(aiTeam);
     }
+  }
+
+  /// The domain most worth countering given the player's overall fielded
+  /// composition (units AND standing towers, see [_playerComposition]) -
+  /// used to bias which combat tower the AI builds when nothing is
+  /// actively assaulting its base right now (see [_tryBuild]); returns null
+  /// when the player has nothing up yet to react to.
+  UnitDomain? _strategicCounterDomain(
+    ({int air, int vehicle, int airTowers, int groundTowers, int builders})
+    enemy,
+  ) {
+    final airSignal = enemy.air + enemy.airTowers;
+    final groundSignal = enemy.vehicle + enemy.groundTowers;
+    if (airSignal == 0 && groundSignal == 0) return null;
+    return airSignal > groundSignal ? UnitDomain.air : UnitDomain.ground;
   }
 
   /// Live hostile mobile units within [_threatRadius] of the AI's own base
@@ -558,7 +576,7 @@ class AiSkirmishControllerComponent extends Component
 
     UnitType? type;
     if (!isUrgentDefense && !skipMoreInfraForNow) {
-      for (final candidate in _infrastructureBuildOrder) {
+      for (final candidate in _infrastructureOrder) {
         final target = _productionBuildingTargets[candidate];
         if (target != null && _ownedCountOf(aiTeam, candidate) >= target) {
           continue;
@@ -608,8 +626,10 @@ class AiSkirmishControllerComponent extends Component
         if (strategicDomain != null) {
           final countering = options
               .where(
-                (t) =>
-                    game.blueprintFor(t).attackDomains.contains(strategicDomain),
+                (t) => game
+                    .blueprintFor(t)
+                    .attackDomains
+                    .contains(strategicDomain),
               )
               .toList();
           if (countering.isNotEmpty && _rnd.nextDouble() < 0.7) {
@@ -713,4 +733,88 @@ class AiSkirmishControllerComponent extends Component
       }
     }
   }
+}
+
+/// The AI opponent's "brain" in a [GameMode.skirmish] match: periodically
+/// asks [BoomspireGame.aiDirector] (Gemini, with a deterministic local
+/// fallback - see [SkirmishDirective.fallback]) how aggressive to be right
+/// now, then spends its own `AiEconomy` wallet through the exact same
+/// [BoomspireGame.buildStructure]/[BoomspireGame.canBuildTower] rules the
+/// human player's build menu uses - same gold costs, same per-type limits,
+/// same Tech Lab/Command Post prerequisite chains, same "never seal the
+/// only path between the two bases" guard.
+///
+/// Four cooperating strategies, evaluated every [_decisionInterval]:
+/// - **Economy**: Gold Mine + resource-node capture (see [_tryCaptureNode])
+///   fund everything else; a bounded number of Training Centers/War
+///   Factories (see [_productionBuildingTargets]) are built for production
+///   capacity instead of endlessly re-building more of them, and - once it
+///   has at least one of those - every further building purchase must
+///   leave enough gold to still afford its cheapest unit afterward (see
+///   [_cheapestUnitCost]), so it never buries its whole wallet in
+///   buildings and finds itself unable to actually field a unit.
+/// - **Defense**: a baseline garrison of combat towers (see
+///   [_baseDefenseTowerTarget]) is kept around its own base at all times,
+///   reinforced with a domain-appropriate counter tower (e.g. anti-air vs.
+///   an air raid) whenever hostile units are actually approaching (see
+///   [_threatRadius]) - the one purchase allowed to dip below the unit
+///   reserve, since an assault in progress is worth reacting to now.
+/// - **Production/attack**: once it has a Training Center/War Factory, it
+///   mans them every tick it can afford to (see [_tryProduce]), biasing
+///   which unit kind it rolls out toward whatever currently counters the
+///   human player's own fielded army (see [_playerComposition]) - e.g. more
+///   anti-air once the player has aircraft up.
+/// - **Directive**: [SkirmishDirective.aggression]/`buildBias` (Gemini or
+///   the local fallback) tunes the overall balance between "more attack
+///   units" vs. "more extra towers" beyond the above floors, reacting to
+///   both tower count *and* fielded-unit-count disparity against the
+///   player (see [SkirmishSnapshot.aiUnitCount]/`playerUnitCount`).
+///
+/// It builds its own Training Center/War Factory before it can produce any
+/// units at all (just like the player has to), and only ever mans those
+/// buildings to actually roll units out - there is no direct "spawn a unit
+/// from the base" shortcut anymore. Its only edge over a literal 1:1
+/// player clone is a generous total-structure soft cap (see
+/// [_maxOwnStructures]) that exists purely to bound an AI that never gets
+/// tired of building, not because it's allowed to build less.
+
+/// A specialized long-term identity the AI opponent commits to for the
+/// whole match, chosen once at [AiSkirmishControllerComponent] construction
+/// - the AI's answer to C&C Generals' distinct specialized generals
+/// (armor/infantry/air), layered *underneath* the per-tick
+/// [SkirmishDirective] (Gemini or its local fallback): the persona biases
+/// which production building it rushes first and which unit category it
+/// leans toward producing, while the directive still tunes moment-to-moment
+/// aggression/targeting on top. This is what makes the AI "hybrid" - a
+/// stable scripted specialization combined with a reactive tactical layer,
+/// instead of either alone.
+enum _CommanderPersona {
+  /// Rushes the War Factory first and leans on vehicles/aircraft.
+  armored,
+
+  /// Rushes the Training Center first and leans on cheap infantry numbers.
+  infantry,
+
+  /// Rushes the War Factory first and leans hardest on aircraft.
+  airborne,
+
+  /// No particular lean - the original all-around behavior.
+  balanced;
+
+  /// The broad unit category this persona favors producing - `null` for
+  /// [balanced], which applies no extra weighting in [_pickKind].
+  String? get favoredCategory => switch (this) {
+    _CommanderPersona.armored => 'vehicle',
+    _CommanderPersona.infantry => 'infantry',
+    _CommanderPersona.airborne => 'air',
+    _CommanderPersona.balanced => null,
+  };
+
+  /// Whether this persona wants the War Factory built ahead of the
+  /// Training Center in [AiSkirmishControllerComponent._infrastructureOrder]
+  /// - both [armored] (vehicles) and [airborne] (aircraft) only come out of
+  /// a War Factory, so both rush it first; [infantry]/[balanced] keep the
+  /// default Training-Center-first order.
+  bool get rushesWarFactory =>
+      this == _CommanderPersona.armored || this == _CommanderPersona.airborne;
 }

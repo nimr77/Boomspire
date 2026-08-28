@@ -72,4 +72,3 @@ List<String> _producibleUnitIdsFor(BuildingType type) => switch (type) {
   ],
   _ => const [],
 };
-

@@ -31,7 +31,7 @@ Future<void> main() async {
 /// playable either way.
 const _defaultPort = 8787;
 
-const _model = 'gemini-2.0-flash';
+const _model = 'gemini-3.6-flash';
 
 Future<StrategyDirective> _askGemini(
   String apiKey,

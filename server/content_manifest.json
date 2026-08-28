@@ -11,10 +11,7 @@
     "splashRadius": 0.0,
     "maxHp": 90.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "sea"
-    ],
+    "attackDomains": ["ground", "sea"],
     "cost": 100,
     "speed": 0.0,
     "size": 0.0,
@@ -46,10 +43,7 @@
     "splashRadius": 75.0,
     "maxHp": 120.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "sea"
-    ],
+    "attackDomains": ["ground", "sea"],
     "cost": 250,
     "speed": 0.0,
     "size": 0.0,
@@ -81,10 +75,7 @@
     "splashRadius": 55.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "sea"
-    ],
+    "attackDomains": ["ground", "sea"],
     "cost": 300,
     "speed": 0.0,
     "size": 0.0,
@@ -116,9 +107,7 @@
     "splashRadius": 0.0,
     "maxHp": 100.0,
     "domain": "ground",
-    "attackDomains": [
-      "air"
-    ],
+    "attackDomains": ["air"],
     "cost": 150,
     "speed": 0.0,
     "size": 0.0,
@@ -150,11 +139,7 @@
     "splashRadius": 0.0,
     "maxHp": 100.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "air",
-      "sea"
-    ],
+    "attackDomains": ["ground", "air", "sea"],
     "cost": 1000,
     "speed": 0.0,
     "size": 0.0,
@@ -196,10 +181,7 @@
     "splashRadius": 90.0,
     "maxHp": 150.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "sea"
-    ],
+    "attackDomains": ["ground", "sea"],
     "cost": 500,
     "speed": 0.0,
     "size": 0.0,
@@ -246,10 +228,7 @@
     "splashRadius": 40.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "sea"
-    ],
+    "attackDomains": ["ground", "sea"],
     "cost": 800,
     "speed": 0.0,
     "size": 0.0,
@@ -287,9 +266,7 @@
     "splashRadius": 20.0,
     "maxHp": 40.0,
     "domain": "ground",
-    "attackDomains": [
-      "air"
-    ],
+    "attackDomains": ["air"],
     "cost": 900,
     "speed": 0.0,
     "size": 0.0,
@@ -336,9 +313,7 @@
     "splashRadius": 0.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 500,
     "speed": 0.0,
     "size": 0.0,
@@ -380,9 +355,7 @@
     "splashRadius": 0.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 600,
     "speed": 0.0,
     "size": 0.0,
@@ -395,10 +368,7 @@
     "requirements": [
       {
         "kind": "anyBuildingExists",
-        "buildingIds": [
-          "building.warFactory",
-          "building.trainingCenter"
-        ]
+        "buildingIds": ["building.warFactory", "building.trainingCenter"]
       },
       {
         "kind": "maxCount",
@@ -426,9 +396,7 @@
     "splashRadius": 0.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 550,
     "speed": 0.0,
     "size": 0.0,
@@ -469,9 +437,7 @@
     "splashRadius": 0.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 700,
     "speed": 0.0,
     "size": 0.0,
@@ -513,9 +479,7 @@
     "splashRadius": 0.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 250,
     "speed": 0.0,
     "size": 0.0,
@@ -547,9 +511,7 @@
     "splashRadius": 0.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 350,
     "speed": 0.0,
     "size": 0.0,
@@ -586,9 +548,7 @@
     "splashRadius": 0.0,
     "maxHp": 45.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 0,
     "speed": 70.0,
     "size": 34.0,
@@ -620,9 +580,7 @@
     "splashRadius": 0.0,
     "maxHp": 150.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 0,
     "speed": 40.0,
     "size": 46.0,
@@ -654,10 +612,7 @@
     "splashRadius": 0.0,
     "maxHp": 60.0,
     "domain": "air",
-    "attackDomains": [
-      "ground",
-      "air"
-    ],
+    "attackDomains": ["ground", "air"],
     "cost": 0,
     "speed": 95.0,
     "size": 38.0,
@@ -689,9 +644,7 @@
     "splashRadius": 0.0,
     "maxHp": 360.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 0,
     "speed": 30.0,
     "size": 50.0,
@@ -723,10 +676,7 @@
     "splashRadius": 0.0,
     "maxHp": 65.0,
     "domain": "air",
-    "attackDomains": [
-      "ground",
-      "air"
-    ],
+    "attackDomains": ["ground", "air"],
     "cost": 0,
     "speed": 270.0,
     "size": 40.0,
@@ -758,9 +708,7 @@
     "splashRadius": 0.0,
     "maxHp": 200.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 0,
     "speed": 26.0,
     "size": 52.0,
@@ -792,10 +740,7 @@
     "splashRadius": 0.0,
     "maxHp": 180.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "air"
-    ],
+    "attackDomains": ["ground", "air"],
     "cost": 0,
     "speed": 34.0,
     "size": 50.0,
@@ -827,10 +772,7 @@
     "splashRadius": 0.0,
     "maxHp": 160.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "air"
-    ],
+    "attackDomains": ["ground", "air"],
     "cost": 0,
     "speed": 45.0,
     "size": 46.0,
@@ -862,9 +804,7 @@
     "splashRadius": 0.0,
     "maxHp": 110.0,
     "domain": "air",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 0,
     "speed": 190.0,
     "size": 54.0,
@@ -896,9 +836,7 @@
     "splashRadius": 0.0,
     "maxHp": 40.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 40,
     "speed": 78.0,
     "size": 34.0,
@@ -930,9 +868,7 @@
     "splashRadius": 0.0,
     "maxHp": 170.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 150,
     "speed": 34.0,
     "size": 50.0,
@@ -964,9 +900,7 @@
     "splashRadius": 0.0,
     "maxHp": 80.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 90,
     "speed": 96.0,
     "size": 38.0,
@@ -998,10 +932,7 @@
     "splashRadius": 0.0,
     "maxHp": 60.0,
     "domain": "air",
-    "attackDomains": [
-      "ground",
-      "air"
-    ],
+    "attackDomains": ["ground", "air"],
     "cost": 120,
     "speed": 170.0,
     "size": 40.0,
@@ -1033,10 +964,7 @@
     "splashRadius": 0.0,
     "maxHp": 140.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "air"
-    ],
+    "attackDomains": ["ground", "air"],
     "cost": 220,
     "speed": 30.0,
     "size": 50.0,
@@ -1068,9 +996,7 @@
     "splashRadius": 0.0,
     "maxHp": 50.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 70,
     "speed": 60.0,
     "size": 34.0,
@@ -1102,10 +1028,7 @@
     "splashRadius": 0.0,
     "maxHp": 45.0,
     "domain": "ground",
-    "attackDomains": [
-      "ground",
-      "air"
-    ],
+    "attackDomains": ["ground", "air"],
     "cost": 65,
     "speed": 65.0,
     "size": 34.0,
@@ -1137,9 +1060,7 @@
     "splashRadius": 0.0,
     "maxHp": 100.0,
     "domain": "air",
-    "attackDomains": [
-      "ground"
-    ],
+    "attackDomains": ["ground"],
     "cost": 260,
     "speed": 190.0,
     "size": 54.0,

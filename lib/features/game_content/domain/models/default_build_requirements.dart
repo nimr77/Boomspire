@@ -3,6 +3,30 @@ import '../../../towers/domain/models/building_type.dart';
 import '../../../towers/domain/models/tower_type.dart';
 import 'build_requirement.dart';
 
+/// Same as [defaultRequirementsForTower], for support buildings.
+List<BuildRequirement> defaultRequirementsForBuilding(BuildingType type) =>
+    switch (type) {
+      BuildingType.powerPlant => const [MaxCountRequirement(1)],
+      BuildingType.techLab => const [
+        BuildingExistsRequirement('building.powerPlant'),
+        MaxCountRequirement(1),
+      ],
+      BuildingType.commandPost => const [
+        AnyBuildingExistsRequirement([
+          'building.warFactory',
+          'building.trainingCenter',
+        ]),
+        MaxCountRequirement(1),
+      ],
+      BuildingType.trainingCenter => const [
+        ScoreRequirement(GameConfig.trainingCenterUnlockScore),
+      ],
+      BuildingType.warFactory => const [
+        ScoreRequirement(GameConfig.warFactoryUnlockScore),
+      ],
+      _ => const [],
+    };
+
 /// The game's built-in prerequisite/build-limit rules for every combat
 /// tower - the single source of truth consulted both by
 /// `BoomspireGame.buildBlockReason`/`buildLimitFor` (as the fallback
@@ -29,30 +53,6 @@ List<BuildRequirement> defaultRequirementsForTower(TowerType type) =>
         BuildingExistsRequirement('building.techLab'),
         BuildingExistsRequirement('building.commandPost'),
         MaxCountRequirement(1),
-      ],
-      _ => const [],
-    };
-
-/// Same as [defaultRequirementsForTower], for support buildings.
-List<BuildRequirement> defaultRequirementsForBuilding(BuildingType type) =>
-    switch (type) {
-      BuildingType.powerPlant => const [MaxCountRequirement(1)],
-      BuildingType.techLab => const [
-        BuildingExistsRequirement('building.powerPlant'),
-        MaxCountRequirement(1),
-      ],
-      BuildingType.commandPost => const [
-        AnyBuildingExistsRequirement([
-          'building.warFactory',
-          'building.trainingCenter',
-        ]),
-        MaxCountRequirement(1),
-      ],
-      BuildingType.trainingCenter => const [
-        ScoreRequirement(GameConfig.trainingCenterUnlockScore),
-      ],
-      BuildingType.warFactory => const [
-        ScoreRequirement(GameConfig.warFactoryUnlockScore),
       ],
       _ => const [],
     };

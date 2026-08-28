@@ -213,27 +213,6 @@ class BoomspireGame extends FlameGame<GameWorld>
       ? buildingRepository.blueprintFor(type)
       : towerRepository.blueprintFor(type as TowerType);
 
-  /// The catalog of [BuildRequirement]s gating [type] - a synced server
-  /// override's [GameObjectDefinition.requirements] if one exists (see
-  /// `GameContentSyncService`), otherwise the built-in default table (see
-  /// `default_build_requirements.dart`). This is the single place both
-  /// [buildBlockReason] (prerequisites/score gates) and [buildLimitFor]
-  /// (flat per-type caps, via any [MaxCountRequirement] in the list) read
-  /// from, so every build condition for towers/buildings genuinely comes
-  /// from data rather than a hardcoded per-type `if`.
-  List<BuildRequirement> _requirementsFor(UnitType type) => type is BuildingType
-      ? buildingRepository.requirementsFor(type)
-      : towerRepository.requirementsFor(type as TowerType);
-
-  /// A short, human-readable label for the building identified by
-  /// [buildingId] (e.g. `"building.techLab"`) - reuses the buildable's own
-  /// (already-localized) blueprint name rather than inventing new text.
-  String _buildingLabel(String buildingId) {
-    final name = buildingId.split('.').last;
-    final type = BuildingType.values.byName(name);
-    return buildingRepository.blueprintFor(type).name;
-  }
-
   /// Why [type] can't be built right now for [owner] (defaults to the human
   /// player), or null if it's buildable (gold permitting) - shown in the
   /// build menu's lock overlay/tooltip, and used identically by the AI
@@ -578,15 +557,16 @@ class BoomspireGame extends FlameGame<GameWorld>
           ?.contains(owner.id) ??
       false;
 
-  bool hasTechLabFor(Team owner) =>
-      _everBuiltByTeam[buildingDefinitionId(BuildingType.techLab)]?.contains(
+  bool hasPowerPlantFor(Team owner) =>
+      _everBuiltByTeam[buildingDefinitionId(BuildingType.powerPlant)]?.contains(
         owner.id,
       ) ??
       false;
 
-  bool hasPowerPlantFor(Team owner) =>
-      _everBuiltByTeam[buildingDefinitionId(BuildingType.powerPlant)]
-          ?.contains(owner.id) ??
+  bool hasTechLabFor(Team owner) =>
+      _everBuiltByTeam[buildingDefinitionId(BuildingType.techLab)]?.contains(
+        owner.id,
+      ) ??
       false;
 
   @override
@@ -796,6 +776,15 @@ class BoomspireGame extends FlameGame<GameWorld>
     tower.upgrade();
   }
 
+  /// A short, human-readable label for the building identified by
+  /// [buildingId] (e.g. `"building.techLab"`) - reuses the buildable's own
+  /// (already-localized) blueprint name rather than inventing new text.
+  String _buildingLabel(String buildingId) {
+    final name = buildingId.split('.').last;
+    final type = BuildingType.values.byName(name);
+    return buildingRepository.blueprintFor(type).name;
+  }
+
   void _buildTower(UnitType type, Vector2 point) {
     final tower = buildStructure(playerTeam, type, point);
     if (tower == null) return;
@@ -876,6 +865,18 @@ class BoomspireGame extends FlameGame<GameWorld>
     tower.repair(tower.maxHp);
     audioRepository.play(SfxType.towerRepair, volume: 0.7);
   }
+
+  /// The catalog of [BuildRequirement]s gating [type] - a synced server
+  /// override's [GameObjectDefinition.requirements] if one exists (see
+  /// `GameContentSyncService`), otherwise the built-in default table (see
+  /// `default_build_requirements.dart`). This is the single place both
+  /// [buildBlockReason] (prerequisites/score gates) and [buildLimitFor]
+  /// (flat per-type caps, via any [MaxCountRequirement] in the list) read
+  /// from, so every build condition for towers/buildings genuinely comes
+  /// from data rather than a hardcoded per-type `if`.
+  List<BuildRequirement> _requirementsFor(UnitType type) => type is BuildingType
+      ? buildingRepository.requirementsFor(type)
+      : towerRepository.requirementsFor(type as TowerType);
 
   ResourceNodeComponent? _resourceNodeAt(Vector2 point) {
     for (final node in world.activeResourceNodes) {

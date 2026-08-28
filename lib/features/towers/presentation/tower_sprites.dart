@@ -343,43 +343,6 @@ class TowerSpriteFactory {
     }
   }
 
-  static void _paintPowerPlantTurret(Canvas canvas, Offset center) {
-    // A lightning bolt over a glowing coil - reads as an energy generator,
-    // not a weapon.
-    final bolt = Path()
-      ..moveTo(center.dx + 2, center.dy - 20)
-      ..lineTo(center.dx - 5, center.dy - 4)
-      ..lineTo(center.dx + 1, center.dy - 4)
-      ..lineTo(center.dx - 3, center.dy + 12)
-      ..lineTo(center.dx + 7, center.dy - 6)
-      ..lineTo(center.dx + 1, center.dy - 6)
-      ..close();
-    canvas.drawCircle(
-      center,
-      12,
-      Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF42A5F5), Color(0xFF14314f)],
-        ).createShader(Rect.fromCircle(center: center, radius: 12)),
-    );
-    canvas.drawCircle(
-      center,
-      12,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = const Color(0xFF42A5F5),
-    );
-    canvas.drawPath(bolt, Paint()..color = const Color(0xFFFFEE58));
-    canvas.drawPath(
-      bolt,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..color = const Color(0xFFFFF9C4),
-    );
-  }
-
   static void _paintLaserTurret(Canvas canvas, Offset center) {
     // A single slender emitter rod ending in a crystal lens - reads as an
     // energy weapon rather than a ballistic one.
@@ -467,6 +430,43 @@ class TowerSpriteFactory {
         ..color = const Color(0xFF4FC3F7),
     );
     _paintViewhole(canvas, center.translate(0, 7));
+  }
+
+  static void _paintPowerPlantTurret(Canvas canvas, Offset center) {
+    // A lightning bolt over a glowing coil - reads as an energy generator,
+    // not a weapon.
+    final bolt = Path()
+      ..moveTo(center.dx + 2, center.dy - 20)
+      ..lineTo(center.dx - 5, center.dy - 4)
+      ..lineTo(center.dx + 1, center.dy - 4)
+      ..lineTo(center.dx - 3, center.dy + 12)
+      ..lineTo(center.dx + 7, center.dy - 6)
+      ..lineTo(center.dx + 1, center.dy - 6)
+      ..close();
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF42A5F5), Color(0xFF14314f)],
+        ).createShader(Rect.fromCircle(center: center, radius: 12)),
+    );
+    canvas.drawCircle(
+      center,
+      12,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFF42A5F5),
+    );
+    canvas.drawPath(bolt, Paint()..color = const Color(0xFFFFEE58));
+    canvas.drawPath(
+      bolt,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = const Color(0xFFFFF9C4),
+    );
   }
 
   static void _paintRocketSiloTurret(Canvas canvas, Offset center) {
