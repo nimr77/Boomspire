@@ -20,4 +20,3 @@ class BiomePreview extends StatelessWidget {
     return CustomPaint(painter: LevelSelectBiomeThumbPainter(terrainMap));
   }
 }
-

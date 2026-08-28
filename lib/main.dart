@@ -7,8 +7,8 @@ import 'core/di/service_locator.dart';
 import 'core/router/router.dart';
 import 'features/account/domain/models/account.dart';
 import 'features/account/domain/repos/account_repository.dart';
-import 'features/account/presentation/state/account_profile_state.dart';
 import 'features/account/presentation/create_account_content.dart';
+import 'features/account/presentation/state/account_profile_state.dart';
 import 'features/messaging/presentation/glass_message.dart';
 import 'generated/l10n.dart';
 

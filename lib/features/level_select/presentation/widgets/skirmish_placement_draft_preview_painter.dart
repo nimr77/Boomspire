@@ -46,6 +46,7 @@ class SkirmishPlacementDraftPreviewPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant SkirmishPlacementDraftPreviewPainter oldDelegate) =>
-      oldDelegate.preview != preview;
+  bool shouldRepaint(
+    covariant SkirmishPlacementDraftPreviewPainter oldDelegate,
+  ) => oldDelegate.preview != preview;
 }

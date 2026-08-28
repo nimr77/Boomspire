@@ -87,11 +87,12 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                                   children: [
                                     AccountBadge(state: _accountProfileState),
                                     Center(
-                                      child: LevelSelectDifficultySelectorWidget(
-                                        value: difficulty,
-                                        onChanged: (value) =>
-                                            _difficulty.value = value,
-                                      ),
+                                      child:
+                                          LevelSelectDifficultySelectorWidget(
+                                            value: difficulty,
+                                            onChanged: (value) =>
+                                                _difficulty.value = value,
+                                          ),
                                     ),
                                     const SizedBox(height: 20),
                                     GridView.count(
@@ -117,10 +118,7 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                                                 delay: (120 + index * 90).ms,
                                               )
                                               .scale(
-                                                begin: const Offset(
-                                                  0.92,
-                                                  0.92,
-                                                ),
+                                                begin: const Offset(0.92, 0.92),
                                                 curve: Curves.easeOutCubic,
                                               ),
                                       ],

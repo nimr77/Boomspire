@@ -365,7 +365,9 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
       extra: GameRouteArgs(
         scene: GameScene(
           id: 'draft-${draft.id}',
-          name: draft.name.isEmpty ? S.current.untitledMapEditorPage : draft.name,
+          name: draft.name.isEmpty
+              ? S.current.untitledMapEditorPage
+              : draft.name,
           briefing: S.current.skirmishPlacementTestBriefing,
           biome: draft.biome,
           mode: aiSite != null ? GameMode.skirmish : GameMode.waveDefense,
