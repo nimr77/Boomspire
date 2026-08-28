@@ -5,10 +5,6 @@ import 'package:flame/components.dart';
 
 import '../domain/enums/biome.dart';
 
-/// Which flavor of blown-particle effect a biome gets - `null` means the
-/// biome has no wind effect at all (e.g. the sea/city-ruins scenes).
-enum WindStyle { grass, snow, sand }
-
 WindStyle? _windStyleFor(Biome biome) => switch (biome) {
   Biome.grassPlains || Biome.savanna || Biome.mountainForest => WindStyle.grass,
   Biome.snowTundra || Biome.frozenPeaks => WindStyle.snow,
@@ -62,23 +58,6 @@ class WindEffectComponent extends PositionComponent {
   }
 
   @override
-  void update(double dt) {
-    super.update(dt);
-    for (final p in _particles) {
-      p.position.x += p.speed * dt;
-      p.position.y += p.drop * dt;
-      p.bobPhase += dt * 2;
-      if (p.position.x > _arenaSize.x + 20) {
-        p.position.x = -20;
-        p.position.y = _rnd.nextDouble() * _arenaSize.y;
-      }
-      if (p.position.y > _arenaSize.y + 20) {
-        p.position.y = -20;
-      }
-    }
-  }
-
-  @override
   void render(ui.Canvas canvas) {
     final style = _style;
     if (style == null) return;
@@ -109,15 +88,32 @@ class WindEffectComponent extends PositionComponent {
             ..color = const ui.Color(0xFFD8C08A).withValues(alpha: p.opacity)
             ..strokeWidth = 1.5 * p.scale
             ..strokeCap = ui.StrokeCap.round;
-          canvas.drawLine(
-            center,
-            center.translate(-22 * p.scale, 0),
-            paint,
-          );
+          canvas.drawLine(center, center.translate(-22 * p.scale, 0), paint);
+      }
+    }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    for (final p in _particles) {
+      p.position.x += p.speed * dt;
+      p.position.y += p.drop * dt;
+      p.bobPhase += dt * 2;
+      if (p.position.x > _arenaSize.x + 20) {
+        p.position.x = -20;
+        p.position.y = _rnd.nextDouble() * _arenaSize.y;
+      }
+      if (p.position.y > _arenaSize.y + 20) {
+        p.position.y = -20;
       }
     }
   }
 }
+
+/// Which flavor of blown-particle effect a biome gets - `null` means the
+/// biome has no wind effect at all (e.g. the sea/city-ruins scenes).
+enum WindStyle { grass, snow, sand }
 
 class _WindParticle {
   Vector2 position;
