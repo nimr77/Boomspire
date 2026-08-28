@@ -1,35 +1,52 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
 
 import '../../../core/combat/team.dart';
 
-/// Static team-color stripe mounted on a plane's hull - the flying-wing
+/// Pulsing team-color light mounted on a plane's hull - the flying-wing
 /// body type's analog of [VehiclePlayerMarkerComponent]'s roundel, which
-/// doesn't read well on a shape with no flat "deck" to sit on.
+/// doesn't read well on a shape with no flat "deck" to sit on. Deliberately
+/// a breathing glow rather than the static stripe/line this used to be -
+/// see [JetFlareComponent] for the same "light, not a line" treatment on
+/// the engine trail.
 class TeamStripeMarkerComponent extends PositionComponent {
   final Color accent;
+  double _phase = 0;
 
   TeamStripeMarkerComponent({required Vector2 hullSize, required Team team})
     : accent = team.color,
       super(
         position: hullSize / 2,
         anchor: Anchor.center,
-        size: Vector2(hullSize.x * 0.5, hullSize.y * 0.14),
+        size: Vector2.all(hullSize.y * 0.4),
         priority: 6,
       );
 
   @override
+  void update(double dt) {
+    super.update(dt);
+    _phase += dt * 2.6;
+  }
+
+  @override
   void render(Canvas canvas) {
-    final rect = Rect.fromLTWH(0, 0, size.x, size.y);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, Radius.circular(size.y / 2)),
-      Paint()..color = const Color(0xFF2B2E33),
+    final pulse = 0.5 + 0.5 * sin(_phase);
+    final center = Offset(size.x / 2, size.y / 2);
+    final radius = size.x * 0.5;
+
+    canvas.drawCircle(
+      center,
+      radius * (1.3 + pulse * 0.4),
+      Paint()
+        ..color = accent.withValues(alpha: 0.2 + pulse * 0.25)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.6),
     );
-    final inner = rect.deflate(size.y * 0.18);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(inner, Radius.circular(inner.height / 2)),
-      Paint()..color = accent,
+    canvas.drawCircle(
+      center,
+      radius * (0.7 + pulse * 0.3),
+      Paint()..color = accent.withValues(alpha: 0.75 + pulse * 0.25),
     );
   }
 }

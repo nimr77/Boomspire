@@ -15,6 +15,7 @@
 import 'package:boomspire/core/combat/team.dart';
 import 'package:boomspire/features/combat/presentation/fire_component.dart';
 import 'package:boomspire/features/combat/presentation/human_limbs_component.dart';
+import 'package:boomspire/features/combat/presentation/team_stripe_marker_component.dart';
 import 'package:boomspire/features/combat/presentation/vehicle_player_marker_component.dart';
 import 'package:boomspire/features/combat/presentation/vehicle_tread_component.dart';
 import 'package:flame/components.dart';
@@ -139,6 +140,35 @@ void main() {
 
         // Freshly spawned: age is 0, so fade is 1.
         expect((Canvas canvas) => fire.render(canvas), paints..path());
+      },
+    );
+  });
+
+  group('TeamStripeMarkerComponent render', () {
+    test(
+      'a plane\'s team marker is a pulsing light, not a static line/stripe',
+      () {
+        final hullSize = Vector2(40, 40);
+        final marker = TeamStripeMarkerComponent(
+          hullSize: hullSize,
+          team: Team.defaultPlayer,
+        );
+        final center = Offset(marker.size.x / 2, marker.size.y / 2);
+        final radius = marker.size.x * 0.5;
+
+        // No update() has run yet, so `_phase` is still 0.
+        expect(
+          (Canvas canvas) => marker.render(canvas),
+          paints
+            ..circle(x: center.dx, y: center.dy, radius: radius * 1.5)
+            ..circle(x: center.dx, y: center.dy, radius: radius * 0.85),
+        );
+        // The old implementation drew a rounded-rect stripe - assert that
+        // shape is gone, not just that circles happen to also be present.
+        expect(
+          (Canvas canvas) => marker.render(canvas),
+          isNot(paints..rrect()),
+        );
       },
     );
   });

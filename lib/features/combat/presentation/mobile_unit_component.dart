@@ -1019,7 +1019,16 @@ class MobileUnitComponent extends PositionComponent
     }
 
     final toTarget = target.position - position;
-    _facingAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
+    // A strafing plane manages its own facing via the gradual banking turn
+    // inside `_updateStrafingRun` (`_bankTurnToward`) - snapping it straight
+    // at the target here too, every single frame, was overriding that bank
+    // turn before it ever ran, forcing the plane to always face (and drift
+    // toward) the target directly. That's what made it orbit in a tight
+    // circle right on top of the target instead of flying a wide loiter
+    // loop or a clean straight pass.
+    if (!_isStrafingPlane) {
+      _facingAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
+    }
 
     // A zero-length tick (e.g. the single `update(0)` frame used to mount
     // a just-spawned unit) must never resolve a shot - otherwise simply
