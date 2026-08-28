@@ -50,6 +50,7 @@ class TrainingCenterComponent extends TowerComponent {
   /// Returns whether it actually happened.
   bool produceUnit(UnitKind kind) {
     if (!canProduce) return false;
+    if (!game.canProduceUnit(kind, owner: owner)) return false;
     final blueprint = game.unitRepository.blueprintFor(owner, kind);
     if (!game.spendGoldFor(owner, blueprint.cost)) return false;
     cooldownRemaining = GameConfig.trainingCenterProductionCooldown;

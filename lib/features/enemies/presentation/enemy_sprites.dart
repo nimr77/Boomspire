@@ -17,6 +17,7 @@ class EnemySpriteFactory {
   static Sprite? _artilleryBarrage;
   static Sprite? _rocketBarrage;
   static Sprite? _antiAirVehicle;
+  static Sprite? _stealthBomber;
   EnemySpriteFactory._();
 
   static Future<Sprite> antiAirVehicle() async {
@@ -68,6 +69,13 @@ class EnemySpriteFactory {
     return _soldier = Sprite(image);
   }
 
+  static Future<Sprite> stealthBomber() async {
+    final cached = _stealthBomber;
+    if (cached != null) return cached;
+    final image = await renderToImage(54, 54, _paintStealthBomber);
+    return _stealthBomber = Sprite(image);
+  }
+
   static Future<Sprite> spriteFor(UnitKind kind) => switch (kind) {
     UnitKind.soldier => soldier(),
     UnitKind.heavySoldier => heavySoldier(),
@@ -77,6 +85,7 @@ class EnemySpriteFactory {
     UnitKind.artilleryBarrage => artilleryBarrage(),
     UnitKind.rocketBarrage => rocketBarrage(),
     UnitKind.antiAirVehicle => antiAirVehicle(),
+    UnitKind.stealthBomber => stealthBomber(),
     _ => throw ArgumentError('No enemy sprite for $kind'),
   };
 
@@ -91,7 +100,8 @@ class EnemySpriteFactory {
     UnitKind.attackPlane ||
     UnitKind.artilleryBarrage ||
     UnitKind.rocketBarrage ||
-    UnitKind.antiAirVehicle => true,
+    UnitKind.antiAirVehicle ||
+    UnitKind.stealthBomber => true,
     _ => false,
   };
 
@@ -684,5 +694,62 @@ class EnemySpriteFactory {
       size * 0.045,
       Paint()..color = const Color(0xFFFFF59D),
     );
+  }
+
+  // Same neutral stealth-gray livery as `AllySpriteFactory._paintStealthBomber`
+  // - team ownership is shown by `TeamStripeMarkerComponent` instead.
+  static void _paintStealthBomber(Canvas canvas) {
+    const size = 54.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.8, height: size * 0.22),
+      Paint()..color = const Color(0x40000000),
+    );
+
+    final wingPath = Path()
+      ..moveTo(center.dx, center.dy - size * 0.12)
+      ..lineTo(center.dx + size * 0.48, center.dy + size * 0.34)
+      ..lineTo(center.dx + size * 0.3, center.dy + size * 0.4)
+      ..lineTo(center.dx, center.dy + size * 0.16)
+      ..lineTo(center.dx - size * 0.3, center.dy + size * 0.4)
+      ..lineTo(center.dx - size * 0.48, center.dy + size * 0.34)
+      ..close();
+    canvas.drawPath(
+      wingPath,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF3A3F44), Color(0xFF0D0F10)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromCircle(center: center, radius: size * 0.4)),
+    );
+    canvas.drawPath(
+      wingPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = const Color(0x33000000),
+    );
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center.translate(0, -size * 0.02),
+        width: size * 0.1,
+        height: size * 0.16,
+      ),
+      Paint()..color = const Color(0xFF1A1C1E),
+    );
+
+    for (final dx in [-size * 0.14, size * 0.14]) {
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: center.translate(dx, size * 0.3),
+          width: size * 0.05,
+          height: size * 0.1,
+        ),
+        Paint()..color = const Color(0xFF1A1C1E),
+      );
+    }
   }
 }

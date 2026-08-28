@@ -39,6 +39,7 @@ import 'rocket_component.dart';
 import 'rotor_component.dart';
 import 'smoke_trail_component.dart';
 import 'target_highlight_component.dart';
+import 'team_stripe_marker_component.dart';
 import 'track_mark_component.dart';
 import 'vapor_cone_component.dart';
 import 'vehicle_player_marker_component.dart';
@@ -47,6 +48,22 @@ import 'vehicle_tread_component.dart';
 /// How far (in grid cells) a strafing plane loops out to while reloading
 /// between passes - see [MobileUnitComponent._updateStrafingRun].
 const _planeLoiterRadiusCells = 12;
+
+/// Distance (in grid cells) to an engaged target within which a strafing
+/// plane kicks into "attack mode": a [_planeBoostSpeedMultiplier] speed
+/// boost plus a blue afterburner jet-flare trail - see
+/// [MobileUnitComponent._updateStrafingRun].
+const _planeBoostRangeCells = 10;
+
+/// Speed multiplier applied while within [_planeBoostRangeCells] of the
+/// engaged target - a 70% boost.
+const _planeBoostSpeedMultiplier = 1.7;
+
+/// Max turn rate (radians/sec) a strafing plane banks its heading toward a
+/// new desired direction - replaces an instant snap-to-target facing with
+/// a smooth curved arc, matching a real jet's banking turn. See
+/// [MobileUnitComponent._bankTurnToward].
+const _planeTurnRate = 3.0;
 
 /// Squared distance within which two same-team, same-domain units push
 /// apart a bit while converging on the same path/base instead of
@@ -164,6 +181,10 @@ class MobileUnitComponent extends PositionComponent
   /// Scrolling wheel/tread-tick overlay for ground vehicles - null for
   /// infantry and air units. See [addExtraVisuals].
   VehicleTreadComponent? _tread;
+
+  /// Team-color stripe overlay for plane-body units - null for everything
+  /// else. See [addExtraVisuals].
+  TeamStripeMarkerComponent? _teamStripe;
   late final PositionComponent _visual;
   late final TargetHighlightComponent _targetHighlight;
 
@@ -237,10 +258,11 @@ class MobileUnitComponent extends PositionComponent
 
   /// Attaches extra always-on visuals once the model/sprite is loaded -
   /// a spinning rotor for [UnitKind.helicopter], or a [UnitBodyType]-driven
-  /// overlay: leg/arm animation for infantry, and a scrolling tread plus a
-  /// static team-color marker for ground vehicles. Air vehicles other than
-  /// the helicopter get their jet-flare/vapor-cone treatment purely in
-  /// [_flyToward], with no extra child component.
+  /// overlay: leg/arm animation for infantry, a scrolling tread plus a
+  /// static team-color marker for ground vehicles, and a team-color stripe
+  /// for planes. Air vehicles other than the helicopter get their
+  /// jet-flare/vapor-cone treatment purely in [_flyToward], with no extra
+  /// child component for that part.
   Future<void> addExtraVisuals(PositionComponent visual) async {
     if (blueprint.kind == UnitKind.helicopter) {
       await visual.add(RotorComponent(position: visual.size / 2));
@@ -259,6 +281,12 @@ class MobileUnitComponent extends PositionComponent
         team: team,
       );
       await visual.add(_playerMarker!);
+    } else if (body == VehicleUnitType.plane) {
+      _teamStripe = TeamStripeMarkerComponent(
+        hullSize: visual.size,
+        team: team,
+      );
+      await visual.add(_teamStripe!);
     }
   }
 
@@ -1085,20 +1113,67 @@ class MobileUnitComponent extends PositionComponent
     }
   }
 
+  /// Rotates [_facingAngle] toward the direction of [toTarget] at
+  /// [_planeTurnRate] rad/s instead of snapping straight to it every frame,
+  /// then returns the resulting forward unit vector - reads as a real
+  /// banking arc rather than a robotic pivot. Shared by every phase of
+  /// [_updateStrafingRun].
+  Vector2 _bankTurnToward(Vector2 toTarget, double dt) {
+    if (!toTarget.isZero()) {
+      final desiredAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
+      var diff = (desiredAngle - _facingAngle) % (2 * pi);
+      if (diff > pi) diff -= 2 * pi;
+      if (diff < -pi) diff += 2 * pi;
+      final maxStep = _planeTurnRate * dt;
+      _facingAngle += diff.clamp(-maxStep, maxStep);
+    }
+    final dirAngle = _facingAngle - pi / 2;
+    return Vector2(cos(dirAngle), sin(dirAngle));
+  }
+
+  /// Spawns the plane's engine-flare trail while it's actively engaging
+  /// (approach/pass/loiter) - fired more rapidly and tinted blue while
+  /// [boosted] (see [_planeBoostRangeCells]), so the "attack mode" speed
+  /// boost has a visible afterburner instead of being a silent stat change.
+  void _updateJetFlare(double dt, {required bool boosted}) {
+    _jetFlareTimer -= dt;
+    if (_jetFlareTimer <= 0) {
+      _jetFlareTimer = boosted ? 0.03 : 0.05;
+      final dirAngle = _facingAngle - pi / 2;
+      final dir = Vector2(cos(dirAngle), sin(dirAngle));
+      game.world.spawn(
+        JetFlareComponent(
+          position: position.clone() - dir * (size.x * 0.5),
+          angle: dirAngle,
+          boosted: boosted,
+        ),
+      );
+    }
+  }
+
   /// Plane-only "attack while moving" state machine (see [_isStrafingPlane])
   /// - like a real jet (or a C&C Generals air unit), it never hovers to
   /// fire: it flies straight through its target emptying a clip, then
   /// peels off into a loitering loop within [_planeLoiterRadiusCells] cells
   /// while its clip reloads, before coming back around for another pass.
+  /// Turning is a gradual bank (see [_bankTurnToward]) rather than an
+  /// instant snap, and closing within [_planeBoostRangeCells] cells of the
+  /// target kicks it into "attack mode" - a [_planeBoostSpeedMultiplier]
+  /// speed boost with a blue afterburner jet-flare trail (see
+  /// [_updateJetFlare]).
   void _updateStrafingRun(Attackable target, Vector2 toTarget, double dt) {
     switch (_planePhase) {
       case _PlaneAttackPhase.approach:
         final dist = toTarget.length;
+        final boosting =
+            dist <= _planeBoostRangeCells * game.terrainMap.grid.cellSize;
         if (dist > 4) {
-          final dir = applySeparationSteering(toTarget / dist);
-          position += dir * blueprint.speed * dt;
-          _facingAngle = atan2(dir.y, dir.x) + pi / 2;
+          final dir = applySeparationSteering(_bankTurnToward(toTarget, dt));
+          final speed =
+              blueprint.speed * (boosting ? _planeBoostSpeedMultiplier : 1.0);
+          position += dir * speed * dt;
         }
+        _updateJetFlare(dt, boosted: boosting);
         if (dist <= blueprint.attackRange) {
           _planePhase = _PlaneAttackPhase.pass;
           _clipShotsFired = 0;
@@ -1107,12 +1182,16 @@ class MobileUnitComponent extends PositionComponent
       case _PlaneAttackPhase.pass:
         // Keep flying through the target instead of stopping to shoot.
         final dist = toTarget.length;
-        final dir = dist > 1
-            ? toTarget / dist
+        final boosting =
+            dist <= _planeBoostRangeCells * game.terrainMap.grid.cellSize;
+        final desired = dist > 1
+            ? toTarget
             : Vector2(cos(_facingAngle - pi / 2), sin(_facingAngle - pi / 2));
-        final steered = applySeparationSteering(dir);
-        position += steered * blueprint.speed * dt;
-        _facingAngle = atan2(steered.y, steered.x) + pi / 2;
+        final steered = applySeparationSteering(_bankTurnToward(desired, dt));
+        final speed =
+            blueprint.speed * (boosting ? _planeBoostSpeedMultiplier : 1.0);
+        position += steered * speed * dt;
+        _updateJetFlare(dt, boosted: boosting);
 
         _attackCooldown -= dt;
         if (_attackCooldown <= 0) {
@@ -1141,10 +1220,10 @@ class MobileUnitComponent extends PositionComponent
             Vector2(cos(_loiterAngle), sin(_loiterAngle)) * radius;
         final toDesired = desired - position;
         if (toDesired.length > 1) {
-          final dir = applySeparationSteering(toDesired.normalized());
+          final dir = applySeparationSteering(_bankTurnToward(toDesired, dt));
           position += dir * blueprint.speed * dt;
-          _facingAngle = atan2(dir.y, dir.x) + pi / 2;
         }
+        _updateJetFlare(dt, boosted: false);
         if (_loiterTimer <= 0) {
           _planePhase = _PlaneAttackPhase.approach;
         }

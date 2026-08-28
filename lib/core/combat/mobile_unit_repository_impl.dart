@@ -152,6 +152,29 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       movementStyle: MovementStyle.roll,
       weaponType: WeaponType.cannon,
     ),
+    // Flying-wing heavy bomber: same strafing-pass movement as Attack
+    // Plane (see `MobileUnitComponent._updateStrafingRun`), but a single
+    // heavy bomb per pass (`projectileCount: 1`) instead of a burst, and it
+    // can only hit ground targets - a real dogfighter has to catch it,
+    // not the other way around. Prefers shelling structures like Artillery
+    // Barrage.
+    UnitKind.stealthBomber: MobileUnitBlueprint(
+      kind: UnitKind.stealthBomber,
+      name: 'Stealth Bomber',
+      maxHealth: 110,
+      speed: 150,
+      bounty: 90,
+      size: 54,
+      domain: UnitDomain.air,
+      attackDomains: {UnitDomain.ground},
+      isVehicle: true,
+      attackDamage: 90,
+      attackRange: 200,
+      attackInterval: 3.0,
+      movementStyle: MovementStyle.swoop,
+      weaponType: WeaponType.rocket,
+      prefersStructures: true,
+    ),
   };
 
   // Note: these are the stats a fresh, un-upgraded Training Center/War
@@ -270,6 +293,26 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       attackRange: 190,
       attackInterval: 1.2,
       attackDomains: {UnitDomain.ground, UnitDomain.air},
+      weaponType: WeaponType.rocket,
+    ),
+    // Player-side counterpart of the enemy Stealth Bomber - same model,
+    // same strafing-pass/single-bomb behavior, mustered from the War
+    // Factory like the other vehicles.
+    UnitKind.stealthBomber: MobileUnitBlueprint(
+      kind: UnitKind.stealthBomber,
+      name: 'Ally Stealth Bomber',
+      cost: 260,
+      maxHealth: 100,
+      speed: 150,
+      bounty: 95,
+      size: 54,
+      domain: UnitDomain.air,
+      attackDomains: {UnitDomain.ground},
+      isVehicle: true,
+      attackDamage: 85,
+      attackRange: 200,
+      attackInterval: 3.0,
+      movementStyle: MovementStyle.swoop,
       weaponType: WeaponType.rocket,
     ),
   };

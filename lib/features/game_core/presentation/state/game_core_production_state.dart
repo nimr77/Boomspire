@@ -23,7 +23,11 @@ class GameCoreProductionState {
           ready: ready,
           cooldownRemaining: cooldownRemaining,
           cost: costFor(kind),
-          affordable: ready && gold >= costFor(kind),
+          affordable:
+              ready &&
+              gold >= costFor(kind) &&
+              game.canProduceUnit(kind, owner: tower.owner),
+          lockReason: game.unitBlockReason(kind, owner: tower.owner),
         ),
     ];
   }

@@ -507,7 +507,9 @@ class AiSkirmishControllerComponent extends Component
         if (tower is! WarFactoryComponent || !tower.canProduce) continue;
         final kinds = game.unitRepository.kindsFor(aiTeam).where((k) {
           final blueprint = game.unitRepository.blueprintFor(aiTeam, k);
-          return blueprint.isVehicle && blueprint.cost <= game.goldFor(aiTeam);
+          return blueprint.isVehicle &&
+              blueprint.cost <= game.goldFor(aiTeam) &&
+              game.canProduceUnit(k, owner: aiTeam);
         }).toList();
         if (kinds.isEmpty) continue;
         final produced = tower.produceUnit(
@@ -550,6 +552,7 @@ class AiSkirmishControllerComponent extends Component
             .kindsFor(aiTeam)
             .where((k) => !TrainingCenterComponent.producibleKinds.contains(k))
             .where((k) => tower.costFor(k) <= game.goldFor(aiTeam))
+            .where((k) => game.canProduceUnit(k, owner: aiTeam))
             .toList();
         if (kinds.isNotEmpty &&
             tower.produceUnit(_pickKind(kinds, aiTeam, enemy))) {

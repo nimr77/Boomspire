@@ -13,7 +13,9 @@ extension UnitKindExtensions on UnitKind {
     UnitKind.antiTankSoldier ||
     UnitKind.antiAirSoldier => HumanUnitType.infantry,
     UnitKind.helicopter => VehicleUnitType.helicopter,
-    UnitKind.attackPlane || UnitKind.aircraft => VehicleUnitType.plane,
+    UnitKind.attackPlane ||
+    UnitKind.aircraft ||
+    UnitKind.stealthBomber => VehicleUnitType.plane,
     UnitKind.tank ||
     UnitKind.artilleryBarrage ||
     UnitKind.antiAirVehicle => VehicleUnitType.heavyVehicle,

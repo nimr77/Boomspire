@@ -34,4 +34,14 @@ enum UnitKind {
   /// `attackDomains` include air, so it can shoot down player helicopters/
   /// aircraft as well as ground allies, not just one or the other.
   antiAirVehicle,
+
+  /// Flying-wing heavy bomber, fielded by both sides - a slow, high-value
+  /// air unit that flies a strafing-style pass (see
+  /// `MobileUnitComponent._updateStrafingRun`) but drops a single heavy
+  /// bomb per pass instead of a machine-gun-style burst. Shares one Lottie
+  /// model (`ally_stealthBomber`/`enemy_stealthBomber` are the same
+  /// silhouette) between both sides - team ownership is shown purely by the
+  /// stripe overlay (see `TeamStripeMarkerComponent`), not by recoloring
+  /// the model itself.
+  stealthBomber,
 }

@@ -274,9 +274,10 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
       for (final option in _productionState.optionsFor(game, tower))
         GameCoreTowerActionButtonWidget(
           icon: _unitIcon(option.kind),
-          label: option.ready
-              ? '${option.cost}g'
-              : '${option.cooldownRemaining.ceil()}s',
+          label: option.lockReason ??
+              (option.ready
+                  ? '${option.cost}g'
+                  : '${option.cooldownRemaining.ceil()}s'),
           color: AppThemeColors.accentEmerald,
           enabled: option.affordable,
           onTap: () => _productionState.produce(tower, option.kind),
@@ -295,6 +296,7 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
     UnitKind.artilleryBarrage => Icons.gps_fixed,
     UnitKind.antiTankSoldier => Icons.gps_fixed,
     UnitKind.antiAirSoldier => Icons.arrow_circle_up,
+    UnitKind.stealthBomber => Icons.airplanemode_active,
     _ => Icons.directions_walk,
   };
 }

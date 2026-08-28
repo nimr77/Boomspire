@@ -7,8 +7,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Color;
 
 import '../../../core/combat/attackable.dart';
+import '../../../core/combat/enums/vehicle_unit_type.dart';
+import '../../../core/combat/extensions/unit_kind_extensions.dart';
 import '../../../core/combat/mobile_unit_repository.dart';
 import '../../../core/combat/team.dart';
+import '../../../core/combat/unit_kind.dart';
 import '../../../core/rendering/domain/repos/unit_render_repository.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
@@ -333,6 +336,27 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   bool canBuildTower(UnitType type, {Team? owner}) =>
       buildBlockReason(type, owner: owner) == null;
+
+  /// Why [kind] can't be produced from a Training Center/War Factory right
+  /// now for [owner] (defaults to the human player), or null if it's
+  /// producible (gold/cooldown permitting) - shown in the action panel's
+  /// produce-unit row, and used identically by the AI skirmish opponent so
+  /// both sides are bound by the same rules (see [buildBlockReason]).
+  String? unitBlockReason(UnitKind kind, {Team? owner}) {
+    final builder = owner ?? playerTeam;
+    final isPlane = kind.bodyType == VehicleUnitType.plane;
+    if (kind == UnitKind.stealthBomber &&
+        !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
+      return 'Requires Tech Lab & Command Post';
+    }
+    if (isPlane && !hasCommandPostFor(builder)) {
+      return 'Requires Command Post';
+    }
+    return null;
+  }
+
+  bool canProduceUnit(UnitKind kind, {Team? owner}) =>
+      unitBlockReason(kind, owner: owner) == null;
 
   /// How many active Command Posts [owner] has standing - each one supports
   /// one Artillery Bunker for that same owner (see [buildLimitFor]).

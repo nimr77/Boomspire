@@ -46,6 +46,7 @@ class WarFactoryComponent extends TowerComponent {
     Vector2? captureTarget,
   }) {
     if (!canProduce) return false;
+    if (!game.canProduceUnit(kind, owner: owner)) return false;
     final blueprint = game.unitRepository.blueprintFor(owner, kind);
     if (!game.spendGoldFor(owner, blueprint.cost)) return false;
     cooldownRemaining = GameConfig.warFactoryProductionCooldown;

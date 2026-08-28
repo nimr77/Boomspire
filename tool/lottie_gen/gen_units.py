@@ -334,6 +334,29 @@ def enemy_tank():
     return ops, s, s
 
 
+# Flying-wing stealth bomber - one silhouette shared by both `ally_` and
+# `enemy_` keys (team ownership shown by `TeamStripeMarkerComponent`
+# instead of recoloring the model), mirroring
+# `AllySpriteFactory._paintStealthBomber`/`EnemySpriteFactory._paintStealthBomber`.
+def stealth_bomber():
+    s = 54.0
+    cx = cy = s / 2
+    ops = [shadow(cx, cy, 0.8 * s, 0.22 * s)]
+    wing_pts = [
+        (cx, cy - 0.12 * s),
+        (cx + 0.48 * s, cy + 0.34 * s),
+        (cx + 0.3 * s, cy + 0.4 * s),
+        (cx, cy + 0.16 * s),
+        (cx - 0.3 * s, cy + 0.4 * s),
+        (cx - 0.48 * s, cy + 0.34 * s),
+    ]
+    ops.append(op(polygon(wing_pts), gradient_fill([0xFF3A3F44, 0xFF0D0F10], cx, cy, 0.8 * s, 0.8 * s, "vertical")))
+    ops.append(op(ellipse(cx, cy - 0.02 * s, 0.1 * s, 0.16 * s), fill(0xFF1A1C1E)))
+    for dx in (-0.14 * s, 0.14 * s):
+        ops.append(op(rrect(cx + dx, cy + 0.3 * s, 0.05 * s, 0.1 * s, 0), fill(0xFF1A1C1E)))
+    return ops, s, s
+
+
 UNITS = {
     "ally_soldier": ally_soldier,
     "ally_tank": ally_tank,
@@ -342,6 +365,7 @@ UNITS = {
     "ally_rocketBarrage": ally_rocket_barrage,
     "ally_antiTankSoldier": ally_anti_tank,
     "ally_antiAirSoldier": ally_anti_air,
+    "ally_stealthBomber": stealth_bomber,
     "enemy_soldier": lambda: enemy_infantry(False),
     "enemy_heavySoldier": lambda: enemy_infantry(True),
     "enemy_tank": enemy_tank,
@@ -350,6 +374,7 @@ UNITS = {
     "enemy_artilleryBarrage": enemy_artillery_barrage,
     "enemy_rocketBarrage": enemy_rocket_barrage,
     "enemy_antiAirVehicle": enemy_anti_air_vehicle,
+    "enemy_stealthBomber": stealth_bomber,
 }
 
 
