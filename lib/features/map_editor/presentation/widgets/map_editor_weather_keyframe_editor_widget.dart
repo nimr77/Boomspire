@@ -92,7 +92,9 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
         ),
-        Expanded(child: Slider(value: value, onChanged: onChanged)),
+        Expanded(
+          child: Slider(value: value, onChanged: onChanged),
+        ),
       ],
     );
   }

@@ -154,9 +154,8 @@ class MapEditorCanvasPainter extends CustomPainter {
     canvas.drawRect(
       rect,
       Paint()
-        ..color = const Color(
-          0xFF120A24,
-        ).withValues(alpha: (1 - sunHeight) * 0.4),
+        ..color = const Color(0xFF120A24)
+            .withValues(alpha: (1 - sunHeight) * 0.4),
     );
 
     final from = sunFromRight ? Offset(size.width, 0) : Offset.zero;
@@ -180,9 +179,8 @@ class MapEditorCanvasPainter extends CustomPainter {
       canvas.drawRect(
         rect,
         Paint()
-          ..color = const Color(
-            0xFF37474F,
-          ).withValues(alpha: weather.cloudCover * 0.35),
+          ..color = const Color(0xFF37474F)
+              .withValues(alpha: weather.cloudCover * 0.35),
       );
     }
 

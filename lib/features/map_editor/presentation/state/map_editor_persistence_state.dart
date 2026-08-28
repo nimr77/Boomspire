@@ -149,9 +149,7 @@ class MapEditorPersistenceState {
     return GameRouteArgs(
       scene: GameScene(
         id: 'draft-${draft.id}',
-        name: draft.name.isEmpty
-            ? S.current.untitledMapEditorPage
-            : draft.name,
+        name: draft.name.isEmpty ? S.current.untitledMapEditorPage : draft.name,
         briefing: S.current.testingHandDrawnMapBriefingEditorPage,
         biome: draft.biome,
         waveCount: draft.waveCount,

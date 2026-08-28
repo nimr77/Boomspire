@@ -302,7 +302,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           ),
                         ],
                         const Divider(color: Colors.white24, height: 32),
-                        MapEditorSectionLabelWidget(S.current.mapLabelEditorPage),
+                        MapEditorSectionLabelWidget(
+                          S.current.mapLabelEditorPage,
+                        ),
                         DropdownButtonFormField<Biome>(
                           initialValue: currentDraft.biome,
                           dropdownColor: const Color(0xFF1A1F26),
@@ -331,7 +333,9 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           items: [
                             DropdownMenuItem(
                               value: GameMode.waveDefense,
-                              child: Text(S.current.waveDefenseOptionEditorPage),
+                              child: Text(
+                                S.current.waveDefenseOptionEditorPage,
+                              ),
                             ),
                             DropdownMenuItem(
                               value: GameMode.skirmish,
@@ -411,7 +415,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           Row(
                             children: [
                               IconButton(
-                                tooltip: S.current.previousWaveTooltipEditorPage,
+                                tooltip:
+                                    S.current.previousWaveTooltipEditorPage,
                                 icon: const Icon(
                                   Icons.chevron_left,
                                   color: Colors.white70,
@@ -730,4 +735,3 @@ class _MapEditorPageState extends State<MapEditorPage> {
       ..scaleByDouble(next, next, next, 1);
   }
 }
-
