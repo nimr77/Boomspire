@@ -11,6 +11,7 @@ import '../../audio/domain/models/sfx_type.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
 import '../../game_core/domain/models/game_status.dart';
 import '../../game_core/presentation/boomspire_game.dart';
+import '../../terrain/domain/models/terrain_map.dart';
 
 /// Drives round progression: schedules enemy spawns for the current wave,
 /// detects when a wave is cleared, and hands out the wave-clear gold bonus
@@ -37,6 +38,10 @@ class WaveDirectorComponent extends Component
 
   /// How long a batch waits before re-checking a crowded entry point.
   static const _spawnRetryDelay = 0.5;
+
+  /// Entry points closer than this many grid cells to the player's home
+  /// base are excluded from spawn selection - see [_planSpawnQueue].
+  static const _minHomeDistanceCells = 10;
 
   int _nextWaveNumber = 1;
   bool _waveActive = false;
@@ -184,7 +189,7 @@ class WaveDirectorComponent extends Component
     double aggression,
   ) {
     final totalEnemies = entries.fold<int>(0, (sum, e) => sum + e.count);
-    final availablePoints = List.of(game.terrainMap.spawnPoints)..shuffle();
+    final availablePoints = _eligibleSpawnPoints()..shuffle();
     final desiredGroups = totalEnemies > _splitThreshold
         ? 2 +
               (aggression * 2).round() +
@@ -219,6 +224,21 @@ class WaveDirectorComponent extends Component
       }
     }
     return queue;
+  }
+
+  /// Entry points at least [_minHomeDistanceCells] cells from the player's
+  /// home base - keeps the AI from ever spawning right on top of the base
+  /// it's supposed to be rushing. Falls back to every entry point if the
+  /// home base isn't up yet or none clear the distance (small maps).
+  List<PathPoint> _eligibleSpawnPoints() {
+    final home = game.world.playerHomeBase?.position;
+    final allPoints = List.of(game.terrainMap.spawnPoints);
+    if (home == null) return allPoints;
+    final minDistance = game.terrainMap.grid.cellSize * _minHomeDistanceCells;
+    final far = allPoints.where((p) {
+      return Vector2(p.x, p.y).distanceTo(home) >= minDistance;
+    }).toList();
+    return far.isEmpty ? allPoints : far;
   }
 
   /// True once [_maxUnitsPerSpawnPoint] invaders spawned from this run are
