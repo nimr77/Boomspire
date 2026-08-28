@@ -54,8 +54,9 @@ class GameCoreProductionState {
     BoomspireGame game,
     TowerComponent tower,
   ) {
-    if (tower is TrainingCenterComponent)
+    if (tower is TrainingCenterComponent) {
       return TrainingCenterComponent.producibleKinds;
+    }
     return game.unitRepository
         .kindsFor(game.playerTeam)
         .where(

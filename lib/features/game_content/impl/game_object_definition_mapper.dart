@@ -3,7 +3,6 @@ import '../../../core/combat/mobile_unit_blueprint.dart';
 import '../../towers/domain/models/building_type.dart';
 import '../../towers/domain/models/tower_type.dart';
 import '../../towers/domain/models/unit_blueprint.dart';
-import '../domain/enums/mobility_type.dart';
 import '../domain/models/asset_source.dart';
 import '../domain/models/build_requirement.dart';
 import '../domain/models/game_object_category.dart';
@@ -129,7 +128,9 @@ GameObjectDefinition mobileUnitToDefinition(
     size: blueprint.size,
     projectileCount: blueprint.projectileCount,
     movementStyle: blueprint.movementStyle,
-    unitType: blueprint.isVehicle ? MobilityType.vehicle : MobilityType.infantry,
+    unitType: blueprint.isVehicle
+        ? MobilityType.vehicle
+        : MobilityType.infantry,
     bounty: blueprint.bounty,
     prefersStructures: blueprint.prefersStructures,
     requirements: requirements,
