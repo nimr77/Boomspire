@@ -427,5 +427,28 @@
   "untitledMapEditorPage": "Untitled Map",
   "@untitledMapEditorPage": {},
   "testingHandDrawnMapBriefingEditorPage": "Testing your hand-drawn map draft.",
-  "@testingHandDrawnMapBriefingEditorPage": {}
+  "@testingHandDrawnMapBriefingEditorPage": {},
+  "weaponLabelBullet": "Bullets",
+  "@weaponLabelBullet": {},
+  "weaponLabelCannon": "Cannon Shells",
+  "@weaponLabelCannon": {},
+  "weaponLabelRocket": "Rockets",
+  "@weaponLabelRocket": {},
+  "weaponLabelLaser": "Laser Beam",
+  "@weaponLabelLaser": {},
+  "hpLabelEntityPanel": "HP {current}/{max}",
+  "@hpLabelEntityPanel": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "activeLabelEntityPanel": "Active",
+  "@activeLabelEntityPanel": {},
+  "unclaimedLabelEntityPanel": "Unclaimed",
+  "@unclaimedLabelEntityPanel": {}
 }

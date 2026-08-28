@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Fades/slides a label in whenever its text changes - used so cost/state
-/// text in the tower action panel (gold costs, "MAX", "Active"...) doesn't
-/// just snap when the underlying tower stat changes.
+/// text in the entity panel (gold costs, "MAX", "Active"...) doesn't just
+/// snap when the underlying tower/unit stat changes.
 class GameCoreTowerActionAnimatedLabelWidget extends StatelessWidget {
   final String label;
   final TextStyle style;

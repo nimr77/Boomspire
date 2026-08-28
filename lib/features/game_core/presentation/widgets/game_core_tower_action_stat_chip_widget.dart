@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Small icon+text pill for a passive stat readout - used by the Gold
-/// Mine's row in [TowerActionPanel] since it has no action button, just
-/// information.
+/// Mine's row and a unit's fire-stats row in `GameCoreEntityPanelWidget`
+/// since those are informational, with no action button.
 class GameCoreTowerActionStatChipWidget extends StatelessWidget {
   final IconData icon;
   final String label;

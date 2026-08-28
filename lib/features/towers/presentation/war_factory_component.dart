@@ -10,7 +10,7 @@ import 'tower_component.dart';
 
 /// Non-combat structure: it never fires (zero range/damage). Instead, the
 /// player mans it via the build menu shown when it's selected on the
-/// battlefield (see `TowerActionPanel`), spending gold to roll out any
+/// battlefield (see `GameCoreEntityPanelWidget`), spending gold to roll out any
 /// buildable unit of their choosing that heads out to hunt down the
 /// nearest hostile on its own (see
 /// `MobileUnitComponent`/`UnitObjective.huntHostiles`) - or, on a

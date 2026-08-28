@@ -122,7 +122,7 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   /// Read-only info card for whatever isn't the player's to command (an
   /// enemy tower, any mobile unit, or a resource node) - see [InspectedInfo]
-  /// and `InspectPanel`. Mutually exclusive with [selectedTower]:
+  /// and `GameCoreEntityPanelWidget`. Mutually exclusive with [selectedTower]:
   /// [handleArenaTap] always clears one before setting the other.
   final ValueNotifier<InspectedInfo?> inspected = ValueNotifier(null);
 
@@ -562,6 +562,7 @@ class BoomspireGame extends FlameGame<GameWorld>
         kind: InspectedKind.unit,
         name: tappedUnit.blueprint.name,
         owner: tappedUnit.team,
+        unitBlueprint: tappedUnit.blueprint,
       );
       pendingPlacement.value = null;
       return;

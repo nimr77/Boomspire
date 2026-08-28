@@ -8,7 +8,7 @@ import 'tower_component.dart';
 
 /// Non-combat structure: it never fires (zero range/damage). Instead, the
 /// player mans it via the build menu shown when it's selected on the
-/// battlefield (see `TowerActionPanel`), spending gold to muster a fresh
+/// battlefield (see `GameCoreEntityPanelWidget`), spending gold to muster a fresh
 /// Ally Soldier that walks out to hunt down the nearest hostile on its own
 /// (see `MobileUnitComponent`/`UnitObjective.huntHostiles`) - or, on a
 /// [GameMode.skirmish] map, marches to assault the AI's base instead.

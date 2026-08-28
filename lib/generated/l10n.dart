@@ -1479,6 +1479,76 @@ class S {
       args: [],
     );
   }
+
+  /// `Bullets`
+  String get weaponLabelBullet {
+    return Intl.message(
+      'Bullets',
+      name: 'weaponLabelBullet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cannon Shells`
+  String get weaponLabelCannon {
+    return Intl.message(
+      'Cannon Shells',
+      name: 'weaponLabelCannon',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rockets`
+  String get weaponLabelRocket {
+    return Intl.message(
+      'Rockets',
+      name: 'weaponLabelRocket',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Laser Beam`
+  String get weaponLabelLaser {
+    return Intl.message(
+      'Laser Beam',
+      name: 'weaponLabelLaser',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `HP {current}/{max}`
+  String hpLabelEntityPanel(int current, int max) {
+    return Intl.message(
+      'HP $current/$max',
+      name: 'hpLabelEntityPanel',
+      desc: '',
+      args: [current, max],
+    );
+  }
+
+  /// `Active`
+  String get activeLabelEntityPanel {
+    return Intl.message(
+      'Active',
+      name: 'activeLabelEntityPanel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unclaimed`
+  String get unclaimedLabelEntityPanel {
+    return Intl.message(
+      'Unclaimed',
+      name: 'unclaimedLabelEntityPanel',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

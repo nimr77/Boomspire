@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'game_core_tower_action_animated_label_widget.dart';
 
-/// Small action button in [TowerActionPanel]'s stat row (repair, upgrade,
-/// anti-rocket, sell) - dims and disables its tap when unaffordable/locked.
+/// Small action button in `GameCoreEntityPanelWidget`'s tower stat row
+/// (repair, upgrade, anti-rocket, sell) - dims and disables its tap when
+/// unaffordable/locked.
 class GameCoreTowerActionButtonWidget extends StatelessWidget {
   final IconData icon;
   final String label;

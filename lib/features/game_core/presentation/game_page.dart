@@ -25,10 +25,9 @@ import '../domain/models/game_scene.dart';
 import '../domain/models/game_status.dart';
 import '../domain/repos/game_state_repository.dart';
 import 'boomspire_game.dart';
+import 'widgets/game_core_entity_panel_widget.dart';
 import 'widgets/game_over_overlay.dart';
 import 'widgets/hud_overlay.dart';
-import 'widgets/inspect_panel.dart';
-import 'widgets/tower_action_panel.dart';
 import 'widgets/victory_overlay.dart';
 
 /// Hosts the [GameWidget] and keeps its Flutter overlays (HUD / game-over /
@@ -185,24 +184,15 @@ class _GamePageState extends State<GamePage> {
             ],
           ),
           // Floats over the game canvas (doesn't resize the letterboxed
-          // arena the way a Column sibling would) - docked just above the
-          // command bar.
+          // arena the way a Column sibling would) - docked to the left edge,
+          // clear of the command bar and the top-right window controls.
           Positioned(
-            left: 0,
-            right: 0,
+            left: 16,
+            top: 0,
             bottom: 112,
             child: Align(
-              alignment: Alignment.bottomCenter,
-              child: TowerActionPanel(game: _game),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 112,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: InspectPanel(game: _game),
+              alignment: Alignment.centerLeft,
+              child: GameCoreEntityPanelWidget(game: _game),
             ),
           ),
           Positioned(

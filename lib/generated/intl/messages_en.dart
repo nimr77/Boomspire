@@ -33,33 +33,35 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m5(count, max) =>
       "Home sites: ${count}/${max} - tap to place, tap a marker to remove.";
 
-  static String m6(health) => "AI BASE ${health}";
+  static String m6(current, max) => "HP ${current}/${max}";
 
-  static String m7(current, total) => "WAVE ${current} / ${total}";
+  static String m7(health) => "AI BASE ${health}";
 
-  static String m8(name) => "Imported \"${name}\"";
+  static String m8(current, total) => "WAVE ${current} / ${total}";
 
-  static String m9(percent) => "At ${percent}% of match";
+  static String m9(name) => "Imported \"${name}\"";
 
-  static String m10(max) => "Only ${max} home sites supported";
+  static String m10(percent) => "At ${percent}% of match";
 
-  static String m11(percent) => "Preview weather at: ${percent}% of match";
+  static String m11(max) => "Only ${max} home sites supported";
 
-  static String m12(count) => "Randomize all ${count} waves";
+  static String m12(percent) => "Preview weather at: ${percent}% of match";
 
-  static String m13(width) => "River width: ${width}";
+  static String m13(count) => "Randomize all ${count} waves";
 
-  static String m14(name) => "Saved \"${name}\"";
+  static String m14(width) => "River width: ${width}";
 
-  static String m15(percent) => "Sun angle: ${percent}%";
+  static String m15(name) => "Saved \"${name}\"";
 
-  static String m16(tier) => "Tier ${tier}";
+  static String m16(percent) => "Sun angle: ${percent}%";
 
-  static String m17(current, total) => "Wave ${current} / ${total}";
+  static String m17(tier) => "Tier ${tier}";
 
-  static String m18(count) => "${count} WAVES";
+  static String m18(current, total) => "Wave ${current} / ${total}";
 
-  static String m19(percent) => "${percent}%";
+  static String m19(count) => "${count} WAVES";
+
+  static String m20(percent) => "${percent}%";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -75,6 +77,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "accountWelcomeTitle": MessageLookupByLibrary.simpleMessage(
       "Welcome, Commander",
     ),
+    "activeLabelEntityPanel": MessageLookupByLibrary.simpleMessage("Active"),
     "addKeyframeLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Add keyframe",
     ),
@@ -181,10 +184,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "heightLabelEditorPage": MessageLookupByLibrary.simpleMessage("Height"),
     "homeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Home"),
     "homeSitesHintEditorPage": m5,
-    "hudAiBaseLabel": m6,
-    "hudWaveLabel": m7,
-    "importedMapEditorPage": m8,
-    "keyframeAtProgressLabelEditorPage": m9,
+    "hpLabelEntityPanel": m6,
+    "hudAiBaseLabel": m7,
+    "hudWaveLabel": m8,
+    "importedMapEditorPage": m9,
+    "keyframeAtProgressLabelEditorPage": m10,
     "lakeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Lake"),
     "levelSelectSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose a campaign",
@@ -221,15 +225,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "nextWaveTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
       "Next wave",
     ),
-    "onlyHomeSitesSupportedEditorPage": m10,
+    "onlyHomeSitesSupportedEditorPage": m11,
     "playAgain": MessageLookupByLibrary.simpleMessage("PLAY AGAIN"),
     "playLabelEditorPage": MessageLookupByLibrary.simpleMessage("Play"),
-    "previewWeatherLabelEditorPage": m11,
+    "previewWeatherLabelEditorPage": m12,
     "previousWaveTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
       "Previous wave",
     ),
     "rainLabelEditorPage": MessageLookupByLibrary.simpleMessage("Rain"),
-    "randomizeAllWavesLabelEditorPage": m12,
+    "randomizeAllWavesLabelEditorPage": m13,
     "randomizeWaveLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Randomize",
     ),
@@ -240,9 +244,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Reset zoom",
     ),
     "riverLabelEditorPage": MessageLookupByLibrary.simpleMessage("River"),
-    "riverWidthLabelEditorPage": m13,
+    "riverWidthLabelEditorPage": m14,
     "saveLabelEditorPage": MessageLookupByLibrary.simpleMessage("Save"),
-    "savedMapEditorPage": m14,
+    "savedMapEditorPage": m15,
     "sceneCompleted": MessageLookupByLibrary.simpleMessage("COMPLETED"),
     "skirmishOptionEditorPage": MessageLookupByLibrary.simpleMessage(
       "Skirmish",
@@ -295,7 +299,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "startingGoldLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Starting gold",
     ),
-    "sunAngleLabelEditorPage": m15,
+    "sunAngleLabelEditorPage": m16,
     "testingHandDrawnMapBriefingEditorPage":
         MessageLookupByLibrary.simpleMessage(
           "Testing your hand-drawn map draft.",
@@ -313,7 +317,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "towerNameRocket": MessageLookupByLibrary.simpleMessage("Rocket Battery"),
     "towerNameRocketSilo": MessageLookupByLibrary.simpleMessage("Rocket Silo"),
     "towerNameSam": MessageLookupByLibrary.simpleMessage("SAM Site"),
-    "towerTier": m16,
+    "towerTier": m17,
+    "unclaimedLabelEntityPanel": MessageLookupByLibrary.simpleMessage(
+      "Unclaimed",
+    ),
     "untitledMapEditorPage": MessageLookupByLibrary.simpleMessage(
       "Untitled Map",
     ),
@@ -324,9 +331,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "waveDefenseOptionEditorPage": MessageLookupByLibrary.simpleMessage(
       "Wave Defense",
     ),
-    "waveHeaderEditorPage": m17,
-    "wavesCount": m18,
+    "waveHeaderEditorPage": m18,
+    "wavesCount": m19,
     "wavesLabelEditorPage": MessageLookupByLibrary.simpleMessage("Waves"),
+    "weaponLabelBullet": MessageLookupByLibrary.simpleMessage("Bullets"),
+    "weaponLabelCannon": MessageLookupByLibrary.simpleMessage("Cannon Shells"),
+    "weaponLabelLaser": MessageLookupByLibrary.simpleMessage("Laser Beam"),
+    "weaponLabelRocket": MessageLookupByLibrary.simpleMessage("Rockets"),
     "weatherTimelineLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Weather timeline",
     ),
@@ -336,6 +347,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "zoomOutTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
       "Zoom out",
     ),
-    "zoomPercentEditorPage": m19,
+    "zoomPercentEditorPage": m20,
   };
 }
