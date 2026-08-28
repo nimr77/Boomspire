@@ -3,10 +3,13 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../../core/combat/enums/movement_style.dart';
 import '../../../../core/combat/enums/weapon_type.dart';
 import '../../../../core/combat/unit.dart';
+import '../enums/mobility_type.dart';
 import 'asset_source.dart';
 import 'build_requirement.dart';
 import 'game_object_category.dart';
 import 'sound_ref.dart';
+
+export '../enums/mobility_type.dart';
 
 part 'game_object_definition.freezed.dart';
 part 'game_object_definition.g.dart';
@@ -68,7 +71,7 @@ abstract class GameObjectDefinition with _$GameObjectDefinition {
     @Default(0) double size,
     @Default(1) int projectileCount,
     @Default(MovementStyle.walk) MovementStyle movementStyle,
-    @Default(false) bool isVehicle,
+    @Default(MobilityType.infantry) MobilityType unitType,
     @Default(0) int bounty,
     @Default(false) bool prefersStructures,
 
@@ -80,7 +83,7 @@ abstract class GameObjectDefinition with _$GameObjectDefinition {
     @Default(<BuildRequirement>[])
     List<BuildRequirement> requirements,
 
-    required AssetSource asset,
+    required AssetSource modelView,
     required SoundRef sound,
   }) = _GameObjectDefinition;
 

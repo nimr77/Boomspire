@@ -36,7 +36,9 @@ _GameObjectDefinition _$GameObjectDefinitionFromJson(
   movementStyle:
       $enumDecodeNullable(_$MovementStyleEnumMap, json['movementStyle']) ??
       MovementStyle.walk,
-  isVehicle: json['isVehicle'] as bool? ?? false,
+  unitType:
+      $enumDecodeNullable(_$MobilityTypeEnumMap, json['unitType']) ??
+      MobilityType.infantry,
   bounty: (json['bounty'] as num?)?.toInt() ?? 0,
   prefersStructures: json['prefersStructures'] as bool? ?? false,
   producibleUnitIds:
@@ -47,7 +49,7 @@ _GameObjectDefinition _$GameObjectDefinitionFromJson(
   requirements: json['requirements'] == null
       ? const <BuildRequirement>[]
       : _requirementsFromJson(json['requirements'] as List),
-  asset: AssetSource.fromJson(json['asset'] as Map<String, dynamic>),
+  modelView: AssetSource.fromJson(json['modelView'] as Map<String, dynamic>),
   sound: SoundRef.fromJson(json['sound'] as Map<String, dynamic>),
 );
 
@@ -73,12 +75,12 @@ Map<String, dynamic> _$GameObjectDefinitionToJson(
   'size': instance.size,
   'projectileCount': instance.projectileCount,
   'movementStyle': _$MovementStyleEnumMap[instance.movementStyle]!,
-  'isVehicle': instance.isVehicle,
+  'unitType': _$MobilityTypeEnumMap[instance.unitType]!,
   'bounty': instance.bounty,
   'prefersStructures': instance.prefersStructures,
   'producibleUnitIds': instance.producibleUnitIds,
   'requirements': _requirementsToJson(instance.requirements),
-  'asset': instance.asset.toJson(),
+  'modelView': instance.modelView.toJson(),
   'sound': instance.sound.toJson(),
 };
 
@@ -107,4 +109,9 @@ const _$MovementStyleEnumMap = {
   MovementStyle.hover: 'hover',
   MovementStyle.swoop: 'swoop',
   MovementStyle.sail: 'sail',
+};
+
+const _$MobilityTypeEnumMap = {
+  MobilityType.infantry: 'infantry',
+  MobilityType.vehicle: 'vehicle',
 };

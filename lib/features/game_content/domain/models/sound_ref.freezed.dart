@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SoundRef {
 
- SfxType? get builtIn; String? get remoteUrl;
+ SoundSourceType? get type; String? get path;
 /// Create a copy of SoundRef
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $SoundRefCopyWith<SoundRef> get copyWith => _$SoundRefCopyWithImpl<SoundRef>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SoundRef&&(identical(other.builtIn, builtIn) || other.builtIn == builtIn)&&(identical(other.remoteUrl, remoteUrl) || other.remoteUrl == remoteUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SoundRef&&(identical(other.type, type) || other.type == type)&&(identical(other.path, path) || other.path == path));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,builtIn,remoteUrl);
+int get hashCode => Object.hash(runtimeType,type,path);
 
 @override
 String toString() {
-  return 'SoundRef(builtIn: $builtIn, remoteUrl: $remoteUrl)';
+  return 'SoundRef(type: $type, path: $path)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $SoundRefCopyWith<$Res>  {
   factory $SoundRefCopyWith(SoundRef value, $Res Function(SoundRef) _then) = _$SoundRefCopyWithImpl;
 @useResult
 $Res call({
- SfxType? builtIn, String? remoteUrl
+ SoundSourceType? type, String? path
 });
 
 
@@ -66,10 +66,10 @@ class _$SoundRefCopyWithImpl<$Res>
 
 /// Create a copy of SoundRef
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? builtIn = freezed,Object? remoteUrl = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? type = freezed,Object? path = freezed,}) {
   return _then(SoundRef(
-builtIn: freezed == builtIn ? _self.builtIn : builtIn // ignore: cast_nullable_to_non_nullable
-as SfxType?,remoteUrl: freezed == remoteUrl ? _self.remoteUrl : remoteUrl // ignore: cast_nullable_to_non_nullable
+type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as SoundSourceType?,path: freezed == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -155,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SfxType? builtIn,  String? remoteUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SoundSourceType? type,  String? path)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SoundRef() when $default != null:
-return $default(_that.builtIn,_that.remoteUrl);case _:
+return $default(_that.type,_that.path);case _:
   return orElse();
 
 }
@@ -176,10 +176,10 @@ return $default(_that.builtIn,_that.remoteUrl);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SfxType? builtIn,  String? remoteUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SoundSourceType? type,  String? path)  $default,) {final _that = this;
 switch (_that) {
 case _SoundRef():
-return $default(_that.builtIn,_that.remoteUrl);case _:
+return $default(_that.type,_that.path);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +196,10 @@ return $default(_that.builtIn,_that.remoteUrl);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SfxType? builtIn,  String? remoteUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SoundSourceType? type,  String? path)?  $default,) {final _that = this;
 switch (_that) {
 case _SoundRef() when $default != null:
-return $default(_that.builtIn,_that.remoteUrl);case _:
+return $default(_that.type,_that.path);case _:
   return null;
 
 }
@@ -211,11 +211,11 @@ return $default(_that.builtIn,_that.remoteUrl);case _:
 @JsonSerializable()
 
 class _SoundRef implements SoundRef {
-  const _SoundRef({this.builtIn, this.remoteUrl});
+  const _SoundRef({this.type, this.path});
   factory _SoundRef.fromJson(Map<String, dynamic> json) => _$SoundRefFromJson(json);
 
-@override final  SfxType? builtIn;
-@override final  String? remoteUrl;
+@override final  SoundSourceType? type;
+@override final  String? path;
 
 /// Create a copy of SoundRef
 /// with the given fields replaced by the non-null parameter values.
@@ -230,16 +230,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SoundRef&&(identical(other.builtIn, builtIn) || other.builtIn == builtIn)&&(identical(other.remoteUrl, remoteUrl) || other.remoteUrl == remoteUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SoundRef&&(identical(other.type, type) || other.type == type)&&(identical(other.path, path) || other.path == path));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,builtIn,remoteUrl);
+int get hashCode => Object.hash(runtimeType,type,path);
 
 @override
 String toString() {
-  return 'SoundRef(builtIn: $builtIn, remoteUrl: $remoteUrl)';
+  return 'SoundRef(type: $type, path: $path)';
 }
 
 
@@ -250,7 +250,7 @@ abstract mixin class _$SoundRefCopyWith<$Res> implements $SoundRefCopyWith<$Res>
   factory _$SoundRefCopyWith(_SoundRef value, $Res Function(_SoundRef) _then) = __$SoundRefCopyWithImpl;
 @override @useResult
 $Res call({
- SfxType? builtIn, String? remoteUrl
+ SoundSourceType? type, String? path
 });
 
 
@@ -267,10 +267,10 @@ class __$SoundRefCopyWithImpl<$Res>
 
 /// Create a copy of SoundRef
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? builtIn = freezed,Object? remoteUrl = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? type = freezed,Object? path = freezed,}) {
   return _then(_SoundRef(
-builtIn: freezed == builtIn ? _self.builtIn : builtIn // ignore: cast_nullable_to_non_nullable
-as SfxType?,remoteUrl: freezed == remoteUrl ? _self.remoteUrl : remoteUrl // ignore: cast_nullable_to_non_nullable
+type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as SoundSourceType?,path: freezed == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

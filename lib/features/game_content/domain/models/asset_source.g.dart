@@ -7,12 +7,19 @@ part of 'asset_source.dart';
 // **************************************************************************
 
 _AssetSource _$AssetSourceFromJson(Map<String, dynamic> json) => _AssetSource(
-  modelKey: json['modelKey'] as String,
-  remoteUrl: json['remoteUrl'] as String?,
+  type:
+      $enumDecodeNullable(_$AssetSourceTypeEnumMap, json['type']) ??
+      AssetSourceType.assets,
+  path: json['path'] as String,
 );
 
 Map<String, dynamic> _$AssetSourceToJson(_AssetSource instance) =>
     <String, dynamic>{
-      'modelKey': instance.modelKey,
-      'remoteUrl': instance.remoteUrl,
+      'type': _$AssetSourceTypeEnumMap[instance.type]!,
+      'path': instance.path,
     };
+
+const _$AssetSourceTypeEnumMap = {
+  AssetSourceType.assets: 'assets',
+  AssetSourceType.remote: 'remote',
+};

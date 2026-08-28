@@ -99,7 +99,7 @@ GameObjectDefinition _def(
     category: GameObjectCategory.tower,
     damage: 10,
     requirements: requirements,
-    asset: const AssetSource(modelKey: 'tower_machineGun'),
+    modelView: const AssetSource(path: 'tower_machineGun'),
     sound: const SoundRef(),
   );
 }

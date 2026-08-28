@@ -20,18 +20,18 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "tower_machineGun",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "tower_machineGun"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -55,18 +55,18 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "tower_rocket",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "tower_rocket"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -90,18 +90,18 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "tower_cannon",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "tower_cannon"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -124,18 +124,18 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "tower_antiAir",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "tower_antiAir"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -160,7 +160,7 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
@@ -171,13 +171,13 @@
         "minCount": 1
       }
     ],
-    "asset": {
-      "modelKey": "tower_laser",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "tower_laser"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -201,7 +201,7 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
@@ -217,13 +217,13 @@
         "minCount": 1
       }
     ],
-    "asset": {
-      "modelKey": "tower_rocketSilo",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "tower_rocketSilo"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -247,7 +247,7 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
@@ -258,13 +258,13 @@
         "minCount": 1
       }
     ],
-    "asset": {
-      "modelKey": "tower_artilleryBunker",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "tower_artilleryBunker"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -287,7 +287,7 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
@@ -303,13 +303,13 @@
         "minCount": 1
       }
     ],
-    "asset": {
-      "modelKey": "tower_sam",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "tower_sam"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -332,18 +332,18 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "building_techLab",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "building_techLab"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -366,18 +366,18 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "building_commandPost",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "building_commandPost"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -400,7 +400,7 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [
@@ -414,13 +414,13 @@
         "minScore": 250
       }
     ],
-    "asset": {
-      "modelKey": "building_trainingCenter",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "building_trainingCenter"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -443,7 +443,7 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [
@@ -458,13 +458,13 @@
         "minScore": 500
       }
     ],
-    "asset": {
-      "modelKey": "building_warFactory",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "building_warFactory"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -487,18 +487,18 @@
     "size": 0.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 0,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "building_goldMine",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "building_goldMine"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -521,18 +521,18 @@
     "size": 34.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 12,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_soldier",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_soldier"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -555,18 +555,18 @@
     "size": 46.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 30,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_heavySoldier",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_heavySoldier"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -590,18 +590,18 @@
     "size": 38.0,
     "projectileCount": 1,
     "movementStyle": "hover",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 22,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_helicopter",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_helicopter"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -624,18 +624,18 @@
     "size": 50.0,
     "projectileCount": 1,
     "movementStyle": "roll",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 60,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_tank",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_tank"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -659,18 +659,18 @@
     "size": 40.0,
     "projectileCount": 1,
     "movementStyle": "swoop",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 40,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_attackPlane",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_attackPlane"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -693,18 +693,18 @@
     "size": 52.0,
     "projectileCount": 3,
     "movementStyle": "roll",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 70,
     "prefersStructures": true,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_artilleryBarrage",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_artilleryBarrage"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -728,18 +728,18 @@
     "size": 50.0,
     "projectileCount": 1,
     "movementStyle": "roll",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 65,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_rocketBarrage",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_rocketBarrage"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -763,18 +763,18 @@
     "size": 46.0,
     "projectileCount": 2,
     "movementStyle": "roll",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 48,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_antiAirVehicle",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_antiAirVehicle"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -797,18 +797,18 @@
     "size": 34.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 15,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_soldier",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_soldier"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -831,18 +831,18 @@
     "size": 50.0,
     "projectileCount": 1,
     "movementStyle": "roll",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 55,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_tank",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_tank"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -865,18 +865,18 @@
     "size": 38.0,
     "projectileCount": 1,
     "movementStyle": "roll",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 35,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_lightVehicle",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_lightVehicle"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -900,18 +900,18 @@
     "size": 40.0,
     "projectileCount": 1,
     "movementStyle": "swoop",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 45,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_aircraft",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_aircraft"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -935,18 +935,18 @@
     "size": 50.0,
     "projectileCount": 1,
     "movementStyle": "roll",
-    "isVehicle": true,
+    "unitType": "vehicle",
     "bounty": 80,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_rocketBarrage",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_rocketBarrage"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -969,18 +969,18 @@
     "size": 34.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 25,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_antiTankSoldier",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_antiTankSoldier"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   },
   {
@@ -1004,18 +1004,18 @@
     "size": 34.0,
     "projectileCount": 1,
     "movementStyle": "walk",
-    "isVehicle": false,
+    "unitType": "infantry",
     "bounty": 22,
     "prefersStructures": false,
     "producibleUnitIds": [],
     "requirements": [],
-    "asset": {
-      "modelKey": "unit_antiAirSoldier",
-      "remoteUrl": null
+    "modelView": {
+      "type": "assets",
+      "path": "unit_antiAirSoldier"
     },
     "sound": {
-      "builtIn": null,
-      "remoteUrl": null
+      "type": null,
+      "path": null
     }
   }
 ]

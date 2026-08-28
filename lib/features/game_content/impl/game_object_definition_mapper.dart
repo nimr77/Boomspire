@@ -3,6 +3,7 @@ import '../../../core/combat/mobile_unit_blueprint.dart';
 import '../../towers/domain/models/building_type.dart';
 import '../../towers/domain/models/tower_type.dart';
 import '../../towers/domain/models/unit_blueprint.dart';
+import '../domain/enums/mobility_type.dart';
 import '../domain/models/asset_source.dart';
 import '../domain/models/build_requirement.dart';
 import '../domain/models/game_object_category.dart';
@@ -42,7 +43,7 @@ MobileUnitBlueprint applyMobileUnitOverride(
   attackInterval: override.fireRate,
   projectileCount: override.projectileCount,
   movementStyle: override.movementStyle,
-  isVehicle: override.isVehicle,
+  isVehicle: override.unitType == MobilityType.vehicle,
   weaponType: override.weaponType,
   bounty: override.bounty,
   cost: override.cost,
@@ -86,7 +87,7 @@ GameObjectDefinition buildingToDefinition(
     cost: blueprint.cost,
     requirements: requirements,
     producibleUnitIds: producibleUnitIds,
-    asset: AssetSource(modelKey: 'building_${type.name}'),
+    modelView: AssetSource(path: 'building_${type.name}'),
     sound: const SoundRef(),
   );
 }
@@ -128,11 +129,11 @@ GameObjectDefinition mobileUnitToDefinition(
     size: blueprint.size,
     projectileCount: blueprint.projectileCount,
     movementStyle: blueprint.movementStyle,
-    isVehicle: blueprint.isVehicle,
+    unitType: blueprint.isVehicle ? MobilityType.vehicle : MobilityType.infantry,
     bounty: blueprint.bounty,
     prefersStructures: blueprint.prefersStructures,
     requirements: requirements,
-    asset: AssetSource(modelKey: 'unit_${blueprint.kind.name}'),
+    modelView: AssetSource(path: 'unit_${blueprint.kind.name}'),
     sound: const SoundRef(),
   );
 }
@@ -166,7 +167,7 @@ GameObjectDefinition towerToDefinition(
     attackDomains: blueprint.attackDomains,
     cost: blueprint.cost,
     requirements: requirements,
-    asset: AssetSource(modelKey: 'tower_${type.name}'),
+    modelView: AssetSource(path: 'tower_${type.name}'),
     sound: const SoundRef(),
   );
 }

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AssetSource {
 
- String get modelKey; String? get remoteUrl;
+ AssetSourceType get type; String get path;
 /// Create a copy of AssetSource
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $AssetSourceCopyWith<AssetSource> get copyWith => _$AssetSourceCopyWithImpl<Asse
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssetSource&&(identical(other.modelKey, modelKey) || other.modelKey == modelKey)&&(identical(other.remoteUrl, remoteUrl) || other.remoteUrl == remoteUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssetSource&&(identical(other.type, type) || other.type == type)&&(identical(other.path, path) || other.path == path));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,modelKey,remoteUrl);
+int get hashCode => Object.hash(runtimeType,type,path);
 
 @override
 String toString() {
-  return 'AssetSource(modelKey: $modelKey, remoteUrl: $remoteUrl)';
+  return 'AssetSource(type: $type, path: $path)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $AssetSourceCopyWith<$Res>  {
   factory $AssetSourceCopyWith(AssetSource value, $Res Function(AssetSource) _then) = _$AssetSourceCopyWithImpl;
 @useResult
 $Res call({
- String modelKey, String? remoteUrl
+ AssetSourceType type, String path
 });
 
 
@@ -66,11 +66,11 @@ class _$AssetSourceCopyWithImpl<$Res>
 
 /// Create a copy of AssetSource
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? modelKey = null,Object? remoteUrl = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? path = null,}) {
   return _then(AssetSource(
-modelKey: null == modelKey ? _self.modelKey : modelKey // ignore: cast_nullable_to_non_nullable
-as String,remoteUrl: freezed == remoteUrl ? _self.remoteUrl : remoteUrl // ignore: cast_nullable_to_non_nullable
-as String?,
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as AssetSourceType,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -155,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String modelKey,  String? remoteUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AssetSourceType type,  String path)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AssetSource() when $default != null:
-return $default(_that.modelKey,_that.remoteUrl);case _:
+return $default(_that.type,_that.path);case _:
   return orElse();
 
 }
@@ -176,10 +176,10 @@ return $default(_that.modelKey,_that.remoteUrl);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String modelKey,  String? remoteUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AssetSourceType type,  String path)  $default,) {final _that = this;
 switch (_that) {
 case _AssetSource():
-return $default(_that.modelKey,_that.remoteUrl);case _:
+return $default(_that.type,_that.path);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +196,10 @@ return $default(_that.modelKey,_that.remoteUrl);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String modelKey,  String? remoteUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AssetSourceType type,  String path)?  $default,) {final _that = this;
 switch (_that) {
 case _AssetSource() when $default != null:
-return $default(_that.modelKey,_that.remoteUrl);case _:
+return $default(_that.type,_that.path);case _:
   return null;
 
 }
@@ -211,11 +211,11 @@ return $default(_that.modelKey,_that.remoteUrl);case _:
 @JsonSerializable()
 
 class _AssetSource implements AssetSource {
-  const _AssetSource({required this.modelKey, this.remoteUrl});
+  const _AssetSource({this.type = AssetSourceType.assets, required this.path});
   factory _AssetSource.fromJson(Map<String, dynamic> json) => _$AssetSourceFromJson(json);
 
-@override final  String modelKey;
-@override final  String? remoteUrl;
+@override@JsonKey() final  AssetSourceType type;
+@override final  String path;
 
 /// Create a copy of AssetSource
 /// with the given fields replaced by the non-null parameter values.
@@ -230,16 +230,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssetSource&&(identical(other.modelKey, modelKey) || other.modelKey == modelKey)&&(identical(other.remoteUrl, remoteUrl) || other.remoteUrl == remoteUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssetSource&&(identical(other.type, type) || other.type == type)&&(identical(other.path, path) || other.path == path));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,modelKey,remoteUrl);
+int get hashCode => Object.hash(runtimeType,type,path);
 
 @override
 String toString() {
-  return 'AssetSource(modelKey: $modelKey, remoteUrl: $remoteUrl)';
+  return 'AssetSource(type: $type, path: $path)';
 }
 
 
@@ -250,7 +250,7 @@ abstract mixin class _$AssetSourceCopyWith<$Res> implements $AssetSourceCopyWith
   factory _$AssetSourceCopyWith(_AssetSource value, $Res Function(_AssetSource) _then) = __$AssetSourceCopyWithImpl;
 @override @useResult
 $Res call({
- String modelKey, String? remoteUrl
+ AssetSourceType type, String path
 });
 
 
@@ -267,11 +267,11 @@ class __$AssetSourceCopyWithImpl<$Res>
 
 /// Create a copy of AssetSource
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? modelKey = null,Object? remoteUrl = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? path = null,}) {
   return _then(_AssetSource(
-modelKey: null == modelKey ? _self.modelKey : modelKey // ignore: cast_nullable_to_non_nullable
-as String,remoteUrl: freezed == remoteUrl ? _self.remoteUrl : remoteUrl // ignore: cast_nullable_to_non_nullable
-as String?,
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as AssetSourceType,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

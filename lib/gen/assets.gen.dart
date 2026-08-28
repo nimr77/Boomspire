@@ -105,6 +105,16 @@ class $AssetsAudioGen {
   ];
 }
 
+class $AssetsGameContentGen {
+  const $AssetsGameContentGen();
+
+  /// File path: assets/game_content/manifest.json
+  String get manifest => 'assets/game_content/manifest.json';
+
+  /// List of all assets
+  List<String> get values => [manifest];
+}
+
 class $AssetsModelsGen {
   const $AssetsModelsGen();
 
@@ -232,5 +242,6 @@ class $AssetsModelsGen {
 
 abstract final class Assets {
   static const $AssetsAudioGen audio = $AssetsAudioGen();
+  static const $AssetsGameContentGen gameContent = $AssetsGameContentGen();
   static const $AssetsModelsGen models = $AssetsModelsGen();
 }
