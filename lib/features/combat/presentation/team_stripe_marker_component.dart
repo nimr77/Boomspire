@@ -25,12 +25,6 @@ class TeamStripeMarkerComponent extends PositionComponent {
       );
 
   @override
-  void update(double dt) {
-    super.update(dt);
-    _phase += dt * 2.6;
-  }
-
-  @override
   void render(Canvas canvas) {
     final pulse = 0.5 + 0.5 * sin(_phase);
     final center = Offset(size.x / 2, size.y / 2);
@@ -48,5 +42,11 @@ class TeamStripeMarkerComponent extends PositionComponent {
       radius * (0.7 + pulse * 0.3),
       Paint()..color = accent.withValues(alpha: 0.75 + pulse * 0.25),
     );
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _phase += dt * 2.6;
   }
 }
