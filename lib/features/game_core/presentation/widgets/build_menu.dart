@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
 import '../../../towers/domain/models/building_type.dart';
@@ -102,6 +103,14 @@ class _BuildMenuState extends State<BuildMenu> {
                         duration: const Duration(milliseconds: 220),
                         switchInCurve: Curves.easeOut,
                         switchOutCurve: Curves.easeIn,
+                        // Default layoutBuilder stacks children centered,
+                        // which makes the crossfade appear to grow from the
+                        // middle instead of staying pinned to the start.
+                        layoutBuilder: (currentChild, previousChildren) =>
+                            Stack(
+                              alignment: AlignmentDirectional.centerStart,
+                              children: [...previousChildren, ?currentChild],
+                            ),
                         transitionBuilder: (child, animation) => FadeTransition(
                           opacity: animation,
                           child: SlideTransition(
@@ -116,24 +125,56 @@ class _BuildMenuState extends State<BuildMenu> {
                           key: ValueKey(showBuildings),
                           scrollDirection: Axis.horizontal,
                           child: Row(
-                            children: entries.map((bp) {
-                              final lockReason = game.buildBlockReason(bp.type);
-                              final affordable = game.gameState.gold >= bp.cost;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
+                            children: entries
+                                .map((bp) {
+                                  final lockReason = game.buildBlockReason(
+                                    bp.type,
+                                  );
+                                  final affordable =
+                                      game.gameState.gold >= bp.cost;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+                                    child: GameCoreBuildMenuTowerButtonWidget(
+                                      blueprint: bp,
+                                      selected: selected == bp.type,
+                                      enabled: affordable && lockReason == null,
+                                      lockReason: lockReason,
+                                      builtCount: game.towerCountFor(bp.type),
+                                      limit: game.buildLimitFor(bp.type),
+                                      onTap: () =>
+                                          game.selectTowerType(bp.type),
+                                    ),
+                                  );
+                                })
+                                .toList()
+                                .animate(
+                                  effects: [
+                                    FadeEffect(
+                                      duration: const Duration(
+                                        milliseconds: 220,
+                                      ),
+                                      curve: Curves.easeOut,
+                                    ),
+                                    SlideEffect(
+                                      begin: const Offset(0, 0.08),
+                                      end: Offset.zero,
+                                      duration: const Duration(
+                                        milliseconds: 420,
+                                      ),
+                                      curve: Curves.easeOut,
+                                    ),
+
+                                    ScaleEffect(
+                                      begin: const Offset(0.1, 0.1),
+                                      duration: const Duration(
+                                        milliseconds: 220,
+                                      ),
+                                      curve: Curves.easeOut,
+                                    ),
+                                  ],
                                 ),
-                                child: GameCoreBuildMenuTowerButtonWidget(
-                                  blueprint: bp,
-                                  selected: selected == bp.type,
-                                  enabled: affordable && lockReason == null,
-                                  lockReason: lockReason,
-                                  builtCount: game.towerCountFor(bp.type),
-                                  limit: game.buildLimitFor(bp.type),
-                                  onTap: () => game.selectTowerType(bp.type),
-                                ),
-                              );
-                            }).toList(),
                           ),
                         ),
                       );
