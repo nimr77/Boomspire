@@ -102,7 +102,7 @@ class RocketComponent extends PositionComponent
     // A rocket/shell impact leaves a lingering fire behind, on top of the
     // instantaneous explosion flash above.
     game.world.spawn(
-      FireComponent(position: position.clone(), radius: splashRadius * 0.5),
+      FireComponent(position: position.clone(), radius: splashRadius * 0.3),
     );
     // A splash hits every hostile thing in range at once - a mobile unit
     // caught in a shell meant for a tower still gets hurt, and vice versa -

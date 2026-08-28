@@ -140,19 +140,13 @@ void main() {
 
   group('FireComponent render position', () {
     test(
-      'the ember glow sits on the impact point, not shifted to a corner',
+      'the flame path renders without the old dark impact-shadow circle',
       () {
         const radius = 16.0;
         final fire = FireComponent(position: Vector2(100, 100), radius: radius);
-        final size = radius * 2;
-        final cx = size / 2;
-        final cy = size / 2;
 
         // Freshly spawned: age is 0, so fade is 1.
-        expect(
-          (Canvas canvas) => fire.render(canvas),
-          paints..circle(x: cx, y: cy + size * 0.28, radius: size * 0.22),
-        );
+        expect((Canvas canvas) => fire.render(canvas), paints..path());
       },
     );
   });

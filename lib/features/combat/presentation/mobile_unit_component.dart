@@ -231,7 +231,9 @@ class MobileUnitComponent extends PositionComponent
         body == VehicleUnitType.lightVehicle) {
       _tread = VehicleTreadComponent(hullSize: visual.size);
       await visual.add(_tread!);
-      if (blueprint.attackDamage > 0) {
+      // Tanks read cleaner as a bare hull - every other armed ground
+      // vehicle keeps its independently-aiming turret overlay.
+      if (blueprint.attackDamage > 0 && blueprint.kind != UnitKind.tank) {
         _turret = VehicleTurretComponent(
           hullSize: visual.size,
           accent: team.color,

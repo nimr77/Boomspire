@@ -54,12 +54,7 @@ class FireComponent extends PositionComponent {
           const Color(0x00FF7043),
           t,
         )!.withValues(alpha: 0.85 * fade)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-    );
-    canvas.drawCircle(
-      Offset(cx, cy + size.x * 0.28),
-      size.x * 0.22 * fade,
-      Paint()..color = const Color(0x66000000).withValues(alpha: 0.4 * fade),
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
   }
 
