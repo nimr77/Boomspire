@@ -44,30 +44,15 @@ import 'vapor_cone_component.dart';
 import 'vehicle_player_marker_component.dart';
 import 'vehicle_tread_component.dart';
 
+/// How far (in grid cells) a strafing plane loops out to while reloading
+/// between passes - see [MobileUnitComponent._updateStrafingRun].
+const _planeLoiterRadiusCells = 12;
+
 /// Squared distance within which two same-team, same-domain units push
 /// apart a bit while converging on the same path/base instead of
 /// overlapping/stacking - see
 /// [MobileUnitComponent.applySeparationSteering].
 const _separationRadiusSq = 26.0 * 26.0;
-
-/// How far (in grid cells) a strafing plane loops out to while reloading
-/// between passes - see [MobileUnitComponent._updateStrafingRun].
-const _planeLoiterRadiusCells = 12;
-
-/// A strafing plane's current attack phase - see
-/// [MobileUnitComponent._updateStrafingRun].
-enum _PlaneAttackPhase {
-  /// Flying straight at the target, not yet in range to fire.
-  approach,
-
-  /// In range and flying through the target while emptying its clip.
-  pass,
-
-  /// Clip empty - looping out within [_planeLoiterRadiusCells] cells while
-  /// [MobileUnitComponent._loiterTimer] (the reload) counts down, before
-  /// heading back in for another [approach].
-  loiter,
-}
 
 /// A single mobile (non-tower) combat unit. Every team and every
 /// [UnitObjective] shares this one class - an AI-directed wave invader
@@ -970,7 +955,12 @@ class MobileUnitComponent extends PositionComponent
 
     _attackCooldown -= dt;
     if (_attackCooldown <= 0) {
-      _fireOneRound(target, toTarget, _clipShotsFired, blueprint.projectileCount);
+      _fireOneRound(
+        target,
+        toTarget,
+        _clipShotsFired,
+        blueprint.projectileCount,
+      );
       _clipShotsFired++;
       if (_clipShotsFired >= blueprint.projectileCount) {
         _clipShotsFired = 0;
@@ -981,74 +971,6 @@ class MobileUnitComponent extends PositionComponent
     }
     return true;
   }
-
-  /// Plane-only "attack while moving" state machine (see [_isStrafingPlane])
-  /// - like a real jet (or a C&C Generals air unit), it never hovers to
-  /// fire: it flies straight through its target emptying a clip, then
-  /// peels off into a loitering loop within [_planeLoiterRadiusCells] cells
-  /// while its clip reloads, before coming back around for another pass.
-  void _updateStrafingRun(Attackable target, Vector2 toTarget, double dt) {
-    switch (_planePhase) {
-      case _PlaneAttackPhase.approach:
-        final dist = toTarget.length;
-        if (dist > 4) {
-          final dir = applySeparationSteering(toTarget / dist);
-          position += dir * blueprint.speed * dt;
-          _facingAngle = atan2(dir.y, dir.x) + pi / 2;
-        }
-        if (dist <= blueprint.attackRange) {
-          _planePhase = _PlaneAttackPhase.pass;
-          _clipShotsFired = 0;
-          _attackCooldown = 0; // fire the first round immediately
-        }
-      case _PlaneAttackPhase.pass:
-        // Keep flying through the target instead of stopping to shoot.
-        final dist = toTarget.length;
-        final dir = dist > 1
-            ? toTarget / dist
-            : Vector2(cos(_facingAngle - pi / 2), sin(_facingAngle - pi / 2));
-        final steered = applySeparationSteering(dir);
-        position += steered * blueprint.speed * dt;
-        _facingAngle = atan2(steered.y, steered.x) + pi / 2;
-
-        _attackCooldown -= dt;
-        if (_attackCooldown <= 0) {
-          _fireOneRound(
-            target,
-            toTarget,
-            _clipShotsFired,
-            blueprint.projectileCount,
-          );
-          _clipShotsFired++;
-          if (_clipShotsFired >= blueprint.projectileCount) {
-            _planePhase = _PlaneAttackPhase.loiter;
-            _loiterTimer = blueprint.attackInterval; // reload while looping
-            _loiterAngle = Random().nextDouble() * pi * 2;
-            _loiterCenter = target.position.clone();
-          } else {
-            _attackCooldown = blueprint.clipShotInterval;
-          }
-        }
-      case _PlaneAttackPhase.loiter:
-        _loiterTimer -= dt;
-        _loiterAngle += dt * 1.6;
-        final radius =
-            _planeLoiterRadiusCells * game.terrainMap.grid.cellSize;
-        final desired =
-            _loiterCenter +
-            Vector2(cos(_loiterAngle), sin(_loiterAngle)) * radius;
-        final toDesired = desired - position;
-        if (toDesired.length > 1) {
-          final dir = applySeparationSteering(toDesired.normalized());
-          position += dir * blueprint.speed * dt;
-          _facingAngle = atan2(dir.y, dir.x) + pi / 2;
-        }
-        if (_loiterTimer <= 0) {
-          _planePhase = _PlaneAttackPhase.approach;
-        }
-    }
-  }
-
 
   Attackable? _nearestOpposing() {
     Attackable? best;
@@ -1163,6 +1085,72 @@ class MobileUnitComponent extends PositionComponent
     }
   }
 
+  /// Plane-only "attack while moving" state machine (see [_isStrafingPlane])
+  /// - like a real jet (or a C&C Generals air unit), it never hovers to
+  /// fire: it flies straight through its target emptying a clip, then
+  /// peels off into a loitering loop within [_planeLoiterRadiusCells] cells
+  /// while its clip reloads, before coming back around for another pass.
+  void _updateStrafingRun(Attackable target, Vector2 toTarget, double dt) {
+    switch (_planePhase) {
+      case _PlaneAttackPhase.approach:
+        final dist = toTarget.length;
+        if (dist > 4) {
+          final dir = applySeparationSteering(toTarget / dist);
+          position += dir * blueprint.speed * dt;
+          _facingAngle = atan2(dir.y, dir.x) + pi / 2;
+        }
+        if (dist <= blueprint.attackRange) {
+          _planePhase = _PlaneAttackPhase.pass;
+          _clipShotsFired = 0;
+          _attackCooldown = 0; // fire the first round immediately
+        }
+      case _PlaneAttackPhase.pass:
+        // Keep flying through the target instead of stopping to shoot.
+        final dist = toTarget.length;
+        final dir = dist > 1
+            ? toTarget / dist
+            : Vector2(cos(_facingAngle - pi / 2), sin(_facingAngle - pi / 2));
+        final steered = applySeparationSteering(dir);
+        position += steered * blueprint.speed * dt;
+        _facingAngle = atan2(steered.y, steered.x) + pi / 2;
+
+        _attackCooldown -= dt;
+        if (_attackCooldown <= 0) {
+          _fireOneRound(
+            target,
+            toTarget,
+            _clipShotsFired,
+            blueprint.projectileCount,
+          );
+          _clipShotsFired++;
+          if (_clipShotsFired >= blueprint.projectileCount) {
+            _planePhase = _PlaneAttackPhase.loiter;
+            _loiterTimer = blueprint.attackInterval; // reload while looping
+            _loiterAngle = Random().nextDouble() * pi * 2;
+            _loiterCenter = target.position.clone();
+          } else {
+            _attackCooldown = blueprint.clipShotInterval;
+          }
+        }
+      case _PlaneAttackPhase.loiter:
+        _loiterTimer -= dt;
+        _loiterAngle += dt * 1.6;
+        final radius = _planeLoiterRadiusCells * game.terrainMap.grid.cellSize;
+        final desired =
+            _loiterCenter +
+            Vector2(cos(_loiterAngle), sin(_loiterAngle)) * radius;
+        final toDesired = desired - position;
+        if (toDesired.length > 1) {
+          final dir = applySeparationSteering(toDesired.normalized());
+          position += dir * blueprint.speed * dt;
+          _facingAngle = atan2(dir.y, dir.x) + pi / 2;
+        }
+        if (_loiterTimer <= 0) {
+          _planePhase = _PlaneAttackPhase.approach;
+        }
+    }
+  }
+
   /// Per-frame upkeep for the [UnitBodyType]-specific visuals attached in
   /// [addExtraVisuals]: continuous engine smoke for vehicles, ground
   /// track/dust + tread scroll for wheeled/tracked vehicles, and leg
@@ -1203,4 +1191,19 @@ class MobileUnitComponent extends PositionComponent
       }
     }
   }
+}
+
+/// A strafing plane's current attack phase - see
+/// [MobileUnitComponent._updateStrafingRun].
+enum _PlaneAttackPhase {
+  /// Flying straight at the target, not yet in range to fire.
+  approach,
+
+  /// In range and flying through the target while emptying its clip.
+  pass,
+
+  /// Clip empty - looping out within [_planeLoiterRadiusCells] cells while
+  /// [MobileUnitComponent._loiterTimer] (the reload) counts down, before
+  /// heading back in for another [approach].
+  loiter,
 }
