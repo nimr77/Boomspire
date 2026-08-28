@@ -52,6 +52,11 @@ class GameConfig {
   /// (see `ResourceNodeComponent`).
   static const resourceNodeCaptureRadius = 48.0;
 
+  /// Grid cells an attacker must be within to detect (and therefore
+  /// target) a stealth unit (`MobileUnitBlueprint.isStealth`), e.g. the
+  /// Stealth Bomber - see `isTargetDetectable`.
+  static const stealthDetectionRangeCells = 4.0;
+
   /// Seconds an uncontested vehicle must hold a resource node before it
   /// flips to that vehicle's team.
   static const resourceNodeCaptureTime = 4.0;

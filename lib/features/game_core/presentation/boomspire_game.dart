@@ -337,24 +337,6 @@ class BoomspireGame extends FlameGame<GameWorld>
   bool canBuildTower(UnitType type, {Team? owner}) =>
       buildBlockReason(type, owner: owner) == null;
 
-  /// Why [kind] can't be produced from a Training Center/War Factory right
-  /// now for [owner] (defaults to the human player), or null if it's
-  /// producible (gold/cooldown permitting) - shown in the action panel's
-  /// produce-unit row, and used identically by the AI skirmish opponent so
-  /// both sides are bound by the same rules (see [buildBlockReason]).
-  String? unitBlockReason(UnitKind kind, {Team? owner}) {
-    final builder = owner ?? playerTeam;
-    final isPlane = kind.bodyType == VehicleUnitType.plane;
-    if (kind == UnitKind.stealthBomber &&
-        !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
-      return 'Requires Tech Lab & Command Post';
-    }
-    if (isPlane && !hasCommandPostFor(builder)) {
-      return 'Requires Command Post';
-    }
-    return null;
-  }
-
   bool canProduceUnit(UnitKind kind, {Team? owner}) =>
       unitBlockReason(kind, owner: owner) == null;
 
@@ -717,6 +699,24 @@ class BoomspireGame extends FlameGame<GameWorld>
     return world.activeTowers
         .where((t) => t.blueprint.type == type && t.owner.id == builder.id)
         .length;
+  }
+
+  /// Why [kind] can't be produced from a Training Center/War Factory right
+  /// now for [owner] (defaults to the human player), or null if it's
+  /// producible (gold/cooldown permitting) - shown in the action panel's
+  /// produce-unit row, and used identically by the AI skirmish opponent so
+  /// both sides are bound by the same rules (see [buildBlockReason]).
+  String? unitBlockReason(UnitKind kind, {Team? owner}) {
+    final builder = owner ?? playerTeam;
+    final isPlane = kind.bodyType == VehicleUnitType.plane;
+    if (kind == UnitKind.stealthBomber &&
+        !(hasTechLabFor(builder) && hasCommandPostFor(builder))) {
+      return 'Requires Tech Lab & Command Post';
+    }
+    if (isPlane && !hasCommandPostFor(builder)) {
+      return 'Requires Command Post';
+    }
+    return null;
   }
 
   @override

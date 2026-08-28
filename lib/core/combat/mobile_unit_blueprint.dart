@@ -86,6 +86,11 @@ class MobileUnitBlueprint with Unit {
   /// base if no structure is in range - see `EnemyComponent._scoreFor`.
   final bool prefersStructures;
 
+  /// Only targetable once an attacker is within
+  /// `GameConfig.stealthDetectionRangeCells` grid cells of it - see
+  /// `isTargetDetectable` in `mobile_unit_component.dart`.
+  final bool isStealth;
+
   const MobileUnitBlueprint({
     required this.kind,
     required this.name,
@@ -105,5 +110,6 @@ class MobileUnitBlueprint with Unit {
     this.bounty = 0,
     this.cost = 0,
     this.prefersStructures = false,
+    this.isStealth = false,
   });
 }

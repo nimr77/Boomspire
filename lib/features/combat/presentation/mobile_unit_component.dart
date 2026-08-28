@@ -22,6 +22,7 @@ import '../../allies/presentation/ally_sprites.dart';
 import '../../audio/domain/models/sfx_type.dart';
 import '../../enemies/presentation/enemy_sprites.dart';
 import '../../enemies/presentation/floating_text_component.dart';
+import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/domain/models/game_status.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 import '../../towers/presentation/tower_component.dart';
@@ -45,10 +46,6 @@ import 'vapor_cone_component.dart';
 import 'vehicle_player_marker_component.dart';
 import 'vehicle_tread_component.dart';
 
-/// How far (in grid cells) a strafing plane loops out to while reloading
-/// between passes - see [MobileUnitComponent._updateStrafingRun].
-const _planeLoiterRadiusCells = 12;
-
 /// Distance (in grid cells) to an engaged target within which a strafing
 /// plane kicks into "attack mode": a [_planeBoostSpeedMultiplier] speed
 /// boost plus a blue afterburner jet-flare trail - see
@@ -58,6 +55,10 @@ const _planeBoostRangeCells = 10;
 /// Speed multiplier applied while within [_planeBoostRangeCells] of the
 /// engaged target - a 70% boost.
 const _planeBoostSpeedMultiplier = 1.7;
+
+/// How far (in grid cells) a strafing plane loops out to while reloading
+/// between passes - see [MobileUnitComponent._updateStrafingRun].
+const _planeLoiterRadiusCells = 12;
 
 /// Max turn rate (radians/sec) a strafing plane banks its heading toward a
 /// new desired direction - replaces an instant snap-to-target facing with
@@ -70,6 +71,25 @@ const _planeTurnRate = 3.0;
 /// overlapping/stacking - see
 /// [MobileUnitComponent.applySeparationSteering].
 const _separationRadiusSq = 26.0 * 26.0;
+
+/// Whether [candidate] can currently be targeted from [observerPosition] -
+/// a stealth unit (`MobileUnitBlueprint.isStealth`, e.g. the Stealth
+/// Bomber) is only detectable once the observer is within
+/// [GameConfig.stealthDetectionRangeCells] grid cells of it; everything
+/// else is always detectable. Shared by [TowerComponent]'s and
+/// [MobileUnitComponent.opposingTargets]'s targeting so both sides are
+/// bound by the same rule.
+bool isTargetDetectable(
+  Attackable candidate,
+  Vector2 observerPosition,
+  double cellSize,
+) {
+  if (candidate is! MobileUnitComponent || !candidate.blueprint.isStealth) {
+    return true;
+  }
+  return candidate.position.distanceTo(observerPosition) <=
+      GameConfig.stealthDetectionRangeCells * cellSize;
+}
 
 /// A single mobile (non-tower) combat unit. Every team and every
 /// [UnitObjective] shares this one class - an AI-directed wave invader
@@ -535,6 +555,7 @@ class MobileUnitComponent extends PositionComponent
   /// check it used to be; in a skirmish it also lets AI-owned towers/base
   /// draw player-unit fire and vice versa.
   Iterable<Attackable> opposingTargets() {
+    final cellSize = game.terrainMap.grid.cellSize;
     final targets = <Attackable>[
       ...game.world.unitsHostileTo(team),
       ...game.world.activeTowers.where(
@@ -543,7 +564,7 @@ class MobileUnitComponent extends PositionComponent
     ];
     final base = game.enemyHomeBaseFor(team);
     if (base != null) targets.add(base);
-    return targets;
+    return targets.where((t) => isTargetDetectable(t, position, cellSize));
   }
 
   /// Removes this unit from the world's active roster.
@@ -707,6 +728,24 @@ class MobileUnitComponent extends PositionComponent
         _visual.position = size / 2 + Vector2(0, sin(_bobPhase) * 2);
         _visual.angle = _facingAngle + sin(_bobPhase * 0.5) * 0.06;
     }
+  }
+
+  /// Rotates [_facingAngle] toward the direction of [toTarget] at
+  /// [_planeTurnRate] rad/s instead of snapping straight to it every frame,
+  /// then returns the resulting forward unit vector - reads as a real
+  /// banking arc rather than a robotic pivot. Shared by every phase of
+  /// [_updateStrafingRun].
+  Vector2 _bankTurnToward(Vector2 toTarget, double dt) {
+    if (!toTarget.isZero()) {
+      final desiredAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
+      var diff = (desiredAngle - _facingAngle) % (2 * pi);
+      if (diff > pi) diff -= 2 * pi;
+      if (diff < -pi) diff += 2 * pi;
+      final maxStep = _planeTurnRate * dt;
+      _facingAngle += diff.clamp(-maxStep, maxStep);
+    }
+    final dirAngle = _facingAngle - pi / 2;
+    return Vector2(cos(dirAngle), sin(dirAngle));
   }
 
   /// Called whenever [forcedTarget] turns out to be stale (destroyed or
@@ -1111,24 +1150,6 @@ class MobileUnitComponent extends PositionComponent
           ),
         );
     }
-  }
-
-  /// Rotates [_facingAngle] toward the direction of [toTarget] at
-  /// [_planeTurnRate] rad/s instead of snapping straight to it every frame,
-  /// then returns the resulting forward unit vector - reads as a real
-  /// banking arc rather than a robotic pivot. Shared by every phase of
-  /// [_updateStrafingRun].
-  Vector2 _bankTurnToward(Vector2 toTarget, double dt) {
-    if (!toTarget.isZero()) {
-      final desiredAngle = atan2(toTarget.y, toTarget.x) + pi / 2;
-      var diff = (desiredAngle - _facingAngle) % (2 * pi);
-      if (diff > pi) diff -= 2 * pi;
-      if (diff < -pi) diff += 2 * pi;
-      final maxStep = _planeTurnRate * dt;
-      _facingAngle += diff.clamp(-maxStep, maxStep);
-    }
-    final dirAngle = _facingAngle - pi / 2;
-    return Vector2(cos(dirAngle), sin(dirAngle));
   }
 
   /// Spawns the plane's engine-flare trail while it's actively engaging

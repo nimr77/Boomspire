@@ -174,6 +174,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       movementStyle: MovementStyle.swoop,
       weaponType: WeaponType.rocket,
       prefersStructures: true,
+      isStealth: true,
     ),
   };
 
@@ -314,6 +315,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       attackInterval: 3.0,
       movementStyle: MovementStyle.swoop,
       weaponType: WeaponType.rocket,
+      isStealth: true,
     ),
   };
 

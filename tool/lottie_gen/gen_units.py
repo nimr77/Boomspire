@@ -341,7 +341,7 @@ def enemy_tank():
 def stealth_bomber():
     s = 54.0
     cx = cy = s / 2
-    ops = [shadow(cx, cy, 0.8 * s, 0.22 * s)]
+    ops = []
     wing_pts = [
         (cx, cy - 0.12 * s),
         (cx + 0.48 * s, cy + 0.34 * s),
@@ -352,8 +352,6 @@ def stealth_bomber():
     ]
     ops.append(op(polygon(wing_pts), gradient_fill([0xFF3A3F44, 0xFF0D0F10], cx, cy, 0.8 * s, 0.8 * s, "vertical")))
     ops.append(op(ellipse(cx, cy - 0.02 * s, 0.1 * s, 0.16 * s), fill(0xFF1A1C1E)))
-    for dx in (-0.14 * s, 0.14 * s):
-        ops.append(op(rrect(cx + dx, cy + 0.3 * s, 0.05 * s, 0.1 * s, 0), fill(0xFF1A1C1E)))
     return ops, s, s
 
 

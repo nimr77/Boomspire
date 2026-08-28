@@ -584,11 +584,13 @@ abstract class TowerComponent extends PositionComponent
     // already committed to - the one exception is peeling off a near-dead
     // target once a faster-killing tower has that kill in hand (see
     // [_hasFasterFinisherAssigned]).
+    final cellSize = game.terrainMap.grid.cellSize;
     final sticky = currentTarget;
     if (sticky != null &&
         !sticky.destroyed &&
         sticky.isMounted &&
-        canAttack(sticky.domain)) {
+        canAttack(sticky.domain) &&
+        isTargetDetectable(sticky, position, cellSize)) {
       final d = sticky.position.distanceTo(position);
       if (d >= blueprint.minRange &&
           d <= effectiveRange &&
@@ -605,7 +607,9 @@ abstract class TowerComponent extends PositionComponent
     // double-checked here since the result can be up to
     // `GameWorld._targetComputeInterval` stale.
     final suggested = game.world.suggestedTargetFor(this);
-    if (suggested != null && canAttack(suggested.domain)) {
+    if (suggested != null &&
+        canAttack(suggested.domain) &&
+        isTargetDetectable(suggested, position, cellSize)) {
       final d = suggested.position.distanceTo(position);
       if (d >= blueprint.minRange && d <= effectiveRange) return suggested;
     }
@@ -627,6 +631,7 @@ abstract class TowerComponent extends PositionComponent
     ];
     for (final enemy in candidates) {
       if (!canAttack(enemy.domain)) continue;
+      if (!isTargetDetectable(enemy, position, cellSize)) continue;
       final d = enemy.position.distanceTo(position);
       if (d < blueprint.minRange) continue;
       if (d <= closestDist) {

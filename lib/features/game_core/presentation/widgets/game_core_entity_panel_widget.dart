@@ -274,7 +274,8 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
       for (final option in _productionState.optionsFor(game, tower))
         GameCoreTowerActionButtonWidget(
           icon: _unitIcon(option.kind),
-          label: option.lockReason ??
+          label:
+              option.lockReason ??
               (option.ready
                   ? '${option.cost}g'
                   : '${option.cooldownRemaining.ceil()}s'),
