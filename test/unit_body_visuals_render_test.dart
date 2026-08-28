@@ -1,6 +1,6 @@
 // Regression tests for a rendering bug: `HumanLimbsComponent`,
-// `VehicleTurretComponent`, `VehicleTreadComponent` and `FireComponent` all
-// use `Anchor.center` with a non-zero `size`, but Flame always renders in a
+// `VehiclePlayerMarkerComponent`, `VehicleTreadComponent` and `FireComponent`
+// all use `Anchor.center` with a non-zero `size`, but Flame always renders in a
 // top-left-origin `0..size` box regardless of anchor - the anchor only
 // affects where that box is placed in the *parent's* coordinates. Each of
 // these components used to draw as if local `(0, 0)` were already the
@@ -12,10 +12,11 @@
 // Expected offsets are computed with the exact same arithmetic as the
 // production code (rather than baked-in decimal literals) so the
 // comparisons are bit-exact instead of fighting floating-point rounding.
+import 'package:boomspire/core/combat/team.dart';
 import 'package:boomspire/features/combat/presentation/fire_component.dart';
 import 'package:boomspire/features/combat/presentation/human_limbs_component.dart';
+import 'package:boomspire/features/combat/presentation/vehicle_player_marker_component.dart';
 import 'package:boomspire/features/combat/presentation/vehicle_tread_component.dart';
-import 'package:boomspire/features/combat/presentation/vehicle_turret_component.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,30 +72,21 @@ void main() {
     });
   });
 
-  group('VehicleTurretComponent render position', () {
-    test('the pivot ring and barrel sit on the hull center', () {
+  group('VehiclePlayerMarkerComponent render position', () {
+    test('the team-color badge sits centered on the hull', () {
       final hullSize = Vector2(40, 40);
-      final turret = VehicleTurretComponent(
+      final marker = VehiclePlayerMarkerComponent(
         hullSize: hullSize,
-        accent: Colors.blue,
+        team: Team.defaultPlayer,
       );
-      final w = hullSize.x * 0.62;
-      final h = hullSize.x * 0.3;
-      final pivot = Offset(w / 2, h / 2);
-      final expectedRing = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: pivot, width: h * 1.6, height: h * 1.6),
-        Radius.circular(h * 0.5),
-      );
-      final expectedBarrel = RRect.fromRectAndRadius(
-        Rect.fromLTWH(pivot.dx, pivot.dy - h * 0.22, w, h * 0.44),
-        Radius.circular(h * 0.2),
-      );
+      final radius = (hullSize.x * 0.3) / 2;
+      final center = Offset(radius, radius);
 
       expect(
-        (Canvas canvas) => turret.render(canvas),
+        (Canvas canvas) => marker.render(canvas),
         paints
-          ..rrect(rrect: expectedRing)
-          ..rrect(rrect: expectedBarrel),
+          ..circle(x: center.dx, y: center.dy, radius: radius)
+          ..circle(x: center.dx, y: center.dy, radius: radius * 0.68),
       );
     });
   });

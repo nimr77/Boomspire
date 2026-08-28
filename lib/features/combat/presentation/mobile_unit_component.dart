@@ -42,7 +42,7 @@ import 'target_highlight_component.dart';
 import 'track_mark_component.dart';
 import 'vapor_cone_component.dart';
 import 'vehicle_tread_component.dart';
-import 'vehicle_turret_component.dart';
+import 'vehicle_player_marker_component.dart';
 
 /// Squared distance within which two same-team, same-domain units push
 /// apart a bit while converging on the same path/base instead of
@@ -136,7 +136,7 @@ class MobileUnitComponent extends PositionComponent
 
   /// Independently-rotating weapon overlay for ground vehicles - null for
   /// infantry, air units, and unarmed vehicles. See [addExtraVisuals].
-  VehicleTurretComponent? _turret;
+  VehiclePlayerMarkerComponent? _playerMarker;
 
   /// Leg/arm animation overlay for infantry - null for every vehicle. See
   /// [addExtraVisuals].
@@ -214,10 +214,10 @@ class MobileUnitComponent extends PositionComponent
 
   /// Attaches extra always-on visuals once the model/sprite is loaded -
   /// a spinning rotor for [UnitKind.helicopter], or a [UnitBodyType]-driven
-  /// overlay: leg/arm animation for infantry, and a scrolling tread plus
-  /// (if armed) an independently-aiming turret for ground vehicles. Air
-  /// vehicles other than the helicopter get their jet-flare/vapor-cone
-  /// treatment purely in [_flyToward], with no extra child component.
+  /// overlay: leg/arm animation for infantry, and a scrolling tread plus a
+  /// static team-color marker for ground vehicles. Air vehicles other than
+  /// the helicopter get their jet-flare/vapor-cone treatment purely in
+  /// [_flyToward], with no extra child component.
   Future<void> addExtraVisuals(PositionComponent visual) async {
     if (blueprint.kind == UnitKind.helicopter) {
       await visual.add(RotorComponent(position: visual.size / 2));
@@ -231,15 +231,11 @@ class MobileUnitComponent extends PositionComponent
         body == VehicleUnitType.lightVehicle) {
       _tread = VehicleTreadComponent(hullSize: visual.size);
       await visual.add(_tread!);
-      // Tanks read cleaner as a bare hull - every other armed ground
-      // vehicle keeps its independently-aiming turret overlay.
-      if (blueprint.attackDamage > 0 && blueprint.kind != UnitKind.tank) {
-        _turret = VehicleTurretComponent(
-          hullSize: visual.size,
-          accent: team.color,
-        );
-        await visual.add(_turret!);
-      }
+      _playerMarker = VehiclePlayerMarkerComponent(
+        hullSize: visual.size,
+        team: team,
+      );
+      await visual.add(_playerMarker!);
     }
   }
 
@@ -1034,19 +1030,9 @@ class MobileUnitComponent extends PositionComponent
     }
   }
 
-  /// Shortest-path angle interpolation, shared by [_turret]'s aim - same
-  /// idea as `TowerComponent._turnToward`.
-  double _turnToward(double current, double target, double maxDelta) {
-    var diff = (target - current) % (2 * pi);
-    if (diff > pi) diff -= 2 * pi;
-    if (diff < -pi) diff += 2 * pi;
-    if (diff.abs() <= maxDelta) return target;
-    return current + maxDelta * diff.sign;
-  }
-
   /// Per-frame upkeep for the [UnitBodyType]-specific visuals attached in
-  /// [addExtraVisuals]: continuous engine smoke + turret aim for vehicles,
-  /// ground track/dust + tread scroll for wheeled/tracked vehicles, and leg
+  /// [addExtraVisuals]: continuous engine smoke for vehicles, ground
+  /// track/dust + tread scroll for wheeled/tracked vehicles, and leg
   /// animation for infantry - layered on top of [_applyBob] rather than
   /// replacing it, so the existing per-[MovementStyle] wobble is untouched.
   void _updateVisualExtras(double dt) {
@@ -1054,18 +1040,6 @@ class MobileUnitComponent extends PositionComponent
 
     final body = blueprint.kind.bodyType;
     if (body is Human) return;
-
-    if (_turret != null) {
-      final aimTarget = _engaging ?? forcedTarget;
-      final aimAngle = (aimTarget != null && !aimTarget.destroyed)
-          ? atan2(
-                  aimTarget.position.y - position.y,
-                  aimTarget.position.x - position.x,
-                ) +
-                pi / 2
-          : _facingAngle;
-      _turret!.angle = _turnToward(_turret!.angle, aimAngle, dt * 8);
-    }
 
     _tread?.moving = _wasMoving;
     if (!_wasMoving) return;
