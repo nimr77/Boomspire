@@ -17,13 +17,13 @@ import 'game_core_tower_action_button_widget.dart';
 import 'game_core_tower_action_stat_chip_widget.dart';
 import 'game_core_unit_fire_stats_widget.dart';
 
-/// The single floating info+menu card docked at the left edge of the arena -
-/// whatever the player last selected or tapped (a built tower/building, a
-/// unit under their control, or a read-only inspection of anything else)
-/// renders through this ONE [GameCoreEntityPanelShellWidget], just with
-/// different header/body content. Replaces the old separate
-/// `TowerActionPanel`/`InspectPanel` widgets so there is no per-entity-kind
-/// menu to maintain.
+/// The single info+menu card docked next to the minimap in the bottom
+/// command bar - whatever the player last selected or tapped (a built
+/// tower/building, a unit under their control, or a read-only inspection of
+/// anything else) renders through this ONE [GameCoreEntityPanelShellWidget],
+/// just with different header/body content. A selected Training
+/// Center/War Factory's produce-unit buttons live right alongside its
+/// repair/upgrade/sell actions here too - one panel, not several.
 class GameCoreEntityPanelWidget extends StatefulWidget {
   final BoomspireGame game;
 
@@ -92,30 +92,6 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
     });
   }
 
-  Widget _buildGoldMineRow(GoldMineComponent tower) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 6,
-      children: [
-        GameCoreTowerActionStatChipWidget(
-          icon: Icons.paid,
-          label: S.current.goldMinePayoutIn(
-            tower.payoutAmount,
-            tower.payoutTimeRemaining.ceil(),
-          ),
-          color: const Color(0xFFFFB300),
-        ),
-        GameCoreTowerActionStatChipWidget(
-          icon: Icons.local_fire_department,
-          label: S.current.goldMineKillBonus(
-            (tower.killGoldBonus * 100).round(),
-          ),
-          color: const Color(0xFFFF8A65),
-        ),
-      ],
-    );
-  }
-
   Widget _buildInspectedPanel(BoomspireGame game, InspectedInfo info) {
     final ownerColor = info.owner?.color ?? Colors.white54;
     final icon = switch (info.kind) {
@@ -169,6 +145,8 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
 
   Widget _buildTowerPanel(BoomspireGame game, TowerComponent tower) {
     final accent = TowerSpriteFactory.accentColor(tower.blueprint.type);
+    final producing =
+        tower is TrainingCenterComponent || tower is WarFactoryComponent;
     return GameCoreEntityPanelShellWidget(
       key: ValueKey(tower),
       icon: Icons.apartment,
@@ -180,113 +158,73 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
               ? '  •  ${S.current.towerTier(tower.upgradeLevel + 1)}'
               : ''),
       onClose: () => game.selectedTower.value = null,
-      child: Column(
+      trailing: Row(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              GameCoreTowerActionButtonWidget(
-                icon: Icons.build,
-                label: tower.repairCost > 0 ? '${tower.repairCost}g' : '-',
-                enabled:
-                    tower.repairCost > 0 &&
-                    game.gameState.gold >= tower.repairCost,
-                onTap: game.repairSelectedTower,
-              ),
-              GameCoreTowerActionButtonWidget(
-                icon: Icons.upgrade,
-                label: tower.canUpgrade
-                    ? '${tower.upgradeCost}g'
-                    : S.current.towerMax,
-                enabled:
-                    tower.canUpgrade &&
-                    game.gameState.gold >= tower.upgradeCost,
-                onTap: game.upgradeSelectedTower,
-              ),
-              GameCoreTowerActionButtonWidget(
-                icon: Icons.gpp_good,
-                label: tower.antiRocket
-                    ? S.current.activeLabelEntityPanel
-                    : '${kAntiRocketCost}g',
-                color: Colors.cyanAccent,
-                enabled:
-                    !tower.antiRocket && game.gameState.gold >= kAntiRocketCost,
-                onTap: game.buyAntiRocketForSelectedTower,
-              ),
-              GameCoreTowerActionButtonWidget(
-                icon: Icons.sell,
-                label: '+${tower.sellValue}g',
-                enabled: true,
-                color: Colors.redAccent,
-                onTap: game.sellSelectedTower,
-              ),
-            ],
+          _divider(),
+          GameCoreTowerActionButtonWidget(
+            icon: Icons.build,
+            label: tower.repairCost > 0 ? '${tower.repairCost}g' : '-',
+            enabled:
+                tower.repairCost > 0 && game.gameState.gold >= tower.repairCost,
+            onTap: game.repairSelectedTower,
           ),
-          if (tower is TrainingCenterComponent ||
-              tower is WarFactoryComponent) ...[
-            const SizedBox(height: 8),
-            _buildUnitRow(game, tower),
-          ],
+          const SizedBox(width: 6),
+          GameCoreTowerActionButtonWidget(
+            icon: Icons.upgrade,
+            label: tower.canUpgrade
+                ? '${tower.upgradeCost}g'
+                : S.current.towerMax,
+            enabled:
+                tower.canUpgrade && game.gameState.gold >= tower.upgradeCost,
+            onTap: game.upgradeSelectedTower,
+          ),
+          const SizedBox(width: 6),
+          GameCoreTowerActionButtonWidget(
+            icon: Icons.gpp_good,
+            label: tower.antiRocket
+                ? S.current.activeLabelEntityPanel
+                : '${kAntiRocketCost}g',
+            color: Colors.cyanAccent,
+            enabled:
+                !tower.antiRocket && game.gameState.gold >= kAntiRocketCost,
+            onTap: game.buyAntiRocketForSelectedTower,
+          ),
+          const SizedBox(width: 6),
+          GameCoreTowerActionButtonWidget(
+            icon: Icons.sell,
+            label: '+${tower.sellValue}g',
+            enabled: true,
+            color: Colors.redAccent,
+            onTap: game.sellSelectedTower,
+          ),
+
           if (tower is GoldMineComponent) ...[
-            const SizedBox(height: 8),
-            _buildGoldMineRow(tower),
+            const SizedBox(width: 4),
+            _divider(),
+            const SizedBox(width: 10),
+            for (final chip in _goldMineChips(tower)) ...[
+              chip,
+              const SizedBox(width: 8),
+            ],
           ],
         ],
       ),
+      child: producing
+          ? Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Row(
+                children: [
+                  for (final button in _produceButtons(game, tower)) ...[
+                    button,
+                    const SizedBox(width: 6),
+                  ],
+                ],
+              ),
+            )
+          : null,
     );
-  }
-
-  /// Row shown under a Training Center/War Factory's stats - lets the
-  /// player spend gold to muster/roll out a specific unit.
-  Widget _buildUnitRow(BoomspireGame game, TowerComponent tower) {
-    final gold = game.gameState.gold;
-    if (tower is TrainingCenterComponent) {
-      final ready = tower.canProduce;
-      return Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: [
-          for (final kind in TrainingCenterComponent.producibleKinds)
-            GameCoreTowerActionButtonWidget(
-              icon: _unitIcon(kind),
-              label: ready
-                  ? '${tower.costFor(kind)}g'
-                  : '${tower.cooldownRemaining.ceil()}s',
-              color: const Color(0xFF66BB6A),
-              enabled: ready && gold >= tower.costFor(kind),
-              onTap: () => tower.produceUnit(kind),
-            ),
-        ],
-      );
-    }
-    if (tower is WarFactoryComponent) {
-      final ready = tower.canProduce;
-      final buildableKinds = game.unitRepository
-          .kindsFor(game.playerTeam)
-          .where(
-            (type) => !TrainingCenterComponent.producibleKinds.contains(type),
-          );
-      return Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: [
-          for (final type in buildableKinds)
-            GameCoreTowerActionButtonWidget(
-              icon: _unitIcon(type),
-              label: ready
-                  ? '${tower.costFor(type)}g'
-                  : '${tower.cooldownRemaining.ceil()}s',
-              color: const Color(0xFFB0BEC5),
-              enabled: ready && gold >= tower.costFor(type),
-              onTap: () => tower.produceUnit(type),
-            ),
-        ],
-      );
-    }
-    return const SizedBox.shrink();
   }
 
   Widget? _contentFor(BoomspireGame game) {
@@ -297,6 +235,68 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
     final info = game.inspected.value;
     if (info != null) return _buildInspectedPanel(game, info);
     return null;
+  }
+
+  Widget _divider() => Container(
+    margin: const EdgeInsets.symmetric(horizontal: 4),
+    width: 1,
+    height: 34,
+    color: Colors.white24,
+  );
+
+  List<Widget> _goldMineChips(GoldMineComponent tower) {
+    return [
+      GameCoreTowerActionStatChipWidget(
+        icon: Icons.paid,
+        label: S.current.goldMinePayoutIn(
+          tower.payoutAmount,
+          tower.payoutTimeRemaining.ceil(),
+        ),
+        color: const Color(0xFFFFB300),
+      ),
+      GameCoreTowerActionStatChipWidget(
+        icon: Icons.local_fire_department,
+        label: S.current.goldMineKillBonus((tower.killGoldBonus * 100).round()),
+        color: const Color(0xFFFF8A65),
+      ),
+    ];
+  }
+
+  List<Widget> _produceButtons(BoomspireGame game, TowerComponent tower) {
+    final gold = game.gameState.gold;
+    final bool ready;
+    final Iterable<UnitKind> kinds;
+    final int Function(UnitKind) costFor;
+    final double cooldownRemaining;
+    final void Function(UnitKind) produceUnit;
+    if (tower is TrainingCenterComponent) {
+      ready = tower.canProduce;
+      kinds = TrainingCenterComponent.producibleKinds;
+      costFor = tower.costFor;
+      cooldownRemaining = tower.cooldownRemaining;
+      produceUnit = tower.produceUnit;
+    } else {
+      final factory = tower as WarFactoryComponent;
+      ready = factory.canProduce;
+      kinds = game.unitRepository
+          .kindsFor(game.playerTeam)
+          .where(
+            (type) => !TrainingCenterComponent.producibleKinds.contains(type),
+          );
+      costFor = factory.costFor;
+      cooldownRemaining = factory.cooldownRemaining;
+      produceUnit = factory.produceUnit;
+    }
+    return [
+      for (final kind in kinds)
+        GameCoreTowerActionButtonWidget(
+          icon: _unitIcon(kind),
+          label: ready ? '${costFor(kind)}g' : '${cooldownRemaining.ceil()}s',
+          color: const Color(0xFF66BB6A),
+          enabled: ready && gold >= costFor(kind),
+          onTap: () => produceUnit(kind),
+        ),
+    ];
   }
 
   IconData _unitIcon(UnitKind type) => switch (type) {

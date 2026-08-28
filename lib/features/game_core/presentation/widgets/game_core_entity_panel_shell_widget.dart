@@ -6,9 +6,10 @@ import 'game_core_tower_action_animated_label_widget.dart';
 
 /// The ONE frosted-glass card shell every selection/inspection panel is
 /// built from - a building, a tower, or a unit all render through this same
-/// container (icon + title + optional subtitle + optional owner chip +
-/// optional close button up top, arbitrary type-specific content below).
-/// Docked at the left edge of the arena by [GameCoreEntityPanelWidget].
+/// container (icon + title/subtitle + optional owner chip on the left,
+/// arbitrary type-specific content laid out beside it, not below - kept to
+/// one compact row so it fits the bottom command bar). Docked next to the
+/// minimap by [GameCoreEntityPanelWidget].
 class GameCoreEntityPanelShellWidget extends StatelessWidget {
   final IconData icon;
   final Color accentColor;
@@ -18,6 +19,7 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
   final Color? ownerColor;
   final VoidCallback? onClose;
   final Widget? child;
+  final Widget? trailing;
 
   const GameCoreEntityPanelShellWidget({
     super.key,
@@ -29,6 +31,7 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
     this.ownerColor,
     this.onClose,
     this.child,
+    this.trailing,
   });
 
   @override
@@ -40,8 +43,8 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 260),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            constraints: const BoxConstraints(maxWidth: 560),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(14),
@@ -60,15 +63,33 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
               ],
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
-                if (ownerLabel != null) ...[
-                  const SizedBox(height: 6),
-                  _buildOwnerChip(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildHeader(),
+                    if (ownerLabel != null) ...[
+                      const SizedBox(width: 10),
+                      _buildOwnerChip(),
+                    ],
+                    if (trailing != null) ...[
+                      const SizedBox(width: 10),
+                      trailing!,
+                    ],
+                  ],
+                ),
+                if (child != null) ...[
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 320),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: child!,
+                    ),
+                  ),
                 ],
-                if (child != null) ...[const SizedBox(height: 10), child!],
               ],
             ),
           ),
@@ -78,43 +99,27 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: accentColor, size: 18),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (subtitle != null)
-                GameCoreTowerActionAnimatedLabelWidget(
-                  label: subtitle!,
-                  style: const TextStyle(color: Colors.white60, fontSize: 11),
-                ),
-            ],
+    return Flexible(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        if (onClose != null) ...[
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: onClose,
-            borderRadius: BorderRadius.circular(12),
-            child: const Icon(Icons.close, color: Colors.white54, size: 18),
-          ),
+          if (subtitle != null)
+            GameCoreTowerActionAnimatedLabelWidget(
+              label: subtitle!,
+              style: const TextStyle(color: Colors.white60, fontSize: 11),
+            ),
         ],
-      ],
+      ),
     );
   }
 

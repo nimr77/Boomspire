@@ -28,22 +28,24 @@ class _MinimapWidgetState extends State<MinimapWidget>
 
   @override
   Widget build(BuildContext context) {
-    // The HUD is a plain Flutter sibling widget, not gated by Flame's own
-    // load lifecycle, so it can build before `onLoad` sets `terrainMap`.
-    if (!widget.game.terrainReady) {
-      return const SizedBox(
-        width: MinimapWidget.height,
-        height: MinimapWidget.height,
-      );
-    }
-    final arenaWidth = widget.game.terrainMap.arenaWidth;
-    final arenaHeight = widget.game.terrainMap.arenaHeight;
-    final width = MinimapWidget.height * (arenaWidth / arenaHeight);
-    final size = Size(width, MinimapWidget.height);
-
+    // The `_tick` ticker (not this outer build, which only reruns when a
+    // parent rebuilds) is what drives every live redraw, so the
+    // `terrainReady` check must live inside it too - otherwise a first
+    // build that races ahead of Flame's `onLoad` gets stuck on the
+    // placeholder forever, never rechecking once terrain finishes loading.
     return ValueListenableBuilder<int>(
       valueListenable: _tick,
       builder: (context, _, _) {
+        if (!widget.game.terrainReady) {
+          return const SizedBox(
+            width: MinimapWidget.height,
+            height: MinimapWidget.height,
+          );
+        }
+        final arenaWidth = widget.game.terrainMap.arenaWidth;
+        final arenaHeight = widget.game.terrainMap.arenaHeight;
+        final width = MinimapWidget.height * (arenaWidth / arenaHeight);
+        final size = Size(width, MinimapWidget.height);
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapUp: (details) => _navigateTo(details.localPosition, size),

@@ -594,6 +594,63 @@ void main() {
         );
       }
     });
+
+    test(
+      'the AI actually mans its production buildings instead of endlessly '
+      'rebuilding more of them (regression: Training Center/War Factory '
+      'have no game-wide build cap, so the AI used to always pick "build '
+      'another one" and never reach the code path that produces units)',
+      () async {
+        final game = await _bootGame(GameScenes.skirmishes.first);
+        final aiTeam = game.aiTeam!;
+        game.aiEconomy!.addGold(20000);
+
+        // Long enough for the AI to work through its whole infrastructure
+        // build order (Gold Mine, 2x Training Center, 2x War Factory, Tech
+        // Lab, Command Post) *and* fill its baseline defense-tower
+        // garrison before it ever stops building and starts producing -
+        // crosses the ~14s directive-refresh tick, but that's a harmless
+        // fire-and-forget network attempt (connection refused locally
+        // falls back instantly) rather than something this test needs to
+        // avoid.
+        for (var i = 0; i < 800; i++) {
+          game.update(0.1);
+        }
+
+        final trainingCenters = game.world.activeTowers
+            .whereType<TrainingCenterComponent>()
+            .where((t) => t.owner.id == aiTeam.id);
+        final warFactories = game.world.activeTowers
+            .whereType<WarFactoryComponent>()
+            .where((t) => t.owner.id == aiTeam.id);
+        expect(
+          trainingCenters.length,
+          lessThanOrEqualTo(2),
+          reason:
+              'the AI should stop at its production-building target '
+              'instead of endlessly re-building Training Centers',
+        );
+        expect(
+          warFactories.length,
+          lessThanOrEqualTo(2),
+          reason:
+              'the AI should stop at its production-building target '
+              'instead of endlessly re-building War Factories',
+        );
+
+        final aiUnits = game.world.activeUnits.where(
+          (u) => u.team.id == aiTeam.id,
+        );
+        expect(
+          aiUnits,
+          isNotEmpty,
+          reason:
+              'with ample gold and enough decision ticks, a healthy AI must '
+              'actually roll units out of its production buildings, not '
+              'just keep building more of them',
+        );
+      },
+    );
   });
 
   group('combat damage fixes', () {

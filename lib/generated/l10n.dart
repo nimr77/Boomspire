@@ -1549,6 +1549,16 @@ class S {
       args: [],
     );
   }
+
+  /// `PRODUCE UNITS`
+  String get produceUnitsLabelBuildMenu {
+    return Intl.message(
+      'PRODUCE UNITS',
+      name: 'produceUnitsLabelBuildMenu',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

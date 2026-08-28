@@ -450,5 +450,7 @@
   "activeLabelEntityPanel": "Active",
   "@activeLabelEntityPanel": {},
   "unclaimedLabelEntityPanel": "Unclaimed",
-  "@unclaimedLabelEntityPanel": {}
+  "@unclaimedLabelEntityPanel": {},
+  "produceUnitsLabelBuildMenu": "PRODUCE UNITS",
+  "@produceUnitsLabelBuildMenu": {}
 }

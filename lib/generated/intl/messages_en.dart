@@ -232,6 +232,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "previousWaveTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
       "Previous wave",
     ),
+    "produceUnitsLabelBuildMenu": MessageLookupByLibrary.simpleMessage(
+      "PRODUCE UNITS",
+    ),
     "rainLabelEditorPage": MessageLookupByLibrary.simpleMessage("Rain"),
     "randomizeAllWavesLabelEditorPage": m13,
     "randomizeWaveLabelEditorPage": MessageLookupByLibrary.simpleMessage(
