@@ -34,8 +34,7 @@ class GameCoreEntityPanelWidget extends StatefulWidget {
       _GameCoreEntityPanelWidgetState();
 }
 
-class _GameCoreEntityPanelWidgetState
-    extends State<GameCoreEntityPanelWidget> {
+class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
   Timer? _pollTimer;
   final ValueNotifier<int> _tick = ValueNotifier(0);
 
@@ -91,16 +90,6 @@ class _GameCoreEntityPanelWidgetState
         _tick.value++;
       }
     });
-  }
-
-  Widget? _contentFor(BoomspireGame game) {
-    final tower = game.selectedTower.value;
-    if (tower != null) return _buildTowerPanel(game, tower);
-    final unit = game.selectedUnit.value;
-    if (unit != null && !unit.destroyed) return _buildOwnUnitPanel(game, unit);
-    final info = game.inspected.value;
-    if (info != null) return _buildInspectedPanel(game, info);
-    return null;
   }
 
   Widget _buildGoldMineRow(GoldMineComponent tower) {
@@ -224,8 +213,7 @@ class _GameCoreEntityPanelWidgetState
                     : '${kAntiRocketCost}g',
                 color: Colors.cyanAccent,
                 enabled:
-                    !tower.antiRocket &&
-                    game.gameState.gold >= kAntiRocketCost,
+                    !tower.antiRocket && game.gameState.gold >= kAntiRocketCost,
                 onTap: game.buyAntiRocketForSelectedTower,
               ),
               GameCoreTowerActionButtonWidget(
@@ -299,6 +287,16 @@ class _GameCoreEntityPanelWidgetState
       );
     }
     return const SizedBox.shrink();
+  }
+
+  Widget? _contentFor(BoomspireGame game) {
+    final tower = game.selectedTower.value;
+    if (tower != null) return _buildTowerPanel(game, tower);
+    final unit = game.selectedUnit.value;
+    if (unit != null && !unit.destroyed) return _buildOwnUnitPanel(game, unit);
+    final info = game.inspected.value;
+    if (info != null) return _buildInspectedPanel(game, info);
+    return null;
   }
 
   IconData _unitIcon(UnitKind type) => switch (type) {
