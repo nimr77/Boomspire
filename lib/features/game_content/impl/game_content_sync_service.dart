@@ -47,14 +47,18 @@ class GameContentSyncService {
     final byId = {for (final d in base) d.id: d};
     for (final candidate in incoming) {
       final current = byId[candidate.id];
-      if (current == null || needsUpdate(cached: current, incoming: candidate)) {
+      if (current == null ||
+          needsUpdate(cached: current, incoming: candidate)) {
         byId[candidate.id] = candidate;
       }
     }
     return byId.values.toList(growable: false);
   }
 
-  bool _sameVersions(List<GameObjectDefinition> a, List<GameObjectDefinition> b) {
+  bool _sameVersions(
+    List<GameObjectDefinition> a,
+    List<GameObjectDefinition> b,
+  ) {
     if (a.length != b.length) return false;
     final versionsA = {for (final d in a) d.id: d.version};
     for (final d in b) {

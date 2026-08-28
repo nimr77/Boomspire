@@ -27,13 +27,19 @@ void main() {
     test('TowerRepositoryImpl keeps hardcoded stats with no overrides', () {
       final repo = TowerRepositoryImpl();
       final base = repo.blueprintFor(TowerType.machineGun);
-      expect(TowerRepositoryImpl().blueprintFor(TowerType.machineGun).damage, base.damage);
+      expect(
+        TowerRepositoryImpl().blueprintFor(TowerType.machineGun).damage,
+        base.damage,
+      );
     });
 
     test('TowerRepositoryImpl applies a synced override by id', () {
       final repo = TowerRepositoryImpl();
       final baseline = repo.blueprintFor(TowerType.machineGun);
-      final override = towerToDefinition(baseline, version: 2).copyWith(damage: 999);
+      final override = towerToDefinition(
+        baseline,
+        version: 2,
+      ).copyWith(damage: 999);
 
       final synced = TowerRepositoryImpl(overrides: [override]);
       final result = synced.blueprintFor(TowerType.machineGun);
@@ -52,7 +58,10 @@ void main() {
     test('BuildingRepositoryImpl applies a synced override by id', () {
       final repo = BuildingRepositoryImpl();
       final baseline = repo.blueprintFor(BuildingType.techLab);
-      final override = buildingToDefinition(baseline, version: 2).copyWith(cost: 12345);
+      final override = buildingToDefinition(
+        baseline,
+        version: 2,
+      ).copyWith(cost: 12345);
 
       final synced = BuildingRepositoryImpl(overrides: [override]);
 
@@ -81,13 +90,18 @@ void main() {
     });
 
     test('findOverride returns null when no id matches', () {
-      expect(findOverride(const <GameObjectDefinition>[], 'tower.machineGun'), isNull);
+      expect(
+        findOverride(const <GameObjectDefinition>[], 'tower.machineGun'),
+        isNull,
+      );
     });
   });
 
   group('StructureFactoryRegistry', () {
     test('creates the correct concrete component per UnitType', () {
-      final blueprint = TowerRepositoryImpl().blueprintFor(TowerType.machineGun);
+      final blueprint = TowerRepositoryImpl().blueprintFor(
+        TowerType.machineGun,
+      );
       final tower = StructureFactoryRegistry.create(
         TowerType.machineGun,
         position: Vector2.zero(),
@@ -96,7 +110,9 @@ void main() {
       );
       expect(tower, isA<MachineGunTowerComponent>());
 
-      final buildingBlueprint = BuildingRepositoryImpl().blueprintFor(BuildingType.goldMine);
+      final buildingBlueprint = BuildingRepositoryImpl().blueprintFor(
+        BuildingType.goldMine,
+      );
       final building = StructureFactoryRegistry.create(
         BuildingType.goldMine,
         position: Vector2.zero(),
@@ -111,7 +127,11 @@ void main() {
       StructureFactoryRegistry.register(
         TowerType.antiAir,
         ({required position, required cellSize, required blueprint}) =>
-            AntiAirTowerComponent(position: position, cellSize: cellSize, blueprint: blueprint),
+            AntiAirTowerComponent(
+              position: position,
+              cellSize: cellSize,
+              blueprint: blueprint,
+            ),
       );
       final tower = StructureFactoryRegistry.create(
         TowerType.antiAir,

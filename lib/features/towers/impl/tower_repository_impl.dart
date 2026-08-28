@@ -16,7 +16,8 @@ class TowerRepositoryImpl implements TowerRepository {
   TowerRepositoryImpl({this.overrides = const []});
 
   @override
-  List<UnitBlueprint> get all => _resolvedBlueprints.values.toList(growable: false);
+  List<UnitBlueprint> get all =>
+      _resolvedBlueprints.values.toList(growable: false);
 
   Map<TowerType, UnitBlueprint> get _blueprints => <TowerType, UnitBlueprint>{
     TowerType.machineGun: UnitBlueprint(

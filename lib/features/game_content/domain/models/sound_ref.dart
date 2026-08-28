@@ -11,10 +11,7 @@ part 'sound_ref.g.dart';
 /// equivalent for.
 @freezed
 abstract class SoundRef with _$SoundRef {
-  const factory SoundRef({
-    SfxType? builtIn,
-    String? remoteUrl,
-  }) = _SoundRef;
+  const factory SoundRef({SfxType? builtIn, String? remoteUrl}) = _SoundRef;
 
   factory SoundRef.fromJson(Map<String, dynamic> json) =>
       _$SoundRefFromJson(json);

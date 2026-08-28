@@ -9,10 +9,8 @@ part 'asset_source.g.dart';
 /// server-hosted override fetched and cached alongside the manifest itself.
 @freezed
 abstract class AssetSource with _$AssetSource {
-  const factory AssetSource({
-    required String modelKey,
-    String? remoteUrl,
-  }) = _AssetSource;
+  const factory AssetSource({required String modelKey, String? remoteUrl}) =
+      _AssetSource;
 
   factory AssetSource.fromJson(Map<String, dynamic> json) =>
       _$AssetSourceFromJson(json);

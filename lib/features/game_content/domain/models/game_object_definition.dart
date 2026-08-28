@@ -11,11 +11,20 @@ import 'sound_ref.dart';
 part 'game_object_definition.freezed.dart';
 part 'game_object_definition.g.dart';
 
-List<BuildRequirement> _requirementsFromJson(List<dynamic> json) =>
-    json.map((e) => BuildRequirement.fromJson(e as Map<String, dynamic>)).toList();
+/// Pure version comparison - no I/O, so it's trivial to unit test and to
+/// reuse both for a single object and when diffing a whole manifest.
+bool needsUpdate({
+  required GameObjectDefinition cached,
+  required GameObjectDefinition incoming,
+}) => incoming.version > cached.version;
 
-List<Map<String, dynamic>> _requirementsToJson(List<BuildRequirement> requirements) =>
-    requirements.map((r) => r.toJson()).toList();
+List<BuildRequirement> _requirementsFromJson(List<dynamic> json) => json
+    .map((e) => BuildRequirement.fromJson(e as Map<String, dynamic>))
+    .toList();
+
+List<Map<String, dynamic>> _requirementsToJson(
+  List<BuildRequirement> requirements,
+) => requirements.map((r) => r.toJson()).toList();
 
 /// Everything needed for one tower/building/unit to exist in the game -
 /// combat stats, build gating, visuals, and sound - as a single versioned,
@@ -78,10 +87,3 @@ abstract class GameObjectDefinition with _$GameObjectDefinition {
   factory GameObjectDefinition.fromJson(Map<String, dynamic> json) =>
       _$GameObjectDefinitionFromJson(json);
 }
-
-/// Pure version comparison - no I/O, so it's trivial to unit test and to
-/// reuse both for a single object and when diffing a whole manifest.
-bool needsUpdate({
-  required GameObjectDefinition cached,
-  required GameObjectDefinition incoming,
-}) => incoming.version > cached.version;

@@ -5,7 +5,8 @@ import '../domain/repos/game_content_cache_repository.dart';
 /// On-device game-content cache via ToStore's key-value engine - stores the
 /// whole last-synced manifest as one JSON array blob under a single key,
 /// exactly like `LocalProgressRepositoryImpl` stores its snapshot.
-class LocalGameContentCacheRepositoryImpl implements GameContentCacheRepository {
+class LocalGameContentCacheRepositoryImpl
+    implements GameContentCacheRepository {
   static const _key = 'boomspire.game_content.v1';
 
   @override
@@ -15,7 +16,11 @@ class LocalGameContentCacheRepositoryImpl implements GameContentCacheRepository 
     if (raw == null) return null;
     try {
       return (raw as List)
-          .map((e) => GameObjectDefinition.fromJson(Map<String, dynamic>.from(e as Map)))
+          .map(
+            (e) => GameObjectDefinition.fromJson(
+              Map<String, dynamic>.from(e as Map),
+            ),
+          )
           .toList();
     } catch (_) {
       // Corrupt/foreign cache shouldn't crash catalog hydration - treat it

@@ -199,6 +199,25 @@ Future<void> _handle(HttpRequest request, String? apiKey) async {
   }
 }
 
+/// Serves the versioned game-object manifest straight from disk - a plain
+/// JSON file for now (see `tool/generate_content_manifest.dart`), until a
+/// real database backs it.
+Future<void> _handleContentManifest(HttpRequest request) async {
+  final scriptDir = File(Platform.script.toFilePath()).parent;
+  final file = File('${scriptDir.path}/content_manifest.json');
+  if (!file.existsSync()) {
+    request.response.statusCode = HttpStatus.notFound;
+    await request.response.close();
+    return;
+  }
+
+  request.response
+    ..statusCode = HttpStatus.ok
+    ..headers.contentType = ContentType.json
+    ..write(await file.readAsString());
+  await request.response.close();
+}
+
 Future<void> _handleSkirmish(HttpRequest request, String? apiKey) async {
   Map<String, dynamic> snapshot = const {};
   try {
@@ -226,25 +245,6 @@ Future<void> _handleSkirmish(HttpRequest request, String? apiKey) async {
   } finally {
     await request.response.close();
   }
-}
-
-/// Serves the versioned game-object manifest straight from disk - a plain
-/// JSON file for now (see `tool/generate_content_manifest.dart`), until a
-/// real database backs it.
-Future<void> _handleContentManifest(HttpRequest request) async {
-  final scriptDir = File(Platform.script.toFilePath()).parent;
-  final file = File('${scriptDir.path}/content_manifest.json');
-  if (!file.existsSync()) {
-    request.response.statusCode = HttpStatus.notFound;
-    await request.response.close();
-    return;
-  }
-
-  request.response
-    ..statusCode = HttpStatus.ok
-    ..headers.contentType = ContentType.json
-    ..write(await file.readAsString());
-  await request.response.close();
 }
 
 /// Minimal KEY=VALUE parser for `server/.env`, resolved relative to this

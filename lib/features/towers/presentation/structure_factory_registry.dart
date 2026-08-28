@@ -19,12 +19,11 @@ import 'tower_component.dart';
 import 'training_center_component.dart';
 import 'war_factory_component.dart';
 
-typedef TowerFactory =
-    TowerComponent Function({
-      required Vector2 position,
-      required double cellSize,
-      required UnitBlueprint blueprint,
-    });
+typedef TowerFactory = TowerComponent Function({
+  required Vector2 position,
+  required double cellSize,
+  required UnitBlueprint blueprint,
+});
 
 /// Which concrete [TowerComponent] subclass to build for a given
 /// [UnitType] - extracted from `BoomspireGame.createTower`'s switch so a
@@ -55,7 +54,11 @@ class StructureFactoryRegistry {
   }) {
     final factory = _factories[type];
     if (factory == null) throw ArgumentError('Unknown unit type: $type');
-    return factory(position: position, cellSize: cellSize, blueprint: blueprint);
+    return factory(
+      position: position,
+      cellSize: cellSize,
+      blueprint: blueprint,
+    );
   }
 
   /// Lets new buildable types register their component without touching

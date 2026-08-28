@@ -36,20 +36,30 @@ class GameCoreProductionState {
     }
   }
 
-  double _cooldownRemaining(TowerComponent tower) => tower is TrainingCenterComponent
+  double _cooldownRemaining(TowerComponent tower) =>
+      tower is TrainingCenterComponent
       ? tower.cooldownRemaining
       : (tower as WarFactoryComponent).cooldownRemaining;
 
   int Function(UnitKind) _costForFn(TowerComponent tower) =>
-      tower is TrainingCenterComponent ? tower.costFor : (tower as WarFactoryComponent).costFor;
+      tower is TrainingCenterComponent
+      ? tower.costFor
+      : (tower as WarFactoryComponent).costFor;
 
-  bool _isReady(TowerComponent tower) =>
-      tower is TrainingCenterComponent ? tower.canProduce : (tower as WarFactoryComponent).canProduce;
+  bool _isReady(TowerComponent tower) => tower is TrainingCenterComponent
+      ? tower.canProduce
+      : (tower as WarFactoryComponent).canProduce;
 
-  Iterable<UnitKind> _producibleKinds(BoomspireGame game, TowerComponent tower) {
-    if (tower is TrainingCenterComponent) return TrainingCenterComponent.producibleKinds;
+  Iterable<UnitKind> _producibleKinds(
+    BoomspireGame game,
+    TowerComponent tower,
+  ) {
+    if (tower is TrainingCenterComponent)
+      return TrainingCenterComponent.producibleKinds;
     return game.unitRepository
         .kindsFor(game.playerTeam)
-        .where((kind) => !TrainingCenterComponent.producibleKinds.contains(kind));
+        .where(
+          (kind) => !TrainingCenterComponent.producibleKinds.contains(kind),
+        );
   }
 }

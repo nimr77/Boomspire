@@ -25,9 +25,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 
-const _viewport = 1280.0;
-const _hugeArena = 3000.0;
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -82,11 +79,9 @@ void main() {
   });
 }
 
-KeyDownEvent _keyDown(LogicalKeyboardKey key) => KeyDownEvent(
-  logicalKey: key,
-  physicalKey: PhysicalKeyboardKey.arrowRight,
-  timeStamp: Duration.zero,
-);
+const _hugeArena = 3000.0;
+
+const _viewport = 1280.0;
 
 Future<BoomspireGame> _bootGame(
   GameScene scene,
@@ -116,6 +111,22 @@ Future<BoomspireGame> _bootGame(
   return game;
 }
 
+KeyDownEvent _keyDown(LogicalKeyboardKey key) => KeyDownEvent(
+  logicalKey: key,
+  physicalKey: PhysicalKeyboardKey.arrowRight,
+  timeStamp: Duration.zero,
+);
+
+/// No-op audio - the real impl needs real audio plugins that aren't
+/// available under `flutter test`.
+class _FakeAudioRepository implements AudioRepository {
+  @override
+  void play(SfxType type, {double volume = 1.0}) {}
+
+  @override
+  Future<void> preload() async {}
+}
+
 /// Wraps the real terrain generation but reports (and pads the grid to) a
 /// much bigger arena when [enabled], simulating a future "huge map" scene.
 class _HugeTerrainRepository implements TerrainRepository {
@@ -140,14 +151,4 @@ class _HugeTerrainRepository implements TerrainRepository {
       basePoint: const PathPoint(0, 0),
     );
   }
-}
-
-/// No-op audio - the real impl needs real audio plugins that aren't
-/// available under `flutter test`.
-class _FakeAudioRepository implements AudioRepository {
-  @override
-  Future<void> preload() async {}
-
-  @override
-  void play(SfxType type, {double volume = 1.0}) {}
 }

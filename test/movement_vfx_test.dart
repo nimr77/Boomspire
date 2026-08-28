@@ -51,21 +51,44 @@ void main() {
     },
   );
 
-  test(
-    'a moving light vehicle leaves dust puffs, no tread marks',
-    () async {
-      final game = await _bootGame();
-      final buggy = await _spawnMoving(game, UnitKind.lightVehicle);
+  test('a moving light vehicle leaves dust puffs, no tread marks', () async {
+    final game = await _bootGame();
+    final buggy = await _spawnMoving(game, UnitKind.lightVehicle);
 
-      for (var i = 0; i < 40; i++) {
-        game.update(0.1);
-      }
+    for (var i = 0; i < 40; i++) {
+      game.update(0.1);
+    }
 
-      expect(game.world.children.whereType<DustPuffComponent>(), isNotEmpty);
-      expect(game.world.children.whereType<TrackMarkComponent>(), isEmpty);
-      buggy.removeFromParent();
-    },
+    expect(game.world.children.whereType<DustPuffComponent>(), isNotEmpty);
+    expect(game.world.children.whereType<TrackMarkComponent>(), isEmpty);
+    buggy.removeFromParent();
+  });
+}
+
+Future<BoomspireGame> _bootGame() async {
+  final scene = GameScenes.all.first;
+  final game = BoomspireGame(
+    terrainRepository: TerrainRepositoryImpl(),
+    towerRepository: TowerRepositoryImpl(),
+    buildingRepository: BuildingRepositoryImpl(),
+    unitRepository: MobileUnitRepositoryImpl(),
+    waveRepository: WaveRepositoryImpl(
+      totalWaves: scene.waveCount,
+      biome: scene.biome,
+    ),
+    audioRepository: _FakeAudioRepository(),
+    gameState: GameStateRepositoryImpl(),
+    aiDirector: AiDirectorRepositoryImpl(),
+    unitRenderRepository: ProceduralUnitRenderRepositoryImpl(),
+    scene: scene,
   );
+  game.onGameResize(Vector2(1280, 720));
+  // ignore: invalid_use_of_internal_member
+  await game.load();
+  // ignore: invalid_use_of_internal_member
+  game.mount();
+  game.update(0);
+  return game;
 }
 
 /// Spawns an invader of [kind] with [UnitObjective.rushBase] (always has a
@@ -97,32 +120,6 @@ Future<MobileUnitComponent> _spawnMoving(
   await Future<void>.delayed(Duration.zero);
   game.update(0);
   return unit;
-}
-
-Future<BoomspireGame> _bootGame() async {
-  final scene = GameScenes.all.first;
-  final game = BoomspireGame(
-    terrainRepository: TerrainRepositoryImpl(),
-    towerRepository: TowerRepositoryImpl(),
-    buildingRepository: BuildingRepositoryImpl(),
-    unitRepository: MobileUnitRepositoryImpl(),
-    waveRepository: WaveRepositoryImpl(
-      totalWaves: scene.waveCount,
-      biome: scene.biome,
-    ),
-    audioRepository: _FakeAudioRepository(),
-    gameState: GameStateRepositoryImpl(),
-    aiDirector: AiDirectorRepositoryImpl(),
-    unitRenderRepository: ProceduralUnitRenderRepositoryImpl(),
-    scene: scene,
-  );
-  game.onGameResize(Vector2(1280, 720));
-  // ignore: invalid_use_of_internal_member
-  await game.load();
-  // ignore: invalid_use_of_internal_member
-  game.mount();
-  game.update(0);
-  return game;
 }
 
 class _FakeAudioRepository implements AudioRepository {

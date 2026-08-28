@@ -9,14 +9,6 @@ import 'unit_kind.dart';
 import 'weapon_type.dart';
 
 class MobileUnitRepositoryImpl implements MobileUnitRepository {
-  /// Synced game-content overrides (see `GameContentSyncService`) - empty
-  /// by default, so every existing call site (including every test) gets
-  /// today's hardcoded stats unchanged unless a successful sync supplied
-  /// something newer.
-  final List<GameObjectDefinition> overrides;
-
-  MobileUnitRepositoryImpl({this.overrides = const []});
-
   // Keyed by `isEnemy` rather than a specific Team instance, since any
   // number of human player Teams (future multiplayer seats) all draw from
   // the exact same "player" roster/stats - only their `Team.color` differs.
@@ -148,6 +140,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       weaponType: WeaponType.cannon,
     ),
   };
+
   // Note: these are the stats a fresh, un-upgraded Training Center/War
   // Factory produces - `AllyUnitComponent` scales health/damage up with the
   // producing building's `upgradeLevel`, so stronger ally units require
@@ -264,6 +257,13 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
     ),
   };
 
+  /// Synced game-content overrides (see `GameContentSyncService`) - empty
+  /// by default, so every existing call site (including every test) gets
+  /// today's hardcoded stats unchanged unless a successful sync supplied
+  /// something newer.
+  final List<GameObjectDefinition> overrides;
+  MobileUnitRepositoryImpl({this.overrides = const []});
+
   @override
   MobileUnitBlueprint blueprintFor(Team team, UnitKind kind) {
     final table = _tableFor(team.catalog);
@@ -275,7 +275,9 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       overrides,
       unitDefinitionId(team.catalog, kind.name),
     );
-    return override == null ? blueprint : applyMobileUnitOverride(blueprint, override);
+    return override == null
+        ? blueprint
+        : applyMobileUnitOverride(blueprint, override);
   }
 
   @override

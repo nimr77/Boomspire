@@ -33,7 +33,9 @@ class HttpGameContentRepositoryImpl implements GameContentRepository {
 
   @override
   Future<List<GameObjectDefinition>> fetchManifest() async {
-    final response = await _dio.get<List<dynamic>>('$_proxyUrl/content-manifest');
+    final response = await _dio.get<List<dynamic>>(
+      '$_proxyUrl/content-manifest',
+    );
     final data = response.data;
     if (response.statusCode != 200 || data == null) {
       throw StateError(

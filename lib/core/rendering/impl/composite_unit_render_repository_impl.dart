@@ -9,6 +9,10 @@ import 'rive_unit_render_repository_impl.dart';
 /// baked Lottie model, else the procedural Canvas fallback - in that
 /// priority order, per `key`.
 class CompositeUnitRenderRepositoryImpl implements UnitRenderRepository {
+  final UnitRenderRepository _rive;
+
+  final UnitRenderRepository _lottie;
+  final UnitRenderRepository _procedural;
   CompositeUnitRenderRepositoryImpl({
     UnitRenderRepository? rive,
     UnitRenderRepository? lottie,
@@ -16,10 +20,6 @@ class CompositeUnitRenderRepositoryImpl implements UnitRenderRepository {
   }) : _rive = rive ?? RiveUnitRenderRepositoryImpl(),
        _lottie = lottie ?? LottieUnitRenderRepositoryImpl(),
        _procedural = procedural ?? ProceduralUnitRenderRepositoryImpl();
-
-  final UnitRenderRepository _rive;
-  final UnitRenderRepository _lottie;
-  final UnitRenderRepository _procedural;
 
   @override
   Future<PositionComponent> render({

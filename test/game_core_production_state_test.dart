@@ -39,13 +39,11 @@ void main() {
     final game = await _bootGame();
     game.gameState.addGold(5000);
     final cell = _findOpenCell(game);
-    final tower =
-        game.buildStructure(
-              game.playerTeam,
-              BuildingType.trainingCenter,
-              game.terrainMap.grid.cellCenter(cell),
-            )
-            as TrainingCenterComponent;
+    final tower = game.buildStructure(
+      game.playerTeam,
+      BuildingType.trainingCenter,
+      game.terrainMap.grid.cellCenter(cell),
+    ) as TrainingCenterComponent;
 
     final options = state.optionsFor(game, tower);
 
@@ -56,59 +54,56 @@ void main() {
     expect(options.every((o) => o.ready), isTrue);
   });
 
-  test('War Factory offers the buildable roster minus Training Center kinds', () async {
-    final game = await _bootGame();
-    game.gameState.addGold(5000);
-    final cell = _findOpenCell(game);
-    final tower =
-        game.buildStructure(
-              game.playerTeam,
-              BuildingType.warFactory,
-              game.terrainMap.grid.cellCenter(cell),
-            )
-            as WarFactoryComponent;
+  test(
+    'War Factory offers the buildable roster minus Training Center kinds',
+    () async {
+      final game = await _bootGame();
+      game.gameState.addGold(5000);
+      final cell = _findOpenCell(game);
+      final tower = game.buildStructure(
+        game.playerTeam,
+        BuildingType.warFactory,
+        game.terrainMap.grid.cellCenter(cell),
+      ) as WarFactoryComponent;
 
-    final options = state.optionsFor(game, tower);
+      final options = state.optionsFor(game, tower);
 
-    expect(
-      options.map((o) => o.kind),
-      isNot(contains(UnitKind.soldier)),
-    );
-    expect(options, isNotEmpty);
-  });
+      expect(options.map((o) => o.kind), isNot(contains(UnitKind.soldier)));
+      expect(options, isNotEmpty);
+    },
+  );
 
-  test('affordable is false once gold drops below every option\'s cost', () async {
-    final game = await _bootGame();
-    game.gameState.addGold(600);
-    final cell = _findOpenCell(game);
-    final tower =
-        game.buildStructure(
-              game.playerTeam,
-              BuildingType.trainingCenter,
-              game.terrainMap.grid.cellCenter(cell),
-            )
-            as TrainingCenterComponent;
-    // Spend down to (near) zero so no option is affordable anymore.
-    while (game.gameState.gold > 0) {
-      if (!game.gameState.spendGold(game.gameState.gold)) break;
-    }
+  test(
+    'affordable is false once gold drops below every option\'s cost',
+    () async {
+      final game = await _bootGame();
+      game.gameState.addGold(600);
+      final cell = _findOpenCell(game);
+      final tower = game.buildStructure(
+        game.playerTeam,
+        BuildingType.trainingCenter,
+        game.terrainMap.grid.cellCenter(cell),
+      ) as TrainingCenterComponent;
+      // Spend down to (near) zero so no option is affordable anymore.
+      while (game.gameState.gold > 0) {
+        if (!game.gameState.spendGold(game.gameState.gold)) break;
+      }
 
-    final options = state.optionsFor(game, tower);
+      final options = state.optionsFor(game, tower);
 
-    expect(options.every((o) => !o.affordable), isTrue);
-  });
+      expect(options.every((o) => !o.affordable), isTrue);
+    },
+  );
 
   test('produce() spends gold and spawns a unit for the given kind', () async {
     final game = await _bootGame();
     game.gameState.addGold(5000);
     final cell = _findOpenCell(game);
-    final tower =
-        game.buildStructure(
-              game.playerTeam,
-              BuildingType.trainingCenter,
-              game.terrainMap.grid.cellCenter(cell),
-            )
-            as TrainingCenterComponent;
+    final tower = game.buildStructure(
+      game.playerTeam,
+      BuildingType.trainingCenter,
+      game.terrainMap.grid.cellCenter(cell),
+    ) as TrainingCenterComponent;
     final goldBefore = game.gameState.gold;
     final unitsBefore = game.world.activeUnits.length;
 

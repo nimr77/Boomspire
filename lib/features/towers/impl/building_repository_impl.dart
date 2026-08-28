@@ -15,7 +15,8 @@ class BuildingRepositoryImpl implements BuildingRepository {
   BuildingRepositoryImpl({this.overrides = const []});
 
   @override
-  List<UnitBlueprint> get all => _resolvedBlueprints.values.toList(growable: false);
+  List<UnitBlueprint> get all =>
+      _resolvedBlueprints.values.toList(growable: false);
 
   Map<BuildingType, UnitBlueprint> get _blueprints =>
       <BuildingType, UnitBlueprint>{
