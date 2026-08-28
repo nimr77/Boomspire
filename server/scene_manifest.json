@@ -112,10 +112,96 @@
     "version": 1
   },
   {
+    "id": "windy-lowlands",
+    "name": "Windy Lowlands",
+    "briefing": "Gusts never stop rolling across this open grassland, bending the fields sideways in long green waves.",
+    "biome": "grassPlains",
+    "mode": "waveDefense",
+    "waveCount": 6,
+    "aggressionBias": 0.05,
+    "homeLayout": "eastEdge",
+    "spawnLayout": "single",
+    "homeSites": [],
+    "resourceNodeSites": [],
+    "version": 1
+  },
+  {
+    "id": "howling-icefield",
+    "name": "Howling Icefield",
+    "briefing": "A relentless polar wind drives sheets of snow sideways across the ice - visibility is the enemy as much as the assault.",
+    "biome": "snowTundra",
+    "mode": "waveDefense",
+    "waveCount": 7,
+    "aggressionBias": 0.08,
+    "homeLayout": "center",
+    "spawnLayout": "twoSided",
+    "homeSites": [],
+    "resourceNodeSites": [],
+    "version": 1
+  },
+  {
+    "id": "dust-devil-flats",
+    "name": "Dust Devil Flats",
+    "briefing": "Hot desert wind whips loose sand into stinging clouds across the flats, surrounding a lone dug-in outpost.",
+    "biome": "desertDunes",
+    "mode": "waveDefense",
+    "waveCount": 7,
+    "aggressionBias": 0.08,
+    "homeLayout": "southWestCorner",
+    "spawnLayout": "surround",
+    "homeSites": [],
+    "resourceNodeSites": [],
+    "version": 1
+  },
+  {
     "id": "twin-outposts",
     "name": "Twin Outposts",
     "briefing": "Home against home across open grassland - build up and strike before the AI commander finishes theirs.",
     "biome": "grassPlains",
+    "mode": "skirmish",
+    "waveCount": 0,
+    "aggressionBias": 0.0,
+    "homeLayout": "eastEdge",
+    "spawnLayout": "single",
+    "homeSites": [
+      { "layout": "southWestCorner", "owner": "player" },
+      { "layout": "northEastCorner", "owner": "ai" }
+    ],
+    "resourceNodeSites": [
+      { "dx": 0.5, "dy": 0.5 },
+      { "dx": 0.25, "dy": 0.7 },
+      { "dx": 0.75, "dy": 0.3 }
+    ],
+    "startingGold": 3000,
+    "version": 1
+  },
+  {
+    "id": "frostbite-duel",
+    "name": "Frostbite Duel",
+    "briefing": "Home against home in a snow-blind tundra whiteout - the wind never lets either commander see far past their own walls.",
+    "biome": "snowTundra",
+    "mode": "skirmish",
+    "waveCount": 0,
+    "aggressionBias": 0.0,
+    "homeLayout": "eastEdge",
+    "spawnLayout": "single",
+    "homeSites": [
+      { "layout": "southWestCorner", "owner": "player" },
+      { "layout": "northEastCorner", "owner": "ai" }
+    ],
+    "resourceNodeSites": [
+      { "dx": 0.5, "dy": 0.5 },
+      { "dx": 0.25, "dy": 0.7 },
+      { "dx": 0.75, "dy": 0.3 }
+    ],
+    "startingGold": 3000,
+    "version": 1
+  },
+  {
+    "id": "dust-bowl-duel",
+    "name": "Dust Bowl Duel",
+    "briefing": "Home against home across a wind-scoured dune field - stinging blown sand covers whichever side pushes out first.",
+    "biome": "desertDunes",
     "mode": "skirmish",
     "waveCount": 0,
     "aggressionBias": 0.0,

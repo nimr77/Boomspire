@@ -19,6 +19,7 @@ import '../../combat/presentation/move_order_marker_component.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
+import '../../terrain/presentation/wind_effect_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
 import '../../towers/domain/models/building_type.dart';
 import '../../towers/domain/models/tower_type.dart';
@@ -583,6 +584,12 @@ class BoomspireGame extends FlameGame<GameWorld>
     world.add(
       CloudLayerComponent(
         arenaSize: Vector2(terrainMap.arenaWidth, terrainMap.arenaHeight),
+      ),
+    );
+    world.add(
+      WindEffectComponent(
+        arenaSize: Vector2(terrainMap.arenaWidth, terrainMap.arenaHeight),
+        biome: scene.biome,
       ),
     );
     world.playerHomeBase = HomeBaseComponent(

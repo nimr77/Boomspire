@@ -110,6 +110,42 @@ class GameScenes {
       homeLayout: HomeLayout.center,
       spawnLayout: SpawnLayout.twoSided,
     ),
+    GameScene(
+      id: 'windy-lowlands',
+      name: 'Windy Lowlands',
+      briefing:
+          'Gusts never stop rolling across this open grassland, bending '
+          'the fields sideways in long green waves.',
+      biome: Biome.grassPlains,
+      waveCount: 6,
+      aggressionBias: 0.05,
+      homeLayout: HomeLayout.eastEdge,
+      spawnLayout: SpawnLayout.single,
+    ),
+    GameScene(
+      id: 'howling-icefield',
+      name: 'Howling Icefield',
+      briefing:
+          'A relentless polar wind drives sheets of snow sideways across '
+          'the ice - visibility is the enemy as much as the assault.',
+      biome: Biome.snowTundra,
+      waveCount: 7,
+      aggressionBias: 0.08,
+      homeLayout: HomeLayout.center,
+      spawnLayout: SpawnLayout.twoSided,
+    ),
+    GameScene(
+      id: 'dust-devil-flats',
+      name: 'Dust Devil Flats',
+      briefing:
+          'Hot desert wind whips loose sand into stinging clouds across '
+          'the flats, surrounding a lone dug-in outpost.',
+      biome: Biome.desertDunes,
+      waveCount: 7,
+      aggressionBias: 0.08,
+      homeLayout: HomeLayout.southWestCorner,
+      spawnLayout: SpawnLayout.surround,
+    ),
   ];
 
   /// Skirmish scenes: home-vs-home matches where every seat in
@@ -135,6 +171,50 @@ class GameScenes {
       ],
       // One contested node dead-center, plus one tucked closer to each
       // base - fought over by whichever side gets a vehicle there first.
+      resourceNodeSites: [
+        ResourceNodeSite(dx: 0.5, dy: 0.5),
+        ResourceNodeSite(dx: 0.25, dy: 0.7),
+        ResourceNodeSite(dx: 0.75, dy: 0.3),
+      ],
+    ),
+    GameScene(
+      id: 'frostbite-duel',
+      name: 'Frostbite Duel',
+      briefing:
+          'Home against home in a snow-blind tundra whiteout - the wind '
+          'never lets either commander see far past their own walls.',
+      biome: Biome.snowTundra,
+      mode: GameMode.skirmish,
+      startingGold: GameConfig.startingSkirmishGold,
+      homeSites: [
+        HomeSite(
+          layout: HomeLayout.southWestCorner,
+          owner: HomeSiteOwner.player,
+        ),
+        HomeSite(layout: HomeLayout.northEastCorner, owner: HomeSiteOwner.ai),
+      ],
+      resourceNodeSites: [
+        ResourceNodeSite(dx: 0.5, dy: 0.5),
+        ResourceNodeSite(dx: 0.25, dy: 0.7),
+        ResourceNodeSite(dx: 0.75, dy: 0.3),
+      ],
+    ),
+    GameScene(
+      id: 'dust-bowl-duel',
+      name: 'Dust Bowl Duel',
+      briefing:
+          'Home against home across a wind-scoured dune field - stinging '
+          'blown sand covers whichever side pushes out first.',
+      biome: Biome.desertDunes,
+      mode: GameMode.skirmish,
+      startingGold: GameConfig.startingSkirmishGold,
+      homeSites: [
+        HomeSite(
+          layout: HomeLayout.southWestCorner,
+          owner: HomeSiteOwner.player,
+        ),
+        HomeSite(layout: HomeLayout.northEastCorner, owner: HomeSiteOwner.ai),
+      ],
       resourceNodeSites: [
         ResourceNodeSite(dx: 0.5, dy: 0.5),
         ResourceNodeSite(dx: 0.25, dy: 0.7),

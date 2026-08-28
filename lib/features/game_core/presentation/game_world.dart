@@ -10,6 +10,7 @@ import '../../../core/combat/team.dart';
 import '../../combat/presentation/mobile_unit_component.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
+import '../../terrain/presentation/wind_effect_component.dart';
 import '../../towers/domain/models/building_type.dart';
 import '../../towers/domain/targeting/target_assignment_computer.dart';
 import '../../towers/presentation/tower_component.dart';
@@ -109,6 +110,15 @@ class GameWorld extends World
           game.terrainMap.arenaWidth,
           game.terrainMap.arenaHeight,
         ),
+      ),
+    );
+    await add(
+      WindEffectComponent(
+        arenaSize: Vector2(
+          game.terrainMap.arenaWidth,
+          game.terrainMap.arenaHeight,
+        ),
+        biome: game.scene.biome,
       ),
     );
     playerHomeBase = HomeBaseComponent(
