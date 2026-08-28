@@ -23,11 +23,7 @@ class VehiclePlayerMarkerComponent extends PositionComponent {
   void render(Canvas canvas) {
     final center = Offset(size.x / 2, size.y / 2);
     final radius = size.x / 2;
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()..color = const Color(0xFF2B2E33),
-    );
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFF2B2E33));
     canvas.drawCircle(center, radius * 0.68, Paint()..color = accent);
   }
 }

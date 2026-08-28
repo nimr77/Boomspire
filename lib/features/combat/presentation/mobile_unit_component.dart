@@ -41,8 +41,8 @@ import 'smoke_trail_component.dart';
 import 'target_highlight_component.dart';
 import 'track_mark_component.dart';
 import 'vapor_cone_component.dart';
-import 'vehicle_tread_component.dart';
 import 'vehicle_player_marker_component.dart';
+import 'vehicle_tread_component.dart';
 
 /// Squared distance within which two same-team, same-domain units push
 /// apart a bit while converging on the same path/base instead of
