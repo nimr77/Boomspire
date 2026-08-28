@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 import '../../../towers/domain/models/building_type.dart';
 import '../../../towers/domain/models/unit_type.dart';
 import '../boomspire_game.dart';
@@ -34,11 +37,11 @@ class _BuildMenuState extends State<BuildMenu> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: AppThemePaddings.h12v8,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white24),
+            border: Border.all(color: AppThemeColors.borderSubtle),
           ),
           child: _buildPlacementMenu(game),
         ),
@@ -70,7 +73,7 @@ class _BuildMenuState extends State<BuildMenu> {
                   selected: !showBuildings,
                   onTap: () => _showBuildings.value = false,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: AppThemeSpacing.space6),
                 GameCoreBuildMenuTabWidget(
                   label: S.current.buildMenuBuildingsTab,
                   selected: showBuildings,
@@ -78,7 +81,7 @@ class _BuildMenuState extends State<BuildMenu> {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: AppThemeSpacing.space6),
             // Kept at its original, unshrunk size - the tabs above animate
             // their own height instead of squeezing this row.
             SizedBox(
@@ -133,9 +136,7 @@ class _BuildMenuState extends State<BuildMenu> {
                                   final affordable =
                                       game.gameState.gold >= bp.cost;
                                   return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                    ),
+                                    padding: AppThemePaddings.h4,
                                     child: GameCoreBuildMenuTowerButtonWidget(
                                       blueprint: bp,
                                       selected: selected == bp.type,

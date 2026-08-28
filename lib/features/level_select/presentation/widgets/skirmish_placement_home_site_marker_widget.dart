@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../game_core/presentation/player_palette.dart';
 
 /// A single numbered, colored home-site marker that glows and scales up on
@@ -55,7 +56,7 @@ class SkirmishPlacementHomeSiteMarkerWidget extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: color,
                   border: Border.all(
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                     width: selected ? 3 : 2,
                   ),
                   boxShadow: [
@@ -70,7 +71,7 @@ class SkirmishPlacementHomeSiteMarkerWidget extends StatelessWidget {
                 child: Text(
                   '${index + 1}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),

@@ -6,6 +6,9 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../theme/app_theme/app_theme_spacing.dart';
 import '../../game_core/domain/models/game_scenes.dart';
 import '../../map_editor/domain/models/map_draft.dart';
 import '../../map_editor/domain/repos/map_draft_repository.dart';
@@ -35,12 +38,12 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E14),
+      backgroundColor: AppThemeColors.background,
       body: Stack(
         children: [
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              padding: AppThemePaddings.h16v24,
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 720),
@@ -50,11 +53,12 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                     children: [
                       Center(
                         child: Column(
+                          spacing: AppThemeSpacing.space6,
                           children: [
                             Text(
                                   S.current.skirmishSelectTitle,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppThemeColors.textPrimary,
                                     fontSize: 34,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 3,
@@ -63,11 +67,10 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                                 .animate()
                                 .fadeIn(duration: 400.ms)
                                 .slideY(begin: -0.2, end: 0),
-                            const SizedBox(height: 6),
                             Text(
                                   S.current.skirmishSelectSubtitle,
                                   style: const TextStyle(
-                                    color: Colors.white54,
+                                    color: AppThemeColors.textSecondary,
                                     fontSize: 16,
                                   ),
                                 )
@@ -77,17 +80,17 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: AppThemeSpacing.space28),
                       Text(
                         S.current.skirmishSelectFeatured,
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: AppThemeColors.textMuted,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppThemeSpacing.space12),
                       GridView.count(
                         shrinkWrap: true,
                         crossAxisCount: 2,
@@ -110,32 +113,32 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                                 ),
                         ],
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: AppThemeSpacing.space28),
                       Text(
                         S.current.skirmishSelectCustomMaps,
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: AppThemeColors.textMuted,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppThemeSpacing.space12),
                       ValueListenableBuilder<List<MapDraft>?>(
                         valueListenable: _state.drafts,
                         builder: (context, drafts, _) {
                           if (drafts == null) {
                             return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 24),
+                              padding: AppThemePaddings.v24,
                               child: Center(child: CircularProgressIndicator()),
                             );
                           }
                           if (drafts.isEmpty) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: AppThemePaddings.v12,
                               child: Text(
                                 S.current.skirmishSelectEmptyCustom,
-                                style: const TextStyle(color: Colors.white38),
+                                style: const TextStyle(color: AppThemeColors.textFaint),
                               ),
                             );
                           }
@@ -143,7 +146,7 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
                             children: [
                               for (final draft in drafts)
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
+                                  padding: AppThemePaddings.bottom12,
                                   child: SkirmishLevelSelectDraftTileWidget(
                                     draft: draft,
                                     onTap: () => context.push(
@@ -175,15 +178,15 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
             child: SafeArea(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xB31A1F26),
+                  color: AppThemeColors.glassPill,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: AppThemeColors.borderSubtle),
                 ),
                 child: IconButton(
                   tooltip: S.current.backTooltip,
                   icon: const Icon(
                     Icons.arrow_back,
-                    color: Colors.white70,
+                    color: AppThemeColors.textMuted,
                     size: 20,
                   ),
                   onPressed: () => context.pop(),

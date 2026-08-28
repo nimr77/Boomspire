@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../../theme/app_theme/app_theme_colors.dart';
+
 /// Circular commander avatar. Loads [avatarUrl] via [CachedNetworkImage]
 /// when present; falls back to a plain icon glyph on a null/empty url or
 /// on any load failure (no default image asset exists in this project).
@@ -27,5 +29,5 @@ class AccountAvatar extends StatelessWidget {
   }
 
   Widget _fallbackIcon() =>
-      Icon(Icons.account_circle, color: Colors.white54, size: size);
+      Icon(Icons.account_circle, color: AppThemeColors.textSecondary, size: size);
 }

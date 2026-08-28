@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../domain/models/game_scene.dart';
 import '../boomspire_game.dart';
 import 'end_screen.dart';
@@ -18,7 +19,7 @@ class VictoryOverlay extends StatelessWidget {
     return EndScreen(
       title: S.current.defenseHoldsTitle,
       subtitle: subtitle,
-      accentColor: Colors.greenAccent,
+      accentColor: AppThemeColors.accentGreen,
       onRestart: game.restart,
       onChangeMap: game.backToLevelSelect,
     );

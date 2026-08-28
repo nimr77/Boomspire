@@ -2,6 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 import '../../../towers/domain/models/unit_blueprint.dart';
 
 /// Frosted-glass hover card: build cost, core stats, and (when relevant)
@@ -25,12 +28,12 @@ class GameCoreBuildMenuGlassTooltipWidget extends StatelessWidget {
     Widget stat(IconData icon, String value) => Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: Colors.white70),
-        const SizedBox(width: 3),
+        Icon(icon, size: 12, color: AppThemeColors.textMuted),
+        SizedBox(width: AppThemeSpacing.space3),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: AppThemeColors.textPrimary,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
@@ -39,13 +42,13 @@ class GameCoreBuildMenuGlassTooltipWidget extends StatelessWidget {
     );
 
     return Material(
-      color: Colors.transparent,
+      color: AppThemeColors.transparent,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: AppThemePaddings.h12v10,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(12),
@@ -65,12 +68,12 @@ class GameCoreBuildMenuGlassTooltipWidget extends StatelessWidget {
                 Text(
                   blueprint.name,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: AppThemeSpacing.space6),
                 Wrap(
                   spacing: 10,
                   runSpacing: 4,
@@ -98,7 +101,7 @@ class GameCoreBuildMenuGlassTooltipWidget extends StatelessWidget {
                   ],
                 ),
                 if (limit != null) ...[
-                  const SizedBox(height: 6),
+                  SizedBox(height: AppThemeSpacing.space6),
                   Text(
                     '$builtCount / $limit built',
                     style: TextStyle(
@@ -109,20 +112,20 @@ class GameCoreBuildMenuGlassTooltipWidget extends StatelessWidget {
                   ),
                 ],
                 if (lockReason != null) ...[
-                  const SizedBox(height: 6),
+                  SizedBox(height: AppThemeSpacing.space6),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
                         Icons.lock,
                         size: 12,
-                        color: Colors.amberAccent,
+                        color: AppThemeColors.accentAmber,
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: AppThemeSpacing.space4),
                       Text(
                         lockReason!,
                         style: const TextStyle(
-                          color: Colors.amberAccent,
+                          color: AppThemeColors.accentAmber,
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
                         ),

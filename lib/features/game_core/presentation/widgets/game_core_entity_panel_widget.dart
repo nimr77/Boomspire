@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/combat/unit_kind.dart';
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 import '../../../combat/presentation/mobile_unit_component.dart';
 import '../../../towers/presentation/gold_mine_component.dart';
 import '../../../towers/presentation/tower_component.dart';
@@ -93,7 +96,7 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
   }
 
   Widget _buildInspectedPanel(BoomspireGame game, InspectedInfo info) {
-    final ownerColor = info.owner?.color ?? Colors.white54;
+    final ownerColor = info.owner?.color ?? AppThemeColors.textSecondary;
     final icon = switch (info.kind) {
       InspectedKind.tower => Icons.apartment,
       InspectedKind.unit => Icons.directions_walk,
@@ -108,7 +111,7 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
     } else if (info.description != null) {
       child = Text(
         info.description!,
-        style: const TextStyle(color: Colors.white70, fontSize: 11),
+        style: const TextStyle(color: AppThemeColors.textMuted, fontSize: 11),
       );
     }
     return GameCoreEntityPanelShellWidget(
@@ -170,7 +173,7 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
                 tower.repairCost > 0 && game.gameState.gold >= tower.repairCost,
             onTap: game.repairSelectedTower,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: AppThemeSpacing.space6),
           GameCoreTowerActionButtonWidget(
             icon: Icons.upgrade,
             label: tower.canUpgrade
@@ -180,45 +183,45 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
                 tower.canUpgrade && game.gameState.gold >= tower.upgradeCost,
             onTap: game.upgradeSelectedTower,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: AppThemeSpacing.space6),
           GameCoreTowerActionButtonWidget(
             icon: Icons.gpp_good,
             label: tower.antiRocket
                 ? S.current.activeLabelEntityPanel
                 : '${kAntiRocketCost}g',
-            color: Colors.cyanAccent,
+            color: AppThemeColors.accentCyan,
             enabled:
                 !tower.antiRocket && game.gameState.gold >= kAntiRocketCost,
             onTap: game.buyAntiRocketForSelectedTower,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: AppThemeSpacing.space6),
           GameCoreTowerActionButtonWidget(
             icon: Icons.sell,
             label: '+${tower.sellValue}g',
             enabled: true,
-            color: Colors.redAccent,
+            color: AppThemeColors.accentRed,
             onTap: game.sellSelectedTower,
           ),
 
           if (tower is GoldMineComponent) ...[
-            const SizedBox(width: 4),
+            SizedBox(width: AppThemeSpacing.space4),
             _divider(),
-            const SizedBox(width: 10),
+            SizedBox(width: AppThemeSpacing.space10),
             for (final chip in _goldMineChips(tower)) ...[
               chip,
-              const SizedBox(width: 8),
+              SizedBox(width: AppThemeSpacing.space8),
             ],
           ],
         ],
       ),
       child: producing
           ? Padding(
-              padding: const EdgeInsets.only(top: 5),
+              padding: AppThemePaddings.top5,
               child: Row(
                 children: [
                   for (final button in _produceButtons(game, tower)) ...[
                     button,
-                    const SizedBox(width: 6),
+                    SizedBox(width: AppThemeSpacing.space6),
                   ],
                 ],
               ),
@@ -238,10 +241,10 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
   }
 
   Widget _divider() => Container(
-    margin: const EdgeInsets.symmetric(horizontal: 4),
+    margin: AppThemePaddings.h4,
     width: 1,
     height: 34,
-    color: Colors.white24,
+    color: AppThemeColors.borderSubtle,
   );
 
   List<Widget> _goldMineChips(GoldMineComponent tower) {
@@ -252,12 +255,12 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
           tower.payoutAmount,
           tower.payoutTimeRemaining.ceil(),
         ),
-        color: const Color(0xFFFFB300),
+        color: AppThemeColors.accentGold,
       ),
       GameCoreTowerActionStatChipWidget(
         icon: Icons.local_fire_department,
         label: S.current.goldMineKillBonus((tower.killGoldBonus * 100).round()),
-        color: const Color(0xFFFF8A65),
+        color: AppThemeColors.accentDeepOrange,
       ),
     ];
   }
@@ -292,7 +295,7 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
         GameCoreTowerActionButtonWidget(
           icon: _unitIcon(kind),
           label: ready ? '${costFor(kind)}g' : '${cooldownRemaining.ceil()}s',
-          color: const Color(0xFF66BB6A),
+          color: AppThemeColors.accentEmerald,
           enabled: ready && gold >= costFor(kind),
           onTap: () => produceUnit(kind),
         ),

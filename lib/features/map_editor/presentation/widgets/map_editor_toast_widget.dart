@@ -3,6 +3,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
+
 /// Frosted, auto-dismissing confirmation toast - the non-modal counterpart
 /// to the game's `showGlassMessage` sheet, used for brief editor feedback
 /// (saved, playtest notes) that shouldn't block interaction.
@@ -54,14 +58,11 @@ class _MapEditorToastWidgetState extends State<MapEditorToastWidget>
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Material(
-                  color: Colors.transparent,
+                  color: AppThemeColors.transparent,
                   child: BackdropFilter(
                     filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
+                      padding: AppThemePaddings.h20v14,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         gradient: LinearGradient(
@@ -73,19 +74,25 @@ class _MapEditorToastWidgetState extends State<MapEditorToastWidget>
                           ],
                         ),
                         border: Border.all(
-                          color: Colors.cyanAccent.withValues(alpha: 0.4),
+                          color: AppThemeColors.accentCyan.withValues(
+                            alpha: 0.4,
+                          ),
                           width: 1.2,
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(widget.icon, color: Colors.cyanAccent, size: 18),
-                          const SizedBox(width: 10),
+                          Icon(
+                            widget.icon,
+                            color: AppThemeColors.accentCyan,
+                            size: 18,
+                          ),
+                          SizedBox(width: AppThemeSpacing.space10),
                           Text(
                             widget.message,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppThemeColors.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

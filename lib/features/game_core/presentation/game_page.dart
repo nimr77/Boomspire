@@ -10,6 +10,7 @@ import '../../../core/combat/mobile_unit_repository.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_colors.dart';
 import '../../account/presentation/state/account_profile_state.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
 import '../../audio/domain/repos/audio_repository.dart';
@@ -67,7 +68,7 @@ class _GamePageState extends State<GamePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E14),
+      backgroundColor: AppThemeColors.background,
       // The command bar is a normal sibling widget (not a Flame overlay) so
       // the GameWidget above it is only ever given the remaining screen
       // space - the arena is letterboxed inside that shrunk area, so
@@ -231,14 +232,14 @@ class _GamePageState extends State<GamePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F26),
+        backgroundColor: AppThemeColors.surfacePanel,
         title: Text(
           S.current.exitConfirmTitle,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppThemeColors.textPrimary),
         ),
         content: Text(
           S.current.exitConfirmBody,
-          style: const TextStyle(color: Colors.white70),
+          style: const TextStyle(color: AppThemeColors.textMuted),
         ),
         actions: [
           TextButton(
@@ -249,7 +250,7 @@ class _GamePageState extends State<GamePage> {
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               S.current.exitConfirmConfirm,
-              style: const TextStyle(color: Colors.redAccent),
+              style: const TextStyle(color: AppThemeColors.accentRed),
             ),
           ),
         ],

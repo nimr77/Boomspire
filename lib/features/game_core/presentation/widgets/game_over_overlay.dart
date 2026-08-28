@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../boomspire_game.dart';
 import 'end_screen.dart';
 
@@ -14,7 +15,7 @@ class GameOverOverlay extends StatelessWidget {
     return EndScreen(
       title: S.current.baseOverrunTitle,
       subtitle: S.current.baseOverrunSubtitle,
-      accentColor: Colors.redAccent,
+      accentColor: AppThemeColors.accentRed,
       onRestart: game.restart,
       onChangeMap: game.backToLevelSelect,
     );

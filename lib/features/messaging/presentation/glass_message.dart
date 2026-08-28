@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../theme/app_theme/app_theme_colors.dart';
 import 'widgets/messaging_glass_card_widget.dart';
 
 /// Shows a frosted-glass "messaging" surface: forces focus onto its content
@@ -18,7 +19,7 @@ Future<T?> showGlassMessage<T>(
     context: context,
     barrierDismissible: barrierDismissible,
     barrierLabel: MaterialLocalizations.of(context).dialogLabel,
-    barrierColor: const Color(0x66050608),
+    barrierColor: AppThemeColors.scrimDialog,
     transitionDuration: const Duration(milliseconds: 320),
     pageBuilder: (context, _, _) => const SizedBox.shrink(),
     transitionBuilder: (context, animation, _, _) {

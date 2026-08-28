@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../theme/app_theme/app_theme_spacing.dart';
 import '../domain/models/account.dart';
 import '../domain/repos/account_repository.dart';
 
@@ -37,22 +40,22 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
           Text(
             S.current.accountWelcomeTitle,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
               fontSize: 22,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: AppThemeSpacing.space8),
           Text(
             S.current.accountWelcomeSubtitle,
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: const TextStyle(color: AppThemeColors.textMuted, fontSize: 14),
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: AppThemeSpacing.space22),
           TextFormField(
             controller: _controller,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: AppThemeColors.textPrimary),
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _continue(),
             validator: (value) => (value == null || value.trim().isEmpty)
@@ -60,20 +63,17 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
                 : null,
             decoration: InputDecoration(
               hintText: S.current.accountNameHint,
-              hintStyle: const TextStyle(color: Colors.white38),
+              hintStyle: const TextStyle(color: AppThemeColors.textFaint),
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.08),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              contentPadding: AppThemePaddings.h16v14,
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: AppThemeSpacing.space20),
           ValueListenableBuilder<bool>(
             valueListenable: _submitting,
             builder: (context, submitting, _) {
@@ -85,9 +85,9 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
                     child: ElevatedButton(
                       onPressed: submitting ? null : _continue,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightBlueAccent,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: AppThemeColors.accentLightBlue,
+                        foregroundColor: AppThemeColors.textOnAccent,
+                        padding: AppThemePaddings.v14,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -101,13 +101,13 @@ class _CreateAccountContentState extends State<CreateAccountContent> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: AppThemeSpacing.space10),
                   Center(
                     child: TextButton(
                       onPressed: submitting ? null : () => widget.onDone(null),
                       child: Text(
                         S.current.accountQuickPlay,
-                        style: const TextStyle(color: Colors.white54),
+                        style: const TextStyle(color: AppThemeColors.textSecondary),
                       ),
                     ),
                   ),

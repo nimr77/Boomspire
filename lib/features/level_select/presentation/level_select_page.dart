@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../theme/app_theme/app_theme_spacing.dart';
 import '../../account/presentation/account_badge.dart';
 import '../../account/presentation/state/account_profile_state.dart';
 import '../../game_core/domain/models/game_difficulty.dart';
@@ -34,16 +37,13 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E14),
+      backgroundColor: AppThemeColors.background,
       body: Stack(
         children: [
           SafeArea(
             child: Scrollbar(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 24,
-                  horizontal: 16,
-                ),
+                padding: AppThemePaddings.h16v24,
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 720),
@@ -53,7 +53,7 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                         Text(
                               S.current.levelSelectTitle,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                                 fontSize: 34,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 3,
@@ -62,18 +62,18 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                             .animate()
                             .fadeIn(duration: 400.ms)
                             .slideY(begin: -0.2, end: 0),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppThemeSpacing.space6),
                         Text(
                               S.current.levelSelectSubtitle,
                               style: const TextStyle(
-                                color: Colors.white54,
+                                color: AppThemeColors.textSecondary,
                                 fontSize: 16,
                               ),
                             )
                             .animate()
                             .fadeIn(duration: 400.ms, delay: 80.ms)
                             .slideY(begin: -0.2, end: 0),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: AppThemeSpacing.space28),
                         ValueListenableBuilder<ProgressSnapshot?>(
                           valueListenable: _state.progress,
                           builder: (context, progressValue, _) {
@@ -94,7 +94,7 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
                                                 _difficulty.value = value,
                                           ),
                                     ),
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: AppThemeSpacing.space20),
                                     GridView.count(
                                       shrinkWrap: true,
                                       crossAxisCount: 2,
@@ -147,15 +147,15 @@ class _LevelSelectPageState extends State<LevelSelectPage> {
             child: SafeArea(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xB31A1F26),
+                  color: AppThemeColors.glassPill,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: AppThemeColors.borderSubtle),
                 ),
                 child: IconButton(
                   tooltip: S.current.backTooltip,
                   icon: const Icon(
                     Icons.arrow_back,
-                    color: Colors.white70,
+                    color: AppThemeColors.textMuted,
                     size: 20,
                   ),
                   onPressed: () => context.pop(),

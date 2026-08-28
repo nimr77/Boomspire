@@ -7,6 +7,9 @@ import '../../../core/widgets/hover_scale_card.dart';
 import '../../../core/widgets/menu_option_content.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../theme/app_theme/app_theme_spacing.dart';
 
 /// The app's true landing page: shows the game's modes first, before any
 /// map/campaign list. Currently only "Single Player" is playable (which
@@ -18,7 +21,7 @@ class MainMenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E14),
+      backgroundColor: AppThemeColors.background,
       body: Stack(
         children: [
           SafeArea(
@@ -26,14 +29,14 @@ class MainMenuPage extends StatelessWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: AppThemePaddings.h16,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                             S.current.levelSelectTitle,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppThemeColors.textPrimary,
                               fontSize: 40,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 4,
@@ -42,20 +45,20 @@ class MainMenuPage extends StatelessWidget {
                           .animate()
                           .fadeIn(duration: 400.ms)
                           .slideY(begin: -0.2, end: 0),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppThemeSpacing.space6),
                       Text(
                             S.current.mainMenuSubtitle,
                             style: const TextStyle(
-                              color: Colors.white54,
+                              color: AppThemeColors.textSecondary,
                               fontSize: 16,
                             ),
                           )
                           .animate()
                           .fadeIn(duration: 400.ms, delay: 80.ms)
                           .slideY(begin: -0.2, end: 0),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: AppThemeSpacing.space40),
                       HoverScaleCard(
-                            accentColor: Colors.cyanAccent,
+                            accentColor: AppThemeColors.accentCyan,
                             onTap: () => context.push(
                               Routes.singlePlayerModeSelect.route,
                             ),
@@ -63,7 +66,7 @@ class MainMenuPage extends StatelessWidget {
                               icon: Icons.person,
                               title: S.current.mainMenuSinglePlayer,
                               subtitle: S.current.mainMenuSinglePlayerSubtitle,
-                              accentColor: Colors.cyanAccent,
+                              accentColor: AppThemeColors.accentCyan,
                             ),
                           )
                           .animate()
@@ -89,15 +92,15 @@ class MainMenuPage extends StatelessWidget {
             child: SafeArea(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xB31A1F26),
+                  color: AppThemeColors.glassPill,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: AppThemeColors.borderSubtle),
                 ),
                 child: IconButton(
                   tooltip: S.current.mapEditorTooltip,
                   icon: const Icon(
                     Icons.map_outlined,
-                    color: Colors.white70,
+                    color: AppThemeColors.textMuted,
                     size: 20,
                   ),
                   onPressed: () => context.push(Routes.mapEditorList.route),

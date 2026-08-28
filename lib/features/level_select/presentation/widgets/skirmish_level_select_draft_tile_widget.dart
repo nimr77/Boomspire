@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
 import '../../../map_editor/domain/models/map_draft.dart';
 import '../../../terrain/extensions/biome_extensions.dart';
 
@@ -18,7 +19,7 @@ class SkirmishLevelSelectDraftTileWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF161B22),
+      color: AppThemeColors.surfaceCard,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -27,14 +28,23 @@ class SkirmishLevelSelectDraftTileWidget extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          leading: const Icon(Icons.map_outlined, color: Colors.redAccent),
-          title: Text(draft.name, style: const TextStyle(color: Colors.white)),
+          leading: const Icon(
+            Icons.map_outlined,
+            color: AppThemeColors.accentRed,
+          ),
+          title: Text(
+            draft.name,
+            style: const TextStyle(color: AppThemeColors.textPrimary),
+          ),
           subtitle: Text(
             '${draft.biome.displayName} · ${draft.homeSites.length} '
             'home site${draft.homeSites.length == 1 ? '' : 's'}',
-            style: const TextStyle(color: Colors.white54),
+            style: const TextStyle(color: AppThemeColors.textSecondary),
           ),
-          trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+          trailing: const Icon(
+            Icons.chevron_right,
+            color: AppThemeColors.textFaint,
+          ),
         ),
       ),
     );

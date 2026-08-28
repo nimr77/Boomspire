@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
+
 /// A small icon+text pill used in [HudOverlay]'s left-hand stat column
 /// (health/gold/score).
 class GameCoreHudStatChipWidget extends StatelessWidget {
@@ -17,9 +21,9 @@ class GameCoreHudStatChipWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: AppThemePaddings.h12v4,
       decoration: BoxDecoration(
-        color: const Color(0xB31A1F26),
+        color: AppThemeColors.glassPill,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
@@ -27,11 +31,11 @@ class GameCoreHudStatChipWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 16),
-          const SizedBox(width: 6),
+          SizedBox(width: AppThemeSpacing.space6),
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),

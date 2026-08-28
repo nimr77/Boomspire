@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/routes.dart';
 import '../../../game_core/domain/models/game_scene.dart';
 import '../../../terrain/extensions/biome_extensions.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 import '../biome_preview.dart';
 
 /// A featured skirmish scene tile in [SkirmishLevelSelectPage] - live
@@ -17,7 +20,7 @@ class SkirmishLevelSelectSceneCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = scene.biome.palette;
     return Material(
-      color: Colors.transparent,
+      color: AppThemeColors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () => context.push(
@@ -36,8 +39,8 @@ class SkirmishLevelSelectSceneCardWidget extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.05),
-                      Colors.black.withValues(alpha: 0.65),
+                      AppThemeColors.cardOverlayTop,
+                      AppThemeColors.cardOverlayBottomStrong,
                     ],
                   ),
                   border: Border.all(
@@ -46,7 +49,7 @@ class SkirmishLevelSelectSceneCardWidget extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: AppThemePaddings.all16,
                 child: Align(
                   alignment: Alignment.bottomLeft,
                   child: Column(
@@ -56,16 +59,16 @@ class SkirmishLevelSelectSceneCardWidget extends StatelessWidget {
                       Text(
                         scene.name,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppThemeColors.textPrimary,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppThemeSpacing.space4),
                       Text(
                         scene.briefing,
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: AppThemeColors.textMuted,
                           fontSize: 12,
                         ),
                       ),

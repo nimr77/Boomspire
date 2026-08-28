@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../../game_core/presentation/player_palette.dart';
 
 /// A "1 · You"/"2 · AI" chip below the placement surface identifying each
@@ -39,7 +41,7 @@ class _SkirmishPlacementSeatChipWidgetState
             curve: Curves.easeOutBack,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: AppThemePaddings.h12v6,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: widget.isYou ? 0.35 : 0.12),
                 borderRadius: BorderRadius.circular(20),
@@ -57,7 +59,7 @@ class _SkirmishPlacementSeatChipWidgetState
               child: Text(
                 '${widget.index + 1} · ${widget.isYou ? S.current.skirmishPlacementYou : S.current.skirmishPlacementAi}',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                   fontSize: 12,
                   fontWeight: widget.isYou
                       ? FontWeight.bold

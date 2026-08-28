@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+
 /// Small pill toggle used to switch between the Towers/Buildings tabs.
 class GameCoreBuildMenuTabWidget extends StatelessWidget {
   final String label;
@@ -20,16 +23,22 @@ class GameCoreBuildMenuTabWidget extends StatelessWidget {
       borderRadius: BorderRadius.circular(6),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: AppThemePaddings.h10v5,
         decoration: BoxDecoration(
           color: selected ? Colors.white.withValues(alpha: 0.14) : null,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: selected ? Colors.white70 : Colors.white24),
+          border: Border.all(
+            color: selected
+                ? AppThemeColors.textMuted
+                : AppThemeColors.borderSubtle,
+          ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : Colors.white54,
+            color: selected
+                ? AppThemeColors.textPrimary
+                : AppThemeColors.textSecondary,
             fontSize: 11,
             fontWeight: FontWeight.bold,
           ),

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
+
 /// Small icon+text pill for a passive stat readout - used by the Gold
 /// Mine's row and a unit's fire-stats row in `GameCoreEntityPanelWidget`
 /// since those are informational, with no action button.
@@ -18,9 +22,9 @@ class GameCoreTowerActionStatChipWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: AppThemePaddings.h8v5,
       decoration: BoxDecoration(
-        color: const Color(0xB31A1F26),
+        color: AppThemeColors.glassPill,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
@@ -28,7 +32,7 @@ class GameCoreTowerActionStatChipWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 14),
-          const SizedBox(width: 4),
+          SizedBox(width: AppThemeSpacing.space4),
           Text(
             label,
             style: TextStyle(

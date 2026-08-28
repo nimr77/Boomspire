@@ -7,6 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
+import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../theme/app_theme/app_theme_spacing.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../map_editor/domain/models/editor_point.dart';
 import '../../map_editor/domain/models/editor_terrain_preview.dart';
@@ -68,7 +71,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
         final selectedSlot = _placementState.selectedSlot.value;
         final launching = _placementState.launching.value;
         return Scaffold(
-          backgroundColor: const Color(0xFF0A0E14),
+          backgroundColor: AppThemeColors.background,
           body: SafeArea(
             child: Stack(
               children: [
@@ -81,7 +84,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                         Text(
                               S.current.skirmishPlacementTitle,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                                 fontSize: 30,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 2,
@@ -90,26 +93,26 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                             .animate()
                             .fadeIn(duration: 400.ms)
                             .slideY(begin: -0.2, end: 0),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppThemeSpacing.space6),
                         Text(
                           _isDraft
                               ? S.current.skirmishPlacementSubtitleDraft
                               : S.current.skirmishPlacementSubtitleScene,
                           style: const TextStyle(
-                            color: Colors.white54,
+                            color: AppThemeColors.textSecondary,
                             fontSize: 15,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppThemeSpacing.space20),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: AppThemePaddings.h16,
                           child: AspectRatio(
                             aspectRatio: 16 / 9,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.white24),
+                                  border: Border.all(color: AppThemeColors.borderSubtle),
                                 ),
                                 child: _isDraft
                                     ? ValueListenableBuilder<
@@ -167,11 +170,11 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppThemeSpacing.space16),
                         if (_siteCount > 0)
                           Wrap(
-                            spacing: 12,
-                            runSpacing: 8,
+                            spacing: AppThemeSpacing.space12,
+                            runSpacing: AppThemeSpacing.space8,
                             alignment: WrapAlignment.center,
                             children: [
                               for (var i = 0; i < _siteCount; i++)
@@ -181,9 +184,10 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                 ),
                             ],
                           ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppThemeSpacing.space20),
                         Row(
                           mainAxisSize: MainAxisSize.min,
+                          spacing: AppThemeSpacing.space12,
                           children: [
                             if (_isDraft)
                               OutlinedButton.icon(
@@ -193,22 +197,18 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                                   S.current.skirmishPlacementRandomize,
                                 ),
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  side: const BorderSide(color: Colors.white38),
+                                  foregroundColor: AppThemeColors.textPrimary,
+                                  side: const BorderSide(color: AppThemeColors.textFaint),
                                 ),
                               ),
-                            if (_isDraft) const SizedBox(width: 12),
                             ElevatedButton.icon(
                               onPressed: launching ? null : _start,
                               icon: const Icon(Icons.play_arrow),
                               label: Text(S.current.skirmishPlacementStart),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 14,
-                                ),
+                                backgroundColor: AppThemeColors.accentRed,
+                                foregroundColor: AppThemeColors.textPrimary,
+                                padding: AppThemePaddings.h24v14,
                               ),
                             ),
                           ],
@@ -223,15 +223,15 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                   left: 12,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xB31A1F26),
+                      color: AppThemeColors.glassPill,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white24),
+                      border: Border.all(color: AppThemeColors.borderSubtle),
                     ),
                     child: IconButton(
                       tooltip: S.current.backTooltip,
                       icon: const Icon(
                         Icons.arrow_back,
-                        color: Colors.white70,
+                        color: AppThemeColors.textMuted,
                         size: 20,
                       ),
                       onPressed: () => context.pop(),
@@ -240,7 +240,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
                 ),
                 if (launching)
                   const ColoredBox(
-                    color: Color(0x99000000),
+                    color: AppThemeColors.scrimStrong,
                     child: Center(child: CircularProgressIndicator()),
                   ),
               ],

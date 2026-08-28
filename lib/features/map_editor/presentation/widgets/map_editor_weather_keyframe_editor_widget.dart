@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../domain/models/weather_keyframe.dart';
 
 /// One editable card in the environment section's weather timeline - lets
@@ -20,10 +22,10 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: const Color(0xFF1A1F26),
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      color: AppThemeColors.surfacePanel,
+      margin: AppThemePaddings.v6,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: AppThemePaddings.all12,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -34,13 +36,13 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
                     S.current.keyframeAtProgressLabelEditorPage(
                       (keyframe.atProgress * 100).round(),
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: AppThemeColors.textPrimary),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(
                     Icons.close,
-                    color: Colors.white54,
+                    color: AppThemeColors.textSecondary,
                     size: 18,
                   ),
                   onPressed: onRemove,
@@ -89,7 +91,10 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
           width: 44,
           child: Text(
             label,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            style: const TextStyle(
+              color: AppThemeColors.textSecondary,
+              fontSize: 12,
+            ),
           ),
         ),
         Expanded(

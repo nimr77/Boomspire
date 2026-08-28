@@ -2,6 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 import 'game_core_tower_action_animated_label_widget.dart';
 
 /// The ONE frosted-glass card shell every selection/inspection panel is
@@ -37,14 +40,14 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: AppThemeColors.transparent,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 560),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: AppThemePaddings.h14v10,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(14),
@@ -72,11 +75,11 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
                   children: [
                     _buildHeader(),
                     if (ownerLabel != null) ...[
-                      const SizedBox(width: 10),
+                      SizedBox(width: AppThemeSpacing.space10),
                       _buildOwnerChip(),
                     ],
                     if (trailing != null) ...[
-                      const SizedBox(width: 10),
+                      SizedBox(width: AppThemeSpacing.space10),
                       trailing!,
                     ],
                   ],
@@ -108,7 +111,7 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
             title,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
@@ -116,7 +119,10 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
           if (subtitle != null)
             GameCoreTowerActionAnimatedLabelWidget(
               label: subtitle!,
-              style: const TextStyle(color: Colors.white60, fontSize: 11),
+              style: const TextStyle(
+                color: AppThemeColors.textDim,
+                fontSize: 11,
+              ),
             ),
         ],
       ),
@@ -124,9 +130,9 @@ class GameCoreEntityPanelShellWidget extends StatelessWidget {
   }
 
   Widget _buildOwnerChip() {
-    final color = ownerColor ?? Colors.white54;
+    final color = ownerColor ?? AppThemeColors.textSecondary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: AppThemePaddings.h8v3,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(6),

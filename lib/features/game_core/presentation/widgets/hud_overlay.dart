@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
 import '../../domain/models/game_scene.dart';
 import '../boomspire_game.dart';
 import 'build_menu.dart';
@@ -33,20 +35,20 @@ class HudOverlay extends StatelessWidget {
                     // Tall enough for the build menu's tab strip *plus* its
                     // original full-size tower/building buttons underneath.
                     height: 146,
-                    decoration: const BoxDecoration(
-                      color: Color(0xCC12161C),
+                    decoration: BoxDecoration(
+                      color: AppThemeColors.hudBarBackground,
                       border: Border(
-                        top: BorderSide(color: Color(0xFF2A323C), width: 2),
+                        top: BorderSide(
+                          color: AppThemeColors.surfacePanelBorder,
+                          width: 2,
+                        ),
                       ),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+                          padding: AppThemePaddings.h16v12,
                           child: ListenableBuilder(
                             listenable: game.gameState,
                             builder: (context, _) {
@@ -57,17 +59,17 @@ class HudOverlay extends StatelessWidget {
                                 children: [
                                   GameCoreHudStatChipWidget(
                                     icon: Icons.favorite,
-                                    color: Colors.redAccent,
+                                    color: AppThemeColors.accentRed,
                                     label: '${game.gameState.health}',
                                   ),
                                   GameCoreHudStatChipWidget(
                                     icon: Icons.monetization_on,
-                                    color: Colors.amberAccent,
+                                    color: AppThemeColors.accentAmber,
                                     label: '${game.gameState.gold}',
                                   ),
                                   GameCoreHudStatChipWidget(
                                     icon: Icons.military_tech,
-                                    color: Colors.cyanAccent,
+                                    color: AppThemeColors.accentCyan,
                                     label: '${game.gameState.currentScore}',
                                   ),
                                 ],
@@ -76,7 +78,7 @@ class HudOverlay extends StatelessWidget {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: AppThemePaddings.v12,
                           child: MinimapWidget(game: game),
                         ),
                         // The selected tower/unit's info+actions (and its
@@ -84,17 +86,14 @@ class HudOverlay extends StatelessWidget {
                         // next to the minimap, collapses to nothing when
                         // there's no selection.
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 12,
-                          ),
+                          padding: AppThemePaddings.h10v12,
                           child: GameCoreEntityPanelWidget(game: game),
                         ),
                         // Wave-defense shows its own compact progress label;
                         // skirmish has no equivalent single number, so it
                         // shows nothing here rather than a stale/odd stat.
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: AppThemePaddings.h12,
                           child: ListenableBuilder(
                             listenable: game.gameState,
                             builder: (context, _) {
@@ -107,7 +106,7 @@ class HudOverlay extends StatelessWidget {
                                   game.gameState.totalWaves,
                                 ),
                                 style: const TextStyle(
-                                  color: Colors.white70,
+                                  color: AppThemeColors.textMuted,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,

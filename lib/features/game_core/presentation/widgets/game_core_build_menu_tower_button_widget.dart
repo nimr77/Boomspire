@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 import '../../../towers/domain/models/building_type.dart';
 import '../../../towers/domain/models/tower_type.dart';
 import '../../../towers/domain/models/unit_blueprint.dart';
@@ -79,10 +82,10 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                     ),
                   transformAlignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A1F26),
+                    color: AppThemeColors.surfacePanel,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: glowing ? accent : Colors.white24,
+                      color: glowing ? accent : AppThemeColors.borderSubtle,
                       width: selected ? 2.5 : (hovering ? 2 : 1),
                     ),
                     boxShadow: glowing
@@ -123,14 +126,14 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                               color: accent,
                               size: 22,
                             ),
-                            const SizedBox(height: 3),
+                            SizedBox(height: AppThemeSpacing.space3),
                             Text(
                               blueprint.name,
                               textAlign: TextAlign.center,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -142,18 +145,15 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                         right: 3,
                         bottom: 3,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 1,
-                          ),
+                          padding: AppThemePaddings.h5v1,
                           decoration: BoxDecoration(
-                            color: Colors.black87,
+                            color: AppThemeColors.overlayChipBackground,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             '${blueprint.cost}g',
                             style: const TextStyle(
-                              color: Colors.amberAccent,
+                              color: AppThemeColors.accentAmber,
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
                             ),
@@ -165,18 +165,15 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                           left: 3,
                           top: 3,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 1,
-                            ),
+                            padding: AppThemePaddings.h4v1,
                             decoration: BoxDecoration(
-                              color: Colors.black87,
+                              color: AppThemeColors.overlayChipBackground,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               '${widget.builtCount}/${widget.limit}',
                               style: const TextStyle(
-                                color: Colors.white70,
+                                color: AppThemeColors.textMuted,
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -187,13 +184,13 @@ class _GameCoreBuildMenuTowerButtonWidgetState
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.black54,
+                              color: AppThemeColors.overlayLockScrim,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Center(
                               child: Icon(
                                 Icons.lock,
-                                color: Colors.white70,
+                                color: AppThemeColors.textMuted,
                                 size: 20,
                               ),
                             ),

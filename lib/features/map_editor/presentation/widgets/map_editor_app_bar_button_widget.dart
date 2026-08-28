@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
+
 /// HUD-panel-styled action button for the editor's AppBar (Save/Play) -
 /// matches the translucent bordered look used by in-game action buttons
 /// rather than a stock Material [FilledButton].
@@ -24,16 +28,16 @@ class MapEditorAppBarButtonWidget extends StatelessWidget {
     final disabled = onPressed == null;
     final tint = disabled ? color.withValues(alpha: 0.4) : color;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+      padding: AppThemePaddings.h4v12,
       child: Material(
-        color: Colors.transparent,
+        color: AppThemeColors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: onPressed,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: AppThemePaddings.h14v8,
             decoration: BoxDecoration(
-              color: const Color(0xB31A1F26),
+              color: AppThemeColors.glassPill,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: tint.withValues(alpha: 0.6)),
             ),
@@ -51,7 +55,7 @@ class MapEditorAppBarButtonWidget extends StatelessWidget {
                   )
                 else
                   Icon(icon, color: tint, size: 16),
-                const SizedBox(width: 8),
+                SizedBox(width: AppThemeSpacing.space8),
                 Text(
                   label,
                   style: TextStyle(

@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+
 /// The rounded, frosted card body used by [showGlassMessage] - centered as
 /// a dialog on wide/desktop layouts, or docked to the bottom as a sheet on
 /// narrow/mobile layouts.
@@ -27,14 +29,14 @@ class MessagingGlassCardWidget extends StatelessWidget {
           maxWidth: isDesktop ? 440 : double.infinity,
         ),
         child: Padding(
-          padding: EdgeInsets.all(isDesktop ? 24 : 0),
+          padding: isDesktop ? AppThemePaddings.all24 : EdgeInsets.zero,
           child: ClipRRect(
             borderRadius: radius,
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(28),
+                padding: AppThemePaddings.all28,
                 decoration: BoxDecoration(
                   borderRadius: radius,
                   gradient: LinearGradient(

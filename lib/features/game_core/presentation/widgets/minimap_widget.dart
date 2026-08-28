@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../boomspire_game.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
 import 'game_core_minimap_painter.dart';
 
 /// Always-on overview of the whole arena, docked inside the bottom command
@@ -54,9 +55,9 @@ class _MinimapWidgetState extends State<MinimapWidget>
             width: size.width,
             height: size.height,
             decoration: BoxDecoration(
-              color: const Color(0xCC0F1319),
+              color: AppThemeColors.minimapBackground,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white24, width: 1.5),
+              border: Border.all(color: AppThemeColors.borderSubtle, width: 1.5),
             ),
             clipBehavior: Clip.antiAlias,
             child: CustomPaint(

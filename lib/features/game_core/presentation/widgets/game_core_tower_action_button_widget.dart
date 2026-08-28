@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 import 'game_core_tower_action_animated_label_widget.dart';
 
 /// Small action button in `GameCoreEntityPanelWidget`'s tower stat row
@@ -18,7 +21,7 @@ class GameCoreTowerActionButtonWidget extends StatelessWidget {
     required this.label,
     required this.enabled,
     required this.onTap,
-    this.color = Colors.lightBlueAccent,
+    this.color = AppThemeColors.accentLightBlue,
   });
 
   @override
@@ -29,9 +32,9 @@ class GameCoreTowerActionButtonWidget extends StatelessWidget {
         onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: AppThemePaddings.h10v6,
           decoration: BoxDecoration(
-            color: const Color(0xB31A1F26),
+            color: AppThemeColors.glassPill,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: color.withValues(alpha: 0.5)),
           ),
@@ -39,7 +42,7 @@ class GameCoreTowerActionButtonWidget extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, color: color, size: 16),
-              const SizedBox(height: 2),
+              SizedBox(height: AppThemeSpacing.space2),
               GameCoreTowerActionAnimatedLabelWidget(
                 label: label,
                 style: TextStyle(

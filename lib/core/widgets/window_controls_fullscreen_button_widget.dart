@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../generated/l10n.dart';
+import '../../theme/app_theme/app_theme_colors.dart';
 
 /// Fullscreen toggle icon button (desktop only) - tracks the OS window's
 /// live fullscreen state so its icon/tooltip stay in sync even if the user
@@ -29,7 +30,7 @@ class _WindowControlsFullscreenButtonWidgetState
               : S.current.enterFullscreenTooltip,
           icon: Icon(
             isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-            color: Colors.white70,
+            color: AppThemeColors.textMuted,
             size: 20,
           ),
           onPressed: _toggle,

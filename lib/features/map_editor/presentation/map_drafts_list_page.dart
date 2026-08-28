@@ -2,6 +2,8 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../theme/app_theme/app_theme_paddings.dart';
 import '../../terrain/extensions/biome_extensions.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/repos/map_draft_repository.dart';
@@ -25,17 +27,17 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E14),
+      backgroundColor: AppThemeColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF11161D),
+        backgroundColor: AppThemeColors.gradientPanelEnd,
         title: const Text('Map Editor'),
       ),
       floatingActionButton: OpenContainer<void>(
         transitionType: ContainerTransitionType.fade,
         closedElevation: 6,
         closedShape: const StadiumBorder(),
-        closedColor: const Color(0xFF1A1F26),
-        openColor: const Color(0xFF0A0E14),
+        closedColor: AppThemeColors.surfacePanel,
+        openColor: AppThemeColors.background,
         onClosed: (_) => _refresh(),
         closedBuilder: (context, openContainer) =>
             FloatingActionButton.extended(
@@ -56,41 +58,41 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
             return const Center(
               child: Text(
                 'No saved maps yet - tap "New Map" to start.',
-                style: TextStyle(color: Colors.white54),
+                style: TextStyle(color: AppThemeColors.textSecondary),
               ),
             );
           }
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+            padding: AppThemePaddings.ltrb16_16_16_96,
             itemCount: drafts.length,
             itemBuilder: (context, index) {
               final draft = drafts[index];
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: AppThemePaddings.bottom12,
                 child: OpenContainer<void>(
                   transitionType: ContainerTransitionType.fade,
                   closedElevation: 2,
                   closedShape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  closedColor: const Color(0xFF161B22),
-                  openColor: const Color(0xFF0A0E14),
+                  closedColor: AppThemeColors.surfaceCard,
+                  openColor: AppThemeColors.background,
                   onClosed: (_) => _refresh(),
                   closedBuilder: (context, openContainer) => ListTile(
                     onTap: openContainer,
                     title: Text(
                       draft.name,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppThemeColors.textPrimary),
                     ),
                     subtitle: Text(
                       '${draft.biome.displayName} · ${draft.mode.name} · '
                       '${draft.arenaWidth.toInt()}x${draft.arenaHeight.toInt()}',
-                      style: const TextStyle(color: Colors.white54),
+                      style: const TextStyle(color: AppThemeColors.textSecondary),
                     ),
                     trailing: IconButton(
                       icon: const Icon(
                         Icons.delete_outline,
-                        color: Colors.redAccent,
+                        color: AppThemeColors.accentRed,
                       ),
                       onPressed: () => _deleteDraft(draft.id),
                     ),

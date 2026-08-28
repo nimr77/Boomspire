@@ -8,6 +8,9 @@ import '../../../game_core/domain/models/game_difficulty.dart';
 import '../../../game_core/domain/models/game_scene.dart';
 import '../../../progress/domain/models/progress_snapshot.dart';
 import '../../../terrain/extensions/biome_extensions.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 import '../biome_preview.dart';
 
 /// One campaign scene tile in the [LevelSelectPage] grid - live terrain
@@ -32,7 +35,7 @@ class LevelSelectSceneCardWidget extends StatelessWidget {
     final completed = progress.isCompleted(scene.id);
     final bestWave = progress.bestWaveFor(scene.id);
     return Material(
-      color: Colors.transparent,
+      color: AppThemeColors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () async {
@@ -63,8 +66,8 @@ class LevelSelectSceneCardWidget extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.05),
-                        Colors.black.withValues(alpha: 0.55),
+                        AppThemeColors.cardOverlayTop,
+                        AppThemeColors.cardOverlayBottom,
                       ],
                     ),
                     borderGradient: LinearGradient(
@@ -74,29 +77,28 @@ class LevelSelectSceneCardWidget extends StatelessWidget {
                       ],
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: AppThemePaddings.all16,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           if (completed)
                             Container(
-                              margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
+                              margin: AppThemePaddings.bottom6,
+                              padding: AppThemePaddings.h8v2,
                               decoration: BoxDecoration(
-                                color: Colors.greenAccent.withValues(
+                                color: AppThemeColors.accentGreen.withValues(
                                   alpha: 0.2,
                                 ),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: Colors.greenAccent),
+                                border: Border.all(
+                                  color: AppThemeColors.accentGreen,
+                                ),
                               ),
                               child: Text(
                                 S.current.sceneCompleted,
                                 style: const TextStyle(
-                                  color: Colors.greenAccent,
+                                  color: AppThemeColors.accentGreen,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1,
@@ -106,21 +108,22 @@ class LevelSelectSceneCardWidget extends StatelessWidget {
                           Text(
                             scene.name,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppThemeColors.textPrimary,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppThemeSpacing.space4),
                           Text(
                             scene.briefing,
                             style: const TextStyle(
-                              color: Colors.white70,
+                              color: AppThemeColors.textMuted,
                               fontSize: 12,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppThemeSpacing.space8),
                           Row(
+                            spacing: AppThemeSpacing.space10,
                             children: [
                               Text(
                                 S.current.wavesCount(scene.waveCount),
@@ -131,16 +134,14 @@ class LevelSelectSceneCardWidget extends StatelessWidget {
                                   letterSpacing: 1,
                                 ),
                               ),
-                              if (bestWave > 0) ...[
-                                const SizedBox(width: 10),
+                              if (bestWave > 0)
                                 Text(
                                   S.current.bestWaveReached(bestWave),
                                   style: const TextStyle(
-                                    color: Colors.white54,
+                                    color: AppThemeColors.textSecondary,
                                     fontSize: 11,
                                   ),
                                 ),
-                              ],
                             ],
                           ),
                         ],

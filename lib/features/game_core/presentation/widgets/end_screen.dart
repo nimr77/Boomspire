@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../theme/app_theme/app_theme_spacing.dart';
 
 /// Shared full-screen result panel used by both the victory and defeat
 /// overlays.
@@ -24,16 +27,13 @@ class EndScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xCC0A0E14),
+      color: AppThemeColors.scrimBackground,
       alignment: Alignment.center,
       child:
           Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 32,
-                ),
+                padding: AppThemePaddings.h40v32,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A1F26),
+                  color: AppThemeColors.surfacePanel,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: accentColor.withValues(alpha: 0.6),
@@ -59,24 +59,21 @@ class EndScreen extends StatelessWidget {
                         letterSpacing: 2,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: AppThemeSpacing.space12),
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: AppThemeColors.textMuted,
                         fontSize: 16,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    SizedBox(height: AppThemeSpacing.space28),
                     ElevatedButton(
                       onPressed: onRestart,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: accentColor,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 28,
-                          vertical: 14,
-                        ),
+                        foregroundColor: AppThemeColors.textOnAccent,
+                        padding: AppThemePaddings.h28v14,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -90,13 +87,13 @@ class EndScreen extends StatelessWidget {
                       ),
                     ),
                     if (onChangeMap != null) ...[
-                      const SizedBox(height: 10),
+                      SizedBox(height: AppThemeSpacing.space10),
                       TextButton(
                         onPressed: onChangeMap,
                         child: Text(
                           S.current.changeMap,
                           style: const TextStyle(
-                            color: Colors.white70,
+                            color: AppThemeColors.textMuted,
                             letterSpacing: 1,
                           ),
                         ),

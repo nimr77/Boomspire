@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../generated/l10n.dart';
+import '../../theme/app_theme/app_theme_colors.dart';
+import '../../theme/app_theme/app_theme_paddings.dart';
 import 'window_controls_fullscreen_button_widget.dart';
 
 /// Small pill of icon buttons for window-level chrome (fullscreen toggle,
@@ -22,11 +24,11 @@ class WindowControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      padding: AppThemePaddings.h4v4,
       decoration: BoxDecoration(
-        color: const Color(0xB31A1F26),
+        color: AppThemeColors.glassPill,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: AppThemeColors.borderSubtle),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -37,7 +39,7 @@ class WindowControls extends StatelessWidget {
               tooltip: S.current.exitToMenuTooltip,
               icon: const Icon(
                 Icons.exit_to_app,
-                color: Colors.white70,
+                color: AppThemeColors.textMuted,
                 size: 20,
               ),
               onPressed: onExit,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../theme/app_theme/app_theme_paddings.dart';
+
 /// Single easy/normal/hard option inside [LevelSelectDifficultySelectorWidget]
 /// - a HUD-styled segment (matches the build menu's tab strip) rather than
 /// a stock Material chip.
@@ -23,21 +26,25 @@ class LevelSelectDifficultySegmentWidget extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+        padding: AppThemePaddings.h22v10,
         decoration: BoxDecoration(
           color: selected
-              ? Colors.cyanAccent.withValues(alpha: 0.15)
-              : Colors.transparent,
+              ? AppThemeColors.accentCyan.withValues(alpha: 0.15)
+              : AppThemeColors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: selected ? Colors.cyanAccent : Colors.transparent,
+            color: selected
+                ? AppThemeColors.accentCyan
+                : AppThemeColors.transparent,
             width: 1.5,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.cyanAccent : Colors.white54,
+            color: selected
+                ? AppThemeColors.accentCyan
+                : AppThemeColors.textSecondary,
             fontSize: 13,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,

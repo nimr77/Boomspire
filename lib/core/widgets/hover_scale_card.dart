@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../theme/app_theme/app_theme_colors.dart';
+
 /// A tappable card that scales up and brightens its border on mouse hover
 /// (desktop/web) and on press (touch) - used by the main menu / mode-select
 /// screens so each big option feels alive without needing a full custom
@@ -15,7 +17,7 @@ class HoverScaleCard extends StatefulWidget {
     super.key,
     required this.child,
     required this.onTap,
-    this.accentColor = Colors.cyanAccent,
+    this.accentColor = AppThemeColors.accentCyan,
     this.borderRadius = const BorderRadius.all(Radius.circular(20)),
   });
 

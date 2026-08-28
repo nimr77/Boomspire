@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../theme/app_theme/app_theme_spacing.dart';
 import '../domain/models/account_profile.dart';
 import 'account_avatar.dart';
 import 'state/account_profile_state.dart';
@@ -20,31 +23,31 @@ class AccountBadge extends StatelessWidget {
       builder: (context, profile, _) {
         if (profile == null) return const SizedBox.shrink();
         return Padding(
-          padding: const EdgeInsets.only(bottom: 18),
+          padding: AppThemePaddings.bottom18,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AccountAvatar(avatarUrl: profile.account.avatarUrl),
-              const SizedBox(width: 6),
+              SizedBox(width: AppThemeSpacing.space6),
               Text(
                 profile.account.name,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppThemeColors.textMuted,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: AppThemeSpacing.space14),
               const Icon(
                 Icons.military_tech,
-                color: Colors.cyanAccent,
+                color: AppThemeColors.accentCyan,
                 size: 18,
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: AppThemeSpacing.space6),
               Text(
                 '${profile.totalScore}',
                 style: const TextStyle(
-                  color: Colors.cyanAccent,
+                  color: AppThemeColors.accentCyan,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
