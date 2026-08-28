@@ -96,13 +96,13 @@ Future<SkirmishDirective> _askGeminiSkirmish(
 ) async {
   final prompt =
       '''
-You are the AI commander in a real-time base-vs-base skirmish game. Match snapshot (JSON):
+You are the AI commander in a real-time base-vs-base skirmish game. Match snapshot (JSON), including every unit kind you're currently able to build in `availableUnits` (cost, whether it's a vehicle, whether it can hit air targets):
 ${jsonEncode(snapshot)}
 
-Decide your commander's posture right now. Respond with ONLY a JSON object of this exact shape:
-{"aggression": <0..1 float>, "buildBias": <0..1 float>, "commanderNote": "<one short in-character sentence, max 12 words>"}
+Decide your commander's posture right now, which unit to build next, and how to attack. Respond with ONLY a JSON object of this exact shape:
+{"aggression": <0..1 float>, "buildBias": <0..1 float>, "preferredUnitKind": <the "kind" of one entry from availableUnits, or null>, "squadSize": <1..8 int>, "attackTarget": "enemyBase" or "weakestEnemyTower", "commanderNote": "<one short in-character sentence, max 12 words>"}
 
-aggression: 0 = stockpile gold and turtle, 1 = spend gold immediately on attack units and push the opponent's base. buildBias: 0 = spend almost everything on attack units, 1 = spend heavily on defensive towers around your own base first.
+aggression: 0 = stockpile gold and turtle, 1 = spend gold immediately on attack units and push the opponent's base. buildBias: 0 = spend almost everything on attack units, 1 = spend heavily on defensive towers around your own base first. preferredUnitKind: pick whichever unit in availableUnits best counters what the player is fielding (e.g. one that attacksAir if they have aircraft up), or null to let the local heuristic choose. squadSize: how many units to mass into one attack wave before sending them out together - bigger when aggression/gold are high. attackTarget: enemyBase to beeline the player's base, weakestEnemyTower to focus down their most damaged tower first.
 ''';
 
   final uri = Uri.parse(
@@ -168,6 +168,11 @@ Future<void> _handle(HttpRequest request, String? apiKey) async {
     return;
   }
 
+  if (request.method == 'GET' && request.uri.path == '/scene-manifest') {
+    await _handleSceneManifest(request);
+    return;
+  }
+
   if (request.method != 'POST' || request.uri.path != '/strategy') {
     request.response.statusCode = HttpStatus.notFound;
     await request.response.close();
@@ -205,6 +210,25 @@ Future<void> _handle(HttpRequest request, String? apiKey) async {
 Future<void> _handleContentManifest(HttpRequest request) async {
   final scriptDir = File(Platform.script.toFilePath()).parent;
   final file = File('${scriptDir.path}/content_manifest.json');
+  if (!file.existsSync()) {
+    request.response.statusCode = HttpStatus.notFound;
+    await request.response.close();
+    return;
+  }
+
+  request.response
+    ..statusCode = HttpStatus.ok
+    ..headers.contentType = ContentType.json
+    ..write(await file.readAsString());
+  await request.response.close();
+}
+
+/// Serves the versioned scene/map manifest straight from disk - a plain
+/// JSON file for now (see `tool/generate_scene_manifest.dart`), same
+/// per-file-until-a-real-database approach as `_handleContentManifest`.
+Future<void> _handleSceneManifest(HttpRequest request) async {
+  final scriptDir = File(Platform.script.toFilePath()).parent;
+  final file = File('${scriptDir.path}/scene_manifest.json');
   if (!file.existsSync()) {
     request.response.statusCode = HttpStatus.notFound;
     await request.response.close();
@@ -281,6 +305,11 @@ SkirmishSnapshot _snapshotFromJson(Map<String, dynamic> json) =>
       playerTowerCount: (json['playerTowerCount'] as num?)?.toInt() ?? 0,
       aiUnitCount: (json['aiUnitCount'] as num?)?.toInt() ?? 0,
       playerUnitCount: (json['playerUnitCount'] as num?)?.toInt() ?? 0,
+      availableUnits:
+          (json['availableUnits'] as List?)
+              ?.map((u) => UnitRosterEntry.fromJson(u as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 String _stripCodeFence(String text) {

@@ -60,6 +60,11 @@ class GameScene {
   /// map editor's arena-size field) instead of only a single global constant.
   final int? startingGold;
 
+  /// Bumped whenever any field above changes for this [id] - see
+  /// [sceneNeedsUpdate]/`SceneSyncService`, which uses it to decide whether
+  /// a server-served scene should replace a cached/built-in one.
+  final int version;
+
   const GameScene({
     required this.id,
     required this.name,
@@ -68,6 +73,7 @@ class GameScene {
     this.mode = GameMode.waveDefense,
     this.waveCount = 0,
     this.aggressionBias = 0,
+    this.version = 1,
     this.homeLayout = HomeLayout.eastEdge,
     this.spawnLayout = SpawnLayout.single,
     this.homeSites = const [],
@@ -98,6 +104,7 @@ class GameScene {
         .map((site) => ResourceNodeSite.fromJson(site as Map<String, dynamic>))
         .toList(),
     startingGold: json['startingGold'] as int?,
+    version: json['version'] as int? ?? 1,
   );
 
   Map<String, dynamic> toJson() => {
@@ -115,8 +122,15 @@ class GameScene {
         .map((site) => site.toJson())
         .toList(),
     if (startingGold != null) 'startingGold': startingGold,
+    'version': version,
   };
 }
+
+/// Pure version comparison - mirrors `GameObjectDefinition`'s `needsUpdate`
+/// so a server-served [GameScene] only replaces a cached/built-in one when
+/// it's actually newer.
+bool sceneNeedsUpdate({required GameScene cached, required GameScene incoming}) =>
+    incoming.version > cached.version;
 
 /// One buildable home site on a skirmish map - a scene lists one per team
 /// seat that can fight in that match.

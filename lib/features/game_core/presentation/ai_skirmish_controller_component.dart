@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 
+import '../../../core/combat/attackable.dart';
 import '../../../core/combat/enums/unit_domain.dart';
 import '../../../core/combat/team.dart';
 import '../../../core/combat/unit_kind.dart';
@@ -127,6 +128,14 @@ class AiSkirmishControllerComponent extends Component
     buildBias: 0.5,
   );
 
+  /// Attack units produced this "wave" that are being held near the AI's
+  /// own base (see [_tryProduce]) until [SkirmishDirective.squadSize] of
+  /// them are ready, at which point [_dispatchAttackSquad] sends them all
+  /// at [SkirmishDirective.attackTarget] together - the AI's answer to
+  /// "how many units, attacking where" instead of each one trickling off
+  /// alone the instant it's produced.
+  final List<MobileUnitComponent> _stagedAttackers = [];
+
   final Random _rnd = Random();
 
   @override
@@ -187,8 +196,28 @@ class AiSkirmishControllerComponent extends Component
       playerUnitCount: game.world.activeUnits
           .where((u) => !u.destroyed && u.team.id == game.playerTeam.id)
           .length,
+      availableUnits: _availableUnitRoster(aiTeam),
     );
   }
+
+  /// The AI's full buildable roster right now (see
+  /// `MobileUnitRepositoryImpl.kindsFor`) - not just what it happens to
+  /// already own a production building for - so the director (Gemini, via
+  /// [SkirmishDirective.preferredUnitKind]) always gets to reason about
+  /// every unit kind it could ever choose to build, not a subset.
+  List<UnitRosterEntry> _availableUnitRoster(Team aiTeam) =>
+      game.unitRepository
+          .kindsFor(aiTeam)
+          .map((kind) {
+            final blueprint = game.unitRepository.blueprintFor(aiTeam, kind);
+            return UnitRosterEntry(
+              kind: kind.name,
+              cost: blueprint.cost,
+              isVehicle: blueprint.isVehicle,
+              attacksAir: blueprint.attackDomains.contains(UnitDomain.air),
+            );
+          })
+          .toList();
 
   /// Free, buildable cells in an expanding ring around the AI's base,
   /// nearest-ring-first and shuffled within each ring - keeps its
@@ -245,15 +274,24 @@ class AiSkirmishControllerComponent extends Component
       .where((t) => t.owner.id == aiTeam.id && t.blueprint.type == type)
       .length;
 
-  /// Weighted-random pick among [kinds]: a kind that can hit air gets extra
-  /// weight while the player has aircraft up, and the dedicated Anti-Tank
-  /// soldier gets extra weight while the player leans on vehicles - a plain
-  /// random pick otherwise, so this never fully locks out variety.
+  /// The director's explicit pick (see [SkirmishDirective.preferredUnitKind])
+  /// if it named one of [kinds] - otherwise a weighted-random pick among
+  /// [kinds]: a kind that can hit air gets extra weight while the player
+  /// has aircraft up, and the dedicated Anti-Tank soldier gets extra weight
+  /// while the player leans on vehicles - a plain random pick otherwise, so
+  /// this never fully locks out variety.
   UnitKind _pickKind(
     List<UnitKind> kinds,
     Team aiTeam,
     ({int air, int vehicle}) enemy,
   ) {
+    final preferred = _directive.preferredUnitKind;
+    if (preferred != null) {
+      for (final kind in kinds) {
+        if (kind.name == preferred) return kind;
+      }
+    }
+
     final weighted = <UnitKind>[];
     for (final kind in kinds) {
       final blueprint = game.unitRepository.blueprintFor(aiTeam, kind);
@@ -446,11 +484,15 @@ class AiSkirmishControllerComponent extends Component
   /// Center/War Factory of its own, same as the player. Always tries to
   /// produce when it can afford to (no RNG skip) so gold reliably turns
   /// into units instead of piling up toward the next building purchase.
-  /// Which kind gets produced is weighted toward whatever currently
-  /// counters the human player's own fielded army (see
+  /// Which kind gets produced prefers the director's explicit
+  /// [SkirmishDirective.preferredUnitKind] pick, falling back to whatever
+  /// currently counters the human player's own fielded army (see
   /// [_playerComposition]/[_pickKind]) instead of a flat random choice, so
-  /// the AI's attacks actually adapt to what it's fighting.
+  /// the AI's attacks actually adapt to what it's fighting. Every unit
+  /// produced this way is held back near base (see [_stageAttacker]) until
+  /// [SkirmishDirective.squadSize] of them are ready to push out together.
   void _tryProduce(Team aiTeam) {
+    _stagedAttackers.removeWhere((u) => u.destroyed);
     final enemy = _playerComposition();
     for (final tower in game.world.activeTowers) {
       if (tower.owner.id != aiTeam.id) continue;
@@ -458,8 +500,9 @@ class AiSkirmishControllerComponent extends Component
         final kinds = TrainingCenterComponent.producibleKinds
             .where((k) => tower.costFor(k) <= game.goldFor(aiTeam))
             .toList();
-        if (kinds.isNotEmpty) {
-          tower.produceUnit(_pickKind(kinds, aiTeam, enemy));
+        if (kinds.isNotEmpty &&
+            tower.produceUnit(_pickKind(kinds, aiTeam, enemy))) {
+          _stageAttacker(aiTeam, game.world.activeUnits.last);
         }
       } else if (tower is WarFactoryComponent && tower.canProduce) {
         final kinds = game.unitRepository
@@ -467,10 +510,58 @@ class AiSkirmishControllerComponent extends Component
             .where((k) => !TrainingCenterComponent.producibleKinds.contains(k))
             .where((k) => tower.costFor(k) <= game.goldFor(aiTeam))
             .toList();
-        if (kinds.isNotEmpty) {
-          tower.produceUnit(_pickKind(kinds, aiTeam, enemy));
+        if (kinds.isNotEmpty &&
+            tower.produceUnit(_pickKind(kinds, aiTeam, enemy))) {
+          _stageAttacker(aiTeam, game.world.activeUnits.last);
         }
       }
     }
   }
+
+  /// Holds a freshly-produced attack unit in place near base (it still
+  /// auto-fights anything that wanders into range, per [MobileUnitComponent
+  /// .issueMoveOrder]) instead of letting it immediately beeline off alone,
+  /// and dispatches the whole staged squad together the moment it reaches
+  /// [SkirmishDirective.squadSize].
+  void _stageAttacker(Team aiTeam, MobileUnitComponent unit) {
+    unit.issueMoveOrder(unit.position.clone());
+    _stagedAttackers.add(unit);
+    if (_stagedAttackers.length >= _directive.squadSize) {
+      _dispatchAttackSquad(aiTeam);
+    }
+  }
+
+  /// Sends every currently-staged unit at [_resolveAttackTarget] together,
+  /// then clears the staging list - the AI's answer to "how to attack with
+  /// what quantity and where".
+  void _dispatchAttackSquad(Team aiTeam) {
+    final target = _resolveAttackTarget(aiTeam);
+    if (target == null) return;
+    for (final unit in _stagedAttackers) {
+      if (unit.destroyed) continue;
+      unit.issueAttackOrder(target);
+    }
+    _stagedAttackers.clear();
+  }
+
+  /// Where the current directive wants a completed attack squad sent - the
+  /// player's weakest (lowest health-fraction) tower for [AttackTargetKind
+  /// .weakestEnemyTower], falling back to the player's base whenever there
+  /// are no player towers to focus on, or for [AttackTargetKind.enemyBase]
+  /// outright.
+  Attackable? _resolveAttackTarget(Team aiTeam) {
+    if (_directive.attackTarget == AttackTargetKind.weakestEnemyTower) {
+      final playerTowers = game.world.activeTowers
+          .where((t) => t.owner.id == game.playerTeam.id && !t.destroyed)
+          .toList();
+      if (playerTowers.isNotEmpty) {
+        playerTowers.sort(
+          (a, b) => a.healthRatio.compareTo(b.healthRatio),
+        );
+        return playerTowers.first;
+      }
+    }
+    return game.enemyHomeBaseFor(aiTeam);
+  }
 }
+

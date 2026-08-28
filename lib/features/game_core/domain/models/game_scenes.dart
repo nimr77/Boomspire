@@ -5,8 +5,15 @@ import 'game_scene.dart';
 /// The full campaign catalog shown on the level-select screen. Every scene
 /// pairs a biome with its own wave count, opening strategy bias, and base
 /// placement/attack-direction layout.
+///
+/// [all]/[skirmishes] start out as the built-in [_defaultAll]/
+/// [_defaultSkirmishes] literals below (so the game has a full catalog
+/// offline and in tests, with zero network) and can be layered with
+/// server-synced scenes via [applyOverrides] - see `SceneSyncService`,
+/// called once at boot the same way `GameContentSyncService` overrides
+/// tower/unit stats.
 class GameScenes {
-  static const List<GameScene> all = [
+  static const List<GameScene> _defaultAll = [
     GameScene(
       id: 'green-line',
       name: 'Green Line',
@@ -109,7 +116,7 @@ class GameScenes {
   /// [GameScene.homeSites] builds up and fights to destroy the others'
   /// homes, instead of surviving scripted waves. Only one seat is AI-owned
   /// for now (see the multiplayer/team-select plan for more seats).
-  static const List<GameScene> skirmishes = [
+  static const List<GameScene> _defaultSkirmishes = [
     GameScene(
       id: 'twin-outposts',
       name: 'Twin Outposts',
@@ -135,6 +142,49 @@ class GameScenes {
       ],
     ),
   ];
+
+  static List<GameScene> _all = _defaultAll;
+  static List<GameScene> _skirmishes = _defaultSkirmishes;
+
+  static List<GameScene> get all => _all;
+
+  static List<GameScene> get skirmishes => _skirmishes;
+
+  /// Layers server/cache-synced scenes (see `SceneSyncService`) on top of
+  /// the built-in defaults - called once at boot, mirroring how
+  /// `setupServiceLocator(gameContentOverrides:)` overrides tower/unit
+  /// stats. [scenes] is split back into wave-defense/skirmish by
+  /// [GameScene.mode]; a scene whose [GameScene.id] matches a default
+  /// replaces it, any other id is appended - so the server can both patch
+  /// an existing map and ship a brand new one without a client release.
+  static void applyOverrides(List<GameScene> scenes) {
+    _all = _mergeById(
+      _defaultAll,
+      scenes.where((s) => s.mode == GameMode.waveDefense),
+    );
+    _skirmishes = _mergeById(
+      _defaultSkirmishes,
+      scenes.where((s) => s.mode == GameMode.skirmish),
+    );
+  }
+
+  /// Test-only hook to undo [applyOverrides] between tests that don't share
+  /// process state cleanly otherwise.
+  static void resetOverridesForTest() {
+    _all = _defaultAll;
+    _skirmishes = _defaultSkirmishes;
+  }
+
+  static List<GameScene> _mergeById(
+    List<GameScene> base,
+    Iterable<GameScene> incoming,
+  ) {
+    final byId = {for (final s in base) s.id: s};
+    for (final s in incoming) {
+      byId[s.id] = s;
+    }
+    return byId.values.toList(growable: false);
+  }
 
   const GameScenes._();
 }

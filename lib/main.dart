@@ -12,6 +12,10 @@ import 'features/account/presentation/state/account_profile_state.dart';
 import 'features/game_content/impl/game_content_sync_service.dart';
 import 'features/game_content/impl/http_game_content_repository_impl.dart';
 import 'features/game_content/impl/local_game_content_cache_repository_impl.dart';
+import 'features/game_core/domain/models/game_scenes.dart';
+import 'features/game_core/impl/http_scene_repository_impl.dart';
+import 'features/game_core/impl/local_scene_cache_repository_impl.dart';
+import 'features/game_core/impl/scene_sync_service.dart';
 import 'features/messaging/presentation/glass_message.dart';
 import 'generated/l10n.dart';
 
@@ -24,6 +28,14 @@ Future<void> main() async {
     HttpGameContentRepositoryImpl(),
     LocalGameContentCacheRepositoryImpl(),
   ).resolveCatalog(const []);
+  // Same best-effort layering for the scene/map catalog (see
+  // `SceneSyncService`) - a failed/offline fetch just keeps `GameScenes`'
+  // built-in defaults.
+  final sceneOverrides = await SceneSyncService(
+    HttpSceneRepositoryImpl(),
+    LocalSceneCacheRepositoryImpl(),
+  ).resolveScenes(const []);
+  GameScenes.applyOverrides(sceneOverrides);
   setupServiceLocator(gameContentOverrides: gameContentOverrides);
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.macOS ||
