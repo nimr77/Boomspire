@@ -1,3 +1,4 @@
+import 'package:boomspire/shared/widgets/mesh_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -25,6 +26,7 @@ class MainMenuPage extends StatelessWidget {
       backgroundColor: AppThemeColors.background,
       body: Stack(
         children: [
+          GameMeshBackgroundWidget(),
           SafeArea(
             child: Center(
               child: ConstrainedBox(
