@@ -198,6 +198,54 @@ class SkirmishSnapshot {
   };
 }
 
+/// One buildable tower/building kind the AI director is told about in a
+/// [SkirmishSnapshot] - the defensive/economic counterpart of
+/// [UnitRosterEntry], so the director understands the AI's structures'
+/// firepower and range too, not just its mobile units. A non-combat
+/// building (Gold Mine, Training Center, ...) simply has `damage`/`range`
+/// of 0.
+class TowerRosterEntry {
+  /// Matches a `BuildingType`/`TowerType`'s `.name`.
+  final String type;
+  final int cost;
+  final double damage;
+  final double range;
+  final double maxHp;
+  final bool attacksAir;
+  final bool attacksGround;
+
+  const TowerRosterEntry({
+    required this.type,
+    required this.cost,
+    required this.damage,
+    required this.range,
+    required this.maxHp,
+    required this.attacksAir,
+    required this.attacksGround,
+  });
+
+  factory TowerRosterEntry.fromJson(Map<String, dynamic> json) =>
+      TowerRosterEntry(
+        type: json['type'] as String? ?? '',
+        cost: (json['cost'] as num?)?.toInt() ?? 0,
+        damage: (json['damage'] as num?)?.toDouble() ?? 0,
+        range: (json['range'] as num?)?.toDouble() ?? 0,
+        maxHp: (json['maxHp'] as num?)?.toDouble() ?? 0,
+        attacksAir: json['attacksAir'] as bool? ?? false,
+        attacksGround: json['attacksGround'] as bool? ?? false,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'cost': cost,
+    'damage': damage,
+    'range': range,
+    'maxHp': maxHp,
+    'attacksAir': attacksAir,
+    'attacksGround': attacksGround,
+  };
+}
+
 /// One buildable unit kind the AI director is told about in a
 /// [SkirmishSnapshot] - lets it (Gemini, or a smarter future fallback)
 /// reason about *what to build* from the real roster instead of a fixed
@@ -257,53 +305,5 @@ class UnitRosterEntry {
     'damage': damage,
     'range': range,
     'speed': speed,
-  };
-}
-
-/// One buildable tower/building kind the AI director is told about in a
-/// [SkirmishSnapshot] - the defensive/economic counterpart of
-/// [UnitRosterEntry], so the director understands the AI's structures'
-/// firepower and range too, not just its mobile units. A non-combat
-/// building (Gold Mine, Training Center, ...) simply has `damage`/`range`
-/// of 0.
-class TowerRosterEntry {
-  /// Matches a `BuildingType`/`TowerType`'s `.name`.
-  final String type;
-  final int cost;
-  final double damage;
-  final double range;
-  final double maxHp;
-  final bool attacksAir;
-  final bool attacksGround;
-
-  const TowerRosterEntry({
-    required this.type,
-    required this.cost,
-    required this.damage,
-    required this.range,
-    required this.maxHp,
-    required this.attacksAir,
-    required this.attacksGround,
-  });
-
-  factory TowerRosterEntry.fromJson(Map<String, dynamic> json) =>
-      TowerRosterEntry(
-        type: json['type'] as String? ?? '',
-        cost: (json['cost'] as num?)?.toInt() ?? 0,
-        damage: (json['damage'] as num?)?.toDouble() ?? 0,
-        range: (json['range'] as num?)?.toDouble() ?? 0,
-        maxHp: (json['maxHp'] as num?)?.toDouble() ?? 0,
-        attacksAir: json['attacksAir'] as bool? ?? false,
-        attacksGround: json['attacksGround'] as bool? ?? false,
-      );
-
-  Map<String, dynamic> toJson() => {
-    'type': type,
-    'cost': cost,
-    'damage': damage,
-    'range': range,
-    'maxHp': maxHp,
-    'attacksAir': attacksAir,
-    'attacksGround': attacksGround,
   };
 }
