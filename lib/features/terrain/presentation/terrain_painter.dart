@@ -13,7 +13,12 @@ import '../extensions/biome_extensions.dart';
 class TerrainPainter {
   const TerrainPainter._();
 
-  static void paint(ui.Canvas canvas, ui.Size size, TerrainMap terrainMap) {
+  static void paint(
+    ui.Canvas canvas,
+    ui.Size size,
+    TerrainMap terrainMap, {
+    bool includeTrees = true,
+  }) {
     final rect = ui.Offset.zero & size;
     final grid = terrainMap.grid;
     final kinds = terrainMap.obstacleKinds;
@@ -158,7 +163,7 @@ class TerrainPainter {
           case ObstacleKind.lake:
             break; // already painted as a continuous ribbon/pond above
           case null:
-            if (palette.hasTrees && rnd.nextDouble() < 0.05) {
+            if (includeTrees && palette.hasTrees && rnd.nextDouble() < 0.05) {
               _paintTree(canvas, grid, col, row, rnd, terrainMap.biome);
             }
         }
@@ -167,12 +172,89 @@ class TerrainPainter {
 
     // Hand-placed trees (map editor's Tree brush) render on any biome,
     // regardless of [BiomePalette.hasTrees].
+    if (includeTrees) {
+      for (final tree in terrainMap.treeCells) {
+        if (tree.y < 0 || tree.y >= grid.rows) continue;
+        if (tree.x < 0 || tree.x >= grid.cols) continue;
+        if (kinds[tree.y][tree.x] != null) continue;
+        _paintTree(canvas, grid, tree.x, tree.y, rnd, terrainMap.biome);
+      }
+    }
+  }
+
+  /// Live per-frame companion to [paint] (which is normally called with
+  /// `includeTrees: false` for real gameplay, so trees aren't baked into
+  /// the static cached ground image) - redrawn every frame so each
+  /// canopy's [_treeSway] offset can respond to [windStrength] as [phase]
+  /// (elapsed seconds) advances, instead of standing perfectly still.
+  /// [paint] still bakes trees itself when [includeTrees] stays true (e.g.
+  /// the level-select biome thumbnails, which never animate).
+  static void paintTrees(
+    ui.Canvas canvas,
+    ui.Size size,
+    TerrainMap terrainMap, {
+    double windStrength = 0,
+    double phase = 0,
+  }) {
+    final grid = terrainMap.grid;
+    final kinds = terrainMap.obstacleKinds;
+    final palette = terrainMap.biome.palette;
+    if (!palette.hasTrees && terrainMap.treeCells.isEmpty) return;
+
+    // Fresh, dedicated seed every call (not shared with [paint]'s
+    // ground/speckle passes) - deterministic per call, so scatter
+    // placement/jitter/scale stay fixed across frames; only the sway
+    // offset (driven by [phase], not this RNG) actually animates.
+    final rnd = Random(1337);
+    if (palette.hasTrees) {
+      for (var row = 0; row < grid.rows; row++) {
+        for (var col = 0; col < grid.cols; col++) {
+          if (kinds[row][col] != null) continue;
+          if (rnd.nextDouble() >= 0.05) continue;
+          _paintTree(
+            canvas,
+            grid,
+            col,
+            row,
+            rnd,
+            terrainMap.biome,
+            sway: _treeSway(col, row, windStrength, phase),
+          );
+        }
+      }
+    }
+
     for (final tree in terrainMap.treeCells) {
       if (tree.y < 0 || tree.y >= grid.rows) continue;
       if (tree.x < 0 || tree.x >= grid.cols) continue;
       if (kinds[tree.y][tree.x] != null) continue;
-      _paintTree(canvas, grid, tree.x, tree.y, rnd, terrainMap.biome);
+      _paintTree(
+        canvas,
+        grid,
+        tree.x,
+        tree.y,
+        rnd,
+        terrainMap.biome,
+        sway: _treeSway(tree.x, tree.y, windStrength, phase),
+      );
     }
+  }
+
+  /// A small sideways offset for one tree's canopy, driven by a sine wave
+  /// over elapsed [phase] seconds and scaled by [windStrength] (0..1). The
+  /// phase offset is derived from the tree's own cell (not [Random], which
+  /// is reserved for placement/jitter) so it stays fixed across frames and
+  /// makes a whole forest sway out of sync instead of snapping side to
+  /// side in lockstep.
+  static double _treeSway(
+    int col,
+    int row,
+    double windStrength,
+    double phase,
+  ) {
+    if (windStrength <= 0) return 0;
+    final offset = ((col * 13 + row * 31) % 100) / 100.0 * 2 * pi;
+    return sin(phase * 1.6 + offset) * windStrength.clamp(0, 1) * 6.0;
   }
 
   /// Live per-frame animated overlay for a river: a scrolling specular
@@ -899,13 +981,17 @@ class TerrainPainter {
     int col,
     int row,
     Random rnd,
-    Biome biome,
-  ) {
+    Biome biome, {
+    double sway = 0,
+  }) {
     final cx =
         col * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
     final cy =
         row * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
     final scale = 0.7 + rnd.nextDouble() * 0.5;
+    // Only the canopy leans with [sway] - the shadow stays put so the
+    // trunk still reads as planted in the ground while it tips.
+    final canopyCx = cx + sway;
 
     // Ground shadow first, so the canopy reads as sitting above the tile.
     canvas.drawOval(
@@ -921,21 +1007,21 @@ class TerrainPainter {
 
     switch (biome) {
       case Biome.mountainForest:
-        _paintForestCanopy(canvas, cx, cy, scale);
+        _paintForestCanopy(canvas, canopyCx, cy, scale);
       case Biome.savanna:
-        _paintAcaciaCanopy(canvas, cx, cy, scale);
+        _paintAcaciaCanopy(canvas, canopyCx, cy, scale);
       case Biome.snowTundra:
-        _paintSnowyCanopy(canvas, cx, cy, scale);
+        _paintSnowyCanopy(canvas, canopyCx, cy, scale);
       case Biome.frozenPeaks:
-        _paintConiferCanopy(canvas, cx, cy, scale);
+        _paintConiferCanopy(canvas, canopyCx, cy, scale);
       case Biome.desertDunes:
-        _paintDesertTree(canvas, cx, cy, scale);
+        _paintDesertTree(canvas, canopyCx, cy, scale);
       case Biome.sea:
-        _paintPalmCanopy(canvas, cx, cy, scale);
+        _paintPalmCanopy(canvas, canopyCx, cy, scale);
       case Biome.cityRuins:
-        _paintScorchedTree(canvas, cx, cy, scale);
+        _paintScorchedTree(canvas, canopyCx, cy, scale);
       case Biome.grassPlains:
-        _paintRoundCanopy(canvas, cx, cy, scale);
+        _paintRoundCanopy(canvas, canopyCx, cy, scale);
     }
   }
 
