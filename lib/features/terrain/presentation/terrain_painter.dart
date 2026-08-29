@@ -182,81 +182,6 @@ class TerrainPainter {
     }
   }
 
-  /// Live per-frame companion to [paint] (which is normally called with
-  /// `includeTrees: false` for real gameplay, so trees aren't baked into
-  /// the static cached ground image) - redrawn every frame so each
-  /// canopy's [_treeSway] offset can respond to [windStrength] as [phase]
-  /// (elapsed seconds) advances, instead of standing perfectly still.
-  /// [paint] still bakes trees itself when [includeTrees] stays true (e.g.
-  /// the level-select biome thumbnails, which never animate).
-  static void paintTrees(
-    ui.Canvas canvas,
-    ui.Size size,
-    TerrainMap terrainMap, {
-    double windStrength = 0,
-    double phase = 0,
-  }) {
-    final grid = terrainMap.grid;
-    final kinds = terrainMap.obstacleKinds;
-    final palette = terrainMap.biome.palette;
-    if (!palette.hasTrees && terrainMap.treeCells.isEmpty) return;
-
-    // Fresh, dedicated seed every call (not shared with [paint]'s
-    // ground/speckle passes) - deterministic per call, so scatter
-    // placement/jitter/scale stay fixed across frames; only the sway
-    // offset (driven by [phase], not this RNG) actually animates.
-    final rnd = Random(1337);
-    if (palette.hasTrees) {
-      for (var row = 0; row < grid.rows; row++) {
-        for (var col = 0; col < grid.cols; col++) {
-          if (kinds[row][col] != null) continue;
-          if (rnd.nextDouble() >= 0.05) continue;
-          _paintTree(
-            canvas,
-            grid,
-            col,
-            row,
-            rnd,
-            terrainMap.biome,
-            sway: _treeSway(col, row, windStrength, phase),
-          );
-        }
-      }
-    }
-
-    for (final tree in terrainMap.treeCells) {
-      if (tree.y < 0 || tree.y >= grid.rows) continue;
-      if (tree.x < 0 || tree.x >= grid.cols) continue;
-      if (kinds[tree.y][tree.x] != null) continue;
-      _paintTree(
-        canvas,
-        grid,
-        tree.x,
-        tree.y,
-        rnd,
-        terrainMap.biome,
-        sway: _treeSway(tree.x, tree.y, windStrength, phase),
-      );
-    }
-  }
-
-  /// A small sideways offset for one tree's canopy, driven by a sine wave
-  /// over elapsed [phase] seconds and scaled by [windStrength] (0..1). The
-  /// phase offset is derived from the tree's own cell (not [Random], which
-  /// is reserved for placement/jitter) so it stays fixed across frames and
-  /// makes a whole forest sway out of sync instead of snapping side to
-  /// side in lockstep.
-  static double _treeSway(
-    int col,
-    int row,
-    double windStrength,
-    double phase,
-  ) {
-    if (windStrength <= 0) return 0;
-    final offset = ((col * 13 + row * 31) % 100) / 100.0 * 2 * pi;
-    return sin(phase * 1.6 + offset) * windStrength.clamp(0, 1) * 6.0;
-  }
-
   /// Live per-frame animated overlay for a river: a scrolling specular
   /// dash streak plus ripple arcs that both drift downstream as [phase]
   /// (elapsed seconds) advances, on top of the static [_paintRiverBed].
@@ -324,6 +249,64 @@ class TerrainPainter {
     }
   }
 
+  /// Live per-frame companion to [paint] (which is normally called with
+  /// `includeTrees: false` for real gameplay, so trees aren't baked into
+  /// the static cached ground image) - redrawn every frame so each
+  /// canopy's [_treeSway] offset can respond to [windStrength] as [phase]
+  /// (elapsed seconds) advances, instead of standing perfectly still.
+  /// [paint] still bakes trees itself when [includeTrees] stays true (e.g.
+  /// the level-select biome thumbnails, which never animate).
+  static void paintTrees(
+    ui.Canvas canvas,
+    ui.Size size,
+    TerrainMap terrainMap, {
+    double windStrength = 0,
+    double phase = 0,
+  }) {
+    final grid = terrainMap.grid;
+    final kinds = terrainMap.obstacleKinds;
+    final palette = terrainMap.biome.palette;
+    if (!palette.hasTrees && terrainMap.treeCells.isEmpty) return;
+
+    // Fresh, dedicated seed every call (not shared with [paint]'s
+    // ground/speckle passes) - deterministic per call, so scatter
+    // placement/jitter/scale stay fixed across frames; only the sway
+    // offset (driven by [phase], not this RNG) actually animates.
+    final rnd = Random(1337);
+    if (palette.hasTrees) {
+      for (var row = 0; row < grid.rows; row++) {
+        for (var col = 0; col < grid.cols; col++) {
+          if (kinds[row][col] != null) continue;
+          if (rnd.nextDouble() >= 0.05) continue;
+          _paintTree(
+            canvas,
+            grid,
+            col,
+            row,
+            rnd,
+            terrainMap.biome,
+            sway: _treeSway(col, row, windStrength, phase),
+          );
+        }
+      }
+    }
+
+    for (final tree in terrainMap.treeCells) {
+      if (tree.y < 0 || tree.y >= grid.rows) continue;
+      if (tree.x < 0 || tree.x >= grid.cols) continue;
+      if (kinds[tree.y][tree.x] != null) continue;
+      _paintTree(
+        canvas,
+        grid,
+        tree.x,
+        tree.y,
+        rnd,
+        terrainMap.biome,
+        sway: _treeSway(tree.x, tree.y, windStrength, phase),
+      );
+    }
+  }
+
   /// Combined path of every river segment in [terrainMap] (one subpath per
   /// connected group of river cells), smoothed - null if this map has no
   /// river (e.g. desert biome, which uses a dry valley instead). Used both
@@ -349,7 +332,11 @@ class TerrainPainter {
   /// Resolves the brush-type [Biome] painted at a chain's first point, for
   /// tinting that river ribbon - falls back to the map's own biome when the
   /// point falls outside the grid (e.g. an edge-extended chain endpoint).
-  static Biome _chainBiome(TerrainMap terrainMap, Grid grid, List<ui.Offset> chain) {
+  static Biome _chainBiome(
+    TerrainMap terrainMap,
+    Grid grid,
+    List<ui.Offset> chain,
+  ) {
     final first = chain.first;
     final col = (first.dx / grid.cellSize).floor().clamp(0, grid.cols - 1);
     final row = (first.dy / grid.cellSize).floor().clamp(0, grid.rows - 1);
@@ -1123,5 +1110,17 @@ class TerrainPainter {
     }
     path.lineTo(points.last.dx, points.last.dy);
     return path;
+  }
+
+  /// A small sideways offset for one tree's canopy, driven by a sine wave
+  /// over elapsed [phase] seconds and scaled by [windStrength] (0..1). The
+  /// phase offset is derived from the tree's own cell (not [Random], which
+  /// is reserved for placement/jitter) so it stays fixed across frames and
+  /// makes a whole forest sway out of sync instead of snapping side to
+  /// side in lockstep.
+  static double _treeSway(int col, int row, double windStrength, double phase) {
+    if (windStrength <= 0) return 0;
+    final offset = ((col * 13 + row * 31) % 100) / 100.0 * 2 * pi;
+    return sin(phase * 1.6 + offset) * windStrength.clamp(0, 1) * 6.0;
   }
 }

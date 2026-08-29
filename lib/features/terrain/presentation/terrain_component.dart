@@ -133,6 +133,17 @@ class TerrainComponent extends PositionComponent
     );
   }
 
+  /// Renders the scene's authored sun/weather look live (see
+  /// `MapEditorCanvasPainter`, which this mirrors) - drawn fresh every frame
+  /// rather than baked into [_baseImage] since dynamic weather changes over
+  /// the course of a match.
+  void _paintEnvironment(ui.Canvas canvas) {
+    final environment = game.scene.environment;
+    final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+    _paintSunLight(canvas, environment, rect);
+    _paintWeather(canvas, environment, rect);
+  }
+
   /// Redraws every tree fresh each frame (instead of baking them into
   /// [_baseImage]) so [WeatherKeyframe.windStrength] can make canopies sway.
   void _paintLiveTrees(ui.Canvas canvas) {
@@ -146,15 +157,43 @@ class TerrainComponent extends PositionComponent
     );
   }
 
-  /// Renders the scene's authored sun/weather look live (see
-  /// `MapEditorCanvasPainter`, which this mirrors) - drawn fresh every frame
-  /// rather than baked into [_baseImage] since dynamic weather changes over
-  /// the course of a match.
-  void _paintEnvironment(ui.Canvas canvas) {
-    final environment = game.scene.environment;
-    final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-    _paintSunLight(canvas, environment, rect);
-    _paintWeather(canvas, environment, rect);
+  /// Rain streaks fall straight down, looping back to the top once they
+  /// pass the bottom edge - [_weatherPhase] (elapsed seconds) drives the
+  /// fall instead of every frame redrawing the same frozen positions.
+  /// [WeatherKeyframe.windStrength] still leans each streak's angle.
+  void _paintRain(ui.Canvas canvas, WeatherKeyframe weather) {
+    final rnd = math.Random(7);
+    final lean = weather.windStrength * 16;
+    const fallSpeed = 420.0;
+    final paint = ui.Paint()
+      ..color = Colors.lightBlueAccent.withValues(alpha: 0.4)
+      ..strokeWidth = 1.4;
+    for (var i = 0; i < (weather.rainIntensity * 160).round(); i++) {
+      final x = rnd.nextDouble() * size.x;
+      final baseY = rnd.nextDouble() * size.y;
+      final y = (baseY + _weatherPhase * fallSpeed) % size.y;
+      canvas.drawLine(ui.Offset(x, y), ui.Offset(x + lean, y + 14), paint);
+    }
+  }
+
+  /// Snow drifts down slowly with a gentle side-to-side sway (scaled by
+  /// [WeatherKeyframe.windStrength]) instead of sitting frozen in place -
+  /// same looping-fall approach as [_paintRain], just much slower.
+  void _paintSnow(ui.Canvas canvas, WeatherKeyframe weather) {
+    final rnd = math.Random(9);
+    const fallSpeed = 60.0;
+    final paint = ui.Paint()..color = Colors.white.withValues(alpha: 0.8);
+    for (var i = 0; i < (weather.snowIntensity * 110).round(); i++) {
+      final baseX = rnd.nextDouble() * size.x;
+      final baseY = rnd.nextDouble() * size.y;
+      final driftPhase = rnd.nextDouble() * math.pi * 2;
+      final y = (baseY + _weatherPhase * fallSpeed) % size.y;
+      final sway =
+          math.sin(_weatherPhase * 1.4 + driftPhase) *
+          (6 + weather.windStrength * 14);
+      final x = (baseX + sway) % size.x;
+      canvas.drawCircle(ui.Offset(x, y), 1.5, paint);
+    }
   }
 
   void _paintSunLight(
@@ -224,45 +263,6 @@ class TerrainComponent extends PositionComponent
 
     if (weather.snowIntensity > 0) {
       _paintSnow(canvas, weather);
-    }
-  }
-
-  /// Rain streaks fall straight down, looping back to the top once they
-  /// pass the bottom edge - [_weatherPhase] (elapsed seconds) drives the
-  /// fall instead of every frame redrawing the same frozen positions.
-  /// [WeatherKeyframe.windStrength] still leans each streak's angle.
-  void _paintRain(ui.Canvas canvas, WeatherKeyframe weather) {
-    final rnd = math.Random(7);
-    final lean = weather.windStrength * 16;
-    const fallSpeed = 420.0;
-    final paint = ui.Paint()
-      ..color = Colors.lightBlueAccent.withValues(alpha: 0.4)
-      ..strokeWidth = 1.4;
-    for (var i = 0; i < (weather.rainIntensity * 160).round(); i++) {
-      final x = rnd.nextDouble() * size.x;
-      final baseY = rnd.nextDouble() * size.y;
-      final y = (baseY + _weatherPhase * fallSpeed) % size.y;
-      canvas.drawLine(ui.Offset(x, y), ui.Offset(x + lean, y + 14), paint);
-    }
-  }
-
-  /// Snow drifts down slowly with a gentle side-to-side sway (scaled by
-  /// [WeatherKeyframe.windStrength]) instead of sitting frozen in place -
-  /// same looping-fall approach as [_paintRain], just much slower.
-  void _paintSnow(ui.Canvas canvas, WeatherKeyframe weather) {
-    final rnd = math.Random(9);
-    const fallSpeed = 60.0;
-    final paint = ui.Paint()..color = Colors.white.withValues(alpha: 0.8);
-    for (var i = 0; i < (weather.snowIntensity * 110).round(); i++) {
-      final baseX = rnd.nextDouble() * size.x;
-      final baseY = rnd.nextDouble() * size.y;
-      final driftPhase = rnd.nextDouble() * math.pi * 2;
-      final y = (baseY + _weatherPhase * fallSpeed) % size.y;
-      final sway =
-          math.sin(_weatherPhase * 1.4 + driftPhase) *
-          (6 + weather.windStrength * 14);
-      final x = (baseX + sway) % size.x;
-      canvas.drawCircle(ui.Offset(x, y), 1.5, paint);
     }
   }
 
