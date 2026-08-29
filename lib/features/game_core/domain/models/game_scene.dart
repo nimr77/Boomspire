@@ -1,4 +1,5 @@
 import '../../../terrain/domain/models/biome.dart';
+import '../../../map_editor/domain/models/environment_settings.dart';
 import '../enums/game_mode.dart';
 import '../enums/home_layout.dart';
 import '../enums/home_site_owner.dart';
@@ -68,6 +69,11 @@ class GameScene {
   /// map editor's arena-size field) instead of only a single global constant.
   final int? startingGold;
 
+  /// This scene's lighting/weather setup, authored in the map editor -
+  /// defaults to a static, weather-free look for hand-written [GameScenes]
+  /// entries that never set one.
+  final EnvironmentSettings environment;
+
   /// Bumped whenever any field above changes for this [id] - see
   /// [sceneNeedsUpdate]/`SceneSyncService`, which uses it to decide whether
   /// a server-served scene should replace a cached/built-in one.
@@ -87,6 +93,7 @@ class GameScene {
     this.homeSites = const [],
     this.resourceNodeSites = const [],
     this.startingGold,
+    this.environment = const EnvironmentSettings(),
   });
 
   factory GameScene.fromJson(Map<String, dynamic> json) => GameScene(
@@ -113,6 +120,11 @@ class GameScene {
         .toList(),
     startingGold: json['startingGold'] as int?,
     version: json['version'] as int? ?? 1,
+    environment: json['environment'] == null
+        ? const EnvironmentSettings()
+        : EnvironmentSettings.fromJson(
+            json['environment'] as Map<String, dynamic>,
+          ),
   );
 
   Map<String, dynamic> toJson() => {
@@ -131,6 +143,7 @@ class GameScene {
         .toList(),
     if (startingGold != null) 'startingGold': startingGold,
     'version': version,
+    'environment': environment.toJson(),
   };
 }
 

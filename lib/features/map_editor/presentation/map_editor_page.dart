@@ -286,6 +286,22 @@ class _MapEditorPageState extends State<MapEditorPage> {
                                 label: Text(tool.label),
                                 selected: currentTool == tool,
                                 onSelected: (_) => _draftState.setTool(tool),
+                                backgroundColor: AppThemeColors.surfacePanel,
+                                selectedColor: AppThemeColors.accentCyan
+                                    .withValues(alpha: 0.22),
+                                side: BorderSide(
+                                  color: currentTool == tool
+                                      ? AppThemeColors.accentCyan
+                                      : AppThemeColors.borderSubtle,
+                                ),
+                                labelStyle: TextStyle(
+                                  color: currentTool == tool
+                                      ? AppThemeColors.accentCyan
+                                      : AppThemeColors.textSecondary,
+                                  fontWeight: currentTool == tool
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
                               ),
                           ],
                         ),
@@ -346,6 +362,35 @@ class _MapEditorPageState extends State<MapEditorPage> {
                           onChanged: (biome) {
                             if (biome != null) _draftState.setBiome(biome);
                           },
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: AppThemeSpacing.space4,
+                            bottom: AppThemeSpacing.space8,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.park,
+                                size: 14,
+                                color: currentDraft.biome.palette.hasTrees
+                                    ? AppThemeColors.accentEmerald
+                                    : AppThemeColors.textMuted,
+                              ),
+                              SizedBox(width: AppThemeSpacing.space6),
+                              Expanded(
+                                child: Text(
+                                  currentDraft.biome.palette.hasTrees
+                                      ? S.current.treesOnHintEditorPage
+                                      : S.current.treesOffHintEditorPage,
+                                  style: const TextStyle(
+                                    color: AppThemeColors.textMuted,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         DropdownButtonFormField<GameMode>(
                           initialValue: currentDraft.mode,
@@ -583,17 +628,23 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         MapEditorSectionLabelWidget(
                           S.current.environmentLabelEditorPage,
                         ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            S.current.dynamicWeatherLabelEditorPage,
-                            style: const TextStyle(
-                              color: AppThemeColors.textMuted,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                S.current.dynamicWeatherLabelEditorPage,
+                                style: const TextStyle(
+                                  color: AppThemeColors.textMuted,
+                                ),
+                              ),
                             ),
-                          ),
-                          value: currentDraft.environment.dynamicWeather,
-                          onChanged: (value) =>
-                              _draftState.setDynamicWeather(value),
+                            Switch(
+                              value: currentDraft.environment.dynamicWeather,
+                              activeColor: AppThemeColors.accentCyan,
+                              onChanged: (value) =>
+                                  _draftState.setDynamicWeather(value),
+                            ),
+                          ],
                         ),
                         Text(
                           S.current.sunAngleLabelEditorPage(
@@ -605,6 +656,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         ),
                         Slider(
                           value: currentDraft.environment.sunAngle,
+                          activeColor: AppThemeColors.accentAmber,
                           onChanged: (value) => _draftState.setSunAngle(value),
                         ),
                         SizedBox(height: AppThemeSpacing.space8),
@@ -618,6 +670,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         ),
                         Slider(
                           value: currentPreviewProgress,
+                          activeColor: AppThemeColors.accentCyan,
                           onChanged: (value) =>
                               _draftState.setPreviewProgress(value),
                         ),
@@ -629,6 +682,20 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        if (!currentDraft.environment.dynamicWeather &&
+                            currentDraft.environment.timeline.length > 1)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: AppThemeSpacing.space4,
+                            ),
+                            child: Text(
+                              S.current.singleKeyframeHintEditorPage,
+                              style: const TextStyle(
+                                color: AppThemeColors.accentAmber,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                         for (final (index, keyframe)
                             in currentDraft.environment.timeline.indexed)
                           MapEditorWeatherKeyframeEditorWidget(

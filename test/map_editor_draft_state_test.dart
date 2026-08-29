@@ -17,7 +17,6 @@ import 'package:boomspire/features/terrain/domain/models/biome.dart';
 import 'package:boomspire/features/terrain/domain/models/obstacle_kind.dart';
 import 'package:boomspire/features/terrain/extensions/biome_extensions.dart';
 import 'package:boomspire/generated/l10n.dart';
-import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

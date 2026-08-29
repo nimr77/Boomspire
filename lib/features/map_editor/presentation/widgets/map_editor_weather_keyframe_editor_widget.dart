@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
 import '../../../../shared/app_theme/app_theme_colors.dart';
 import '../../../../shared/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_spacing.dart';
 import '../../domain/models/weather_keyframe.dart';
 
 /// One editable card in the environment section's weather timeline - lets
@@ -21,9 +23,16 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppThemeColors.surfacePanel,
+    return Container(
       margin: AppThemePaddings.v6,
+      decoration: BoxDecoration(
+        color: AppThemeColors.surfacePanel,
+        borderRadius: AppThemeBorders.radius12,
+        border: Border.all(
+          color: AppThemeColors.borderSubtle,
+          width: AppThemeBorders.width1,
+        ),
+      ),
       child: Padding(
         padding: AppThemePaddings.all12,
         child: Column(
@@ -36,7 +45,10 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
                     S.current.keyframeAtProgressLabelEditorPage(
                       (keyframe.atProgress * 100).round(),
                     ),
-                    style: const TextStyle(color: AppThemeColors.textPrimary),
+                    style: const TextStyle(
+                      color: AppThemeColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -50,29 +62,39 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
               ],
             ),
             _keyframeSlider(
-              S.current.windLabelEditorPage,
-              keyframe.windStrength,
-              (v) => onChanged(keyframe.copyWith(windStrength: v)),
+              icon: Icons.air,
+              color: AppThemeColors.accentLightBlue,
+              label: S.current.windLabelEditorPage,
+              value: keyframe.windStrength,
+              onChanged: (v) => onChanged(keyframe.copyWith(windStrength: v)),
             ),
             _keyframeSlider(
-              S.current.rainLabelEditorPage,
-              keyframe.rainIntensity,
-              (v) => onChanged(keyframe.copyWith(rainIntensity: v)),
+              icon: Icons.water_drop,
+              color: AppThemeColors.accentCyan,
+              label: S.current.rainLabelEditorPage,
+              value: keyframe.rainIntensity,
+              onChanged: (v) => onChanged(keyframe.copyWith(rainIntensity: v)),
             ),
             _keyframeSlider(
-              S.current.snowLabelEditorPage,
-              keyframe.snowIntensity,
-              (v) => onChanged(keyframe.copyWith(snowIntensity: v)),
+              icon: Icons.ac_unit,
+              color: Colors.white70,
+              label: S.current.snowLabelEditorPage,
+              value: keyframe.snowIntensity,
+              onChanged: (v) => onChanged(keyframe.copyWith(snowIntensity: v)),
             ),
             _keyframeSlider(
-              S.current.fogLabelEditorPage,
-              keyframe.fogDensity,
-              (v) => onChanged(keyframe.copyWith(fogDensity: v)),
+              icon: Icons.blur_on,
+              color: AppThemeColors.textMuted,
+              label: S.current.fogLabelEditorPage,
+              value: keyframe.fogDensity,
+              onChanged: (v) => onChanged(keyframe.copyWith(fogDensity: v)),
             ),
             _keyframeSlider(
-              S.current.cloudLabelEditorPage,
-              keyframe.cloudCover,
-              (v) => onChanged(keyframe.copyWith(cloudCover: v)),
+              icon: Icons.cloud,
+              color: AppThemeColors.accentLightGreen,
+              label: S.current.cloudLabelEditorPage,
+              value: keyframe.cloudCover,
+              onChanged: (v) => onChanged(keyframe.copyWith(cloudCover: v)),
             ),
           ],
         ),
@@ -80,15 +102,19 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
     );
   }
 
-  Widget _keyframeSlider(
-    String label,
-    double value,
-    ValueChanged<double> onChanged,
-  ) {
+  Widget _keyframeSlider({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
     return Row(
       children: [
+        Icon(icon, color: color, size: 16),
+        SizedBox(width: AppThemeSpacing.space6),
         SizedBox(
-          width: 44,
+          width: 38,
           child: Text(
             label,
             style: const TextStyle(
@@ -98,7 +124,25 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: Slider(value: value, onChanged: onChanged),
+          child: Slider(
+            value: value,
+            activeColor: color,
+            inactiveColor: color.withValues(alpha: 0.25),
+            thumbColor: color,
+            onChanged: onChanged,
+          ),
+        ),
+        SizedBox(width: AppThemeSpacing.space8),
+        SizedBox(
+          width: 32,
+          child: Text(
+            S.current.zoomPercentEditorPage((value * 100).round()),
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              color: AppThemeColors.textMuted,
+              fontSize: 11,
+            ),
+          ),
         ),
       ],
     );

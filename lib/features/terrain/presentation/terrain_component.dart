@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart' show Colors;
 
 import '../../../core/rendering/procedural_image.dart';
 import '../../game_core/presentation/boomspire_game.dart';
+import '../../map_editor/domain/models/environment_settings.dart';
 import '../domain/models/terrain_map.dart';
 import 'terrain_painter.dart';
 
@@ -67,6 +69,8 @@ class TerrainComponent extends PositionComponent
       );
     }
 
+    _paintEnvironment(canvas);
+
     final selected = game.selectedTowerType.value;
     if (selected == null) return;
     final blueprint = game.blueprintFor(selected);
@@ -104,5 +108,107 @@ class TerrainComponent extends PositionComponent
 
   void _paintBase(ui.Canvas canvas) {
     TerrainPainter.paint(canvas, ui.Size(size.x, size.y), terrainMap);
+  }
+
+  /// This scene's match-progress fraction (0..1), used to sample
+  /// [EnvironmentSettings.sample] - the same wave-progress fraction the HUD
+  /// shows, so a dynamic weather timeline changes pace with the campaign.
+  double get _matchProgress {
+    final total = game.gameState.totalWaves;
+    if (total <= 0) return 0;
+    return ((game.gameState.currentWave - 1) / total).clamp(0.0, 1.0);
+  }
+
+  /// Renders the scene's authored sun/weather look live (see
+  /// `MapEditorCanvasPainter`, which this mirrors) - drawn fresh every frame
+  /// rather than baked into [_baseImage] since dynamic weather changes over
+  /// the course of a match.
+  void _paintEnvironment(ui.Canvas canvas) {
+    final environment = game.scene.environment;
+    final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+    _paintSunLight(canvas, environment, rect);
+    _paintWeather(canvas, environment, rect);
+  }
+
+  void _paintSunLight(
+    ui.Canvas canvas,
+    EnvironmentSettings environment,
+    ui.Rect rect,
+  ) {
+    final sunHeight = math.sin(environment.sunAngle * math.pi).clamp(0.0, 1.0);
+    final sunFromRight = math.cos(environment.sunAngle * math.pi) >= 0;
+    final warmTint = ui.Color.lerp(
+      const ui.Color(0xFFFF8A3D),
+      Colors.white,
+      sunHeight,
+    )!;
+
+    canvas.drawRect(
+      rect,
+      ui.Paint()
+        ..color = const ui.Color(0xFF120A24).withValues(alpha: (1 - sunHeight) * 0.4),
+    );
+
+    final from = sunFromRight ? ui.Offset(size.x, 0) : ui.Offset.zero;
+    final to = sunFromRight ? ui.Offset.zero : ui.Offset(size.x, 0);
+    canvas.drawRect(
+      rect,
+      ui.Paint()
+        ..shader = ui.Gradient.linear(from, to, [
+          warmTint.withValues(alpha: 0.12 + (1 - sunHeight) * 0.28),
+          Colors.transparent,
+        ]),
+    );
+  }
+
+  void _paintWeather(
+    ui.Canvas canvas,
+    EnvironmentSettings environment,
+    ui.Rect rect,
+  ) {
+    final weather = environment.sample(_matchProgress);
+
+    if (weather.cloudCover > 0) {
+      canvas.drawRect(
+        rect,
+        ui.Paint()
+          ..color = const ui.Color(0xFF37474F)
+              .withValues(alpha: weather.cloudCover * 0.35),
+      );
+    }
+
+    if (weather.fogDensity > 0) {
+      canvas.drawRect(
+        rect,
+        ui.Paint()
+          ..shader = ui.Gradient.linear(ui.Offset.zero, ui.Offset(0, size.y), [
+            Colors.transparent,
+            Colors.white.withValues(alpha: weather.fogDensity * 0.6),
+          ]),
+      );
+    }
+
+    if (weather.rainIntensity > 0) {
+      final rnd = math.Random(7);
+      final lean = weather.windStrength * 16;
+      final paint = ui.Paint()
+        ..color = Colors.lightBlueAccent.withValues(alpha: 0.4)
+        ..strokeWidth = 1.4;
+      for (var i = 0; i < (weather.rainIntensity * 160).round(); i++) {
+        final x = rnd.nextDouble() * size.x;
+        final y = rnd.nextDouble() * size.y;
+        canvas.drawLine(ui.Offset(x, y), ui.Offset(x + lean, y + 14), paint);
+      }
+    }
+
+    if (weather.snowIntensity > 0) {
+      final rnd = math.Random(9);
+      final paint = ui.Paint()..color = Colors.white.withValues(alpha: 0.8);
+      for (var i = 0; i < (weather.snowIntensity * 110).round(); i++) {
+        final x = rnd.nextDouble() * size.x;
+        final y = rnd.nextDouble() * size.y;
+        canvas.drawCircle(ui.Offset(x, y), 1.5, paint);
+      }
+    }
   }
 }

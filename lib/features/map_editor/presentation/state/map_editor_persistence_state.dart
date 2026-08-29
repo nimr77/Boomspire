@@ -154,6 +154,7 @@ class MapEditorPersistenceState {
         biome: draft.biome,
         waveCount: draft.waveCount,
         startingGold: draft.startingGold,
+        environment: draft.environment,
       ),
       terrainRepository: MapDraftTerrainRepository(
         draft: draft,

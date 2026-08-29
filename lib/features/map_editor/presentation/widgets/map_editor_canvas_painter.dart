@@ -141,60 +141,6 @@ class MapEditorCanvasPainter extends CustomPainter {
     }
   }
 
-  /// Scatters simple tree markers over open ground on tree-bearing biomes
-  /// (matching [Biome.hasTrees]/`TerrainPainter`'s in-game placement), so an
-  /// author can actually see where forest cover will appear - previously
-  /// this preview never rendered trees at all. Deterministically seeded per
-  /// cell (not a free-running [Random]) so trees stay put across repaints
-  /// instead of jumping around every time the preview regenerates. Canopies
-  /// lean with the sampled wind strength, giving the wind slider a visible
-  /// effect even when there's no rain to show it.
-  void _paintTrees(
-    Canvas canvas,
-    EditorTerrainPreview p,
-    BiomePalette palette,
-    double cellW,
-    double cellH,
-  ) {
-    if (!palette.hasTrees) return;
-    final windStrength = environment.sample(previewProgress).windStrength;
-    for (var row = 0; row < p.grid.rows; row++) {
-      for (var col = 0; col < p.grid.cols; col++) {
-        if (p.obstacleKinds[row][col] != null) continue;
-        final seed = row * 73856093 ^ col * 19349663;
-        if (Random(seed).nextDouble() >= 0.12) continue;
-        final center = Offset(col * cellW + cellW / 2, row * cellH + cellH / 2);
-        _paintTreeMarker(canvas, center, min(cellW, cellH), windStrength);
-      }
-    }
-  }
-
-  void _paintTreeMarker(
-    Canvas canvas,
-    Offset center,
-    double cellSize,
-    double windStrength,
-  ) {
-    final lean = windStrength * cellSize * 0.22;
-    final trunkBottom = Offset(center.dx, center.dy + cellSize * 0.28);
-    final canopyCenter = Offset(
-      center.dx + lean,
-      center.dy - cellSize * 0.05,
-    );
-    canvas.drawLine(
-      trunkBottom,
-      Offset(canopyCenter.dx, canopyCenter.dy + cellSize * 0.1),
-      Paint()
-        ..color = const Color(0xFF4a3421)
-        ..strokeWidth = cellSize * 0.06,
-    );
-    canvas.drawCircle(
-      canopyCenter,
-      cellSize * 0.22,
-      Paint()..color = const Color(0xFF1f3d22).withValues(alpha: 0.9),
-    );
-  }
-
   /// Tints/dims the scene by sun height and adds raking light from whichever
   /// side the sun sits on - low angles (sunrise/sunset) look warm and
   /// high-contrast, overhead sun looks bright and neutral.
@@ -224,6 +170,57 @@ class MapEditorCanvasPainter extends CustomPainter {
           Colors.transparent,
         ]),
     );
+  }
+
+  void _paintTreeMarker(
+    Canvas canvas,
+    Offset center,
+    double cellSize,
+    double windStrength,
+  ) {
+    final lean = windStrength * cellSize * 0.22;
+    final trunkBottom = Offset(center.dx, center.dy + cellSize * 0.28);
+    final canopyCenter = Offset(center.dx + lean, center.dy - cellSize * 0.05);
+    canvas.drawLine(
+      trunkBottom,
+      Offset(canopyCenter.dx, canopyCenter.dy + cellSize * 0.1),
+      Paint()
+        ..color = const Color(0xFF4a3421)
+        ..strokeWidth = cellSize * 0.06,
+    );
+    canvas.drawCircle(
+      canopyCenter,
+      cellSize * 0.22,
+      Paint()..color = const Color(0xFF1f3d22).withValues(alpha: 0.9),
+    );
+  }
+
+  /// Scatters simple tree markers over open ground on tree-bearing biomes
+  /// (matching [Biome.hasTrees]/`TerrainPainter`'s in-game placement), so an
+  /// author can actually see where forest cover will appear - previously
+  /// this preview never rendered trees at all. Deterministically seeded per
+  /// cell (not a free-running [Random]) so trees stay put across repaints
+  /// instead of jumping around every time the preview regenerates. Canopies
+  /// lean with the sampled wind strength, giving the wind slider a visible
+  /// effect even when there's no rain to show it.
+  void _paintTrees(
+    Canvas canvas,
+    EditorTerrainPreview p,
+    BiomePalette palette,
+    double cellW,
+    double cellH,
+  ) {
+    if (!palette.hasTrees) return;
+    final windStrength = environment.sample(previewProgress).windStrength;
+    for (var row = 0; row < p.grid.rows; row++) {
+      for (var col = 0; col < p.grid.cols; col++) {
+        if (p.obstacleKinds[row][col] != null) continue;
+        final seed = row * 73856093 ^ col * 19349663;
+        if (Random(seed).nextDouble() >= 0.12) continue;
+        final center = Offset(col * cellW + cellW / 2, row * cellH + cellH / 2);
+        _paintTreeMarker(canvas, center, min(cellW, cellH), windStrength);
+      }
+    }
   }
 
   /// Samples the weather timeline at [previewProgress] and draws cloud/fog

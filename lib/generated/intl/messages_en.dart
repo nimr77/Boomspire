@@ -254,6 +254,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "saveLabelEditorPage": MessageLookupByLibrary.simpleMessage("Save"),
     "savedMapEditorPage": m15,
     "sceneCompleted": MessageLookupByLibrary.simpleMessage("COMPLETED"),
+    "singleKeyframeHintEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Only the first keyframe applies while Dynamic Weather is off",
+    ),
     "skirmishOptionEditorPage": MessageLookupByLibrary.simpleMessage(
       "Skirmish",
     ),
@@ -324,6 +327,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "towerNameRocketSilo": MessageLookupByLibrary.simpleMessage("Rocket Silo"),
     "towerNameSam": MessageLookupByLibrary.simpleMessage("SAM Site"),
     "towerTier": m17,
+    "treesOffHintEditorPage": MessageLookupByLibrary.simpleMessage(
+      "This biome has no trees",
+    ),
+    "treesOnHintEditorPage": MessageLookupByLibrary.simpleMessage(
+      "This biome scatters trees automatically",
+    ),
     "unclaimedLabelEntityPanel": MessageLookupByLibrary.simpleMessage(
       "Unclaimed",
     ),

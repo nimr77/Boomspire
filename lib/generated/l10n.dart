@@ -1125,6 +1125,26 @@ class S {
     );
   }
 
+  /// `This biome scatters trees automatically`
+  String get treesOnHintEditorPage {
+    return Intl.message(
+      'This biome scatters trees automatically',
+      name: 'treesOnHintEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This biome has no trees`
+  String get treesOffHintEditorPage {
+    return Intl.message(
+      'This biome has no trees',
+      name: 'treesOffHintEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Mode`
   String get modeLabelEditorPage {
     return Intl.message(
@@ -1340,6 +1360,16 @@ class S {
     return Intl.message(
       'Weather timeline',
       name: 'weatherTimelineLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only the first keyframe applies while Dynamic Weather is off`
+  String get singleKeyframeHintEditorPage {
+    return Intl.message(
+      'Only the first keyframe applies while Dynamic Weather is off',
+      name: 'singleKeyframeHintEditorPage',
       desc: '',
       args: [],
     );
