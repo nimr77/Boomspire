@@ -122,15 +122,10 @@ class TerrainComponent extends PositionComponent
   }
 
   void _paintBase(ui.Canvas canvas) {
-    // Trees are excluded from the baked image and repainted live every
-    // frame instead (see [_paintLiveTrees]) so their canopies can sway with
-    // wind rather than standing frozen in a static cached image.
-    TerrainPainter.paint(
-      canvas,
-      ui.Size(size.x, size.y),
-      terrainMap,
-      includeTrees: false,
-    );
+    // Trees are never baked by [TerrainPainter.paint] - they're painted
+    // live every frame instead (see [_paintLiveTrees]) so their canopies
+    // can sway with wind rather than standing frozen in a static image.
+    TerrainPainter.paint(canvas, ui.Size(size.x, size.y), terrainMap);
   }
 
   /// Renders the scene's authored sun/weather look live (see

@@ -86,7 +86,7 @@ class MapEditorCanvasPainter extends CustomPainter {
           gridPaint,
         );
       }
-      _paintTrees(canvas, p, palette, cellW, cellH);
+      _paintTrees(canvas, p, cellW, cellH);
     }
 
     _paintSunLight(canvas, rect, size);
@@ -314,47 +314,20 @@ class MapEditorCanvasPainter extends CustomPainter {
     }
   }
 
-  /// Scatters simple tree markers over open ground on tree-bearing biomes
-  /// (matching [Biome.hasTrees]/`TerrainPainter`'s in-game placement), so an
-  /// author can actually see where forest cover will appear - previously
-  /// this preview never rendered trees at all. Deterministically seeded per
-  /// cell (not a free-running [Random]) so trees stay put across repaints
-  /// instead of jumping around every time the preview regenerates. Canopies
-  /// lean with the sampled wind strength, giving the wind slider a visible
-  /// effect even when there's no rain to show it. Hand-placed [treeCells]
-  /// are drawn on top regardless of biome, so an author can add trees to
-  /// any map even when its biome has none automatically. Tree style is keyed
-  /// off the map's own biome (matching `TerrainPainter`, which does the
-  /// same - trees don't carry a per-cell brush-type override).
+  /// Draws every hand-placed [treeCells] marker - a biome never grows
+  /// trees an author didn't place with the Tree brush; this preview only
+  /// ever shows what the map's own data actually contains, so it matches
+  /// `TerrainPainter`/real gameplay exactly. Tree style is keyed off the
+  /// map's own biome (matching `TerrainPainter`, which does the same -
+  /// trees don't carry a per-cell brush-type override).
   void _paintTrees(
     Canvas canvas,
     EditorTerrainPreview p,
-    BiomePalette palette,
     double cellW,
     double cellH,
   ) {
     final windStrength = environment.sample(previewProgress).windStrength;
     final biome = p.biome;
-    if (palette.hasTrees) {
-      for (var row = 0; row < p.grid.rows; row++) {
-        for (var col = 0; col < p.grid.cols; col++) {
-          if (p.obstacleKinds[row][col] != null) continue;
-          final seed = row * 73856093 ^ col * 19349663;
-          if (Random(seed).nextDouble() >= 0.12) continue;
-          final center = Offset(
-            col * cellW + cellW / 2,
-            row * cellH + cellH / 2,
-          );
-          _paintTreeMarker(
-            canvas,
-            center,
-            min(cellW, cellH),
-            windStrength,
-            biome,
-          );
-        }
-      }
-    }
 
     for (final tree in treeCells) {
       if (tree.row < 0 || tree.row >= p.grid.rows) continue;

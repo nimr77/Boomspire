@@ -25,6 +25,11 @@ class LevelSelectBiomeThumbPainter extends CustomPainter {
       ui.Size(terrainMap.arenaWidth, terrainMap.arenaHeight),
       terrainMap,
     );
+    TerrainPainter.paintTrees(
+      canvas,
+      ui.Size(terrainMap.arenaWidth, terrainMap.arenaHeight),
+      terrainMap,
+    );
     final riverPath = TerrainPainter.riverPath(
       terrainMap,
       terrainMap.arenaHeight,

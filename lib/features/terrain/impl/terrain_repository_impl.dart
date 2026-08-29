@@ -83,6 +83,9 @@ class TerrainRepositoryImpl implements TerrainRepository {
       ...spawnCells,
       ...nodeCells,
     ], baseCell);
+    final treeCells = palette.hasTrees
+        ? _scatterTrees(grid, obstacleKinds, rnd, protectedCells)
+        : const <Point<int>>[];
 
     return TerrainMap(
       arenaWidth: arenaWidth,
@@ -106,6 +109,7 @@ class TerrainRepositoryImpl implements TerrainRepository {
       resourceNodePoints: nodeCells
           .map((c) => PathPoint(grid.cellCenter(c).x, grid.cellCenter(c).y))
           .toList(),
+      treeCells: treeCells,
     );
   }
 
@@ -276,5 +280,28 @@ class TerrainRepositoryImpl implements TerrainRepository {
       if (dx * dx + dy * dy <= radius * radius) return true;
     }
     return false;
+  }
+
+  /// A biome's forest cover is now baked into [TerrainMap.treeCells] once
+  /// at generation time (not a paint-time random scatter recomputed every
+  /// frame) - only [Biome.hasTrees]-flavored procedural scenes get this;
+  /// author-placed [MapDraft] maps rely solely on their own Tree brush
+  /// cells and never get this automatic scatter.
+  List<Point<int>> _scatterTrees(
+    Grid grid,
+    List<List<ObstacleKind?>> kinds,
+    Random rnd,
+    List<Point<int>> protectedCells,
+  ) {
+    const protectedRadius = 2;
+    final cells = <Point<int>>[];
+    for (var row = 0; row < grid.rows; row++) {
+      for (var col = 0; col < grid.cols; col++) {
+        if (kinds[row][col] != null) continue;
+        if (_withinRadius(col, row, protectedCells, protectedRadius)) continue;
+        if (rnd.nextDouble() < 0.05) cells.add(Point(col, row));
+      }
+    }
+    return cells;
   }
 }

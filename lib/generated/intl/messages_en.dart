@@ -336,7 +336,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "This biome has no automatic trees - use the Tree tool to add your own",
     ),
     "treesOnHintEditorPage": MessageLookupByLibrary.simpleMessage(
-      "This biome scatters trees automatically - use the Tree tool to add more anywhere",
+      "This biome suits forest cover - use the Tree tool to place trees anywhere",
     ),
     "unclaimedLabelEntityPanel": MessageLookupByLibrary.simpleMessage(
       "Unclaimed",

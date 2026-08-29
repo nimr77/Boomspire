@@ -1155,10 +1155,10 @@ class S {
     );
   }
 
-  /// `This biome scatters trees automatically - use the Tree tool to add more anywhere`
+  /// `This biome suits forest cover - use the Tree tool to place trees anywhere`
   String get treesOnHintEditorPage {
     return Intl.message(
-      'This biome scatters trees automatically - use the Tree tool to add more anywhere',
+      'This biome suits forest cover - use the Tree tool to place trees anywhere',
       name: 'treesOnHintEditorPage',
       desc: '',
       args: [],

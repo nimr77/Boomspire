@@ -305,7 +305,7 @@
   "@mapLabelEditorPage": {},
   "biomeLabelEditorPage": "Biome",
   "@biomeLabelEditorPage": {},
-  "treesOnHintEditorPage": "This biome scatters trees automatically - use the Tree tool to add more anywhere",
+  "treesOnHintEditorPage": "This biome suits forest cover - use the Tree tool to place trees anywhere",
   "@treesOnHintEditorPage": {},
   "treesOffHintEditorPage": "This biome has no automatic trees - use the Tree tool to add your own",
   "@treesOffHintEditorPage": {},
