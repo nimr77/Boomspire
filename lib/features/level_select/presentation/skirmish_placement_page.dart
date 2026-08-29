@@ -72,7 +72,7 @@ class _SkirmishPlacementPageState extends State<SkirmishPlacementPage> {
         final selectedSlot = _placementState.selectedSlot.value;
         final launching = _placementState.launching.value;
         return Scaffold(
-          backgroundColor: AppThemeColors.background,
+          backgroundColor: Colors.transparent,
           body: SafeArea(
             child: Stack(
               children: [

@@ -18,7 +18,12 @@ void main() {
     getIt.registerLazySingleton<AccountRepository>(_FakeAccountRepository.new);
 
     await tester.pumpWidget(const BoomspireApp());
-    await tester.pumpAndSettle();
+    // Not pumpAndSettle: the main menu's AppShellWidget mesh-gradient
+    // background animates perpetually, so "settle" (no more frames
+    // scheduled) never actually happens - a few bounded pumps are enough
+    // for the initial route to build.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.byType(Scaffold), findsOneWidget);
   });

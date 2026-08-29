@@ -28,7 +28,7 @@ class _MapDraftsListPageState extends State<MapDraftsListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppThemeColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: AppThemeColors.gradientPanelEnd,
         title: const Text('Map Editor'),

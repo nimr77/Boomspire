@@ -37,6 +37,7 @@ import 'package:boomspire/features/towers/presentation/rocket_silo_tower_compone
 import 'package:boomspire/features/towers/presentation/training_center_component.dart';
 import 'package:boomspire/features/towers/presentation/war_factory_component.dart';
 import 'package:boomspire/features/waves/impl/wave_repository_impl.dart';
+import 'package:boomspire/features/waves/presentation/wave_director_component.dart';
 import 'package:boomspire/generated/l10n.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/widgets.dart' show Locale;
@@ -262,6 +263,17 @@ void main() {
       game.gameState.addGold(3000);
       final grid = game.terrainMap.grid;
 
+      // Strip the auto-added wave director: this test runs long enough
+      // (two 8s assertion loops) to cross its pre-wave timer, and a real
+      // spawned invader hit by the silo could splash-damage closeEnemy
+      // sitting in the dead zone - a source of flakiness unrelated to the
+      // minRange logic under test.
+      for (final director in game.world.children
+          .whereType<WaveDirectorComponent>()
+          .toList()) {
+        director.removeFromParent();
+      }
+
       // Rocket Silo requires a Power Plant, Tech Lab, a War Factory or
       // Training Center, and a Command Post to be built first (see
       // `boomspire_game.dart`'s `buildBlockReason`).
@@ -278,14 +290,7 @@ void main() {
       }
 
       final cell = _findOpenCell(game);
-      game.selectTowerType(TowerType.rocketSilo);
-      game.handleArenaTap(grid.cellCenter(cell));
-      game.handleArenaTap(grid.cellCenter(cell));
-      final silo = game.world.activeTowers
-          .whereType<RocketSiloTowerComponent>()
-          .first;
-      await Future<void>.delayed(Duration.zero);
-      game.update(0);
+      final siloPosition = grid.cellCenter(cell);
 
       final blueprint = TowerRepositoryImpl().blueprintFor(
         TowerType.rocketSilo,
@@ -303,7 +308,16 @@ void main() {
         size: 34,
       );
 
-      // Enemy well inside the dead zone: should never take damage.
+      // Enemy well inside the dead zone: should never take damage. Spawned
+      // and positioned *before* the silo is built (see below) - otherwise
+      // a `rushBase` unit's real (random, possibly in-range) initial spawn
+      // point is briefly live the moment it mounts, and an already-built
+      // silo could acquire + launch a homing rocket at it right then; the
+      // rocket keeps flying to wherever the target currently is even
+      // after we override its position into the dead zone next, landing a
+      // hit the minRange check was supposed to prevent (regression: this
+      // is what made the test flaky under the full suite but not alone -
+      // it depended on which spawn point `Random` happened to pick).
       // Position is set only after mounting, since
       // MobileUnitComponent.onLoad overwrites `position` to a random spawn
       // point (for `UnitObjective.rushBase` units).
@@ -315,7 +329,17 @@ void main() {
       game.world.spawnUnit(closeEnemy);
       await Future<void>.delayed(Duration.zero);
       game.update(0);
-      closeEnemy.position = silo.position + Vector2(blueprint.minRange / 2, 0);
+      closeEnemy.position = siloPosition + Vector2(blueprint.minRange / 2, 0);
+
+      game.selectTowerType(TowerType.rocketSilo);
+      game.handleArenaTap(siloPosition);
+      game.handleArenaTap(siloPosition);
+      final silo = game.world.activeTowers
+          .whereType<RocketSiloTowerComponent>()
+          .first;
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
+
       for (var i = 0; i < 40; i++) {
         await Future<void>.delayed(Duration.zero);
         game.update(0.2);

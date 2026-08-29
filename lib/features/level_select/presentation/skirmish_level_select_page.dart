@@ -39,7 +39,7 @@ class _SkirmishLevelSelectPageState extends State<SkirmishLevelSelectPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppThemeColors.background,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           SafeArea(

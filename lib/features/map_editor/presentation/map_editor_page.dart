@@ -76,7 +76,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
         final currentZoom = _draftState.zoom.value;
         final currentPreviewProgress = _draftState.previewProgress.value;
         return Scaffold(
-          backgroundColor: AppThemeColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: AppThemeColors.gradientPanelEnd,
             title: TextField(

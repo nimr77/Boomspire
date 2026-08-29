@@ -21,7 +21,7 @@ class SinglePlayerModeSelectPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppThemeColors.background,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           SafeArea(

@@ -69,7 +69,7 @@ class _GamePageState extends State<GamePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppThemeColors.background,
+      backgroundColor: Colors.transparent,
       // The command bar is a normal sibling widget (not a Flame overlay) so
       // the GameWidget above it is only ever given the remaining screen
       // space - the arena is letterboxed inside that shrunk area, so
