@@ -31,6 +31,15 @@ class TerrainComponent extends PositionComponent
         priority: -10,
       );
 
+  /// This scene's match-progress fraction (0..1), used to sample
+  /// [EnvironmentSettings.sample] - the same wave-progress fraction the HUD
+  /// shows, so a dynamic weather timeline changes pace with the campaign.
+  double get _matchProgress {
+    final total = game.gameState.totalWaves;
+    if (total <= 0) return 0;
+    return ((game.gameState.currentWave - 1) / total).clamp(0.0, 1.0);
+  }
+
   @override
   Future<void> onLoad() async {
     _baseImage = await renderToImage(
@@ -110,15 +119,6 @@ class TerrainComponent extends PositionComponent
     TerrainPainter.paint(canvas, ui.Size(size.x, size.y), terrainMap);
   }
 
-  /// This scene's match-progress fraction (0..1), used to sample
-  /// [EnvironmentSettings.sample] - the same wave-progress fraction the HUD
-  /// shows, so a dynamic weather timeline changes pace with the campaign.
-  double get _matchProgress {
-    final total = game.gameState.totalWaves;
-    if (total <= 0) return 0;
-    return ((game.gameState.currentWave - 1) / total).clamp(0.0, 1.0);
-  }
-
   /// Renders the scene's authored sun/weather look live (see
   /// `MapEditorCanvasPainter`, which this mirrors) - drawn fresh every frame
   /// rather than baked into [_baseImage] since dynamic weather changes over
@@ -146,7 +146,8 @@ class TerrainComponent extends PositionComponent
     canvas.drawRect(
       rect,
       ui.Paint()
-        ..color = const ui.Color(0xFF120A24).withValues(alpha: (1 - sunHeight) * 0.4),
+        ..color = const ui.Color(0xFF120A24)
+            .withValues(alpha: (1 - sunHeight) * 0.4),
     );
 
     final from = sunFromRight ? ui.Offset(size.x, 0) : ui.Offset.zero;

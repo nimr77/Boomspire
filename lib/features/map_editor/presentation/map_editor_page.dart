@@ -640,7 +640,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             ),
                             Switch(
                               value: currentDraft.environment.dynamicWeather,
-                              activeColor: AppThemeColors.accentCyan,
+                              activeThumbColor: AppThemeColors.accentCyan,
                               onChanged: (value) =>
                                   _draftState.setDynamicWeather(value),
                             ),

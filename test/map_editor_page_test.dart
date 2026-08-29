@@ -92,9 +92,7 @@ void main() {
     expect(find.text(S.current.treesOffHintEditorPage), findsOneWidget);
   });
 
-  testWidgets('map size and starting gold fields are present', (
-    tester,
-  ) async {
+  testWidgets('map size and starting gold fields are present', (tester) async {
     await pumpEditor(tester);
 
     expect(find.text(S.current.widthLabelEditorPage), findsOneWidget);
@@ -109,10 +107,7 @@ void main() {
 
     expect(find.text(S.current.wavesLabelEditorPage), findsOneWidget);
     expect(find.text(S.current.waveCountLabelEditorPage), findsOneWidget);
-    expect(
-      find.widgetWithIcon(OutlinedButton, Icons.shuffle),
-      findsOneWidget,
-    );
+    expect(find.widgetWithIcon(OutlinedButton, Icons.shuffle), findsOneWidget);
   });
 
   testWidgets(
@@ -125,7 +120,10 @@ void main() {
         find.text(S.current.dynamicWeatherLabelEditorPage),
         findsOneWidget,
       );
-      expect(find.text(S.current.weatherTimelineLabelEditorPage), findsOneWidget);
+      expect(
+        find.text(S.current.weatherTimelineLabelEditorPage),
+        findsOneWidget,
+      );
       expect(find.text(S.current.addKeyframeLabelEditorPage), findsOneWidget);
 
       // Sun angle + preview-progress sliders, plus one Wind/Rain/Snow/Fog/
