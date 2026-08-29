@@ -86,6 +86,43 @@ class AiSkirmishControllerComponent extends Component
 
   static const _attackEvaluationDelay = 10.0;
 
+  /// [_playerDefenseStrength] above which a base-bound squad is routed
+  /// through [_flankWaypoint] instead of beelining straight down whatever
+  /// approach is most heavily defended.
+  static const _flankDefenseThreshold = 0.5;
+
+  /// [_playerDefenseStrength] at or below which [_resolveAttackTarget]
+  /// ignores the directive's `weakestEnemyTower` preference and goes
+  /// straight for the base - grinding down towers is only ever a means to
+  /// that end, never the actual goal, so a lightly-defended player just
+  /// gets rushed outright.
+  static const _weakDefenseThreshold = 0.4;
+
+  /// How far to the side of the direct base-to-base line [_flankWaypoint]
+  /// offsets an approach - far enough to actually route around a
+  /// tower-lined lane instead of clipping its edge.
+  static const _flankOffsetDistance = 260.0;
+
+  /// How far short of the target base [_flankWaypoint] sits, so the squad
+  /// commits to its attack run from the flank instead of arriving already
+  /// dead-center in front of it.
+  static const _flankApproachDistance = 160.0;
+
+  /// How close a flanking unit must get to [_flankWaypoint] before it's
+  /// released to actually attack.
+  static const _flankArrivalRadius = 80.0;
+
+  /// Safety valve: a flanking squad that never quite reaches its waypoint
+  /// (blocked terrain, a unit picked off along the way) is released to
+  /// attack directly anyway after this many seconds, rather than idling
+  /// forever.
+  static const _flankTimeoutSeconds = 15.0;
+
+  /// Baseline seconds between solo Stealth Bomber ("B2") sneak runs at the
+  /// enemy base - see [_trySneakStrike]. [_CommanderPersona.airborne]
+  /// halves this (see [_sneakStrikeInterval]).
+  static const _sneakStrikeInterval = 25.0;
+
   /// This match's persona (see [_CommanderPersona]) - rolled once when the
   /// controller is created and held for the whole skirmish, same as a
   /// human wouldn't change their whole strategic identity mid-match.
@@ -94,6 +131,7 @@ class AiSkirmishControllerComponent extends Component
   double _directiveTimer = _directiveInterval * 0.2;
   double _decisionTimer = _decisionInterval * 0.5;
   bool _fetchingDirective = false;
+  double _sneakStrikeCooldown = 0;
 
   SkirmishDirective _directive = const SkirmishDirective(
     aggression: 0.35,
@@ -126,6 +164,17 @@ class AiSkirmishControllerComponent extends Component
   List<MobileUnitComponent> _pendingAttackUnits = const [];
   double _pendingAttackTimer = 0;
   final Random _rnd = Random();
+
+  /// A squad currently walking to [_flankWaypointPoint] (see
+  /// [_dispatchAttackSquad]/[_flankWaypoint]) before it's released to
+  /// actually attack [_flankTarget] - the AI's answer to "how to flank
+  /// me": routed around whichever side of the base is more heavily
+  /// defended instead of beelining down the worst-covered lane. Empty
+  /// whenever no squad is currently mid-flank.
+  final List<MobileUnitComponent> _flankingUnits = [];
+  Attackable? _flankTarget;
+  Vector2? _flankWaypointPoint;
+  double _flankTimeout = 0;
 
   /// The squad size actually required before [update] dispatches the
   /// staged attackers - the directive's requested size, or [_requiredSquadSize]
@@ -194,6 +243,8 @@ class AiSkirmishControllerComponent extends Component
       // to be produced later; this is what let the AI's first attack also
       // be its last.
       _evaluateLastAttack(_decisionInterval);
+      _advanceFlank();
+      _trySneakStrike(aiTeam);
       if (_stagedAttackers.isNotEmpty &&
           _stagedAttackers.length >= _effectiveSquadSize) {
         _dispatchAttackSquad(aiTeam);
@@ -342,18 +393,40 @@ class AiSkirmishControllerComponent extends Component
   /// what quantity and where". If no live target can be resolved right now
   /// the staged units are simply left in place (still defending themselves,
   /// per [MobileUnitComponent.issueMoveOrder]) and dispatch is retried
-  /// automatically on the next decision tick (see [update]).
+  /// automatically on the next decision tick (see [update]). When the
+  /// target is the enemy base itself and the player's defenses are strong
+  /// enough to be worth avoiding (see [_playerDefenseStrength]), the squad
+  /// is routed through [_flankWaypoint] first instead of beelining straight
+  /// down the most heavily-defended lane - see [_advanceFlank] for when it
+  /// actually gets released to attack.
   void _dispatchAttackSquad(Team aiTeam) {
     final target = _resolveAttackTarget(aiTeam);
     if (target == null) return;
+    final isBaseRush = target == game.enemyHomeBaseFor(aiTeam);
+    final waypoint = isBaseRush && _playerDefenseStrength(aiTeam) > _flankDefenseThreshold
+        ? _flankWaypoint(aiTeam, target)
+        : null;
+
     final dispatched = <MobileUnitComponent>[];
     for (final unit in _stagedAttackers) {
       if (unit.destroyed) continue;
-      unit.issueAttackOrder(target);
+      if (waypoint != null) {
+        unit.issueMoveOrder(waypoint.clone());
+      } else {
+        unit.issueAttackOrder(target);
+      }
       dispatched.add(unit);
     }
     _stagedAttackers.clear();
     if (dispatched.isEmpty) return;
+    if (waypoint != null) {
+      _flankingUnits
+        ..clear()
+        ..addAll(dispatched);
+      _flankTarget = target;
+      _flankWaypointPoint = waypoint;
+      _flankTimeout = _flankTimeoutSeconds;
+    }
     _pendingAttackTarget = target;
     _pendingAttackTargetHealthRatio = target.healthRatio;
     _pendingAttackUnits = dispatched;
@@ -504,13 +577,152 @@ class AiSkirmishControllerComponent extends Component
     }
   }
 
+  /// A 0 (no real defense) to roughly 1+ (heavily fortified) read of how
+  /// strong the player's standing combat towers are right now - remaining
+  /// -HP-weighted, not a flat count, so a base ringed with half-dead
+  /// towers doesn't read as scary as a fresh one. The AI's answer to
+  /// "know if the player has strong towers": this is what decides whether
+  /// an attack should punch straight through to the base, grind the
+  /// towers down first, flank around them (see [_flankWaypoint]), or send
+  /// in a stealth sneak run instead (see [_trySneakStrike]).
+  double _playerDefenseStrength(Team aiTeam) {
+    final towers = game.world.activeTowers.where(
+      (t) =>
+          t.owner.id != aiTeam.id && !t.destroyed && t.blueprint.damage > 0,
+    );
+    if (towers.isEmpty) return 0;
+    final hpSum = towers.fold<double>(0, (sum, t) => sum + t.healthRatio);
+    // Six full-health combat towers reads as "very strong" (>= 1.0); fewer
+    // or damaged towers scale down from there.
+    return hpSum / 6;
+  }
+
+  /// A point off to whichever side of the direct AI-base-to-target line
+  /// has fewer of the player's standing combat towers, a short distance
+  /// short of the target itself - an approach angle that avoids the most
+  /// heavily-defended lane instead of always beelining straight down it.
+  /// Null when there's no base pair to draw a line between, or when the
+  /// computed point falls on blocked terrain.
+  Vector2? _flankWaypoint(Team aiTeam, Attackable target) {
+    final base = game.world.aiHomeBase;
+    if (base == null) return null;
+    final toTarget = target.position - base.position;
+    if (toTarget.length2 == 0) return null;
+    final forward = toTarget.normalized();
+    final perpendicular = Vector2(-forward.y, forward.x);
+
+    var leftCount = 0;
+    var rightCount = 0;
+    for (final tower in game.world.activeTowers) {
+      if (tower.owner.id == aiTeam.id || tower.destroyed) continue;
+      if (tower.blueprint.damage <= 0) continue;
+      final side = (tower.position - target.position).dot(perpendicular);
+      if (side >= 0) {
+        rightCount++;
+      } else {
+        leftCount++;
+      }
+    }
+    final side = leftCount <= rightCount ? -1.0 : 1.0;
+    final flankPoint =
+        target.position +
+        perpendicular * (side * _flankOffsetDistance) -
+        forward * _flankApproachDistance;
+
+    final grid = game.terrainMap.grid;
+    final cell = grid.worldToCell(flankPoint);
+    if (!grid.inBounds(cell.x, cell.y) || grid.isBlocked(cell.x, cell.y)) {
+      return null;
+    }
+    return flankPoint;
+  }
+
+  /// Releases any squad currently mid-flank (see [_flankingUnits]) to
+  /// actually attack [_flankTarget] once it's arrived near
+  /// [_flankWaypointPoint], or unconditionally after [_flankTimeoutSeconds]
+  /// as a safety valve against a waypoint that never gets reached.
+  void _advanceFlank() {
+    if (_flankingUnits.isEmpty) return;
+    _flankingUnits.removeWhere((u) => u.destroyed);
+    if (_flankingUnits.isEmpty) {
+      _flankTarget = null;
+      _flankWaypointPoint = null;
+      return;
+    }
+    _flankTimeout -= _decisionInterval;
+    final waypoint = _flankWaypointPoint;
+    final arrived =
+        waypoint == null ||
+        _flankingUnits.every(
+          (u) => u.position.distanceTo(waypoint) <= _flankArrivalRadius,
+        );
+    if (!arrived && _flankTimeout > 0) return;
+
+    final target = _flankTarget;
+    if (target != null && !target.destroyed) {
+      for (final unit in _flankingUnits) {
+        unit.issueAttackOrder(target);
+      }
+    }
+    _flankingUnits.clear();
+    _flankTarget = null;
+    _flankWaypointPoint = null;
+  }
+
+  /// Rolls out a solo Stealth Bomber ("B2") straight at the enemy base
+  /// whenever the player's defenses are strong enough to be worth
+  /// bypassing (see [_playerDefenseStrength]) - the AI's answer to "how to
+  /// sneak me"/"how to use B2": [MobileUnitBlueprint.isStealth] already
+  /// makes it untargetable by towers/units until they're within
+  /// [GameConfig.stealthDetectionRangeCells] of it, so a lone bomber
+  /// routed straight at the base can often slip past a defended perimeter
+  /// that would shred a normal ground squad. Gated by its own cooldown
+  /// (persona-dependent - see [_sneakStrikeInterval]) so it's an
+  /// occasional special play, not the AI's whole strategy.
+  void _trySneakStrike(Team aiTeam) {
+    _sneakStrikeCooldown = max(0, _sneakStrikeCooldown - _decisionInterval);
+    if (_sneakStrikeCooldown > 0) return;
+    if (!game.unitRepository.kindsFor(aiTeam).contains(UnitKind.stealthBomber)) {
+      return;
+    }
+    if (_playerDefenseStrength(aiTeam) < _flankDefenseThreshold) return;
+    final target = game.enemyHomeBaseFor(aiTeam);
+    if (target == null) return;
+
+    for (final tower in game.world.activeTowers) {
+      if (tower.owner.id != aiTeam.id || tower is! WarFactoryComponent) {
+        continue;
+      }
+      if (!tower.canProduce) continue;
+      final blueprint = game.unitRepository.blueprintFor(
+        aiTeam,
+        UnitKind.stealthBomber,
+      );
+      if (blueprint.cost > game.goldFor(aiTeam)) continue;
+      if (!game.canProduceUnit(UnitKind.stealthBomber, owner: aiTeam)) {
+        continue;
+      }
+      if (!tower.produceUnit(UnitKind.stealthBomber)) continue;
+      game.world.activeUnits.last.issueAttackOrder(target);
+      _sneakStrikeCooldown = _persona == _CommanderPersona.airborne
+          ? _sneakStrikeInterval * 0.5
+          : _sneakStrikeInterval;
+      return;
+    }
+  }
+
   /// Where the current directive wants a completed attack squad sent - the
   /// player's weakest (lowest health-fraction) tower for [AttackTargetKind
   /// .weakestEnemyTower], falling back to the player's base whenever there
   /// are no player towers to focus on, or for [AttackTargetKind.enemyBase]
-  /// outright.
+  /// outright. Once the player's defenses have fallen below
+  /// [_weakDefenseThreshold] the tower-grinding preference is ignored
+  /// outright and the squad is sent straight at the base instead - the
+  /// AI's actual goal was always to reach it, towers were only ever an
+  /// obstacle on the way, never the point.
   Attackable? _resolveAttackTarget(Team aiTeam) {
-    if (_directive.attackTarget == AttackTargetKind.weakestEnemyTower) {
+    if (_directive.attackTarget == AttackTargetKind.weakestEnemyTower &&
+        _playerDefenseStrength(aiTeam) > _weakDefenseThreshold) {
       final playerTowers = game.world.activeTowers
           .where((t) => t.owner.id == game.playerTeam.id && !t.destroyed)
           .toList();
@@ -707,16 +919,28 @@ class AiSkirmishControllerComponent extends Component
   /// Sends an owned ground vehicle to go claim a resource node the AI
   /// doesn't already own - the same `ResourceNodeComponent` economy feature
   /// the player can use, so the AI's income isn't limited to its base
-  /// buildings alone. Skips a node it's already sent a capturer toward so
-  /// it doesn't spam its whole War Factory queue at one node, and never
-  /// steals a vehicle destined for combat (it only ever produces an extra
-  /// one for this purpose, through the same gold-gated
+  /// buildings alone. Nodes closer to the player's own base are tried
+  /// first - the AI's answer to "control areas around me": contesting the
+  /// player's own doorstep is worth more than claiming a node deep in the
+  /// AI's own territory that was never seriously contested anyway. Skips
+  /// a node it's already sent a capturer toward so it doesn't spam its
+  /// whole War Factory queue at one node, and never steals a vehicle
+  /// destined for combat (it only ever produces an extra one for this
+  /// purpose, through the same gold-gated
   /// [WarFactoryComponent.produceUnit] the player's build menu uses).
   void _tryCaptureNode(Team aiTeam) {
-    final nodes = game.world.activeResourceNodes.where(
-      (n) => n.owner?.id != aiTeam.id,
-    );
+    final nodes = game.world.activeResourceNodes
+        .where((n) => n.owner?.id != aiTeam.id)
+        .toList();
     if (nodes.isEmpty) return;
+    final playerBase = game.world.playerHomeBase;
+    if (playerBase != null) {
+      nodes.sort(
+        (a, b) => a.position
+            .distanceTo(playerBase.position)
+            .compareTo(b.position.distanceTo(playerBase.position)),
+      );
+    }
 
     final capturersEnRoute = game.world.activeUnits.where(
       (u) =>
