@@ -155,39 +155,61 @@ class TerrainComponent extends PositionComponent
   /// Rain streaks fall straight down, looping back to the top once they
   /// pass the bottom edge - [_weatherPhase] (elapsed seconds) drives the
   /// fall instead of every frame redrawing the same frozen positions.
-  /// [WeatherKeyframe.windStrength] still leans each streak's angle.
+  /// [WeatherKeyframe.windStrength] still leans each streak's angle. Each
+  /// streak gets its own speed/length/width/alpha so the rain reads as a
+  /// mix of near/far drops instead of one uniform pattern, and a slight
+  /// blur softens the streaks like a wet-glass look.
   void _paintRain(ui.Canvas canvas, WeatherKeyframe weather) {
     final rnd = math.Random(7);
-    final lean = weather.windStrength * 16;
+    final lean = weather.windStrength * 10;
     const fallSpeed = 420.0;
     final paint = ui.Paint()
-      ..color = Colors.lightBlueAccent.withValues(alpha: 0.4)
-      ..strokeWidth = 1.4;
+      ..strokeCap = ui.StrokeCap.round
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 0.9);
     for (var i = 0; i < (weather.rainIntensity * 160).round(); i++) {
       final x = rnd.nextDouble() * size.x;
       final baseY = rnd.nextDouble() * size.y;
-      final y = (baseY + _weatherPhase * fallSpeed) % size.y;
-      canvas.drawLine(ui.Offset(x, y), ui.Offset(x + lean, y + 14), paint);
+      final speedMul = 0.7 + rnd.nextDouble() * 0.5;
+      final length = 5 + rnd.nextDouble() * 4;
+      final y = (baseY + _weatherPhase * fallSpeed * speedMul) % size.y;
+      paint
+        ..color = Colors.lightBlueAccent.withValues(
+          alpha: 0.2 + rnd.nextDouble() * 0.22,
+        )
+        ..strokeWidth = 0.7 + rnd.nextDouble() * 0.5;
+      canvas.drawLine(
+        ui.Offset(x, y),
+        ui.Offset(x + lean * speedMul, y + length),
+        paint,
+      );
     }
   }
 
   /// Snow drifts down slowly with a gentle side-to-side sway (scaled by
   /// [WeatherKeyframe.windStrength]) instead of sitting frozen in place -
-  /// same looping-fall approach as [_paintRain], just much slower.
+  /// same looping-fall approach as [_paintRain], just much slower. Each
+  /// flake gets its own size/speed/sway/alpha so the flurry doesn't look
+  /// like one repeating stamp.
   void _paintSnow(ui.Canvas canvas, WeatherKeyframe weather) {
     final rnd = math.Random(9);
     const fallSpeed = 60.0;
-    final paint = ui.Paint()..color = Colors.white.withValues(alpha: 0.8);
     for (var i = 0; i < (weather.snowIntensity * 110).round(); i++) {
       final baseX = rnd.nextDouble() * size.x;
       final baseY = rnd.nextDouble() * size.y;
       final driftPhase = rnd.nextDouble() * math.pi * 2;
-      final y = (baseY + _weatherPhase * fallSpeed) % size.y;
+      final speedMul = 0.6 + rnd.nextDouble() * 0.7;
+      final radius = 1.0 + rnd.nextDouble() * 1.4;
+      final alpha = 0.45 + rnd.nextDouble() * 0.4;
+      final y = (baseY + _weatherPhase * fallSpeed * speedMul) % size.y;
       final sway =
-          math.sin(_weatherPhase * 1.4 + driftPhase) *
-          (6 + weather.windStrength * 14);
+          math.sin(_weatherPhase * (1 + speedMul * 0.4) + driftPhase) *
+          (5 + rnd.nextDouble() * 10 + weather.windStrength * 14);
       final x = (baseX + sway) % size.x;
-      canvas.drawCircle(ui.Offset(x, y), 1.5, paint);
+      canvas.drawCircle(
+        ui.Offset(x, y),
+        radius,
+        ui.Paint()..color = Colors.white.withValues(alpha: alpha),
+      );
     }
   }
 

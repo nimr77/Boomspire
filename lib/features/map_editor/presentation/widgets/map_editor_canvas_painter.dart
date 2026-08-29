@@ -370,24 +370,35 @@ class MapEditorCanvasPainter extends CustomPainter {
 
     if (weather.rainIntensity > 0) {
       final rnd = Random(7);
-      final lean = weather.windStrength * 16;
+      final lean = weather.windStrength * 10;
       final paint = Paint()
-        ..color = Colors.lightBlueAccent.withValues(alpha: 0.4)
-        ..strokeWidth = 1.4;
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.9);
       for (var i = 0; i < (weather.rainIntensity * 160).round(); i++) {
         final x = rnd.nextDouble() * size.width;
         final y = rnd.nextDouble() * size.height;
-        canvas.drawLine(Offset(x, y), Offset(x + lean, y + 14), paint);
+        final length = 5 + rnd.nextDouble() * 4;
+        paint
+          ..color = Colors.lightBlueAccent.withValues(
+            alpha: 0.2 + rnd.nextDouble() * 0.22,
+          )
+          ..strokeWidth = 0.7 + rnd.nextDouble() * 0.5;
+        canvas.drawLine(Offset(x, y), Offset(x + lean, y + length), paint);
       }
     }
 
     if (weather.snowIntensity > 0) {
       final rnd = Random(9);
-      final paint = Paint()..color = Colors.white.withValues(alpha: 0.8);
       for (var i = 0; i < (weather.snowIntensity * 110).round(); i++) {
         final x = rnd.nextDouble() * size.width;
         final y = rnd.nextDouble() * size.height;
-        canvas.drawCircle(Offset(x, y), 1.5, paint);
+        final radius = 1.0 + rnd.nextDouble() * 1.4;
+        final alpha = 0.45 + rnd.nextDouble() * 0.4;
+        canvas.drawCircle(
+          Offset(x, y),
+          radius,
+          Paint()..color = Colors.white.withValues(alpha: alpha),
+        );
       }
     }
   }
