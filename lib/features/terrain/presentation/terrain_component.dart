@@ -210,6 +210,33 @@ class TerrainComponent extends PositionComponent
     }
   }
 
+  /// Blurred orange/gold glow blobs drifting near the top edge, like distant
+  /// wildfire/volcanic flame lighting up the sky - shown whenever the
+  /// resolved wind type is [WindType.ash], independent of wind strength (a
+  /// still-air ash scene still has the fire glowing behind it).
+  void _paintSkyFlames(ui.Canvas canvas) {
+    final rnd = math.Random(21);
+    for (var i = 0; i < 6; i++) {
+      final x = rnd.nextDouble() * size.x;
+      final baseY = size.y * (0.04 + rnd.nextDouble() * 0.16);
+      final pulse =
+          0.6 +
+          0.4 * math.sin(_weatherPhase * (0.4 + rnd.nextDouble() * 0.5) + i);
+      final radius = (28 + rnd.nextDouble() * 42) * pulse;
+      canvas.drawCircle(
+        ui.Offset(x, baseY),
+        radius,
+        ui.Paint()
+          ..color = ui.Color.lerp(
+            const ui.Color(0xFFFF6D1F),
+            const ui.Color(0xFFFFC107),
+            rnd.nextDouble(),
+          )!.withValues(alpha: 0.16 * pulse)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 20),
+      );
+    }
+  }
+
   /// Snow drifts down slowly with a gentle side-to-side sway (scaled by
   /// [WeatherKeyframe.windStrength]) instead of sitting frozen in place -
   /// same looping-fall approach as [_paintRain], just much slower. Each
@@ -386,33 +413,6 @@ class TerrainComponent extends PositionComponent
         ui.Offset(x, baseY),
         ui.Offset(x + streakLength, baseY - streakLength * 0.18),
         paint,
-      );
-    }
-  }
-
-  /// Blurred orange/gold glow blobs drifting near the top edge, like distant
-  /// wildfire/volcanic flame lighting up the sky - shown whenever the
-  /// resolved wind type is [WindType.ash], independent of wind strength (a
-  /// still-air ash scene still has the fire glowing behind it).
-  void _paintSkyFlames(ui.Canvas canvas) {
-    final rnd = math.Random(21);
-    for (var i = 0; i < 6; i++) {
-      final x = rnd.nextDouble() * size.x;
-      final baseY = size.y * (0.04 + rnd.nextDouble() * 0.16);
-      final pulse =
-          0.6 +
-          0.4 * math.sin(_weatherPhase * (0.4 + rnd.nextDouble() * 0.5) + i);
-      final radius = (28 + rnd.nextDouble() * 42) * pulse;
-      canvas.drawCircle(
-        ui.Offset(x, baseY),
-        radius,
-        ui.Paint()
-          ..color = ui.Color.lerp(
-            const ui.Color(0xFFFF6D1F),
-            const ui.Color(0xFFFFC107),
-            rnd.nextDouble(),
-          )!.withValues(alpha: 0.16 * pulse)
-          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 20),
       );
     }
   }

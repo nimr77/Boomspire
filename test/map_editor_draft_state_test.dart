@@ -100,15 +100,12 @@ void main() {
             state.handlePanUpdate(const Offset(300, 100), canvasSize);
             state.handlePanEnd();
             expect(state.draft.value.waterPaths.length, before + 1);
-            expect(
-              state.draft.value.waterPaths.last.kind,
-              switch (tool) {
-                EditorTool.lake => WaterFeatureKind.lake,
-                EditorTool.lava => WaterFeatureKind.lava,
-                EditorTool.volcanicLake => WaterFeatureKind.volcanicLake,
-                _ => WaterFeatureKind.river,
-              },
-            );
+            expect(state.draft.value.waterPaths.last.kind, switch (tool) {
+              EditorTool.lake => WaterFeatureKind.lake,
+              EditorTool.lava => WaterFeatureKind.lava,
+              EditorTool.volcanicLake => WaterFeatureKind.volcanicLake,
+              _ => WaterFeatureKind.river,
+            });
           case EditorTool.homeSite:
             state.setTool(EditorTool.homeSite);
             final before = state.draft.value.homeSites.length;
@@ -182,23 +179,20 @@ void main() {
       );
     });
 
-    test(
-      'a tree brush-type override is stamped on the TreeCell itself '
-      '(EnvironmentAdaptation only gates whether it is later honored at '
-      'generation time, not whether it can be authored)',
-      () async {
-        final state = newState();
-        addTearDown(state.dispose);
-        await state.initialize();
+    test('a tree brush-type override is stamped on the TreeCell itself '
+        '(EnvironmentAdaptation only gates whether it is later honored at '
+        'generation time, not whether it can be authored)', () async {
+      final state = newState();
+      addTearDown(state.dispose);
+      await state.initialize();
 
-        state.setVariant(Biome.snowTundra);
-        state.setTool(EditorTool.tree);
-        state.handlePanStart(const Offset(20, 20), canvasSize);
-        state.handlePanEnd();
+      state.setVariant(Biome.snowTundra);
+      state.setTool(EditorTool.tree);
+      state.handlePanStart(const Offset(20, 20), canvasSize);
+      state.handlePanEnd();
 
-        expect(state.draft.value.treeCells.single.variant, Biome.snowTundra);
-      },
-    );
+      expect(state.draft.value.treeCells.single.variant, Biome.snowTundra);
+    });
 
     test('every Biome is selectable and fully described', () {
       final state = newState();

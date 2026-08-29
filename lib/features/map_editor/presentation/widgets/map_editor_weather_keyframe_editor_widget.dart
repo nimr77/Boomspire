@@ -104,6 +104,52 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
     );
   }
 
+  Widget _keyframeSlider({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 16),
+        SizedBox(width: AppThemeSpacing.space6),
+        SizedBox(
+          width: 38,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppThemeColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Slider(
+            value: value,
+            activeColor: color,
+            inactiveColor: color.withValues(alpha: 0.25),
+            thumbColor: color,
+            onChanged: onChanged,
+          ),
+        ),
+        SizedBox(width: AppThemeSpacing.space8),
+        SizedBox(
+          width: 32,
+          child: Text(
+            S.current.zoomPercentEditorPage((value * 100).round()),
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              color: AppThemeColors.textMuted,
+              fontSize: 11,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Same leading-icon/label layout as [_keyframeSlider], but for the
   /// per-keyframe [WindType] picker instead of a slider - keeps the whole
   /// card visually consistent instead of the dropdown looking bolted on.
@@ -206,50 +252,4 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
     WindType.snow => Icons.ac_unit,
     WindType.ash => Icons.local_fire_department,
   };
-
-  Widget _keyframeSlider({
-    required IconData icon,
-    required Color color,
-    required String label,
-    required double value,
-    required ValueChanged<double> onChanged,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 16),
-        SizedBox(width: AppThemeSpacing.space6),
-        SizedBox(
-          width: 38,
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: AppThemeColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Slider(
-            value: value,
-            activeColor: color,
-            inactiveColor: color.withValues(alpha: 0.25),
-            thumbColor: color,
-            onChanged: onChanged,
-          ),
-        ),
-        SizedBox(width: AppThemeSpacing.space8),
-        SizedBox(
-          width: 32,
-          child: Text(
-            S.current.zoomPercentEditorPage((value * 100).round()),
-            textAlign: TextAlign.end,
-            style: const TextStyle(
-              color: AppThemeColors.textMuted,
-              fontSize: 11,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

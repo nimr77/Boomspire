@@ -72,54 +72,6 @@ class WindEffectComponent extends PositionComponent
     _restyle(_resolvedType);
   }
 
-  /// Rebuilds [_particles] for a newly resolved [style] - called once from
-  /// [onLoad] and again whenever [update] notices the resolved style has
-  /// changed (e.g. a dynamic weather keyframe switching in an ash wind).
-  void _restyle(WindType style) {
-    _currentType = style;
-    _particles.clear();
-    final rnd = Random(13);
-    final count = switch (style) {
-      WindType.snow => 50,
-      WindType.autumnLeaves || WindType.ash => 26,
-      WindType.grassLeaves || WindType.sand || WindType.dust => 30,
-      WindType.automatic => 0, // unreachable - always resolved concretely
-    };
-    for (var i = 0; i < count; i++) {
-      _particles.add(
-        _WindParticle(
-          position: Vector2(
-            rnd.nextDouble() * _arenaSize.x,
-            rnd.nextDouble() * _arenaSize.y,
-          ),
-          speed: switch (style) {
-            WindType.grassLeaves => 45 + rnd.nextDouble() * 35,
-            WindType.snow => 22 + rnd.nextDouble() * 26,
-            WindType.sand => 90 + rnd.nextDouble() * 70,
-            WindType.dust => 55 + rnd.nextDouble() * 40,
-            WindType.autumnLeaves => 18 + rnd.nextDouble() * 22,
-            WindType.ash => 16 + rnd.nextDouble() * 20,
-            WindType.automatic => 0,
-          },
-          drop: switch (style) {
-            WindType.snow => 16 + rnd.nextDouble() * 18,
-            WindType.autumnLeaves => 12 + rnd.nextDouble() * 14,
-            WindType.ash => 10 + rnd.nextDouble() * 12,
-            WindType.grassLeaves || WindType.sand || WindType.dust => 0,
-            WindType.automatic => 0,
-          },
-          scale: 0.5 + rnd.nextDouble() * 1.0,
-          opacity: 0.12 + rnd.nextDouble() * 0.3,
-          bobPhase: rnd.nextDouble() * 2 * pi,
-          gustPhase: rnd.nextDouble() * 2 * pi,
-          rotation: rnd.nextDouble() * 2 * pi,
-          rotationSpeed: (rnd.nextDouble() - 0.5) * 2.4,
-          colorIndex: rnd.nextInt(_autumnLeafColors.length),
-        ),
-      );
-    }
-  }
-
   @override
   void render(ui.Canvas canvas) {
     final style = _currentType;
@@ -228,6 +180,54 @@ class WindEffectComponent extends PositionComponent
       if (p.position.y > _arenaSize.y + 20) {
         p.position.y = -20;
       }
+    }
+  }
+
+  /// Rebuilds [_particles] for a newly resolved [style] - called once from
+  /// [onLoad] and again whenever [update] notices the resolved style has
+  /// changed (e.g. a dynamic weather keyframe switching in an ash wind).
+  void _restyle(WindType style) {
+    _currentType = style;
+    _particles.clear();
+    final rnd = Random(13);
+    final count = switch (style) {
+      WindType.snow => 50,
+      WindType.autumnLeaves || WindType.ash => 26,
+      WindType.grassLeaves || WindType.sand || WindType.dust => 30,
+      WindType.automatic => 0, // unreachable - always resolved concretely
+    };
+    for (var i = 0; i < count; i++) {
+      _particles.add(
+        _WindParticle(
+          position: Vector2(
+            rnd.nextDouble() * _arenaSize.x,
+            rnd.nextDouble() * _arenaSize.y,
+          ),
+          speed: switch (style) {
+            WindType.grassLeaves => 45 + rnd.nextDouble() * 35,
+            WindType.snow => 22 + rnd.nextDouble() * 26,
+            WindType.sand => 90 + rnd.nextDouble() * 70,
+            WindType.dust => 55 + rnd.nextDouble() * 40,
+            WindType.autumnLeaves => 18 + rnd.nextDouble() * 22,
+            WindType.ash => 16 + rnd.nextDouble() * 20,
+            WindType.automatic => 0,
+          },
+          drop: switch (style) {
+            WindType.snow => 16 + rnd.nextDouble() * 18,
+            WindType.autumnLeaves => 12 + rnd.nextDouble() * 14,
+            WindType.ash => 10 + rnd.nextDouble() * 12,
+            WindType.grassLeaves || WindType.sand || WindType.dust => 0,
+            WindType.automatic => 0,
+          },
+          scale: 0.5 + rnd.nextDouble() * 1.0,
+          opacity: 0.12 + rnd.nextDouble() * 0.3,
+          bobPhase: rnd.nextDouble() * 2 * pi,
+          gustPhase: rnd.nextDouble() * 2 * pi,
+          rotation: rnd.nextDouble() * 2 * pi,
+          rotationSpeed: (rnd.nextDouble() - 0.5) * 2.4,
+          colorIndex: rnd.nextInt(_autumnLeafColors.length),
+        ),
+      );
     }
   }
 }

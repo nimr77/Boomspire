@@ -148,6 +148,30 @@ class MapEditorCanvasPainter extends CustomPainter {
     }
   }
 
+  /// Blurred orange/gold glow blobs near the top edge, previewing the same
+  /// atmospheric flame-in-the-sky effect real gameplay renders for
+  /// [WindType.ash] (see `TerrainComponent._paintSkyFlames`) - a static
+  /// snapshot here since this preview doesn't animate.
+  void _paintSkyFlames(Canvas canvas, Size size) {
+    final rnd = Random(21);
+    for (var i = 0; i < 6; i++) {
+      final x = rnd.nextDouble() * size.width;
+      final y = size.height * (0.04 + rnd.nextDouble() * 0.16);
+      final radius = 28 + rnd.nextDouble() * 42;
+      canvas.drawCircle(
+        Offset(x, y),
+        radius,
+        Paint()
+          ..color = Color.lerp(
+            const Color(0xFFFF6D1F),
+            const Color(0xFFFFC107),
+            rnd.nextDouble(),
+          )!.withValues(alpha: 0.16)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
+      );
+    }
+  }
+
   /// Tints/dims the scene by sun height and adds raking light from whichever
   /// side the sun sits on - low angles (sunrise/sunset) look warm and
   /// high-contrast, overhead sun looks bright and neutral.
@@ -475,30 +499,6 @@ class MapEditorCanvasPainter extends CustomPainter {
         Offset(x, y),
         Offset(x + streakLength, y - streakLength * 0.18),
         paint,
-      );
-    }
-  }
-
-  /// Blurred orange/gold glow blobs near the top edge, previewing the same
-  /// atmospheric flame-in-the-sky effect real gameplay renders for
-  /// [WindType.ash] (see `TerrainComponent._paintSkyFlames`) - a static
-  /// snapshot here since this preview doesn't animate.
-  void _paintSkyFlames(Canvas canvas, Size size) {
-    final rnd = Random(21);
-    for (var i = 0; i < 6; i++) {
-      final x = rnd.nextDouble() * size.width;
-      final y = size.height * (0.04 + rnd.nextDouble() * 0.16);
-      final radius = 28 + rnd.nextDouble() * 42;
-      canvas.drawCircle(
-        Offset(x, y),
-        radius,
-        Paint()
-          ..color = Color.lerp(
-            const Color(0xFFFF6D1F),
-            const Color(0xFFFFC107),
-            rnd.nextDouble(),
-          )!.withValues(alpha: 0.16)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
       );
     }
   }
