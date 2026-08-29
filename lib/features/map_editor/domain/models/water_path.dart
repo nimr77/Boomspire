@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../terrain/domain/models/biome.dart';
 import '../enums/water_feature_kind.dart';
 import 'editor_point.dart';
 
@@ -20,6 +21,12 @@ abstract class WaterPath with _$WaterPath {
     required WaterFeatureKind kind,
     required List<EditorPoint> points,
     @Default(48.0) double width,
+
+    /// Overrides which [Biome]'s palette this one water feature renders
+    /// with, instead of the map's own biome - null means "render with the
+    /// map's own biome", matching every path drawn before this brush-type
+    /// feature existed.
+    Biome? variant,
   }) = _WaterPath;
 
   factory WaterPath.fromJson(Map<String, dynamic> json) =>

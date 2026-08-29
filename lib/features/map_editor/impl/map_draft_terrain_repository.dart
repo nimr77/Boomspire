@@ -80,6 +80,14 @@ class MapDraftTerrainRepository implements TerrainRepository {
               grid.cellCenter(secondaryBaseCell).x,
               grid.cellCenter(secondaryBaseCell).y,
             ),
+      treeCells: [
+        for (final tree in draft.treeCells)
+          if (Point(tree.col, tree.row) != baseCell &&
+              Point(tree.col, tree.row) != spawnCell &&
+              Point(tree.col, tree.row) != secondaryBaseCell)
+            Point(tree.col, tree.row),
+      ],
+      variants: preview.variants,
     );
   }
 

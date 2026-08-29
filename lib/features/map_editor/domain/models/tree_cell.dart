@@ -1,0 +1,16 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'tree_cell.freezed.dart';
+part 'tree_cell.g.dart';
+
+/// One hand-placed tree, addressed by terrain grid cell (same col/row space
+/// as [PaintedCell]) - unlike a [PaintedCell], a tree is purely decorative
+/// and never blocks movement or building, and can be placed on any biome
+/// regardless of [BiomePalette.hasTrees].
+@freezed
+abstract class TreeCell with _$TreeCell {
+  const factory TreeCell({required int col, required int row}) = _TreeCell;
+
+  factory TreeCell.fromJson(Map<String, dynamic> json) =>
+      _$TreeCellFromJson(json);
+}

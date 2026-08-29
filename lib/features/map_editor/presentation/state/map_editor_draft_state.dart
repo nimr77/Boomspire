@@ -17,6 +17,7 @@ import '../../domain/models/editor_terrain_preview.dart';
 import '../../domain/models/environment_settings.dart';
 import '../../domain/models/map_draft.dart';
 import '../../domain/models/painted_cell.dart';
+import '../../domain/models/tree_cell.dart';
 import '../../domain/models/water_path.dart';
 import '../../domain/models/weather_keyframe.dart';
 import '../../impl/editor_terrain_generator.dart';
@@ -37,6 +38,11 @@ class MapEditorDraftState {
   final ValueNotifier<EditorTerrainPreview?> _preview = ValueNotifier(null);
   final ValueNotifier<EditorTool> _tool = ValueNotifier(EditorTool.mountain);
   final ValueNotifier<double> _riverWidth = ValueNotifier(48);
+
+  /// The brush type for the currently selected obstacle/water tool - null
+  /// means "render with the map's own biome", the same look as before this
+  /// feature existed.
+  final ValueNotifier<Biome?> _variant = ValueNotifier(null);
   final ValueNotifier<int> _selectedWaveNumber = ValueNotifier(1);
   final ValueNotifier<List<EditorPoint>> _activeStroke = ValueNotifier(
     const [],
@@ -72,6 +78,7 @@ class MapEditorDraftState {
     _preview,
     _tool,
     _riverWidth,
+    _variant,
     _selectedWaveNumber,
     _activeStroke,
     _zoom,
@@ -87,6 +94,7 @@ class MapEditorDraftState {
   ValueListenable<double> get riverWidth => _riverWidth;
   ValueListenable<int> get selectedWaveNumber => _selectedWaveNumber;
   ValueListenable<EditorTool> get tool => _tool;
+  ValueListenable<Biome?> get variant => _variant;
   ValueListenable<double> get zoom => _zoom;
 
   void addKeyframe() {
@@ -135,6 +143,7 @@ class MapEditorDraftState {
     _preview.dispose();
     _tool.dispose();
     _riverWidth.dispose();
+    _variant.dispose();
     _selectedWaveNumber.dispose();
     _activeStroke.dispose();
     _zoom.dispose();
@@ -158,6 +167,7 @@ class MapEditorDraftState {
     switch (_tool.value) {
       case EditorTool.mountain:
       case EditorTool.dune:
+      case EditorTool.tree:
       case EditorTool.erase:
         _paintAt(point);
       case EditorTool.river:
@@ -173,6 +183,7 @@ class MapEditorDraftState {
     switch (_tool.value) {
       case EditorTool.mountain:
       case EditorTool.dune:
+      case EditorTool.tree:
       case EditorTool.erase:
         _paintAt(point);
       case EditorTool.river:
@@ -262,6 +273,8 @@ class MapEditorDraftState {
 
   void setTool(EditorTool value) => _tool.value = value;
 
+  void setVariant(Biome? value) => _variant.value = value;
+
   void setWaveUnitCount(UnitKind kind, int count) {
     _replaceLoadout(currentLoadout.withCount(kind, count.clamp(0, 999)));
   }
@@ -318,6 +331,7 @@ class MapEditorDraftState {
           : WaterFeatureKind.river,
       points: stroke,
       width: _riverWidth.value,
+      variant: _variant.value,
     );
     _mutateDraft((d) => d.copyWith(waterPaths: [...d.waterPaths, path]));
   }
@@ -334,6 +348,7 @@ class MapEditorDraftState {
   ObstacleKind? _kindForTool(EditorTool tool) => switch (tool) {
     EditorTool.mountain => ObstacleKind.mountain,
     EditorTool.dune => ObstacleKind.dune,
+    EditorTool.tree => null,
     EditorTool.erase => null,
     EditorTool.river || EditorTool.lake => null,
     EditorTool.homeSite => null,
@@ -364,12 +379,39 @@ class MapEditorDraftState {
     final grid = preview.grid;
     final col = (point.x / grid.cellSize).floor().clamp(0, grid.cols - 1);
     final row = (point.y / grid.cellSize).floor().clamp(0, grid.rows - 1);
-    final kind = _kindForTool(_tool.value);
+    final tool = _tool.value;
+
+    // Trees are purely decorative (never block movement/building) so they
+    // live in their own list, addable on any biome regardless of
+    // [BiomePalette.hasTrees].
+    if (tool == EditorTool.tree) {
+      _mutateDraft((d) {
+        final cells = [...d.treeCells]
+          ..removeWhere((c) => c.col == col && c.row == row);
+        cells.add(TreeCell(col: col, row: row));
+        return d.copyWith(treeCells: cells);
+      });
+      return;
+    }
+
+    final kind = _kindForTool(tool);
     _mutateDraft((d) {
       final cells = [...d.paintedCells]
         ..removeWhere((c) => c.col == col && c.row == row);
-      if (kind != null) cells.add(PaintedCell(col: col, row: row, kind: kind));
-      return d.copyWith(paintedCells: cells);
+      if (kind != null) {
+        cells.add(
+          PaintedCell(col: col, row: row, kind: kind, variant: _variant.value),
+        );
+      }
+      var next = d.copyWith(paintedCells: cells);
+      if (tool == EditorTool.erase) {
+        next = next.copyWith(
+          treeCells: next.treeCells
+              .where((c) => !(c.col == col && c.row == row))
+              .toList(),
+        );
+      }
+      return next;
     });
   }
 

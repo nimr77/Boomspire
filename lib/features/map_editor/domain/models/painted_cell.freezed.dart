@@ -16,7 +16,11 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PaintedCell {
 
- int get col; int get row; ObstacleKind get kind;
+ int get col; int get row; ObstacleKind get kind;/// Overrides which [Biome]'s palette this one obstacle renders with,
+/// instead of the map's own biome (e.g. a snow-capped mountain dropped
+/// into a desert map) - null means "render with the map's own biome",
+/// matching every cell painted before this brush-type feature existed.
+ Biome? get variant;
 /// Create a copy of PaintedCell
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +33,16 @@ $PaintedCellCopyWith<PaintedCell> get copyWith => _$PaintedCellCopyWithImpl<Pain
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaintedCell&&(identical(other.col, col) || other.col == col)&&(identical(other.row, row) || other.row == row)&&(identical(other.kind, kind) || other.kind == kind));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaintedCell&&(identical(other.col, col) || other.col == col)&&(identical(other.row, row) || other.row == row)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.variant, variant) || other.variant == variant));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,col,row,kind);
+int get hashCode => Object.hash(runtimeType,col,row,kind,variant);
 
 @override
 String toString() {
-  return 'PaintedCell(col: $col, row: $row, kind: $kind)';
+  return 'PaintedCell(col: $col, row: $row, kind: $kind, variant: $variant)';
 }
 
 
@@ -49,7 +53,7 @@ abstract mixin class $PaintedCellCopyWith<$Res>  {
   factory $PaintedCellCopyWith(PaintedCell value, $Res Function(PaintedCell) _then) = _$PaintedCellCopyWithImpl;
 @useResult
 $Res call({
- int col, int row, ObstacleKind kind
+ int col, int row, ObstacleKind kind, Biome? variant
 });
 
 
@@ -66,12 +70,13 @@ class _$PaintedCellCopyWithImpl<$Res>
 
 /// Create a copy of PaintedCell
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? col = null,Object? row = null,Object? kind = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? col = null,Object? row = null,Object? kind = null,Object? variant = freezed,}) {
   return _then(PaintedCell(
 col: null == col ? _self.col : col // ignore: cast_nullable_to_non_nullable
 as int,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
 as int,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
-as ObstacleKind,
+as ObstacleKind,variant: freezed == variant ? _self.variant : variant // ignore: cast_nullable_to_non_nullable
+as Biome?,
   ));
 }
 
@@ -156,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int col,  int row,  ObstacleKind kind)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int col,  int row,  ObstacleKind kind,  Biome? variant)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PaintedCell() when $default != null:
-return $default(_that.col,_that.row,_that.kind);case _:
+return $default(_that.col,_that.row,_that.kind,_that.variant);case _:
   return orElse();
 
 }
@@ -177,10 +182,10 @@ return $default(_that.col,_that.row,_that.kind);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int col,  int row,  ObstacleKind kind)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int col,  int row,  ObstacleKind kind,  Biome? variant)  $default,) {final _that = this;
 switch (_that) {
 case _PaintedCell():
-return $default(_that.col,_that.row,_that.kind);case _:
+return $default(_that.col,_that.row,_that.kind,_that.variant);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +202,10 @@ return $default(_that.col,_that.row,_that.kind);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int col,  int row,  ObstacleKind kind)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int col,  int row,  ObstacleKind kind,  Biome? variant)?  $default,) {final _that = this;
 switch (_that) {
 case _PaintedCell() when $default != null:
-return $default(_that.col,_that.row,_that.kind);case _:
+return $default(_that.col,_that.row,_that.kind,_that.variant);case _:
   return null;
 
 }
@@ -212,12 +217,17 @@ return $default(_that.col,_that.row,_that.kind);case _:
 @JsonSerializable()
 
 class _PaintedCell implements PaintedCell {
-  const _PaintedCell({required this.col, required this.row, required this.kind});
+  const _PaintedCell({required this.col, required this.row, required this.kind, this.variant});
   factory _PaintedCell.fromJson(Map<String, dynamic> json) => _$PaintedCellFromJson(json);
 
 @override final  int col;
 @override final  int row;
 @override final  ObstacleKind kind;
+/// Overrides which [Biome]'s palette this one obstacle renders with,
+/// instead of the map's own biome (e.g. a snow-capped mountain dropped
+/// into a desert map) - null means "render with the map's own biome",
+/// matching every cell painted before this brush-type feature existed.
+@override final  Biome? variant;
 
 /// Create a copy of PaintedCell
 /// with the given fields replaced by the non-null parameter values.
@@ -232,16 +242,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaintedCell&&(identical(other.col, col) || other.col == col)&&(identical(other.row, row) || other.row == row)&&(identical(other.kind, kind) || other.kind == kind));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaintedCell&&(identical(other.col, col) || other.col == col)&&(identical(other.row, row) || other.row == row)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.variant, variant) || other.variant == variant));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,col,row,kind);
+int get hashCode => Object.hash(runtimeType,col,row,kind,variant);
 
 @override
 String toString() {
-  return 'PaintedCell(col: $col, row: $row, kind: $kind)';
+  return 'PaintedCell(col: $col, row: $row, kind: $kind, variant: $variant)';
 }
 
 
@@ -252,7 +262,7 @@ abstract mixin class _$PaintedCellCopyWith<$Res> implements $PaintedCellCopyWith
   factory _$PaintedCellCopyWith(_PaintedCell value, $Res Function(_PaintedCell) _then) = __$PaintedCellCopyWithImpl;
 @override @useResult
 $Res call({
- int col, int row, ObstacleKind kind
+ int col, int row, ObstacleKind kind, Biome? variant
 });
 
 
@@ -269,12 +279,13 @@ class __$PaintedCellCopyWithImpl<$Res>
 
 /// Create a copy of PaintedCell
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? col = null,Object? row = null,Object? kind = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? col = null,Object? row = null,Object? kind = null,Object? variant = freezed,}) {
   return _then(_PaintedCell(
 col: null == col ? _self.col : col // ignore: cast_nullable_to_non_nullable
 as int,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
 as int,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
-as ObstacleKind,
+as ObstacleKind,variant: freezed == variant ? _self.variant : variant // ignore: cast_nullable_to_non_nullable
+as Biome?,
   ));
 }
 

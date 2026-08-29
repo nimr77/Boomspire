@@ -10,6 +10,7 @@ import '../../../terrain/presentation/obstacle_color.dart';
 import '../../domain/models/editor_point.dart';
 import '../../domain/models/editor_terrain_preview.dart';
 import '../../domain/models/environment_settings.dart';
+import '../../domain/models/tree_cell.dart';
 import '../state/map_editor_draft_state.dart';
 
 /// Renders the map editor canvas: the rasterized terrain grid, sun/weather
@@ -24,6 +25,7 @@ class MapEditorCanvasPainter extends CustomPainter {
   final EnvironmentSettings environment;
   final double previewProgress;
   final List<EditorPoint> homeSites;
+  final List<TreeCell> treeCells;
 
   MapEditorCanvasPainter({
     required this.preview,
@@ -34,6 +36,7 @@ class MapEditorCanvasPainter extends CustomPainter {
     required this.environment,
     required this.previewProgress,
     required this.homeSites,
+    required this.treeCells,
   });
 
   @override
@@ -59,9 +62,10 @@ class MapEditorCanvasPainter extends CustomPainter {
         for (var col = 0; col < p.grid.cols; col++) {
           final kind = p.obstacleKinds[row][col];
           if (kind == null) continue;
+          final cellPalette = (p.variants[row][col] ?? p.biome).palette;
           canvas.drawRect(
             Rect.fromLTWH(col * cellW, row * cellH, cellW, cellH),
-            Paint()..color = obstacleColor(kind, palette),
+            Paint()..color = obstacleColor(kind, cellPalette),
           );
         }
       }
@@ -125,7 +129,8 @@ class MapEditorCanvasPainter extends CustomPainter {
         oldDelegate.arenaHeight != arenaHeight ||
         oldDelegate.environment != environment ||
         oldDelegate.previewProgress != previewProgress ||
-        oldDelegate.homeSites != homeSites;
+        oldDelegate.homeSites != homeSites ||
+        oldDelegate.treeCells != treeCells;
   }
 
   /// Draws each skirmish home site as a numbered, colored marker so a map
@@ -172,27 +177,141 @@ class MapEditorCanvasPainter extends CustomPainter {
     );
   }
 
+  /// Dispatches to a per-biome canopy shape (mirrors `TerrainPainter._paintTree`'s
+  /// 8-biome styles, simplified/rescaled for this marker's tiny footprint)
+  /// so the editor preview actually shows what each biome's trees will look
+  /// like in-game, instead of one generic green blob everywhere.
   void _paintTreeMarker(
     Canvas canvas,
     Offset center,
     double cellSize,
     double windStrength,
+    Biome biome,
   ) {
     final lean = windStrength * cellSize * 0.22;
     final trunkBottom = Offset(center.dx, center.dy + cellSize * 0.28);
     final canopyCenter = Offset(center.dx + lean, center.dy - cellSize * 0.05);
-    canvas.drawLine(
-      trunkBottom,
-      Offset(canopyCenter.dx, canopyCenter.dy + cellSize * 0.1),
-      Paint()
-        ..color = const Color(0xFF4a3421)
-        ..strokeWidth = cellSize * 0.06,
-    );
-    canvas.drawCircle(
-      canopyCenter,
-      cellSize * 0.22,
-      Paint()..color = const Color(0xFF1f3d22).withValues(alpha: 0.9),
-    );
+    final r = cellSize * 0.22;
+
+    void trunk(int color) {
+      canvas.drawLine(
+        trunkBottom,
+        Offset(canopyCenter.dx, canopyCenter.dy + cellSize * 0.1),
+        Paint()
+          ..color = Color(color)
+          ..strokeWidth = cellSize * 0.06,
+      );
+    }
+
+    switch (biome) {
+      case Biome.mountainForest:
+        trunk(0xFF4a3421);
+        canvas.drawCircle(
+          canopyCenter.translate(-r * 0.4, 0),
+          r * 0.8,
+          Paint()..color = const Color(0xFF14311a).withValues(alpha: 0.94),
+        );
+        canvas.drawCircle(
+          canopyCenter.translate(r * 0.4, r * 0.15),
+          r * 0.85,
+          Paint()..color = const Color(0xFF14311a).withValues(alpha: 0.94),
+        );
+      case Biome.savanna:
+        trunk(0xFF5a3f1f);
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: canopyCenter,
+            width: r * 2.4,
+            height: r * 0.9,
+          ),
+          Paint()..color = const Color(0xFF6b7a3d).withValues(alpha: 0.92),
+        );
+      case Biome.snowTundra:
+        trunk(0xFF4a3421);
+        canvas.drawCircle(
+          canopyCenter,
+          r,
+          Paint()..color = const Color(0xFF1f3d22).withValues(alpha: 0.92),
+        );
+        canvas.drawArc(
+          Rect.fromCenter(center: canopyCenter, width: r * 2, height: r * 1.6),
+          pi,
+          pi,
+          false,
+          Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: 0.8),
+        );
+      case Biome.frozenPeaks:
+        trunk(0xFF3a3228);
+        final path = Path()
+          ..moveTo(canopyCenter.dx - r, canopyCenter.dy + r * 0.5)
+          ..lineTo(canopyCenter.dx, canopyCenter.dy - r)
+          ..lineTo(canopyCenter.dx + r, canopyCenter.dy + r * 0.5)
+          ..close();
+        canvas.drawPath(
+          path,
+          Paint()..color = const Color(0xFF375a52).withValues(alpha: 0.9),
+        );
+        canvas.drawCircle(
+          Offset(canopyCenter.dx, canopyCenter.dy - r * 0.7),
+          r * 0.28,
+          Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: 0.85),
+        );
+      case Biome.desertDunes:
+        final paint = Paint()
+          ..color = const Color(0xFF7a5c3d)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = cellSize * 0.05
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(trunkBottom, canopyCenter, paint);
+        for (final branch in [
+          canopyCenter.translate(-r * 0.9, -r * 0.7),
+          canopyCenter.translate(r * 0.8, -r * 0.6),
+          canopyCenter.translate(-r * 0.2, -r),
+        ]) {
+          canvas.drawLine(canopyCenter, branch, paint);
+        }
+      case Biome.sea:
+        canvas.drawLine(
+          trunkBottom,
+          canopyCenter,
+          Paint()
+            ..color = const Color(0xFF8a6a3f)
+            ..strokeWidth = cellSize * 0.06,
+        );
+        final frondPaint = Paint()
+          ..color = const Color(0xFF2f7a4a)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = cellSize * 0.05
+          ..strokeCap = StrokeCap.round;
+        for (final angle in [-1.1, -0.3, 0.5]) {
+          canvas.drawLine(
+            canopyCenter,
+            canopyCenter.translate(cos(angle) * r, sin(angle) * r - r * 0.3),
+            frondPaint,
+          );
+        }
+      case Biome.cityRuins:
+        final paint = Paint()
+          ..color = const Color(0xFF2a2622)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = cellSize * 0.05
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(trunkBottom, canopyCenter, paint);
+        for (final branch in [
+          canopyCenter.translate(-r * 0.9, -r * 0.5),
+          canopyCenter.translate(r * 0.7, -r * 0.8),
+          canopyCenter.translate(r * 0.1, -r),
+        ]) {
+          canvas.drawLine(canopyCenter, branch, paint);
+        }
+      case Biome.grassPlains:
+        trunk(0xFF4a3421);
+        canvas.drawCircle(
+          canopyCenter,
+          r,
+          Paint()..color = const Color(0xFF1f3d22).withValues(alpha: 0.9),
+        );
+    }
   }
 
   /// Scatters simple tree markers over open ground on tree-bearing biomes
@@ -202,7 +321,11 @@ class MapEditorCanvasPainter extends CustomPainter {
   /// cell (not a free-running [Random]) so trees stay put across repaints
   /// instead of jumping around every time the preview regenerates. Canopies
   /// lean with the sampled wind strength, giving the wind slider a visible
-  /// effect even when there's no rain to show it.
+  /// effect even when there's no rain to show it. Hand-placed [treeCells]
+  /// are drawn on top regardless of biome, so an author can add trees to
+  /// any map even when its biome has none automatically. Tree style is keyed
+  /// off the map's own biome (matching `TerrainPainter`, which does the
+  /// same - trees don't carry a per-cell brush-type override).
   void _paintTrees(
     Canvas canvas,
     EditorTerrainPreview p,
@@ -210,16 +333,60 @@ class MapEditorCanvasPainter extends CustomPainter {
     double cellW,
     double cellH,
   ) {
-    if (!palette.hasTrees) return;
     final windStrength = environment.sample(previewProgress).windStrength;
-    for (var row = 0; row < p.grid.rows; row++) {
-      for (var col = 0; col < p.grid.cols; col++) {
-        if (p.obstacleKinds[row][col] != null) continue;
-        final seed = row * 73856093 ^ col * 19349663;
-        if (Random(seed).nextDouble() >= 0.12) continue;
-        final center = Offset(col * cellW + cellW / 2, row * cellH + cellH / 2);
-        _paintTreeMarker(canvas, center, min(cellW, cellH), windStrength);
+    final biome = p.biome;
+    if (palette.hasTrees) {
+      for (var row = 0; row < p.grid.rows; row++) {
+        for (var col = 0; col < p.grid.cols; col++) {
+          if (p.obstacleKinds[row][col] != null) continue;
+          final seed = row * 73856093 ^ col * 19349663;
+          if (Random(seed).nextDouble() >= 0.12) continue;
+          final center = Offset(
+            col * cellW + cellW / 2,
+            row * cellH + cellH / 2,
+          );
+          _paintTreeMarker(
+            canvas,
+            center,
+            min(cellW, cellH),
+            windStrength,
+            biome,
+          );
+        }
       }
+    }
+
+    for (final tree in treeCells) {
+      if (tree.row < 0 || tree.row >= p.grid.rows) continue;
+      if (tree.col < 0 || tree.col >= p.grid.cols) continue;
+      if (p.obstacleKinds[tree.row][tree.col] != null) continue;
+      final center = Offset(
+        tree.col * cellW + cellW / 2,
+        tree.row * cellH + cellH / 2,
+      );
+      _paintTreeMarker(canvas, center, min(cellW, cellH), windStrength, biome);
+    }
+  }
+
+  /// Faint drifting dust/leaf streaks that scale with wind strength - unlike
+  /// tree-lean (only visible on tree-bearing biomes), this makes the wind
+  /// slider have a visible effect on every biome/map.
+  void _paintWindStreaks(Canvas canvas, Size size, double windStrength) {
+    if (windStrength <= 0) return;
+    final rnd = Random(13);
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.18 * windStrength.clamp(0, 1))
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round;
+    final streakLength = 18 + windStrength * 40;
+    for (var i = 0; i < (windStrength * 40).round(); i++) {
+      final x = rnd.nextDouble() * size.width;
+      final y = rnd.nextDouble() * size.height;
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x + streakLength, y - streakLength * 0.18),
+        paint,
+      );
     }
   }
 
@@ -227,6 +394,8 @@ class MapEditorCanvasPainter extends CustomPainter {
   /// tinting plus simple rain/snow overlays so timeline edits are visible.
   void _paintWeather(Canvas canvas, Rect rect, Size size) {
     final weather = environment.sample(previewProgress);
+
+    _paintWindStreaks(canvas, size, weather.windStrength);
 
     if (weather.cloudCover > 0) {
       canvas.drawRect(

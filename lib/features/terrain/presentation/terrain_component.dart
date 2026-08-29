@@ -169,6 +169,8 @@ class TerrainComponent extends PositionComponent
   ) {
     final weather = environment.sample(_matchProgress);
 
+    _paintWindStreaks(canvas, weather.windStrength);
+
     if (weather.cloudCover > 0) {
       canvas.drawRect(
         rect,
@@ -210,6 +212,28 @@ class TerrainComponent extends PositionComponent
         final y = rnd.nextDouble() * size.y;
         canvas.drawCircle(ui.Offset(x, y), 1.5, paint);
       }
+    }
+  }
+
+  /// Faint drifting dust/leaf streaks that scale with wind strength - unlike
+  /// tree-lean (only visible on tree-bearing biomes), this gives the wind
+  /// slider a visible effect on every biome/map.
+  void _paintWindStreaks(ui.Canvas canvas, double windStrength) {
+    if (windStrength <= 0) return;
+    final rnd = math.Random(13);
+    final paint = ui.Paint()
+      ..color = Colors.white.withValues(alpha: 0.18 * windStrength.clamp(0, 1))
+      ..strokeWidth = 1.2
+      ..strokeCap = ui.StrokeCap.round;
+    final streakLength = 18 + windStrength * 40;
+    for (var i = 0; i < (windStrength * 40).round(); i++) {
+      final x = rnd.nextDouble() * size.x;
+      final y = rnd.nextDouble() * size.y;
+      canvas.drawLine(
+        ui.Offset(x, y),
+        ui.Offset(x + streakLength, y - streakLength * 0.18),
+        paint,
+      );
     }
   }
 }

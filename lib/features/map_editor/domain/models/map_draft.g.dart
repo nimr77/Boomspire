@@ -21,6 +21,11 @@ _MapDraft _$MapDraftFromJson(Map<String, dynamic> json) => _MapDraft(
           ?.map((e) => PaintedCell.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  treeCells:
+      (json['treeCells'] as List<dynamic>?)
+          ?.map((e) => TreeCell.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
   waterPaths:
       (json['waterPaths'] as List<dynamic>?)
           ?.map((e) => WaterPath.fromJson(e as Map<String, dynamic>))
@@ -53,6 +58,7 @@ Map<String, dynamic> _$MapDraftToJson(_MapDraft instance) => <String, dynamic>{
   'arenaWidth': instance.arenaWidth,
   'arenaHeight': instance.arenaHeight,
   'paintedCells': instance.paintedCells.map((e) => e.toJson()).toList(),
+  'treeCells': instance.treeCells.map((e) => e.toJson()).toList(),
   'waterPaths': instance.waterPaths.map((e) => e.toJson()).toList(),
   'homeSites': instance.homeSites.map((e) => e.toJson()).toList(),
   'environment': instance.environment.toJson(),

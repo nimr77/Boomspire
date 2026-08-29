@@ -2,6 +2,7 @@ import 'package:flame/game.dart' show Vector2;
 import 'package:flutter/foundation.dart' show compute;
 
 import '../../../core/pathfinding/grid.dart';
+import '../../terrain/domain/models/biome.dart';
 import '../../terrain/domain/models/obstacle_kind.dart';
 import '../domain/models/editor_terrain_preview.dart';
 import '../domain/models/map_draft.dart';
@@ -27,15 +28,20 @@ EditorTerrainPreview _generatePreview(MapDraft draft) {
     rows,
     (_) => List<ObstacleKind?>.filled(cols, null),
   );
+  final variants = List.generate(
+    rows,
+    (_) => List<Biome?>.filled(cols, null),
+  );
 
-  void paint(int col, int row, ObstacleKind kind) {
+  void paint(int col, int row, ObstacleKind kind, Biome? variant) {
     if (!grid.inBounds(col, row)) return;
     grid.setMountain(col, row, true);
     obstacleKinds[row][col] = kind;
+    variants[row][col] = variant;
   }
 
   for (final cell in draft.paintedCells) {
-    paint(cell.col, cell.row, cell.kind);
+    paint(cell.col, cell.row, cell.kind, cell.variant);
   }
 
   for (final path in draft.waterPaths) {
@@ -45,6 +51,7 @@ EditorTerrainPreview _generatePreview(MapDraft draft) {
   return EditorTerrainPreview(
     grid: grid,
     obstacleKinds: obstacleKinds,
+    variants: variants,
     biome: draft.biome,
   );
 }
@@ -66,7 +73,7 @@ void _rasterizeWaterPath(
   WaterPath path,
   int cols,
   int rows,
-  void Function(int col, int row, ObstacleKind kind) paint,
+  void Function(int col, int row, ObstacleKind kind, Biome? variant) paint,
 ) {
   if (path.points.length < 2) return;
   final points = path.points
@@ -85,7 +92,7 @@ void _rasterizeWaterPath(
           for (var i = 0; i < points.length - 1; i++) {
             if (_distanceToSegment(center, points[i], points[i + 1]) <=
                 halfWidth) {
-              paint(col, row, ObstacleKind.river);
+              paint(col, row, ObstacleKind.river, path.variant);
               break;
             }
           }
@@ -99,7 +106,7 @@ void _rasterizeWaterPath(
             row * _cellSize + _cellSize / 2,
           );
           if (_pointInPolygon(center, points)) {
-            paint(col, row, ObstacleKind.lake);
+            paint(col, row, ObstacleKind.lake, path.variant);
           }
         }
       }

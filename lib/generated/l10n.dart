@@ -990,6 +990,16 @@ class S {
     );
   }
 
+  /// `Tree`
+  String get treeLabelEditorPage {
+    return Intl.message(
+      'Tree',
+      name: 'treeLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Home`
   String get homeLabelEditorPage {
     return Intl.message(
@@ -1110,6 +1120,26 @@ class S {
     );
   }
 
+  /// `Type`
+  String get brushTypeLabelEditorPage {
+    return Intl.message(
+      'Type',
+      name: 'brushTypeLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Match biome`
+  String get brushTypeMatchBiomeEditorPage {
+    return Intl.message(
+      'Match biome',
+      name: 'brushTypeMatchBiomeEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Map`
   String get mapLabelEditorPage {
     return Intl.message('Map', name: 'mapLabelEditorPage', desc: '', args: []);
@@ -1125,20 +1155,20 @@ class S {
     );
   }
 
-  /// `This biome scatters trees automatically`
+  /// `This biome scatters trees automatically - use the Tree tool to add more anywhere`
   String get treesOnHintEditorPage {
     return Intl.message(
-      'This biome scatters trees automatically',
+      'This biome scatters trees automatically - use the Tree tool to add more anywhere',
       name: 'treesOnHintEditorPage',
       desc: '',
       args: [],
     );
   }
 
-  /// `This biome has no trees`
+  /// `This biome has no automatic trees - use the Tree tool to add your own`
   String get treesOffHintEditorPage {
     return Intl.message(
-      'This biome has no trees',
+      'This biome has no automatic trees - use the Tree tool to add your own',
       name: 'treesOffHintEditorPage',
       desc: '',
       args: [],

@@ -139,6 +139,9 @@ class $AssetsModelsGen {
   /// File path: assets/models/ally_soldier.json
   String get allySoldier => 'assets/models/ally_soldier.json';
 
+  /// File path: assets/models/ally_stealthBomber.json
+  String get allyStealthBomber => 'assets/models/ally_stealthBomber.json';
+
   /// File path: assets/models/ally_tank.json
   String get allyTank => 'assets/models/ally_tank.json';
 
@@ -163,6 +166,9 @@ class $AssetsModelsGen {
 
   /// File path: assets/models/enemy_soldier.json
   String get enemySoldier => 'assets/models/enemy_soldier.json';
+
+  /// File path: assets/models/enemy_stealthBomber.json
+  String get enemyStealthBomber => 'assets/models/enemy_stealthBomber.json';
 
   /// File path: assets/models/enemy_tank.json
   String get enemyTank => 'assets/models/enemy_tank.json';
@@ -215,6 +221,7 @@ class $AssetsModelsGen {
     allyLightVehicle,
     allyRocketBarrage,
     allySoldier,
+    allyStealthBomber,
     allyTank,
     enemyAntiAirVehicle,
     enemyArtilleryBarrage,
@@ -223,6 +230,7 @@ class $AssetsModelsGen {
     enemyHelicopter,
     enemyRocketBarrage,
     enemySoldier,
+    enemyStealthBomber,
     enemyTank,
     towerAntiAir,
     towerArtilleryBunker,

@@ -6,6 +6,7 @@ import '../../../waves/domain/models/wave_loadout.dart';
 import 'editor_point.dart';
 import 'environment_settings.dart';
 import 'painted_cell.dart';
+import 'tree_cell.dart';
 import 'water_path.dart';
 
 part 'map_draft.freezed.dart';
@@ -35,6 +36,7 @@ abstract class MapDraft with _$MapDraft {
     @Default(1280.0) double arenaWidth,
     @Default(720.0) double arenaHeight,
     @Default([]) List<PaintedCell> paintedCells,
+    @Default([]) List<TreeCell> treeCells,
     @Default([]) List<WaterPath> waterPaths,
     @Default([]) List<EditorPoint> homeSites,
     @Default(EnvironmentSettings()) EnvironmentSettings environment,

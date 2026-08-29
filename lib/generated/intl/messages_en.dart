@@ -131,6 +131,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "biomeNameSea": MessageLookupByLibrary.simpleMessage("Open Sea"),
     "biomeNameSnowTundra": MessageLookupByLibrary.simpleMessage("Snow Tundra"),
     "brushLabelEditorPage": MessageLookupByLibrary.simpleMessage("Brush"),
+    "brushTypeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Type"),
+    "brushTypeMatchBiomeEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Match biome",
+    ),
     "buildMenuBuildingsTab": MessageLookupByLibrary.simpleMessage("Buildings"),
     "buildMenuTowersTab": MessageLookupByLibrary.simpleMessage("Towers"),
     "buildingNameCommandPost": MessageLookupByLibrary.simpleMessage(
@@ -327,11 +331,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "towerNameRocketSilo": MessageLookupByLibrary.simpleMessage("Rocket Silo"),
     "towerNameSam": MessageLookupByLibrary.simpleMessage("SAM Site"),
     "towerTier": m17,
+    "treeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Tree"),
     "treesOffHintEditorPage": MessageLookupByLibrary.simpleMessage(
-      "This biome has no trees",
+      "This biome has no automatic trees - use the Tree tool to add your own",
     ),
     "treesOnHintEditorPage": MessageLookupByLibrary.simpleMessage(
-      "This biome scatters trees automatically",
+      "This biome scatters trees automatically - use the Tree tool to add more anywhere",
     ),
     "unclaimedLabelEntityPanel": MessageLookupByLibrary.simpleMessage(
       "Unclaimed",

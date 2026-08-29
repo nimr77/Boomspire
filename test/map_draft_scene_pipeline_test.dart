@@ -51,10 +51,23 @@ void main() {
     draftState.handlePanStart(const Offset(400, 40), canvasSize);
     draftState.handlePanEnd();
 
+    // A brush-type override (an icy mountain painted on this otherwise
+    // forest map) so the variant survives all the way to the real terrain.
+    draftState.setVariant(Biome.frozenPeaks);
+    draftState.handlePanStart(const Offset(440, 40), canvasSize);
+    draftState.handlePanEnd();
+    draftState.setVariant(null);
+
     // A custom home site on the west side (the default, unset base sits
     // on the east edge) so we can prove it - not the default - was used.
     draftState.setTool(EditorTool.homeSite);
     draftState.handlePanStart(const Offset(60, 60), canvasSize);
+
+    // A hand-placed tree, independent of the biome's automatic scatter -
+    // authorable on any biome via the Tree tool.
+    draftState.setTool(EditorTool.tree);
+    draftState.handlePanStart(const Offset(800, 400), canvasSize);
+    draftState.handlePanEnd();
 
     // Environment/weather config: dynamic, distinctive sun angle, and two
     // keyframes with distinct, non-default intensities.
@@ -88,6 +101,7 @@ void main() {
     final draft = draftState.draft.value;
     expect(draft.homeSites, hasLength(1));
     expect(draft.environment.timeline, hasLength(2));
+    expect(draft.treeCells.any((t) => t.col == 20 && t.row == 10), isTrue);
 
     // 1. The exported/re-imported draft JSON (what `download`/`upload`
     // round-trip) must carry every field losslessly.
@@ -133,6 +147,25 @@ void main() {
       reason:
           'placing a home site on the west edge should move the base '
           'off its east-edge default',
+    );
+    expect(
+      terrainMap.treeCells.any((p) => p.x == 20 && p.y == 10),
+      isTrue,
+      reason:
+          'a hand-placed tree should reach the real terrain regardless of biome',
+    );
+    expect(
+      terrainMap.biomeAt(11, 1),
+      Biome.frozenPeaks,
+      reason:
+          "a mountain painted with a brush-type override should render "
+          "with that biome's palette, not the map's own biome",
+    );
+    expect(
+      terrainMap.biomeAt(10, 1),
+      draft.biome,
+      reason: 'a mountain painted with no override still renders with the '
+          "map's own biome",
     );
 
     // The generated wave definition reflects the author's per-wave unit

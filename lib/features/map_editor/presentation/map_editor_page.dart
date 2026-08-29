@@ -67,6 +67,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
         final currentPreview = _draftState.preview.value;
         final currentTool = _draftState.tool.value;
         final currentRiverWidth = _draftState.riverWidth.value;
+        final currentVariant = _draftState.variant.value;
         final currentSelectedWave = _draftState.selectedWaveNumber.value;
         final currentStroke = _draftState.activeStroke.value;
         final currentSaving = _persistenceState.saving.value;
@@ -243,6 +244,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                                           previewProgress:
                                               currentPreviewProgress,
                                           homeSites: currentDraft.homeSites,
+                                          treeCells: currentDraft.treeCells,
                                         ),
                                       ),
                                     ),
@@ -334,6 +336,40 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             max: 160,
                             onChanged: (value) =>
                                 _draftState.setRiverWidth(value),
+                          ),
+                        ],
+                        if (currentTool == EditorTool.mountain ||
+                            currentTool == EditorTool.dune ||
+                            currentTool == EditorTool.river ||
+                            currentTool == EditorTool.lake) ...[
+                          SizedBox(height: AppThemeSpacing.space8),
+                          Text(
+                            S.current.brushTypeLabelEditorPage,
+                            style: const TextStyle(
+                              color: AppThemeColors.textMuted,
+                            ),
+                          ),
+                          SizedBox(height: AppThemeSpacing.space8),
+                          Wrap(
+                            spacing: AppThemeSpacing.space8,
+                            runSpacing: AppThemeSpacing.space8,
+                            children: [
+                              ChoiceChip(
+                                label: Text(
+                                  S.current.brushTypeMatchBiomeEditorPage,
+                                ),
+                                selected: currentVariant == null,
+                                onSelected: (_) =>
+                                    _draftState.setVariant(null),
+                              ),
+                              for (final biome in Biome.values)
+                                ChoiceChip(
+                                  label: Text(biome.displayName),
+                                  selected: currentVariant == biome,
+                                  onSelected: (_) =>
+                                      _draftState.setVariant(biome),
+                                ),
+                            ],
                           ),
                         ],
                         const Divider(

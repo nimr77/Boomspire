@@ -10,11 +10,16 @@ class EditorTerrainPreview {
 
   /// Per-cell obstacle flavor (null = open ground), same shape as [grid].
   final List<List<ObstacleKind?>> obstacleKinds;
+
+  /// Per-cell brush-type override (null = render with [biome]), same shape
+  /// as [grid] - only meaningful where [obstacleKinds] is non-null.
+  final List<List<Biome?>> variants;
   final Biome biome;
 
   const EditorTerrainPreview({
     required this.grid,
     required this.obstacleKinds,
+    required this.variants,
     required this.biome,
   });
 }

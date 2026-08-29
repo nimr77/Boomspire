@@ -72,6 +72,27 @@ void main() {
               isFalse,
               reason: 'erase should clear a previously painted cell',
             );
+          case EditorTool.tree:
+            state.setTool(EditorTool.tree);
+            state.handlePanStart(const Offset(700, 20), canvasSize);
+            state.handlePanEnd();
+            expect(
+              state.draft.value.treeCells.any(
+                (c) => c.col == 17 && c.row == 0,
+              ),
+              isTrue,
+              reason: 'tree tool should place a tree cell on any biome',
+            );
+            state.setTool(EditorTool.erase);
+            state.handlePanStart(const Offset(700, 20), canvasSize);
+            state.handlePanEnd();
+            expect(
+              state.draft.value.treeCells.any(
+                (c) => c.col == 17 && c.row == 0,
+              ),
+              isFalse,
+              reason: 'erase should also clear a previously painted tree',
+            );
           case EditorTool.river:
           case EditorTool.lake:
             final before = state.draft.value.waterPaths.length;
@@ -97,6 +118,63 @@ void main() {
         }
       }
     });
+
+    test(
+      'a brush type (Biome) can be set for every obstacle/water tool and '
+      'is stamped onto newly painted cells/paths',
+      () async {
+        final state = newState();
+        addTearDown(state.dispose);
+        await state.initialize();
+
+        expect(state.variant.value, isNull);
+
+        for (final tool in [
+          EditorTool.mountain,
+          EditorTool.dune,
+          EditorTool.river,
+          EditorTool.lake,
+        ]) {
+          for (final brushType in Biome.values) {
+            state.setVariant(brushType);
+            expect(state.variant.value, brushType);
+            state.setTool(tool);
+            state.handlePanStart(const Offset(20, 20), canvasSize);
+            if (tool == EditorTool.river || tool == EditorTool.lake) {
+              state.handlePanUpdate(const Offset(300, 100), canvasSize);
+            }
+            state.handlePanEnd();
+          }
+        }
+
+        expect(
+          state.draft.value.paintedCells.every(
+            (c) => c.variant == Biome.values.last,
+          ),
+          isTrue,
+          reason: 'the last selected brush type should stick to every '
+              'newly painted obstacle cell',
+        );
+        expect(
+          state.draft.value.waterPaths.last.variant,
+          Biome.values.last,
+          reason: 'the last selected brush type should stick to the most '
+              'recently drawn water path',
+        );
+
+        // Switching back to "match biome" (null) stamps no override.
+        state.setVariant(null);
+        state.setTool(EditorTool.mountain);
+        state.handlePanStart(const Offset(700, 500), canvasSize);
+        state.handlePanEnd();
+        expect(
+          state.draft.value.paintedCells
+              .firstWhere((c) => c.col == 17 && c.row == 12)
+              .variant,
+          isNull,
+        );
+      },
+    );
 
     test('every Biome is selectable and fully described', () {
       final state = newState();

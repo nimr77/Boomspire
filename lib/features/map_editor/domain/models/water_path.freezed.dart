@@ -16,7 +16,11 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$WaterPath {
 
- WaterFeatureKind get kind; List<EditorPoint> get points; double get width;
+ WaterFeatureKind get kind; List<EditorPoint> get points; double get width;/// Overrides which [Biome]'s palette this one water feature renders
+/// with, instead of the map's own biome - null means "render with the
+/// map's own biome", matching every path drawn before this brush-type
+/// feature existed.
+ Biome? get variant;
 /// Create a copy of WaterPath
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +33,16 @@ $WaterPathCopyWith<WaterPath> get copyWith => _$WaterPathCopyWithImpl<WaterPath>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WaterPath&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other.points, points)&&(identical(other.width, width) || other.width == width));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WaterPath&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other.points, points)&&(identical(other.width, width) || other.width == width)&&(identical(other.variant, variant) || other.variant == variant));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,kind,const DeepCollectionEquality().hash(points),width);
+int get hashCode => Object.hash(runtimeType,kind,const DeepCollectionEquality().hash(points),width,variant);
 
 @override
 String toString() {
-  return 'WaterPath(kind: $kind, points: $points, width: $width)';
+  return 'WaterPath(kind: $kind, points: $points, width: $width, variant: $variant)';
 }
 
 
@@ -49,7 +53,7 @@ abstract mixin class $WaterPathCopyWith<$Res>  {
   factory $WaterPathCopyWith(WaterPath value, $Res Function(WaterPath) _then) = _$WaterPathCopyWithImpl;
 @useResult
 $Res call({
- WaterFeatureKind kind, List<EditorPoint> points, double width
+ WaterFeatureKind kind, List<EditorPoint> points, double width, Biome? variant
 });
 
 
@@ -66,12 +70,13 @@ class _$WaterPathCopyWithImpl<$Res>
 
 /// Create a copy of WaterPath
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? points = null,Object? width = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? points = null,Object? width = null,Object? variant = freezed,}) {
   return _then(WaterPath(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as WaterFeatureKind,points: null == points ? _self.points : points // ignore: cast_nullable_to_non_nullable
 as List<EditorPoint>,width: null == width ? _self.width : width // ignore: cast_nullable_to_non_nullable
-as double,
+as double,variant: freezed == variant ? _self.variant : variant // ignore: cast_nullable_to_non_nullable
+as Biome?,
   ));
 }
 
@@ -156,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WaterFeatureKind kind,  List<EditorPoint> points,  double width)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WaterFeatureKind kind,  List<EditorPoint> points,  double width,  Biome? variant)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WaterPath() when $default != null:
-return $default(_that.kind,_that.points,_that.width);case _:
+return $default(_that.kind,_that.points,_that.width,_that.variant);case _:
   return orElse();
 
 }
@@ -177,10 +182,10 @@ return $default(_that.kind,_that.points,_that.width);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WaterFeatureKind kind,  List<EditorPoint> points,  double width)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WaterFeatureKind kind,  List<EditorPoint> points,  double width,  Biome? variant)  $default,) {final _that = this;
 switch (_that) {
 case _WaterPath():
-return $default(_that.kind,_that.points,_that.width);case _:
+return $default(_that.kind,_that.points,_that.width,_that.variant);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +202,10 @@ return $default(_that.kind,_that.points,_that.width);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WaterFeatureKind kind,  List<EditorPoint> points,  double width)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WaterFeatureKind kind,  List<EditorPoint> points,  double width,  Biome? variant)?  $default,) {final _that = this;
 switch (_that) {
 case _WaterPath() when $default != null:
-return $default(_that.kind,_that.points,_that.width);case _:
+return $default(_that.kind,_that.points,_that.width,_that.variant);case _:
   return null;
 
 }
@@ -212,7 +217,7 @@ return $default(_that.kind,_that.points,_that.width);case _:
 @JsonSerializable()
 
 class _WaterPath implements WaterPath {
-  const _WaterPath({required this.kind, required  List<EditorPoint> points, this.width = 48.0}): _points = points;
+  const _WaterPath({required this.kind, required  List<EditorPoint> points, this.width = 48.0, this.variant}): _points = points;
   factory _WaterPath.fromJson(Map<String, dynamic> json) => _$WaterPathFromJson(json);
 
 @override final  WaterFeatureKind kind;
@@ -224,6 +229,11 @@ class _WaterPath implements WaterPath {
 }
 
 @override@JsonKey() final  double width;
+/// Overrides which [Biome]'s palette this one water feature renders
+/// with, instead of the map's own biome - null means "render with the
+/// map's own biome", matching every path drawn before this brush-type
+/// feature existed.
+@override final  Biome? variant;
 
 /// Create a copy of WaterPath
 /// with the given fields replaced by the non-null parameter values.
@@ -238,16 +248,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WaterPath&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other._points, _points)&&(identical(other.width, width) || other.width == width));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WaterPath&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other._points, _points)&&(identical(other.width, width) || other.width == width)&&(identical(other.variant, variant) || other.variant == variant));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,kind,const DeepCollectionEquality().hash(_points),width);
+int get hashCode => Object.hash(runtimeType,kind,const DeepCollectionEquality().hash(_points),width,variant);
 
 @override
 String toString() {
-  return 'WaterPath(kind: $kind, points: $points, width: $width)';
+  return 'WaterPath(kind: $kind, points: $points, width: $width, variant: $variant)';
 }
 
 
@@ -258,7 +268,7 @@ abstract mixin class _$WaterPathCopyWith<$Res> implements $WaterPathCopyWith<$Re
   factory _$WaterPathCopyWith(_WaterPath value, $Res Function(_WaterPath) _then) = __$WaterPathCopyWithImpl;
 @override @useResult
 $Res call({
- WaterFeatureKind kind, List<EditorPoint> points, double width
+ WaterFeatureKind kind, List<EditorPoint> points, double width, Biome? variant
 });
 
 
@@ -275,12 +285,13 @@ class __$WaterPathCopyWithImpl<$Res>
 
 /// Create a copy of WaterPath
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? points = null,Object? width = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? points = null,Object? width = null,Object? variant = freezed,}) {
   return _then(_WaterPath(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as WaterFeatureKind,points: null == points ? _self._points : points // ignore: cast_nullable_to_non_nullable
 as List<EditorPoint>,width: null == width ? _self.width : width // ignore: cast_nullable_to_non_nullable
-as double,
+as double,variant: freezed == variant ? _self.variant : variant // ignore: cast_nullable_to_non_nullable
+as Biome?,
   ));
 }
 
