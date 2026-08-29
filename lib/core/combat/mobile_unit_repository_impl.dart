@@ -230,7 +230,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
     UnitKind.aircraft: MobileUnitBlueprint(
       kind: UnitKind.aircraft,
       name: 'Ally Aircraft',
-      cost: 120,
+      cost: 300,
       maxHealth: 60,
       speed: 170,
       bounty: 45,
@@ -251,7 +251,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
     UnitKind.rocketBarrage: MobileUnitBlueprint(
       kind: UnitKind.rocketBarrage,
       name: 'Ally Rocket Barrage',
-      cost: 220,
+      cost: 200,
       maxHealth: 140,
       speed: 30,
       bounty: 80,
@@ -302,7 +302,7 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
     UnitKind.stealthBomber: MobileUnitBlueprint(
       kind: UnitKind.stealthBomber,
       name: 'Ally Stealth Bomber',
-      cost: 260,
+      cost: 700,
       maxHealth: 100,
       speed: 190,
       bounty: 95,

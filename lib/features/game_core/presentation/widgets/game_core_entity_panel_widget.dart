@@ -15,6 +15,7 @@ import '../../../towers/presentation/tower_sprites.dart';
 import '../../../towers/presentation/training_center_component.dart';
 import '../../../towers/presentation/war_factory_component.dart';
 import '../../domain/models/inspected_info.dart';
+import '../../domain/models/production_option.dart';
 import '../boomspire_game.dart';
 import '../state/game_core_production_state.dart';
 import 'game_core_entity_panel_shell_widget.dart';
@@ -272,18 +273,27 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
   List<Widget> _produceButtons(BoomspireGame game, TowerComponent tower) {
     return [
       for (final option in _productionState.optionsFor(game, tower))
-        GameCoreTowerActionButtonWidget(
-          icon: _unitIcon(option.kind),
-          label:
-              option.lockReason ??
-              (option.ready
-                  ? '${option.cost}g'
-                  : '${option.cooldownRemaining.ceil()}s'),
-          color: AppThemeColors.accentEmerald,
-          enabled: option.affordable,
-          onTap: () => _productionState.produce(tower, option.kind),
-        ),
+        _produceButton(game, tower, option),
     ];
+  }
+
+  // Lock reason (e.g. "Requires War Factory") only surfaces on hover, same
+  // as a tower's build-menu tooltip, instead of replacing the cost label.
+  Widget _produceButton(
+    BoomspireGame game,
+    TowerComponent tower,
+    ProductionOption option,
+  ) {
+    final button = GameCoreTowerActionButtonWidget(
+      icon: _unitIcon(option.kind),
+      label: option.ready ? '${option.cost}g' : '${option.cooldownRemaining.ceil()}s',
+      color: AppThemeColors.accentEmerald,
+      enabled: option.affordable,
+      onTap: () => _productionState.produce(tower, option.kind),
+    );
+    return option.lockReason == null
+        ? button
+        : Tooltip(message: option.lockReason!, child: button);
   }
 
   IconData _unitIcon(UnitKind type) => switch (type) {
