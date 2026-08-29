@@ -28,10 +28,7 @@ EditorTerrainPreview _generatePreview(MapDraft draft) {
     rows,
     (_) => List<ObstacleKind?>.filled(cols, null),
   );
-  final variants = List.generate(
-    rows,
-    (_) => List<Biome?>.filled(cols, null),
-  );
+  final variants = List.generate(rows, (_) => List<Biome?>.filled(cols, null));
 
   void paint(int col, int row, ObstacleKind kind, Biome? variant) {
     if (!grid.inBounds(col, row)) return;

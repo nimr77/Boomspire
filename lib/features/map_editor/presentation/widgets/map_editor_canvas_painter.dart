@@ -368,28 +368,6 @@ class MapEditorCanvasPainter extends CustomPainter {
     }
   }
 
-  /// Faint drifting dust/leaf streaks that scale with wind strength - unlike
-  /// tree-lean (only visible on tree-bearing biomes), this makes the wind
-  /// slider have a visible effect on every biome/map.
-  void _paintWindStreaks(Canvas canvas, Size size, double windStrength) {
-    if (windStrength <= 0) return;
-    final rnd = Random(13);
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.18 * windStrength.clamp(0, 1))
-      ..strokeWidth = 1.2
-      ..strokeCap = StrokeCap.round;
-    final streakLength = 18 + windStrength * 40;
-    for (var i = 0; i < (windStrength * 40).round(); i++) {
-      final x = rnd.nextDouble() * size.width;
-      final y = rnd.nextDouble() * size.height;
-      canvas.drawLine(
-        Offset(x, y),
-        Offset(x + streakLength, y - streakLength * 0.18),
-        paint,
-      );
-    }
-  }
-
   /// Samples the weather timeline at [previewProgress] and draws cloud/fog
   /// tinting plus simple rain/snow overlays so timeline edits are visible.
   void _paintWeather(Canvas canvas, Rect rect, Size size) {
@@ -438,6 +416,28 @@ class MapEditorCanvasPainter extends CustomPainter {
         final y = rnd.nextDouble() * size.height;
         canvas.drawCircle(Offset(x, y), 1.5, paint);
       }
+    }
+  }
+
+  /// Faint drifting dust/leaf streaks that scale with wind strength - unlike
+  /// tree-lean (only visible on tree-bearing biomes), this makes the wind
+  /// slider have a visible effect on every biome/map.
+  void _paintWindStreaks(Canvas canvas, Size size, double windStrength) {
+    if (windStrength <= 0) return;
+    final rnd = Random(13);
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.18 * windStrength.clamp(0, 1))
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round;
+    final streakLength = 18 + windStrength * 40;
+    for (var i = 0; i < (windStrength * 40).round(); i++) {
+      final x = rnd.nextDouble() * size.width;
+      final y = rnd.nextDouble() * size.height;
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x + streakLength, y - streakLength * 0.18),
+        paint,
+      );
     }
   }
 }

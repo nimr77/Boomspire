@@ -151,8 +151,7 @@ void main() {
     expect(
       terrainMap.treeCells.any((p) => p.x == 20 && p.y == 10),
       isTrue,
-      reason:
-          'a hand-placed tree should reach the real terrain regardless of biome',
+      reason: 'a hand-placed tree should reach the real terrain regardless of biome',
     );
     expect(
       terrainMap.biomeAt(11, 1),
@@ -164,7 +163,8 @@ void main() {
     expect(
       terrainMap.biomeAt(10, 1),
       draft.biome,
-      reason: 'a mountain painted with no override still renders with the '
+      reason:
+          'a mountain painted with no override still renders with the '
           "map's own biome",
     );
 

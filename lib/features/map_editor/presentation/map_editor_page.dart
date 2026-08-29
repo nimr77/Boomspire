@@ -359,8 +359,7 @@ class _MapEditorPageState extends State<MapEditorPage> {
                                   S.current.brushTypeMatchBiomeEditorPage,
                                 ),
                                 selected: currentVariant == null,
-                                onSelected: (_) =>
-                                    _draftState.setVariant(null),
+                                onSelected: (_) => _draftState.setVariant(null),
                               ),
                               for (final biome in Biome.values)
                                 ChoiceChip(

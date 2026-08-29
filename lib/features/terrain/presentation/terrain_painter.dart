@@ -402,6 +402,87 @@ class TerrainPainter {
     return chains;
   }
 
+  /// A flattened, wide-spread canopy on a taller trunk - reads as an acacia
+  /// silhouette against open savanna grassland.
+  static void _paintAcaciaCanopy(
+    ui.Canvas canvas,
+    double cx,
+    double cy,
+    double scale,
+  ) {
+    _paintTrunk(canvas, cx, cy, scale, height: 12, color: 0xFF5a3f1f);
+    canvas.drawOval(
+      ui.Rect.fromCenter(
+        center: ui.Offset(cx, cy - 11 * scale),
+        width: 26 * scale,
+        height: 9 * scale,
+      ),
+      ui.Paint()..color = const ui.Color(0xFF6b7a3d).withValues(alpha: 0.92),
+    );
+    canvas.drawOval(
+      ui.Rect.fromCenter(
+        center: ui.Offset(cx - 4 * scale, cy - 13 * scale),
+        width: 12 * scale,
+        height: 5 * scale,
+      ),
+      ui.Paint()..color = const ui.Color(0xFF8a9a4a).withValues(alpha: 0.6),
+    );
+  }
+
+  /// Layered conical tiers (blue-white, snow-capped) for the icy peaks -
+  /// distinct from the tundra's frosted broadleaf look.
+  static void _paintConiferCanopy(
+    ui.Canvas canvas,
+    double cx,
+    double cy,
+    double scale,
+  ) {
+    _paintTrunk(canvas, cx, cy, scale, height: 8, color: 0xFF3a3228);
+    const tiers = [0.0, -5.0, -9.5];
+    for (final dy in tiers) {
+      final width = (16 - tiers.indexOf(dy) * 3) * scale;
+      final tierCenter = ui.Offset(cx, cy + dy * scale - 3 * scale);
+      final path = ui.Path()
+        ..moveTo(tierCenter.dx - width / 2, tierCenter.dy + 4 * scale)
+        ..lineTo(tierCenter.dx, tierCenter.dy - 5 * scale)
+        ..lineTo(tierCenter.dx + width / 2, tierCenter.dy + 4 * scale)
+        ..close();
+      canvas.drawPath(
+        path,
+        ui.Paint()..color = const ui.Color(0xFF375a52).withValues(alpha: 0.9),
+      );
+    }
+    canvas.drawCircle(
+      ui.Offset(cx, cy - 12.5 * scale),
+      3.2 * scale,
+      ui.Paint()..color = const ui.Color(0xFFFFFFFF).withValues(alpha: 0.85),
+    );
+  }
+
+  /// A couple of leafless, forked branches - no canopy - for the arid dunes.
+  static void _paintDesertTree(
+    ui.Canvas canvas,
+    double cx,
+    double cy,
+    double scale,
+  ) {
+    final paint = ui.Paint()
+      ..color = const ui.Color(0xFF7a5c3d)
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 2.2 * scale
+      ..strokeCap = ui.StrokeCap.round;
+    final base = ui.Offset(cx, cy + 8 * scale);
+    final mid = ui.Offset(cx, cy - 2 * scale);
+    canvas.drawLine(base, mid, paint);
+    for (final branch in [
+      ui.Offset(cx - 9 * scale, cy - 9 * scale),
+      ui.Offset(cx + 8 * scale, cy - 8 * scale),
+      ui.Offset(cx - 3 * scale, cy - 12 * scale),
+    ]) {
+      canvas.drawLine(mid, branch, paint);
+    }
+  }
+
   static void _paintDune(
     ui.Canvas canvas,
     Grid grid,
@@ -444,6 +525,36 @@ class TerrainPainter {
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 1.5
         ..color = const ui.Color(0xFF5c3d1a).withValues(alpha: 0.5),
+    );
+  }
+
+  /// Dense, darker overlapping foliage blobs - a thicker rainforest canopy
+  /// than the default grassland tree.
+  static void _paintForestCanopy(
+    ui.Canvas canvas,
+    double cx,
+    double cy,
+    double scale,
+  ) {
+    _paintTrunk(canvas, cx, cy, scale);
+    const lobes = [
+      (dx: 0.0, dy: -3.0, scale: 1.15),
+      (dx: -7.0, dy: 1.5, scale: 0.9),
+      (dx: 7.0, dy: 1.5, scale: 0.95),
+      (dx: -3.0, dy: 5.0, scale: 0.85),
+      (dx: 4.0, dy: 5.5, scale: 0.8),
+    ];
+    for (final lobe in lobes) {
+      canvas.drawCircle(
+        ui.Offset(cx + lobe.dx * scale, cy + lobe.dy * scale - 4 * scale),
+        9 * scale * lobe.scale,
+        ui.Paint()..color = const ui.Color(0xFF14311a).withValues(alpha: 0.94),
+      );
+    }
+    canvas.drawCircle(
+      ui.Offset(cx - 5 * scale, cy - 9 * scale),
+      6 * scale,
+      ui.Paint()..color = const ui.Color(0xFF3a7a3f).withValues(alpha: 0.55),
     );
   }
 
@@ -578,6 +689,47 @@ class TerrainPainter {
     );
   }
 
+  /// A curved trunk plus radiating frond blades - reads as a palm on the
+  /// sea biome's coastal reefs/islets.
+  static void _paintPalmCanopy(
+    ui.Canvas canvas,
+    double cx,
+    double cy,
+    double scale,
+  ) {
+    final trunkPath = ui.Path()
+      ..moveTo(cx - 2 * scale, cy + 9 * scale)
+      ..quadraticBezierTo(
+        cx + 5 * scale,
+        cy + 2 * scale,
+        cx + 1 * scale,
+        cy - 9 * scale,
+      );
+    canvas.drawPath(
+      trunkPath,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 3 * scale
+        ..color = const ui.Color(0xFF8a6a3f),
+    );
+    final crown = ui.Offset(cx + 1 * scale, cy - 9 * scale);
+    for (final angle in [-1.1, -0.5, 0.0, 0.5, 1.1]) {
+      final tip = ui.Offset(
+        crown.dx + cos(angle) * 13 * scale,
+        crown.dy + sin(angle) * 8 * scale - 3 * scale,
+      );
+      canvas.drawLine(
+        crown,
+        tip,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2.4 * scale
+          ..strokeCap = ui.StrokeCap.round
+          ..color = const ui.Color(0xFF2f7a4a),
+      );
+    }
+  }
+
   /// Static shore/bed/water-gradient layers only - baked once into the
   /// cached terrain image. The moving shimmer/ripples are drawn separately
   /// every frame by [paintRiverFlow] so the river reads as flowing water.
@@ -644,209 +796,6 @@ class TerrainPainter {
           const [0.0, 0.25, 0.5, 0.75, 1.0],
         ),
     );
-  }
-
-  /// Trees adapt their silhouette/color to the biome they're planted on
-  /// (whether scattered automatically or hand-placed via the map editor's
-  /// Tree brush) instead of always looking like the same grassland tree -
-  /// a snow-capped conifer on the tundra reads very differently from a
-  /// scorched dead tree in the ruins.
-  static void _paintTree(
-    ui.Canvas canvas,
-    Grid grid,
-    int col,
-    int row,
-    Random rnd,
-    Biome biome,
-  ) {
-    final cx =
-        col * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
-    final cy =
-        row * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
-    final scale = 0.7 + rnd.nextDouble() * 0.5;
-
-    // Ground shadow first, so the canopy reads as sitting above the tile.
-    canvas.drawOval(
-      ui.Rect.fromCenter(
-        center: ui.Offset(cx + 3, cy + 9 * scale),
-        width: 20 * scale,
-        height: 8 * scale,
-      ),
-      ui.Paint()
-        ..color = const ui.Color(0xFF000000).withValues(alpha: 0.22)
-        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 3),
-    );
-
-    switch (biome) {
-      case Biome.mountainForest:
-        _paintForestCanopy(canvas, cx, cy, scale);
-      case Biome.savanna:
-        _paintAcaciaCanopy(canvas, cx, cy, scale);
-      case Biome.snowTundra:
-        _paintSnowyCanopy(canvas, cx, cy, scale);
-      case Biome.frozenPeaks:
-        _paintConiferCanopy(canvas, cx, cy, scale);
-      case Biome.desertDunes:
-        _paintDesertTree(canvas, cx, cy, scale);
-      case Biome.sea:
-        _paintPalmCanopy(canvas, cx, cy, scale);
-      case Biome.cityRuins:
-        _paintScorchedTree(canvas, cx, cy, scale);
-      case Biome.grassPlains:
-        _paintRoundCanopy(canvas, cx, cy, scale);
-    }
-  }
-
-  /// A flattened, wide-spread canopy on a taller trunk - reads as an acacia
-  /// silhouette against open savanna grassland.
-  static void _paintAcaciaCanopy(
-    ui.Canvas canvas,
-    double cx,
-    double cy,
-    double scale,
-  ) {
-    _paintTrunk(canvas, cx, cy, scale, height: 12, color: 0xFF5a3f1f);
-    canvas.drawOval(
-      ui.Rect.fromCenter(
-        center: ui.Offset(cx, cy - 11 * scale),
-        width: 26 * scale,
-        height: 9 * scale,
-      ),
-      ui.Paint()..color = const ui.Color(0xFF6b7a3d).withValues(alpha: 0.92),
-    );
-    canvas.drawOval(
-      ui.Rect.fromCenter(
-        center: ui.Offset(cx - 4 * scale, cy - 13 * scale),
-        width: 12 * scale,
-        height: 5 * scale,
-      ),
-      ui.Paint()..color = const ui.Color(0xFF8a9a4a).withValues(alpha: 0.6),
-    );
-  }
-
-  /// Layered conical tiers (blue-white, snow-capped) for the icy peaks -
-  /// distinct from the tundra's frosted broadleaf look.
-  static void _paintConiferCanopy(
-    ui.Canvas canvas,
-    double cx,
-    double cy,
-    double scale,
-  ) {
-    _paintTrunk(canvas, cx, cy, scale, height: 8, color: 0xFF3a3228);
-    const tiers = [0.0, -5.0, -9.5];
-    for (final dy in tiers) {
-      final width = (16 - tiers.indexOf(dy) * 3) * scale;
-      final tierCenter = ui.Offset(cx, cy + dy * scale - 3 * scale);
-      final path = ui.Path()
-        ..moveTo(tierCenter.dx - width / 2, tierCenter.dy + 4 * scale)
-        ..lineTo(tierCenter.dx, tierCenter.dy - 5 * scale)
-        ..lineTo(tierCenter.dx + width / 2, tierCenter.dy + 4 * scale)
-        ..close();
-      canvas.drawPath(
-        path,
-        ui.Paint()..color = const ui.Color(0xFF375a52).withValues(alpha: 0.9),
-      );
-    }
-    canvas.drawCircle(
-      ui.Offset(cx, cy - 12.5 * scale),
-      3.2 * scale,
-      ui.Paint()..color = const ui.Color(0xFFFFFFFF).withValues(alpha: 0.85),
-    );
-  }
-
-  /// A couple of leafless, forked branches - no canopy - for the arid dunes.
-  static void _paintDesertTree(
-    ui.Canvas canvas,
-    double cx,
-    double cy,
-    double scale,
-  ) {
-    final paint = ui.Paint()
-      ..color = const ui.Color(0xFF7a5c3d)
-      ..style = ui.PaintingStyle.stroke
-      ..strokeWidth = 2.2 * scale
-      ..strokeCap = ui.StrokeCap.round;
-    final base = ui.Offset(cx, cy + 8 * scale);
-    final mid = ui.Offset(cx, cy - 2 * scale);
-    canvas.drawLine(base, mid, paint);
-    for (final branch in [
-      ui.Offset(cx - 9 * scale, cy - 9 * scale),
-      ui.Offset(cx + 8 * scale, cy - 8 * scale),
-      ui.Offset(cx - 3 * scale, cy - 12 * scale),
-    ]) {
-      canvas.drawLine(mid, branch, paint);
-    }
-  }
-
-  /// Dense, darker overlapping foliage blobs - a thicker rainforest canopy
-  /// than the default grassland tree.
-  static void _paintForestCanopy(
-    ui.Canvas canvas,
-    double cx,
-    double cy,
-    double scale,
-  ) {
-    _paintTrunk(canvas, cx, cy, scale);
-    const lobes = [
-      (dx: 0.0, dy: -3.0, scale: 1.15),
-      (dx: -7.0, dy: 1.5, scale: 0.9),
-      (dx: 7.0, dy: 1.5, scale: 0.95),
-      (dx: -3.0, dy: 5.0, scale: 0.85),
-      (dx: 4.0, dy: 5.5, scale: 0.8),
-    ];
-    for (final lobe in lobes) {
-      canvas.drawCircle(
-        ui.Offset(cx + lobe.dx * scale, cy + lobe.dy * scale - 4 * scale),
-        9 * scale * lobe.scale,
-        ui.Paint()..color = const ui.Color(0xFF14311a).withValues(alpha: 0.94),
-      );
-    }
-    canvas.drawCircle(
-      ui.Offset(cx - 5 * scale, cy - 9 * scale),
-      6 * scale,
-      ui.Paint()..color = const ui.Color(0xFF3a7a3f).withValues(alpha: 0.55),
-    );
-  }
-
-  /// A curved trunk plus radiating frond blades - reads as a palm on the
-  /// sea biome's coastal reefs/islets.
-  static void _paintPalmCanopy(
-    ui.Canvas canvas,
-    double cx,
-    double cy,
-    double scale,
-  ) {
-    final trunkPath = ui.Path()
-      ..moveTo(cx - 2 * scale, cy + 9 * scale)
-      ..quadraticBezierTo(
-        cx + 5 * scale,
-        cy + 2 * scale,
-        cx + 1 * scale,
-        cy - 9 * scale,
-      );
-    canvas.drawPath(
-      trunkPath,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 3 * scale
-        ..color = const ui.Color(0xFF8a6a3f),
-    );
-    final crown = ui.Offset(cx + 1 * scale, cy - 9 * scale);
-    for (final angle in [-1.1, -0.5, 0.0, 0.5, 1.1]) {
-      final tip = ui.Offset(
-        crown.dx + cos(angle) * 13 * scale,
-        crown.dy + sin(angle) * 8 * scale - 3 * scale,
-      );
-      canvas.drawLine(
-        crown,
-        tip,
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2.4 * scale
-          ..strokeCap = ui.StrokeCap.round
-          ..color = const ui.Color(0xFF2f7a4a),
-      );
-    }
   }
 
   /// The default grassland canopy: rounded, overlapping foliage blobs
@@ -937,6 +886,57 @@ class TerrainPainter {
       false,
       ui.Paint()..color = const ui.Color(0xFFFFFFFF).withValues(alpha: 0.75),
     );
+  }
+
+  /// Trees adapt their silhouette/color to the biome they're planted on
+  /// (whether scattered automatically or hand-placed via the map editor's
+  /// Tree brush) instead of always looking like the same grassland tree -
+  /// a snow-capped conifer on the tundra reads very differently from a
+  /// scorched dead tree in the ruins.
+  static void _paintTree(
+    ui.Canvas canvas,
+    Grid grid,
+    int col,
+    int row,
+    Random rnd,
+    Biome biome,
+  ) {
+    final cx =
+        col * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
+    final cy =
+        row * grid.cellSize + grid.cellSize / 2 + (rnd.nextDouble() - 0.5) * 8;
+    final scale = 0.7 + rnd.nextDouble() * 0.5;
+
+    // Ground shadow first, so the canopy reads as sitting above the tile.
+    canvas.drawOval(
+      ui.Rect.fromCenter(
+        center: ui.Offset(cx + 3, cy + 9 * scale),
+        width: 20 * scale,
+        height: 8 * scale,
+      ),
+      ui.Paint()
+        ..color = const ui.Color(0xFF000000).withValues(alpha: 0.22)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 3),
+    );
+
+    switch (biome) {
+      case Biome.mountainForest:
+        _paintForestCanopy(canvas, cx, cy, scale);
+      case Biome.savanna:
+        _paintAcaciaCanopy(canvas, cx, cy, scale);
+      case Biome.snowTundra:
+        _paintSnowyCanopy(canvas, cx, cy, scale);
+      case Biome.frozenPeaks:
+        _paintConiferCanopy(canvas, cx, cy, scale);
+      case Biome.desertDunes:
+        _paintDesertTree(canvas, cx, cy, scale);
+      case Biome.sea:
+        _paintPalmCanopy(canvas, cx, cy, scale);
+      case Biome.cityRuins:
+        _paintScorchedTree(canvas, cx, cy, scale);
+      case Biome.grassPlains:
+        _paintRoundCanopy(canvas, cx, cy, scale);
+    }
   }
 
   /// Shared trunk shape used by every canopy style except the desert/ruins
