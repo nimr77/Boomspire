@@ -268,9 +268,8 @@ void main() {
       // spawned invader hit by the silo could splash-damage closeEnemy
       // sitting in the dead zone - a source of flakiness unrelated to the
       // minRange logic under test.
-      for (final director in game.world.children
-          .whereType<WaveDirectorComponent>()
-          .toList()) {
+      for (final director
+          in game.world.children.whereType<WaveDirectorComponent>().toList()) {
         director.removeFromParent();
       }
 
