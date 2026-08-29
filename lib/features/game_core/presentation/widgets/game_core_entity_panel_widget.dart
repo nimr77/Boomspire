@@ -270,13 +270,6 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
     ];
   }
 
-  List<Widget> _produceButtons(BoomspireGame game, TowerComponent tower) {
-    return [
-      for (final option in _productionState.optionsFor(game, tower))
-        _produceButton(game, tower, option),
-    ];
-  }
-
   // Lock reason (e.g. "Requires War Factory") only surfaces on hover, same
   // as a tower's build-menu tooltip, instead of replacing the cost label.
   Widget _produceButton(
@@ -286,7 +279,9 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
   ) {
     final button = GameCoreTowerActionButtonWidget(
       icon: _unitIcon(option.kind),
-      label: option.ready ? '${option.cost}g' : '${option.cooldownRemaining.ceil()}s',
+      label: option.ready
+          ? '${option.cost}g'
+          : '${option.cooldownRemaining.ceil()}s',
       color: AppThemeColors.accentEmerald,
       enabled: option.affordable,
       onTap: () => _productionState.produce(tower, option.kind),
@@ -294,6 +289,13 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
     return option.lockReason == null
         ? button
         : Tooltip(message: option.lockReason!, child: button);
+  }
+
+  List<Widget> _produceButtons(BoomspireGame game, TowerComponent tower) {
+    return [
+      for (final option in _productionState.optionsFor(game, tower))
+        _produceButton(game, tower, option),
+    ];
   }
 
   IconData _unitIcon(UnitKind type) => switch (type) {
