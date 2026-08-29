@@ -205,7 +205,10 @@ class AiSkirmishControllerComponent extends Component
   /// `MobileUnitRepositoryImpl.kindsFor`) - not just what it happens to
   /// already own a production building for - so the director (Gemini, via
   /// [SkirmishDirective.preferredUnitKind]) always gets to reason about
-  /// every unit kind it could ever choose to build, not a subset.
+  /// every unit kind it could ever choose to build, not a subset. Carries
+  /// each kind's real combat profile (domain, damage, range, speed), not
+  /// just its name/cost, so the director actually knows how each unit
+  /// fights instead of guessing from a label.
   List<UnitRosterEntry> _availableUnitRoster(Team aiTeam) =>
       game.unitRepository.kindsFor(aiTeam).map((kind) {
         final blueprint = game.unitRepository.blueprintFor(aiTeam, kind);
@@ -214,12 +217,60 @@ class AiSkirmishControllerComponent extends Component
           cost: blueprint.cost,
           isVehicle: blueprint.isVehicle,
           attacksAir: blueprint.attackDomains.contains(UnitDomain.air),
+          domain: blueprint.domain.name,
+          damage: blueprint.attackDamage,
+          range: blueprint.attackRange,
+          speed: blueprint.speed,
         );
       }).toList();
+
+  /// Every tower/building the AI can ever build, with its own combat
+  /// profile - the structure-side counterpart of [_availableUnitRoster], so
+  /// the director understands the AI's defensive/economic options (cost,
+  /// range, firepower, what domain they can hit) instead of only ever
+  /// seeing raw tower counts.
+  List<TowerRosterEntry> _availableTowerRoster() =>
+      <UnitType>[..._infrastructureBuildOrder, ..._combatTowerTypes].map((
+        type,
+      ) {
+        final blueprint = game.blueprintFor(type);
+        return TowerRosterEntry(
+          type: type.name,
+          cost: blueprint.cost,
+          damage: blueprint.damage,
+          range: blueprint.range,
+          maxHp: blueprint.maxHp,
+          attacksAir: blueprint.attackDomains.contains(UnitDomain.air),
+          attacksGround: blueprint.attackDomains.contains(UnitDomain.ground),
+        );
+      }).toList();
+
+  /// A top-down `#`/`.` read of the battlefield grid (blocked terrain or an
+  /// occupied cell vs. open ground) - the director's "read the blocks on
+  /// the screen" view of the map, letting it reason about chokepoints and
+  /// buildable space instead of only raw unit/tower counts. See
+  /// [SkirmishSnapshot.terrainRows].
+  List<String> _terrainRows() {
+    final grid = game.terrainMap.grid;
+    return List.generate(grid.rows, (row) {
+      final buffer = StringBuffer();
+      for (var col = 0; col < grid.cols; col++) {
+        buffer.write(grid.isBlocked(col, row) ? '#' : '.');
+      }
+      return buffer.toString();
+    });
+  }
 
   SkirmishSnapshot _buildSnapshot() {
     final economy = game.aiEconomy!;
     final aiTeam = game.aiTeam!;
+    final grid = game.terrainMap.grid;
+    final aiBaseCell = game.world.aiHomeBase == null
+        ? null
+        : grid.worldToCell(game.world.aiHomeBase!.position);
+    final playerBaseCell = game.world.playerHomeBase == null
+        ? null
+        : grid.worldToCell(game.world.playerHomeBase!.position);
     return SkirmishSnapshot(
       aiGold: economy.gold,
       aiHealth: economy.health,
@@ -238,6 +289,12 @@ class AiSkirmishControllerComponent extends Component
           .where((u) => !u.destroyed && u.team.id == game.playerTeam.id)
           .length,
       availableUnits: _availableUnitRoster(aiTeam),
+      availableTowers: _availableTowerRoster(),
+      terrainRows: _terrainRows(),
+      aiBaseCol: aiBaseCell?.x,
+      aiBaseRow: aiBaseCell?.y,
+      playerBaseCol: playerBaseCell?.x,
+      playerBaseRow: playerBaseCell?.y,
     );
   }
 

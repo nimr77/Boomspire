@@ -96,13 +96,15 @@ Future<SkirmishDirective> _askGeminiSkirmish(
 ) async {
   final prompt =
       '''
-You are the AI commander in a real-time base-vs-base skirmish game. Match snapshot (JSON), including every unit kind you're currently able to build in `availableUnits` (cost, whether it's a vehicle, whether it can hit air targets):
+You are the AI commander in a real-time base-vs-base skirmish game. Match snapshot (JSON):
 ${jsonEncode(snapshot)}
+
+`availableUnits` is your full mobile-unit roster: each entry's `domain` (ground/air/sea) is what it physically is, `attacksAir`/`damage`/`range`/`speed` are its real combat stats - use these to judge what actually counters the enemy, not just the name. `availableTowers` is every tower/building you can build the same way (`damage`/`range`/`maxHp`/`attacksAir`/`attacksGround`; a 0 damage/range entry like Gold Mine or Training Center is non-combat infrastructure). `terrainRows` is a top-down read of the battlefield grid, one string per row, `#` for blocked terrain (or an occupied cell) and `.` for open ground - `aiBaseCol`/`aiBaseRow` and `playerBaseCol`/`playerBaseRow` locate each base within it (column, then row, both 0-indexed). Use the terrain to judge chokepoints and how exposed each base is, not just raw counts.
 
 Decide your commander's posture right now, which unit to build next, and how to attack. Respond with ONLY a JSON object of this exact shape:
 {"aggression": <0..1 float>, "buildBias": <0..1 float>, "preferredUnitKind": <the "kind" of one entry from availableUnits, or null>, "squadSize": <1..8 int>, "attackTarget": "enemyBase" or "weakestEnemyTower", "commanderNote": "<one short in-character sentence, max 12 words>"}
 
-aggression: 0 = stockpile gold and turtle, 1 = spend gold immediately on attack units and push the opponent's base. buildBias: 0 = spend almost everything on attack units, 1 = spend heavily on defensive towers around your own base first. preferredUnitKind: pick whichever unit in availableUnits best counters what the player is fielding (e.g. one that attacksAir if they have aircraft up), or null to let the local heuristic choose. squadSize: how many units to mass into one attack wave before sending them out together - bigger when aggression/gold are high. attackTarget: enemyBase to beeline the player's base, weakestEnemyTower to focus down their most damaged tower first.
+aggression: 0 = stockpile gold and turtle, 1 = spend gold immediately on attack units and push the opponent's base. buildBias: 0 = spend almost everything on attack units, 1 = spend heavily on defensive towers around your own base first. preferredUnitKind: pick whichever unit in availableUnits best counters what the player is fielding by real stats (e.g. one that attacksAir with good range if they have aircraft up), or null to let the local heuristic choose. squadSize: how many units to mass into one attack wave before sending them out together - bigger when aggression/gold are high. attackTarget: enemyBase to beeline the player's base, weakestEnemyTower to focus down their most damaged tower first.
 ''';
 
   final uri = Uri.parse(
@@ -310,6 +312,18 @@ SkirmishSnapshot _snapshotFromJson(Map<String, dynamic> json) =>
               ?.map((u) => UnitRosterEntry.fromJson(u as Map<String, dynamic>))
               .toList() ??
           const [],
+      availableTowers:
+          (json['availableTowers'] as List?)
+              ?.map((t) => TowerRosterEntry.fromJson(t as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      terrainRows:
+          (json['terrainRows'] as List?)?.map((r) => r as String).toList() ??
+          const [],
+      aiBaseCol: (json['aiBaseCol'] as num?)?.toInt(),
+      aiBaseRow: (json['aiBaseRow'] as num?)?.toInt(),
+      playerBaseCol: (json['playerBaseCol'] as num?)?.toInt(),
+      playerBaseRow: (json['playerBaseRow'] as num?)?.toInt(),
     );
 
 String _stripCodeFence(String text) {
