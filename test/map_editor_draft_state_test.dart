@@ -9,6 +9,7 @@ import 'dart:ui';
 import 'package:boomspire/core/combat/unit_kind.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scene.dart';
 import 'package:boomspire/features/game_core/presentation/player_palette.dart';
+import 'package:boomspire/features/map_editor/domain/models/environment_settings.dart';
 import 'package:boomspire/features/map_editor/domain/models/map_draft.dart';
 import 'package:boomspire/features/map_editor/domain/models/water_path.dart';
 import 'package:boomspire/features/map_editor/domain/models/weather_keyframe.dart';
@@ -91,6 +92,8 @@ void main() {
             );
           case EditorTool.river:
           case EditorTool.lake:
+          case EditorTool.lava:
+          case EditorTool.volcanicLake:
             final before = state.draft.value.waterPaths.length;
             state.setTool(tool);
             state.handlePanStart(const Offset(100, 100), canvasSize);
@@ -99,9 +102,12 @@ void main() {
             expect(state.draft.value.waterPaths.length, before + 1);
             expect(
               state.draft.value.waterPaths.last.kind,
-              tool == EditorTool.river
-                  ? WaterFeatureKind.river
-                  : WaterFeatureKind.lake,
+              switch (tool) {
+                EditorTool.lake => WaterFeatureKind.lake,
+                EditorTool.lava => WaterFeatureKind.lava,
+                EditorTool.volcanicLake => WaterFeatureKind.volcanicLake,
+                _ => WaterFeatureKind.river,
+              },
             );
           case EditorTool.homeSite:
             state.setTool(EditorTool.homeSite);
@@ -128,13 +134,18 @@ void main() {
         EditorTool.dune,
         EditorTool.river,
         EditorTool.lake,
+        EditorTool.lava,
+        EditorTool.volcanicLake,
       ]) {
         for (final brushType in Biome.values) {
           state.setVariant(brushType);
           expect(state.variant.value, brushType);
           state.setTool(tool);
           state.handlePanStart(const Offset(20, 20), canvasSize);
-          if (tool == EditorTool.river || tool == EditorTool.lake) {
+          if (tool == EditorTool.river ||
+              tool == EditorTool.lake ||
+              tool == EditorTool.lava ||
+              tool == EditorTool.volcanicLake) {
             state.handlePanUpdate(const Offset(300, 100), canvasSize);
           }
           state.handlePanEnd();
@@ -170,6 +181,24 @@ void main() {
         isNull,
       );
     });
+
+    test(
+      'a tree brush-type override is stamped on the TreeCell itself '
+      '(EnvironmentAdaptation only gates whether it is later honored at '
+      'generation time, not whether it can be authored)',
+      () async {
+        final state = newState();
+        addTearDown(state.dispose);
+        await state.initialize();
+
+        state.setVariant(Biome.snowTundra);
+        state.setTool(EditorTool.tree);
+        state.handlePanStart(const Offset(20, 20), canvasSize);
+        state.handlePanEnd();
+
+        expect(state.draft.value.treeCells.single.variant, Biome.snowTundra);
+      },
+    );
 
     test('every Biome is selectable and fully described', () {
       final state = newState();
@@ -213,6 +242,17 @@ void main() {
 
       state.setDynamicWeather(true);
       expect(state.draft.value.environment.dynamicWeather, isTrue);
+
+      state.setEnvironmentAdaptation(EnvironmentAdaptation.manual);
+      expect(
+        state.draft.value.environment.adaptation,
+        EnvironmentAdaptation.manual,
+      );
+      state.setEnvironmentAdaptation(EnvironmentAdaptation.automatic);
+      expect(
+        state.draft.value.environment.adaptation,
+        EnvironmentAdaptation.automatic,
+      );
 
       state.setSunAngle(0.75);
       expect(state.draft.value.environment.sunAngle, 0.75);

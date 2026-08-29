@@ -3,9 +3,22 @@ import 'package:flutter/material.dart' show Color;
 import '../../../generated/l10n.dart';
 import '../domain/enums/biome.dart';
 import '../domain/enums/obstacle_kind.dart';
+import '../domain/enums/wind_type.dart';
 import '../domain/models/biome.dart' show BiomePalette;
 
 extension BiomeExtensions on Biome {
+  /// This biome's own natural wind look - what a scene's live weather
+  /// renders when a keyframe leaves [WindType] on [WindType.automatic].
+  /// This is the biome's *default*, not a hard link: [EnvironmentSettings]
+  /// can still override it explicitly on any keyframe.
+  WindType get defaultWindType => switch (this) {
+    Biome.grassPlains || Biome.savanna => WindType.grassLeaves,
+    Biome.mountainForest => WindType.autumnLeaves,
+    Biome.snowTundra || Biome.frozenPeaks => WindType.snow,
+    Biome.desertDunes => WindType.sand,
+    Biome.cityRuins || Biome.sea => WindType.dust,
+  };
+
   String get description => switch (this) {
     Biome.grassPlains => S.current.biomeDescriptionGrassPlains,
     Biome.snowTundra => S.current.biomeDescriptionSnowTundra,

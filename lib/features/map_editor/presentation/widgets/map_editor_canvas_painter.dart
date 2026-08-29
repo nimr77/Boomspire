@@ -11,6 +11,7 @@ import '../../domain/models/editor_point.dart';
 import '../../domain/models/editor_terrain_preview.dart';
 import '../../domain/models/environment_settings.dart';
 import '../../domain/models/tree_cell.dart';
+import '../../domain/models/weather_keyframe.dart';
 import '../state/map_editor_draft_state.dart';
 
 /// Renders the map editor canvas: the rasterized terrain grid, sun/weather
@@ -108,11 +109,12 @@ class MapEditorCanvasPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..color =
-              (tool == EditorTool.lake
-                      ? Colors.blueAccent
-                      : Colors.lightBlueAccent)
-                  .withValues(alpha: 0.8)
+          ..color = switch (tool) {
+            EditorTool.lake => Colors.blueAccent,
+            EditorTool.lava ||
+            EditorTool.volcanicLake => Colors.deepOrangeAccent,
+            _ => Colors.lightBlueAccent,
+          }.withValues(alpha: 0.8)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 4
           ..strokeCap = StrokeCap.round,
@@ -327,12 +329,12 @@ class MapEditorCanvasPainter extends CustomPainter {
     double cellH,
   ) {
     final windStrength = environment.sample(previewProgress).windStrength;
-    final biome = p.biome;
 
     for (final tree in treeCells) {
       if (tree.row < 0 || tree.row >= p.grid.rows) continue;
       if (tree.col < 0 || tree.col >= p.grid.cols) continue;
       if (p.obstacleKinds[tree.row][tree.col] != null) continue;
+      final biome = p.variants[tree.row][tree.col] ?? p.biome;
       final center = Offset(
         tree.col * cellW + cellW / 2,
         tree.row * cellH + cellH / 2,
@@ -345,8 +347,9 @@ class MapEditorCanvasPainter extends CustomPainter {
   /// tinting plus simple rain/snow overlays so timeline edits are visible.
   void _paintWeather(Canvas canvas, Rect rect, Size size) {
     final weather = environment.sample(previewProgress);
+    final biome = preview?.biome ?? Biome.grassPlains;
 
-    _paintWindStreaks(canvas, size, weather.windStrength);
+    _paintWindStreaks(canvas, size, weather, biome);
 
     if (weather.cloudCover > 0) {
       canvas.drawRect(
@@ -403,24 +406,99 @@ class MapEditorCanvasPainter extends CustomPainter {
     }
   }
 
-  /// Faint drifting dust/leaf streaks that scale with wind strength - unlike
-  /// tree-lean (only visible on tree-bearing biomes), this makes the wind
-  /// slider have a visible effect on every biome/map.
-  void _paintWindStreaks(Canvas canvas, Size size, double windStrength) {
-    if (windStrength <= 0) return;
+  /// Faint drifting wind-blown particles that scale with wind strength -
+  /// unlike tree-lean (only visible on tree-bearing biomes), this makes the
+  /// wind slider have a visible effect on every biome/map. The style comes
+  /// from [WeatherKeyframe.resolvedWindType] - the map's own biome unless
+  /// the keyframe explicitly overrides it.
+  void _paintWindStreaks(
+    Canvas canvas,
+    Size size,
+    WeatherKeyframe weather,
+    Biome biome,
+  ) {
+    final resolvedType = weather.resolvedWindType(biome);
+    if (resolvedType == WindType.ash) _paintSkyFlames(canvas, size);
+    if (weather.windStrength <= 0) return;
+
     final rnd = Random(13);
+    final strength = weather.windStrength.clamp(0, 1);
+    final streakLength = 18 + weather.windStrength * 40;
+    final count = (weather.windStrength * 40).round();
+
+    if (resolvedType == WindType.ash) {
+      for (var i = 0; i < count; i++) {
+        final x = rnd.nextDouble() * size.width;
+        final y = rnd.nextDouble() * size.height;
+        if (rnd.nextBool()) {
+          canvas.drawCircle(
+            Offset(x, y),
+            0.8 + rnd.nextDouble() * 1.4,
+            Paint()
+              ..color = Color.lerp(
+                const Color(0xFF9e9e9e),
+                const Color(0xFF2b2b2b),
+                rnd.nextDouble(),
+              )!.withValues(alpha: 0.3 * strength),
+          );
+        } else {
+          canvas.drawLine(
+            Offset(x, y),
+            Offset(x + streakLength * 0.5, y - streakLength * 0.12),
+            Paint()
+              ..color = const Color(0xFF4a3524)
+                  .withValues(alpha: 0.22 * strength)
+              ..strokeWidth = 1.6
+              ..strokeCap = StrokeCap.round,
+          );
+        }
+      }
+      return;
+    }
+
+    final color = switch (resolvedType) {
+      WindType.grassLeaves => const Color(0xFFB7C97A),
+      WindType.autumnLeaves => const Color(0xFFC1502D),
+      WindType.sand => const Color(0xFFD8C08A),
+      WindType.snow => Colors.white70,
+      WindType.dust || WindType.automatic => Colors.white,
+      WindType.ash => Colors.white, // unreachable, handled above
+    };
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.18 * windStrength.clamp(0, 1))
+      ..color = color.withValues(alpha: 0.18 * strength)
       ..strokeWidth = 1.2
       ..strokeCap = StrokeCap.round;
-    final streakLength = 18 + windStrength * 40;
-    for (var i = 0; i < (windStrength * 40).round(); i++) {
+    for (var i = 0; i < count; i++) {
       final x = rnd.nextDouble() * size.width;
       final y = rnd.nextDouble() * size.height;
       canvas.drawLine(
         Offset(x, y),
         Offset(x + streakLength, y - streakLength * 0.18),
         paint,
+      );
+    }
+  }
+
+  /// Blurred orange/gold glow blobs near the top edge, previewing the same
+  /// atmospheric flame-in-the-sky effect real gameplay renders for
+  /// [WindType.ash] (see `TerrainComponent._paintSkyFlames`) - a static
+  /// snapshot here since this preview doesn't animate.
+  void _paintSkyFlames(Canvas canvas, Size size) {
+    final rnd = Random(21);
+    for (var i = 0; i < 6; i++) {
+      final x = rnd.nextDouble() * size.width;
+      final y = size.height * (0.04 + rnd.nextDouble() * 0.16);
+      final radius = 28 + rnd.nextDouble() * 42;
+      canvas.drawCircle(
+        Offset(x, y),
+        radius,
+        Paint()
+          ..color = Color.lerp(
+            const Color(0xFFFF6D1F),
+            const Color(0xFFFFC107),
+            rnd.nextDouble(),
+          )!.withValues(alpha: 0.16)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
       );
     }
   }

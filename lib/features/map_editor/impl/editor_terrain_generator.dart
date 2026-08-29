@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show compute;
 import '../../../core/pathfinding/grid.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../../terrain/domain/models/obstacle_kind.dart';
+import '../domain/enums/environment_adaptation.dart';
 import '../domain/models/editor_terrain_preview.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/models/water_path.dart';
@@ -45,6 +46,19 @@ EditorTerrainPreview _generatePreview(MapDraft draft) {
     _rasterizeWaterPath(path, cols, rows, paint);
   }
 
+  // Per-tree brush-type overrides only take effect once an author opts
+  // into manual environment adaptation - otherwise every tree keeps
+  // rendering with this map's own biome, exactly as before this feature
+  // existed.
+  if (draft.environment.adaptation == EnvironmentAdaptation.manual) {
+    for (final tree in draft.treeCells) {
+      final variant = tree.variant;
+      if (variant == null) continue;
+      if (!grid.inBounds(tree.col, tree.row)) continue;
+      variants[tree.row][tree.col] = variant;
+    }
+  }
+
   return EditorTerrainPreview(
     grid: grid,
     obstacleKinds: obstacleKinds,
@@ -79,6 +93,10 @@ void _rasterizeWaterPath(
 
   switch (path.kind) {
     case WaterFeatureKind.river:
+    case WaterFeatureKind.lava:
+      final kind = path.kind == WaterFeatureKind.lava
+          ? ObstacleKind.lava
+          : ObstacleKind.river;
       final halfWidth = path.width / 2;
       for (var col = 0; col < cols; col++) {
         for (var row = 0; row < rows; row++) {
@@ -89,13 +107,17 @@ void _rasterizeWaterPath(
           for (var i = 0; i < points.length - 1; i++) {
             if (_distanceToSegment(center, points[i], points[i + 1]) <=
                 halfWidth) {
-              paint(col, row, ObstacleKind.river, path.variant);
+              paint(col, row, kind, path.variant);
               break;
             }
           }
         }
       }
     case WaterFeatureKind.lake:
+    case WaterFeatureKind.volcanicLake:
+      final kind = path.kind == WaterFeatureKind.volcanicLake
+          ? ObstacleKind.volcanicLake
+          : ObstacleKind.lake;
       for (var col = 0; col < cols; col++) {
         for (var row = 0; row < rows; row++) {
           final center = Vector2(
@@ -103,7 +125,7 @@ void _rasterizeWaterPath(
             row * _cellSize + _cellSize / 2,
           );
           if (_pointInPolygon(center, points)) {
-            paint(col, row, ObstacleKind.lake, path.variant);
+            paint(col, row, kind, path.variant);
           }
         }
       }

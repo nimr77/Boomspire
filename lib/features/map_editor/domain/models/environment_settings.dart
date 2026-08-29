@@ -1,6 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../enums/environment_adaptation.dart';
 import 'weather_keyframe.dart';
+
+export '../enums/environment_adaptation.dart';
 
 part 'environment_settings.freezed.dart';
 part 'environment_settings.g.dart';
@@ -23,6 +26,14 @@ abstract class EnvironmentSettings with _$EnvironmentSettings {
     /// angle wherever that's rendered.
     @Default(0.5) double sunAngle,
     @Default([_defaultKeyframe]) List<WeatherKeyframe> timeline,
+
+    /// [EnvironmentAdaptation.automatic] (default) keeps every terrain
+    /// object (trees) matching this map's own biome.
+    /// [EnvironmentAdaptation.manual] lets an author mix tree styles
+    /// instead - e.g. snow-dusted trees on a desert map. Wind type is a
+    /// separate, always-editable per-keyframe override - see
+    /// `WeatherKeyframe.resolvedWindType`.
+    @Default(EnvironmentAdaptation.automatic) EnvironmentAdaptation adaptation,
   }) = _EnvironmentSettings;
 
   factory EnvironmentSettings.fromJson(Map<String, dynamic> json) =>
@@ -57,6 +68,8 @@ abstract class EnvironmentSettings with _$EnvironmentSettings {
         snowIntensity: _lerp(from.snowIntensity, to.snowIntensity, t),
         fogDensity: _lerp(from.fogDensity, to.fogDensity, t),
         cloudCover: _lerp(from.cloudCover, to.cloudCover, t),
+        // Discrete, not lerp-able - switches at the halfway point instead.
+        windType: t < 0.5 ? from.windType : to.windType,
       );
     }
     return sorted.last;

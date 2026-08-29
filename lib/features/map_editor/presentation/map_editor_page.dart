@@ -13,6 +13,7 @@ import '../../../shared/app_theme/app_theme_spacing.dart';
 import '../../game_core/domain/models/game_scene.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../../terrain/extensions/biome_extensions.dart';
+import '../domain/models/environment_settings.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/repos/map_draft_repository.dart';
 import '../extensions/editor_tool_extensions.dart';
@@ -320,7 +321,8 @@ class _MapEditorPageState extends State<MapEditorPage> {
                             ),
                           ),
                         ],
-                        if (currentTool == EditorTool.river) ...[
+                        if (currentTool == EditorTool.river ||
+                            currentTool == EditorTool.lava) ...[
                           SizedBox(height: AppThemeSpacing.space8),
                           Text(
                             S.current.riverWidthLabelEditorPage(
@@ -341,7 +343,12 @@ class _MapEditorPageState extends State<MapEditorPage> {
                         if (currentTool == EditorTool.mountain ||
                             currentTool == EditorTool.dune ||
                             currentTool == EditorTool.river ||
-                            currentTool == EditorTool.lake) ...[
+                            currentTool == EditorTool.lake ||
+                            currentTool == EditorTool.lava ||
+                            currentTool == EditorTool.volcanicLake ||
+                            (currentTool == EditorTool.tree &&
+                                currentDraft.environment.adaptation ==
+                                    EnvironmentAdaptation.manual)) ...[
                           SizedBox(height: AppThemeSpacing.space8),
                           Text(
                             S.current.brushTypeLabelEditorPage,
@@ -680,6 +687,62 @@ class _MapEditorPageState extends State<MapEditorPage> {
                                   _draftState.setDynamicWeather(value),
                             ),
                           ],
+                        ),
+                        SizedBox(height: AppThemeSpacing.space8),
+                        Text(
+                          S.current.environmentAdaptationLabelEditorPage,
+                          style: const TextStyle(
+                            color: AppThemeColors.textMuted,
+                          ),
+                        ),
+                        SizedBox(height: AppThemeSpacing.space8),
+                        Wrap(
+                          spacing: AppThemeSpacing.space8,
+                          children: [
+                            ChoiceChip(
+                              label: Text(
+                                S
+                                    .current
+                                    .environmentAdaptationAutomaticEditorPage,
+                              ),
+                              selected:
+                                  currentDraft.environment.adaptation ==
+                                  EnvironmentAdaptation.automatic,
+                              onSelected: (_) =>
+                                  _draftState.setEnvironmentAdaptation(
+                                    EnvironmentAdaptation.automatic,
+                                  ),
+                            ),
+                            ChoiceChip(
+                              label: Text(
+                                S.current.environmentAdaptationManualEditorPage,
+                              ),
+                              selected:
+                                  currentDraft.environment.adaptation ==
+                                  EnvironmentAdaptation.manual,
+                              onSelected: (_) =>
+                                  _draftState.setEnvironmentAdaptation(
+                                    EnvironmentAdaptation.manual,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: AppThemeSpacing.space4),
+                          child: Text(
+                            currentDraft.environment.adaptation ==
+                                    EnvironmentAdaptation.manual
+                                ? S
+                                      .current
+                                      .environmentAdaptationManualHintEditorPage
+                                : S
+                                      .current
+                                      .environmentAdaptationAutomaticHintEditorPage,
+                            style: const TextStyle(
+                              color: AppThemeColors.textMuted,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                         Text(
                           S.current.sunAngleLabelEditorPage(

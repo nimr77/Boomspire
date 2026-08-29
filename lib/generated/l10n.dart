@@ -990,6 +990,26 @@ class S {
     );
   }
 
+  /// `Lava`
+  String get lavaLabelEditorPage {
+    return Intl.message(
+      'Lava',
+      name: 'lavaLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Volcanic Lake`
+  String get volcanicLakeLabelEditorPage {
+    return Intl.message(
+      'Volcanic Lake',
+      name: 'volcanicLakeLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Tree`
   String get treeLabelEditorPage {
     return Intl.message(
@@ -1365,6 +1385,56 @@ class S {
     );
   }
 
+  /// `Environment adaptation`
+  String get environmentAdaptationLabelEditorPage {
+    return Intl.message(
+      'Environment adaptation',
+      name: 'environmentAdaptationLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Automatic`
+  String get environmentAdaptationAutomaticEditorPage {
+    return Intl.message(
+      'Automatic',
+      name: 'environmentAdaptationAutomaticEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Manual`
+  String get environmentAdaptationManualEditorPage {
+    return Intl.message(
+      'Manual',
+      name: 'environmentAdaptationManualEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Trees always match this map's biome`
+  String get environmentAdaptationAutomaticHintEditorPage {
+    return Intl.message(
+      'Trees always match this map\'s biome',
+      name: 'environmentAdaptationAutomaticHintEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Trees can use any biome's look`
+  String get environmentAdaptationManualHintEditorPage {
+    return Intl.message(
+      'Trees can use any biome\'s look',
+      name: 'environmentAdaptationManualHintEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Sun angle: {percent}%`
   String sunAngleLabelEditorPage(int percent) {
     return Intl.message(
@@ -1430,6 +1500,86 @@ class S {
     return Intl.message(
       'Wind',
       name: 'windLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wind type`
+  String get windTypeFieldLabelEditorPage {
+    return Intl.message(
+      'Wind type',
+      name: 'windTypeFieldLabelEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Automatic`
+  String get windTypeAutomaticEditorPage {
+    return Intl.message(
+      'Automatic',
+      name: 'windTypeAutomaticEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Green leaves`
+  String get windTypeGrassLeavesEditorPage {
+    return Intl.message(
+      'Green leaves',
+      name: 'windTypeGrassLeavesEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Autumn leaves`
+  String get windTypeAutumnLeavesEditorPage {
+    return Intl.message(
+      'Autumn leaves',
+      name: 'windTypeAutumnLeavesEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sand`
+  String get windTypeSandEditorPage {
+    return Intl.message(
+      'Sand',
+      name: 'windTypeSandEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dust`
+  String get windTypeDustEditorPage {
+    return Intl.message(
+      'Dust',
+      name: 'windTypeDustEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Snow`
+  String get windTypeSnowEditorPage {
+    return Intl.message(
+      'Snow',
+      name: 'windTypeSnowEditorPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ash`
+  String get windTypeAshEditorPage {
+    return Intl.message(
+      'Ash',
+      name: 'windTypeAshEditorPage',
       desc: '',
       args: [],
     );

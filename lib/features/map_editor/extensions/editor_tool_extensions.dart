@@ -10,6 +10,8 @@ extension EditorToolExtensions on EditorTool {
     EditorTool.erase => S.current.eraseLabelEditorPage,
     EditorTool.river => S.current.riverLabelEditorPage,
     EditorTool.lake => S.current.lakeLabelEditorPage,
+    EditorTool.lava => S.current.lavaLabelEditorPage,
+    EditorTool.volcanicLake => S.current.volcanicLakeLabelEditorPage,
     EditorTool.homeSite => S.current.homeLabelEditorPage,
   };
 }

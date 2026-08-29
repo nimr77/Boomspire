@@ -26,6 +26,8 @@ Map<String, dynamic> _$WaterPathToJson(_WaterPath instance) =>
 const _$WaterFeatureKindEnumMap = {
   WaterFeatureKind.river: 'river',
   WaterFeatureKind.lake: 'lake',
+  WaterFeatureKind.lava: 'lava',
+  WaterFeatureKind.volcanicLake: 'volcanicLake',
 };
 
 const _$BiomeEnumMap = {

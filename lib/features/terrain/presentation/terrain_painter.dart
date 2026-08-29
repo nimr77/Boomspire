@@ -113,6 +113,27 @@ class TerrainPainter {
       );
     }
 
+    // Lava/volcanic lakes are the molten counterparts of river/lake - a
+    // fixed magma look regardless of biome, since molten rock doesn't get
+    // a biome tint the way water/sand does.
+    for (final chain in _obstacleChains(
+      grid,
+      kinds,
+      ObstacleKind.lava,
+      size.height,
+    )) {
+      if (chain.length >= 2) {
+        _paintLavaBed(canvas, _smoothPath(chain), grid.cellSize);
+      }
+    }
+    for (final component in _connectedCells(
+      grid,
+      kinds,
+      ObstacleKind.volcanicLake,
+    )) {
+      _paintVolcanicLake(canvas, component, grid.cellSize);
+    }
+
     // Pseudo-3D contact shadow pass: every mountain/dune cell drops a soft
     // dark shadow offset down-right (fake sun direction) before the shape
     // itself is painted, giving the ridge/dune a sense of elevation.
@@ -156,6 +177,8 @@ class TerrainPainter {
           case ObstacleKind.river:
           case ObstacleKind.valley:
           case ObstacleKind.lake:
+          case ObstacleKind.lava:
+          case ObstacleKind.volcanicLake:
             break; // already painted as a continuous ribbon/pond above
           case null:
             break; // open ground - trees are drawn live, see [paintTrees]
@@ -231,6 +254,59 @@ class TerrainPainter {
     }
   }
 
+  /// Live per-frame animated overlay for a lava ribbon: a pulsing bright
+  /// glow (brightness oscillates with [phase]) plus drifting ember specks,
+  /// on top of the static [_paintLavaBed].
+  static void paintLavaFlow(
+    ui.Canvas canvas,
+    ui.Path path,
+    double cellSize,
+    double phase,
+  ) {
+    final metrics = path.computeMetrics().toList();
+    if (metrics.isEmpty) return;
+
+    final pulse = 0.5 + 0.5 * sin(phase * 2.2);
+    final glowPaint = ui.Paint()
+      ..style = ui.PaintingStyle.stroke
+      ..strokeCap = ui.StrokeCap.round
+      ..strokeJoin = ui.StrokeJoin.round
+      ..strokeWidth = cellSize * (0.5 + pulse * 0.15)
+      ..color = ui.Color.lerp(
+        const ui.Color(0xFFff7a1a),
+        const ui.Color(0xFFffe066),
+        pulse,
+      )!.withValues(alpha: 0.35 + pulse * 0.25)
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 4);
+    canvas.drawPath(path, glowPaint);
+
+    final emberPaint = ui.Paint()..color = const ui.Color(0xFFffcf7a);
+    final rnd = Random(11);
+    for (final metric in metrics) {
+      final length = metric.length;
+      if (length <= 0) continue;
+      final emberCount = (length / (cellSize * 1.2)).floor().clamp(0, 200);
+      for (var i = 0; i < emberCount; i++) {
+        final baseDist = (i + 0.5) * (length / emberCount);
+        // Embers drift upward off the flow instead of along it.
+        final rise = ((phase * 30 + i * 37) % 60);
+        final dist = (baseDist + rnd.nextDouble() * cellSize * 0.4) % length;
+        final tangent = metric.getTangentForOffset(dist);
+        if (tangent == null) continue;
+        final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.6;
+        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
+        final center =
+            tangent.position + normal * jitter - ui.Offset(0, rise * 0.3);
+        final alpha = (1 - rise / 60).clamp(0.0, 1.0);
+        canvas.drawCircle(
+          center,
+          1.4,
+          emberPaint..color = emberPaint.color.withValues(alpha: alpha * 0.8),
+        );
+      }
+    }
+  }
+
   /// Live per-frame companion to [paint] (which never draws trees itself)
   /// - redrawn every frame so each canopy's [_treeSway] offset can respond
   /// to [windStrength] as [phase] (elapsed seconds) advances, instead of
@@ -265,7 +341,7 @@ class TerrainPainter {
         tree.x,
         tree.y,
         rnd,
-        terrainMap.biome,
+        terrainMap.biomeAt(tree.x, tree.y),
         sway: _treeSway(tree.x, tree.y, windStrength, phase),
       );
     }
@@ -275,12 +351,17 @@ class TerrainPainter {
   /// connected group of river cells), smoothed - null if this map has no
   /// river (e.g. desert biome, which uses a dry valley instead). Used both
   /// to bake the static bed (see [_paintRiverBed]) and to drive the live
-  /// [paintRiverFlow] overlay.
-  static ui.Path? riverPath(TerrainMap terrainMap, double canvasHeight) {
+  /// [paintRiverFlow] overlay. Pass `kind: ObstacleKind.lava` to get the
+  /// equivalent path for lava ribbons instead.
+  static ui.Path? riverPath(
+    TerrainMap terrainMap,
+    double canvasHeight, {
+    ObstacleKind kind = ObstacleKind.river,
+  }) {
     final chains = _obstacleChains(
       terrainMap.grid,
       terrainMap.obstacleKinds,
-      ObstacleKind.river,
+      kind,
       canvasHeight,
     );
     final combined = ui.Path();
@@ -645,6 +726,56 @@ class TerrainPainter {
     );
   }
 
+  /// Molten counterpart of [_paintLake] - a charcoal shore ring around a
+  /// glowing magma fill. Deliberately not [BiomePalette]-tinted (unlike
+  /// [_paintLake]/[_paintRiverBed]): lava looks the same regardless of
+  /// biome.
+  static void _paintVolcanicLake(
+    ui.Canvas canvas,
+    List<Point<int>> cells,
+    double cellSize,
+  ) {
+    if (cells.isEmpty) return;
+    var shape = ui.Path();
+    for (final cell in cells) {
+      final rect = ui.Rect.fromLTWH(
+        cell.x * cellSize - 2,
+        cell.y * cellSize - 2,
+        cellSize + 4,
+        cellSize + 4,
+      );
+      final piece = ui.Path()
+        ..addRRect(
+          ui.RRect.fromRectAndRadius(rect, ui.Radius.circular(cellSize * 0.4)),
+        );
+      shape = ui.Path.combine(ui.PathOperation.union, shape, piece);
+    }
+    final bounds = shape.getBounds();
+    canvas.drawPath(
+      shape,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = cellSize * 0.5
+        ..color = const ui.Color(0xFF261a16).withValues(alpha: 0.6),
+    );
+    canvas.drawPath(
+      shape,
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          bounds.topCenter,
+          bounds.bottomCenter,
+          [
+            const ui.Color(0xFF3a0d02),
+            const ui.Color(0xFFd93a0a),
+            const ui.Color(0xFFffb347),
+            const ui.Color(0xFFd93a0a),
+            const ui.Color(0xFF3a0d02),
+          ],
+          const [0.0, 0.3, 0.5, 0.7, 1.0],
+        ),
+    );
+  }
+
   static void _paintMountain(
     ui.Canvas canvas,
     Grid grid,
@@ -825,6 +956,54 @@ class TerrainPainter {
               ui.Color(0xFF0a3450),
             ])
               ui.Color.lerp(c, palette.capColor, 0.22)!,
+          ],
+          const [0.0, 0.25, 0.5, 0.75, 1.0],
+        ),
+    );
+  }
+
+  /// Molten counterpart of [_paintRiverBed] - a charcoal/basalt bank
+  /// around a glowing magma channel. Deliberately not [BiomePalette]-
+  /// tinted: lava looks the same regardless of biome.
+  static void _paintLavaBed(ui.Canvas canvas, ui.Path path, double cellSize) {
+    final bounds = path.getBounds();
+    // Cooled charcoal/basalt bank, wider than the molten channel itself.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 2.0
+        ..color = const ui.Color(0xFF241a17).withValues(alpha: 0.6),
+    );
+    // Scorched, darker rock right at the flow's edge.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 1.5
+        ..color = const ui.Color(0xFF120b09).withValues(alpha: 0.7),
+    );
+    // Molten channel with a deep-to-bright gradient across its width.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 1.3
+        ..shader = ui.Gradient.linear(
+          bounds.topCenter,
+          bounds.bottomCenter,
+          [
+            const ui.Color(0xFF3a0d02),
+            const ui.Color(0xFFd93a0a),
+            const ui.Color(0xFF3a0d02),
+            const ui.Color(0xFFd93a0a),
+            const ui.Color(0xFF3a0d02),
           ],
           const [0.0, 0.25, 0.5, 0.75, 1.0],
         ),

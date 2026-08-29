@@ -12,4 +12,6 @@ Color obstacleColor(ObstacleKind kind, BiomePalette palette) => switch (kind) {
   ObstacleKind.river => Colors.blueAccent,
   ObstacleKind.valley => palette.ridgeDark,
   ObstacleKind.lake => Colors.teal.shade300,
+  ObstacleKind.lava => Colors.deepOrange.shade600,
+  ObstacleKind.volcanicLake => Colors.deepOrange.shade900,
 };

@@ -1,5 +1,11 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../terrain/domain/enums/biome.dart';
+import '../../../terrain/domain/enums/wind_type.dart';
+import '../../../terrain/extensions/biome_extensions.dart';
+
+export '../../../terrain/domain/enums/wind_type.dart';
+
 part 'weather_keyframe.freezed.dart';
 part 'weather_keyframe.g.dart';
 
@@ -16,8 +22,22 @@ abstract class WeatherKeyframe with _$WeatherKeyframe {
     @Default(0.0) double snowIntensity,
     @Default(0.0) double fogDensity,
     @Default(0.0) double cloudCover,
+
+    /// [WindType.automatic] (the default) inherits the map's own biome's
+    /// natural wind look - see [resolvedWindType]. Any other value is an
+    /// explicit author override, editable in the map editor regardless of
+    /// [EnvironmentAdaptation] (that toggle only gates tree variants).
+    @Default(WindType.automatic) WindType windType,
   }) = _WeatherKeyframe;
 
   factory WeatherKeyframe.fromJson(Map<String, dynamic> json) =>
       _$WeatherKeyframeFromJson(json);
+
+  const WeatherKeyframe._();
+
+  /// The wind-blown particle style to actually render - [windType] itself,
+  /// unless it's left on [WindType.automatic], in which case this resolves
+  /// to [biome]'s own natural look (`BiomeExtensions.defaultWindType`).
+  WindType resolvedWindType(Biome biome) =>
+      windType == WindType.automatic ? biome.defaultWindType : windType;
 }

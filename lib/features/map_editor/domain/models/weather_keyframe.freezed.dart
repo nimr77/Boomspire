@@ -17,7 +17,11 @@ T _$identity<T>(T value) => value;
 mixin _$WeatherKeyframe {
 
 /// How far through the match this keyframe applies, 0 (start) to 1 (end).
- double get atProgress; double get windStrength; double get rainIntensity; double get snowIntensity; double get fogDensity; double get cloudCover;
+ double get atProgress; double get windStrength; double get rainIntensity; double get snowIntensity; double get fogDensity; double get cloudCover;/// [WindType.automatic] (the default) inherits the map's own biome's
+/// natural wind look - see [resolvedWindType]. Any other value is an
+/// explicit author override, editable in the map editor regardless of
+/// [EnvironmentAdaptation] (that toggle only gates tree variants).
+ WindType get windType;
 /// Create a copy of WeatherKeyframe
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,16 +34,16 @@ $WeatherKeyframeCopyWith<WeatherKeyframe> get copyWith => _$WeatherKeyframeCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeatherKeyframe&&(identical(other.atProgress, atProgress) || other.atProgress == atProgress)&&(identical(other.windStrength, windStrength) || other.windStrength == windStrength)&&(identical(other.rainIntensity, rainIntensity) || other.rainIntensity == rainIntensity)&&(identical(other.snowIntensity, snowIntensity) || other.snowIntensity == snowIntensity)&&(identical(other.fogDensity, fogDensity) || other.fogDensity == fogDensity)&&(identical(other.cloudCover, cloudCover) || other.cloudCover == cloudCover));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WeatherKeyframe&&(identical(other.atProgress, atProgress) || other.atProgress == atProgress)&&(identical(other.windStrength, windStrength) || other.windStrength == windStrength)&&(identical(other.rainIntensity, rainIntensity) || other.rainIntensity == rainIntensity)&&(identical(other.snowIntensity, snowIntensity) || other.snowIntensity == snowIntensity)&&(identical(other.fogDensity, fogDensity) || other.fogDensity == fogDensity)&&(identical(other.cloudCover, cloudCover) || other.cloudCover == cloudCover)&&(identical(other.windType, windType) || other.windType == windType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,atProgress,windStrength,rainIntensity,snowIntensity,fogDensity,cloudCover);
+int get hashCode => Object.hash(runtimeType,atProgress,windStrength,rainIntensity,snowIntensity,fogDensity,cloudCover,windType);
 
 @override
 String toString() {
-  return 'WeatherKeyframe(atProgress: $atProgress, windStrength: $windStrength, rainIntensity: $rainIntensity, snowIntensity: $snowIntensity, fogDensity: $fogDensity, cloudCover: $cloudCover)';
+  return 'WeatherKeyframe(atProgress: $atProgress, windStrength: $windStrength, rainIntensity: $rainIntensity, snowIntensity: $snowIntensity, fogDensity: $fogDensity, cloudCover: $cloudCover, windType: $windType)';
 }
 
 
@@ -50,7 +54,7 @@ abstract mixin class $WeatherKeyframeCopyWith<$Res>  {
   factory $WeatherKeyframeCopyWith(WeatherKeyframe value, $Res Function(WeatherKeyframe) _then) = _$WeatherKeyframeCopyWithImpl;
 @useResult
 $Res call({
- double atProgress, double windStrength, double rainIntensity, double snowIntensity, double fogDensity, double cloudCover
+ double atProgress, double windStrength, double rainIntensity, double snowIntensity, double fogDensity, double cloudCover, WindType windType
 });
 
 
@@ -67,7 +71,7 @@ class _$WeatherKeyframeCopyWithImpl<$Res>
 
 /// Create a copy of WeatherKeyframe
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? atProgress = null,Object? windStrength = null,Object? rainIntensity = null,Object? snowIntensity = null,Object? fogDensity = null,Object? cloudCover = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? atProgress = null,Object? windStrength = null,Object? rainIntensity = null,Object? snowIntensity = null,Object? fogDensity = null,Object? cloudCover = null,Object? windType = null,}) {
   return _then(WeatherKeyframe(
 atProgress: null == atProgress ? _self.atProgress : atProgress // ignore: cast_nullable_to_non_nullable
 as double,windStrength: null == windStrength ? _self.windStrength : windStrength // ignore: cast_nullable_to_non_nullable
@@ -75,7 +79,8 @@ as double,rainIntensity: null == rainIntensity ? _self.rainIntensity : rainInten
 as double,snowIntensity: null == snowIntensity ? _self.snowIntensity : snowIntensity // ignore: cast_nullable_to_non_nullable
 as double,fogDensity: null == fogDensity ? _self.fogDensity : fogDensity // ignore: cast_nullable_to_non_nullable
 as double,cloudCover: null == cloudCover ? _self.cloudCover : cloudCover // ignore: cast_nullable_to_non_nullable
-as double,
+as double,windType: null == windType ? _self.windType : windType // ignore: cast_nullable_to_non_nullable
+as WindType,
   ));
 }
 
@@ -160,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double atProgress,  double windStrength,  double rainIntensity,  double snowIntensity,  double fogDensity,  double cloudCover)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double atProgress,  double windStrength,  double rainIntensity,  double snowIntensity,  double fogDensity,  double cloudCover,  WindType windType)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WeatherKeyframe() when $default != null:
-return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.snowIntensity,_that.fogDensity,_that.cloudCover);case _:
+return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.snowIntensity,_that.fogDensity,_that.cloudCover,_that.windType);case _:
   return orElse();
 
 }
@@ -181,10 +186,10 @@ return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.sn
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double atProgress,  double windStrength,  double rainIntensity,  double snowIntensity,  double fogDensity,  double cloudCover)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double atProgress,  double windStrength,  double rainIntensity,  double snowIntensity,  double fogDensity,  double cloudCover,  WindType windType)  $default,) {final _that = this;
 switch (_that) {
 case _WeatherKeyframe():
-return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.snowIntensity,_that.fogDensity,_that.cloudCover);case _:
+return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.snowIntensity,_that.fogDensity,_that.cloudCover,_that.windType);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +206,10 @@ return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.sn
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double atProgress,  double windStrength,  double rainIntensity,  double snowIntensity,  double fogDensity,  double cloudCover)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double atProgress,  double windStrength,  double rainIntensity,  double snowIntensity,  double fogDensity,  double cloudCover,  WindType windType)?  $default,) {final _that = this;
 switch (_that) {
 case _WeatherKeyframe() when $default != null:
-return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.snowIntensity,_that.fogDensity,_that.cloudCover);case _:
+return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.snowIntensity,_that.fogDensity,_that.cloudCover,_that.windType);case _:
   return null;
 
 }
@@ -215,8 +220,8 @@ return $default(_that.atProgress,_that.windStrength,_that.rainIntensity,_that.sn
 /// @nodoc
 @JsonSerializable()
 
-class _WeatherKeyframe implements WeatherKeyframe {
-  const _WeatherKeyframe({required this.atProgress, this.windStrength = 0.0, this.rainIntensity = 0.0, this.snowIntensity = 0.0, this.fogDensity = 0.0, this.cloudCover = 0.0});
+class _WeatherKeyframe extends WeatherKeyframe {
+  const _WeatherKeyframe({required this.atProgress, this.windStrength = 0.0, this.rainIntensity = 0.0, this.snowIntensity = 0.0, this.fogDensity = 0.0, this.cloudCover = 0.0, this.windType = WindType.automatic}): super._();
   factory _WeatherKeyframe.fromJson(Map<String, dynamic> json) => _$WeatherKeyframeFromJson(json);
 
 /// How far through the match this keyframe applies, 0 (start) to 1 (end).
@@ -226,6 +231,11 @@ class _WeatherKeyframe implements WeatherKeyframe {
 @override@JsonKey() final  double snowIntensity;
 @override@JsonKey() final  double fogDensity;
 @override@JsonKey() final  double cloudCover;
+/// [WindType.automatic] (the default) inherits the map's own biome's
+/// natural wind look - see [resolvedWindType]. Any other value is an
+/// explicit author override, editable in the map editor regardless of
+/// [EnvironmentAdaptation] (that toggle only gates tree variants).
+@override@JsonKey() final  WindType windType;
 
 /// Create a copy of WeatherKeyframe
 /// with the given fields replaced by the non-null parameter values.
@@ -240,16 +250,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeatherKeyframe&&(identical(other.atProgress, atProgress) || other.atProgress == atProgress)&&(identical(other.windStrength, windStrength) || other.windStrength == windStrength)&&(identical(other.rainIntensity, rainIntensity) || other.rainIntensity == rainIntensity)&&(identical(other.snowIntensity, snowIntensity) || other.snowIntensity == snowIntensity)&&(identical(other.fogDensity, fogDensity) || other.fogDensity == fogDensity)&&(identical(other.cloudCover, cloudCover) || other.cloudCover == cloudCover));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WeatherKeyframe&&(identical(other.atProgress, atProgress) || other.atProgress == atProgress)&&(identical(other.windStrength, windStrength) || other.windStrength == windStrength)&&(identical(other.rainIntensity, rainIntensity) || other.rainIntensity == rainIntensity)&&(identical(other.snowIntensity, snowIntensity) || other.snowIntensity == snowIntensity)&&(identical(other.fogDensity, fogDensity) || other.fogDensity == fogDensity)&&(identical(other.cloudCover, cloudCover) || other.cloudCover == cloudCover)&&(identical(other.windType, windType) || other.windType == windType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,atProgress,windStrength,rainIntensity,snowIntensity,fogDensity,cloudCover);
+int get hashCode => Object.hash(runtimeType,atProgress,windStrength,rainIntensity,snowIntensity,fogDensity,cloudCover,windType);
 
 @override
 String toString() {
-  return 'WeatherKeyframe(atProgress: $atProgress, windStrength: $windStrength, rainIntensity: $rainIntensity, snowIntensity: $snowIntensity, fogDensity: $fogDensity, cloudCover: $cloudCover)';
+  return 'WeatherKeyframe(atProgress: $atProgress, windStrength: $windStrength, rainIntensity: $rainIntensity, snowIntensity: $snowIntensity, fogDensity: $fogDensity, cloudCover: $cloudCover, windType: $windType)';
 }
 
 
@@ -260,7 +270,7 @@ abstract mixin class _$WeatherKeyframeCopyWith<$Res> implements $WeatherKeyframe
   factory _$WeatherKeyframeCopyWith(_WeatherKeyframe value, $Res Function(_WeatherKeyframe) _then) = __$WeatherKeyframeCopyWithImpl;
 @override @useResult
 $Res call({
- double atProgress, double windStrength, double rainIntensity, double snowIntensity, double fogDensity, double cloudCover
+ double atProgress, double windStrength, double rainIntensity, double snowIntensity, double fogDensity, double cloudCover, WindType windType
 });
 
 
@@ -277,7 +287,7 @@ class __$WeatherKeyframeCopyWithImpl<$Res>
 
 /// Create a copy of WeatherKeyframe
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? atProgress = null,Object? windStrength = null,Object? rainIntensity = null,Object? snowIntensity = null,Object? fogDensity = null,Object? cloudCover = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? atProgress = null,Object? windStrength = null,Object? rainIntensity = null,Object? snowIntensity = null,Object? fogDensity = null,Object? cloudCover = null,Object? windType = null,}) {
   return _then(_WeatherKeyframe(
 atProgress: null == atProgress ? _self.atProgress : atProgress // ignore: cast_nullable_to_non_nullable
 as double,windStrength: null == windStrength ? _self.windStrength : windStrength // ignore: cast_nullable_to_non_nullable
@@ -285,7 +295,8 @@ as double,rainIntensity: null == rainIntensity ? _self.rainIntensity : rainInten
 as double,snowIntensity: null == snowIntensity ? _self.snowIntensity : snowIntensity // ignore: cast_nullable_to_non_nullable
 as double,fogDensity: null == fogDensity ? _self.fogDensity : fogDensity // ignore: cast_nullable_to_non_nullable
 as double,cloudCover: null == cloudCover ? _self.cloudCover : cloudCover // ignore: cast_nullable_to_non_nullable
-as double,
+as double,windType: null == windType ? _self.windType : windType // ignore: cast_nullable_to_non_nullable
+as WindType,
   ));
 }
 

@@ -170,6 +170,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "enterFullscreenTooltip": MessageLookupByLibrary.simpleMessage(
       "Enter fullscreen",
     ),
+    "environmentAdaptationAutomaticEditorPage":
+        MessageLookupByLibrary.simpleMessage("Automatic"),
+    "environmentAdaptationAutomaticHintEditorPage":
+        MessageLookupByLibrary.simpleMessage(
+          "Trees always match this map\'s biome",
+        ),
+    "environmentAdaptationLabelEditorPage":
+        MessageLookupByLibrary.simpleMessage("Environment adaptation"),
+    "environmentAdaptationManualEditorPage":
+        MessageLookupByLibrary.simpleMessage("Manual"),
+    "environmentAdaptationManualHintEditorPage":
+        MessageLookupByLibrary.simpleMessage("Trees can use any biome\'s look"),
     "environmentLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Environment",
     ),
@@ -197,6 +209,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "importedMapEditorPage": m9,
     "keyframeAtProgressLabelEditorPage": m10,
     "lakeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Lake"),
+    "lavaLabelEditorPage": MessageLookupByLibrary.simpleMessage("Lava"),
     "levelSelectSubtitle": MessageLookupByLibrary.simpleMessage(
       "Choose a campaign",
     ),
@@ -345,6 +358,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Untitled Map",
     ),
     "uploadLabelEditorPage": MessageLookupByLibrary.simpleMessage("Upload"),
+    "volcanicLakeLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Volcanic Lake",
+    ),
     "waveCountLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Number of waves",
     ),
@@ -363,6 +379,22 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "widthLabelEditorPage": MessageLookupByLibrary.simpleMessage("Width"),
     "windLabelEditorPage": MessageLookupByLibrary.simpleMessage("Wind"),
+    "windTypeAshEditorPage": MessageLookupByLibrary.simpleMessage("Ash"),
+    "windTypeAutomaticEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Automatic",
+    ),
+    "windTypeAutumnLeavesEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Autumn leaves",
+    ),
+    "windTypeDustEditorPage": MessageLookupByLibrary.simpleMessage("Dust"),
+    "windTypeFieldLabelEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Wind type",
+    ),
+    "windTypeGrassLeavesEditorPage": MessageLookupByLibrary.simpleMessage(
+      "Green leaves",
+    ),
+    "windTypeSandEditorPage": MessageLookupByLibrary.simpleMessage("Sand"),
+    "windTypeSnowEditorPage": MessageLookupByLibrary.simpleMessage("Snow"),
     "zoomInTooltipEditorPage": MessageLookupByLibrary.simpleMessage("Zoom in"),
     "zoomOutTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
       "Zoom out",

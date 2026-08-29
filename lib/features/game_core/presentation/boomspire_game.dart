@@ -143,6 +143,12 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   int _shakeEventCount = 0;
   double _shakeEventWindow = 0;
+
+  /// Seconds since this match started (reset on [restart]) - the only
+  /// match-progress signal available in [GameMode.skirmish], which has no
+  /// wave count to derive one from (see `TerrainComponent._matchProgress`/
+  /// `WindEffectComponent._matchProgress`).
+  double elapsedSeconds = 0;
   BoomspireGame({
     required this.terrainRepository,
     required this.towerRepository,
@@ -594,6 +600,7 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   void restart() {
     terrainMap = terrainRepository.loadTerrain(scene: scene);
+    elapsedSeconds = 0;
     _setupSkirmishState();
     gameState.reset(startingGold: _resolvedStartingGold);
     world.activeUnits.clear();
@@ -741,6 +748,7 @@ class BoomspireGame extends FlameGame<GameWorld>
   @override
   void update(double dt) {
     super.update(dt);
+    elapsedSeconds += dt;
     _syncMoveOrderMarker();
     if (_shakeEventWindow > 0) {
       _shakeEventWindow -= dt;

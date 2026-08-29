@@ -16,7 +16,13 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TreeCell {
 
- int get col; int get row;
+ int get col; int get row;/// Overrides which [Biome]'s canopy style this one tree renders with,
+/// instead of the map's own biome (e.g. a snow-capped tree dropped
+/// into a desert map) - only honored when this map's
+/// `EnvironmentSettings.adaptation` is manual; null means "render with
+/// the map's own biome", matching every tree placed before this
+/// brush-type feature existed.
+ Biome? get variant;
 /// Create a copy of TreeCell
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +35,16 @@ $TreeCellCopyWith<TreeCell> get copyWith => _$TreeCellCopyWithImpl<TreeCell>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TreeCell&&(identical(other.col, col) || other.col == col)&&(identical(other.row, row) || other.row == row));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TreeCell&&(identical(other.col, col) || other.col == col)&&(identical(other.row, row) || other.row == row)&&(identical(other.variant, variant) || other.variant == variant));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,col,row);
+int get hashCode => Object.hash(runtimeType,col,row,variant);
 
 @override
 String toString() {
-  return 'TreeCell(col: $col, row: $row)';
+  return 'TreeCell(col: $col, row: $row, variant: $variant)';
 }
 
 
@@ -49,7 +55,7 @@ abstract mixin class $TreeCellCopyWith<$Res>  {
   factory $TreeCellCopyWith(TreeCell value, $Res Function(TreeCell) _then) = _$TreeCellCopyWithImpl;
 @useResult
 $Res call({
- int col, int row
+ int col, int row, Biome? variant
 });
 
 
@@ -66,11 +72,12 @@ class _$TreeCellCopyWithImpl<$Res>
 
 /// Create a copy of TreeCell
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? col = null,Object? row = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? col = null,Object? row = null,Object? variant = freezed,}) {
   return _then(TreeCell(
 col: null == col ? _self.col : col // ignore: cast_nullable_to_non_nullable
 as int,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
-as int,
+as int,variant: freezed == variant ? _self.variant : variant // ignore: cast_nullable_to_non_nullable
+as Biome?,
   ));
 }
 
@@ -155,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int col,  int row)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int col,  int row,  Biome? variant)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TreeCell() when $default != null:
-return $default(_that.col,_that.row);case _:
+return $default(_that.col,_that.row,_that.variant);case _:
   return orElse();
 
 }
@@ -176,10 +183,10 @@ return $default(_that.col,_that.row);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int col,  int row)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int col,  int row,  Biome? variant)  $default,) {final _that = this;
 switch (_that) {
 case _TreeCell():
-return $default(_that.col,_that.row);case _:
+return $default(_that.col,_that.row,_that.variant);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +203,10 @@ return $default(_that.col,_that.row);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int col,  int row)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int col,  int row,  Biome? variant)?  $default,) {final _that = this;
 switch (_that) {
 case _TreeCell() when $default != null:
-return $default(_that.col,_that.row);case _:
+return $default(_that.col,_that.row,_that.variant);case _:
   return null;
 
 }
@@ -211,11 +218,18 @@ return $default(_that.col,_that.row);case _:
 @JsonSerializable()
 
 class _TreeCell implements TreeCell {
-  const _TreeCell({required this.col, required this.row});
+  const _TreeCell({required this.col, required this.row, this.variant});
   factory _TreeCell.fromJson(Map<String, dynamic> json) => _$TreeCellFromJson(json);
 
 @override final  int col;
 @override final  int row;
+/// Overrides which [Biome]'s canopy style this one tree renders with,
+/// instead of the map's own biome (e.g. a snow-capped tree dropped
+/// into a desert map) - only honored when this map's
+/// `EnvironmentSettings.adaptation` is manual; null means "render with
+/// the map's own biome", matching every tree placed before this
+/// brush-type feature existed.
+@override final  Biome? variant;
 
 /// Create a copy of TreeCell
 /// with the given fields replaced by the non-null parameter values.
@@ -230,16 +244,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TreeCell&&(identical(other.col, col) || other.col == col)&&(identical(other.row, row) || other.row == row));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TreeCell&&(identical(other.col, col) || other.col == col)&&(identical(other.row, row) || other.row == row)&&(identical(other.variant, variant) || other.variant == variant));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,col,row);
+int get hashCode => Object.hash(runtimeType,col,row,variant);
 
 @override
 String toString() {
-  return 'TreeCell(col: $col, row: $row)';
+  return 'TreeCell(col: $col, row: $row, variant: $variant)';
 }
 
 
@@ -250,7 +264,7 @@ abstract mixin class _$TreeCellCopyWith<$Res> implements $TreeCellCopyWith<$Res>
   factory _$TreeCellCopyWith(_TreeCell value, $Res Function(_TreeCell) _then) = __$TreeCellCopyWithImpl;
 @override @useResult
 $Res call({
- int col, int row
+ int col, int row, Biome? variant
 });
 
 
@@ -267,11 +281,12 @@ class __$TreeCellCopyWithImpl<$Res>
 
 /// Create a copy of TreeCell
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? col = null,Object? row = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? col = null,Object? row = null,Object? variant = freezed,}) {
   return _then(_TreeCell(
 col: null == col ? _self.col : col // ignore: cast_nullable_to_non_nullable
 as int,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
-as int,
+as int,variant: freezed == variant ? _self.variant : variant // ignore: cast_nullable_to_non_nullable
+as Biome?,
   ));
 }
 

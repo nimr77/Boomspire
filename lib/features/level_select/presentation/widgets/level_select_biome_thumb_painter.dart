@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../../terrain/domain/models/obstacle_kind.dart';
 import '../../../terrain/domain/models/terrain_map.dart';
 import '../../../terrain/presentation/terrain_painter.dart';
 
@@ -38,6 +39,19 @@ class LevelSelectBiomeThumbPainter extends CustomPainter {
       TerrainPainter.paintRiverFlow(
         canvas,
         riverPath,
+        terrainMap.grid.cellSize,
+        0,
+      );
+    }
+    final lavaPath = TerrainPainter.riverPath(
+      terrainMap,
+      terrainMap.arenaHeight,
+      kind: ObstacleKind.lava,
+    );
+    if (lavaPath != null) {
+      TerrainPainter.paintLavaFlow(
+        canvas,
+        lavaPath,
         terrainMap.grid.cellSize,
         0,
       );

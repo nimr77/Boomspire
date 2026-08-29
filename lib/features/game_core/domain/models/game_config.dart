@@ -71,4 +71,11 @@ class GameConfig {
   /// a skirmish match - crystals are a player-only currency, so an
   /// AI-held node pays into `AiEconomy.gold` at this rate instead.
   static const aiResourceNodeGoldPerTick = 60;
+
+  /// Nominal full-match length (seconds) used only to map elapsed time to
+  /// a 0..1 weather-timeline progress fraction in [GameMode.skirmish] -
+  /// unlike wave-defense, skirmish has no wave count to derive progress
+  /// from (see `TerrainComponent._matchProgress`). Not a hard timer/does
+  /// not end the match.
+  static const skirmishWeatherCycleSeconds = 480.0;
 }

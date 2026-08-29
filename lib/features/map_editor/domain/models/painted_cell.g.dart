@@ -27,6 +27,8 @@ const _$ObstacleKindEnumMap = {
   ObstacleKind.river: 'river',
   ObstacleKind.valley: 'valley',
   ObstacleKind.lake: 'lake',
+  ObstacleKind.lava: 'lava',
+  ObstacleKind.volcanicLake: 'volcanicLake',
 };
 
 const _$BiomeEnumMap = {

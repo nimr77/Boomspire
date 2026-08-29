@@ -155,7 +155,10 @@ class MapEditorDraftState {
     final currentTool = _tool.value;
     final stroke = _activeStroke.value;
     final isWaterTool =
-        currentTool == EditorTool.river || currentTool == EditorTool.lake;
+        currentTool == EditorTool.river ||
+        currentTool == EditorTool.lake ||
+        currentTool == EditorTool.lava ||
+        currentTool == EditorTool.volcanicLake;
     if (isWaterTool && stroke.length >= 2) {
       _commitWaterPath(currentTool, stroke);
     }
@@ -172,6 +175,8 @@ class MapEditorDraftState {
         _paintAt(point);
       case EditorTool.river:
       case EditorTool.lake:
+      case EditorTool.lava:
+      case EditorTool.volcanicLake:
         _activeStroke.value = [point];
       case EditorTool.homeSite:
         toggleHomeSiteAt(point);
@@ -188,6 +193,8 @@ class MapEditorDraftState {
         _paintAt(point);
       case EditorTool.river:
       case EditorTool.lake:
+      case EditorTool.lava:
+      case EditorTool.volcanicLake:
         _activeStroke.value = [..._activeStroke.value, point];
       case EditorTool.homeSite:
         break; // single-tap placement only, handled in handlePanStart
@@ -252,6 +259,9 @@ class MapEditorDraftState {
 
   void setDynamicWeather(bool value) =>
       _mutateEnvironment((env) => env.copyWith(dynamicWeather: value));
+
+  void setEnvironmentAdaptation(EnvironmentAdaptation value) =>
+      _mutateEnvironment((env) => env.copyWith(adaptation: value));
 
   void setMode(GameMode mode) => _mutateDraft(
     (d) => d.copyWith(
@@ -326,9 +336,12 @@ class MapEditorDraftState {
 
   void _commitWaterPath(EditorTool tool, List<EditorPoint> stroke) {
     final path = WaterPath(
-      kind: tool == EditorTool.lake
-          ? WaterFeatureKind.lake
-          : WaterFeatureKind.river,
+      kind: switch (tool) {
+        EditorTool.lake => WaterFeatureKind.lake,
+        EditorTool.lava => WaterFeatureKind.lava,
+        EditorTool.volcanicLake => WaterFeatureKind.volcanicLake,
+        _ => WaterFeatureKind.river,
+      },
       points: stroke,
       width: _riverWidth.value,
       variant: _variant.value,
@@ -350,7 +363,10 @@ class MapEditorDraftState {
     EditorTool.dune => ObstacleKind.dune,
     EditorTool.tree => null,
     EditorTool.erase => null,
-    EditorTool.river || EditorTool.lake => null,
+    EditorTool.river ||
+    EditorTool.lake ||
+    EditorTool.lava ||
+    EditorTool.volcanicLake => null,
     EditorTool.homeSite => null,
   };
 
@@ -388,7 +404,7 @@ class MapEditorDraftState {
       _mutateDraft((d) {
         final cells = [...d.treeCells]
           ..removeWhere((c) => c.col == col && c.row == row);
-        cells.add(TreeCell(col: col, row: row));
+        cells.add(TreeCell(col: col, row: row, variant: _variant.value));
         return d.copyWith(treeCells: cells);
       });
       return;

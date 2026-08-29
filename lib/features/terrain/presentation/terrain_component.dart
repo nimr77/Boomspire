@@ -5,9 +5,12 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show Colors;
 
 import '../../../core/rendering/procedural_image.dart';
+import '../../game_core/domain/enums/game_mode.dart';
+import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 import '../../map_editor/domain/models/environment_settings.dart';
 import '../../map_editor/domain/models/weather_keyframe.dart';
+import '../domain/models/obstacle_kind.dart';
 import '../domain/models/terrain_map.dart';
 import 'terrain_painter.dart';
 
@@ -24,6 +27,7 @@ class TerrainComponent extends PositionComponent
 
   late final ui.Image _baseImage;
   ui.Path? _riverPath;
+  ui.Path? _lavaPath;
   double _riverPhase = 0;
   double _treeSwayPhase = 0;
   double _weatherPhase = 0;
@@ -37,7 +41,14 @@ class TerrainComponent extends PositionComponent
   /// This scene's match-progress fraction (0..1), used to sample
   /// [EnvironmentSettings.sample] - the same wave-progress fraction the HUD
   /// shows, so a dynamic weather timeline changes pace with the campaign.
+  /// [GameMode.skirmish] has no wave count to derive this from, so it
+  /// falls back to elapsed time instead - otherwise it would be stuck at 0
+  /// (always the timeline's first keyframe) for the whole match.
   double get _matchProgress {
+    if (game.scene.mode == GameMode.skirmish) {
+      return (game.elapsedSeconds / GameConfig.skirmishWeatherCycleSeconds)
+          .clamp(0.0, 1.0);
+    }
     final total = game.gameState.totalWaves;
     if (total <= 0) return 0;
     return ((game.gameState.currentWave - 1) / total).clamp(0.0, 1.0);
@@ -51,6 +62,11 @@ class TerrainComponent extends PositionComponent
       _paintBase,
     );
     _riverPath = TerrainPainter.riverPath(terrainMap, size.y);
+    _lavaPath = TerrainPainter.riverPath(
+      terrainMap,
+      size.y,
+      kind: ObstacleKind.lava,
+    );
   }
 
   @override
@@ -76,6 +92,15 @@ class TerrainComponent extends PositionComponent
       TerrainPainter.paintRiverFlow(
         canvas,
         riverPath,
+        terrainMap.grid.cellSize,
+        _riverPhase,
+      );
+    }
+    final lavaPath = _lavaPath;
+    if (lavaPath != null) {
+      TerrainPainter.paintLavaFlow(
+        canvas,
+        lavaPath,
         terrainMap.grid.cellSize,
         _riverPhase,
       );
@@ -252,7 +277,7 @@ class TerrainComponent extends PositionComponent
   ) {
     final weather = environment.sample(_matchProgress);
 
-    _paintWindStreaks(canvas, weather.windStrength);
+    _paintWindStreaks(canvas, weather);
 
     if (weather.cloudCover > 0) {
       canvas.drawRect(
@@ -283,24 +308,111 @@ class TerrainComponent extends PositionComponent
     }
   }
 
-  /// Faint drifting dust/leaf streaks that scale with wind strength - unlike
-  /// tree-lean (only visible on tree-bearing biomes), this gives the wind
-  /// slider a visible effect on every biome/map.
-  void _paintWindStreaks(ui.Canvas canvas, double windStrength) {
-    if (windStrength <= 0) return;
+  /// Faint drifting wind-blown particles that scale with wind strength -
+  /// unlike tree-lean (only visible on tree-bearing biomes), this gives the
+  /// wind slider a visible effect on every biome/map. The style (green
+  /// leaves/autumn leaves/sand/dust/snow/ash) comes from
+  /// [WeatherKeyframe.resolvedWindType] - the biome's own natural look
+  /// unless the keyframe explicitly overrides it. Positions are reseeded
+  /// identically every frame (same fixed [math.Random] seed) then shifted
+  /// by [_weatherPhase], the same looping-drift technique [_paintRain]/
+  /// [_paintSnow] use, so particles visibly carry with the wind instead of
+  /// sitting frozen in place.
+  void _paintWindStreaks(ui.Canvas canvas, WeatherKeyframe weather) {
+    final resolvedType = weather.resolvedWindType(game.scene.biome);
+    if (resolvedType == WindType.ash) _paintSkyFlames(canvas);
+    if (weather.windStrength <= 0) return;
+
     final rnd = math.Random(13);
+    final strength = weather.windStrength.clamp(0, 1);
+    final streakLength = 18 + weather.windStrength * 40;
+    final count = (weather.windStrength * 40).round();
+    final drift = _weatherPhase * (30 + weather.windStrength * 70);
+
+    if (resolvedType == WindType.ash) {
+      for (var i = 0; i < count; i++) {
+        final baseX = rnd.nextDouble() * size.x;
+        final baseY = rnd.nextDouble() * size.y;
+        final bobPhase = rnd.nextDouble() * math.pi * 2;
+        final x = (baseX + drift) % size.x;
+        final y =
+            (baseY + math.sin(_weatherPhase * 0.8 + bobPhase) * 10) % size.y;
+        if (rnd.nextBool()) {
+          // A small gray/charcoal ash fleck, not a streak.
+          canvas.drawCircle(
+            ui.Offset(x, y),
+            0.8 + rnd.nextDouble() * 1.4,
+            ui.Paint()
+              ..color = ui.Color.lerp(
+                const ui.Color(0xFF9e9e9e),
+                const ui.Color(0xFF2b2b2b),
+                rnd.nextDouble(),
+              )!.withValues(alpha: 0.3 * strength),
+          );
+        } else {
+          // A drifting burnt-leaf smudge - short, dark, slightly curved.
+          canvas.drawLine(
+            ui.Offset(x, y),
+            ui.Offset(x + streakLength * 0.5, y - streakLength * 0.12),
+            ui.Paint()
+              ..color = const ui.Color(0xFF4a3524)
+                  .withValues(alpha: 0.22 * strength)
+              ..strokeWidth = 1.6
+              ..strokeCap = ui.StrokeCap.round,
+          );
+        }
+      }
+      return;
+    }
+
+    final color = switch (resolvedType) {
+      WindType.grassLeaves => const ui.Color(0xFFB7C97A),
+      WindType.autumnLeaves => const ui.Color(0xFFC1502D),
+      WindType.sand => const ui.Color(0xFFD8C08A),
+      WindType.snow => Colors.white70,
+      WindType.dust || WindType.automatic => Colors.white,
+      WindType.ash => Colors.white, // unreachable, handled above
+    };
+
     final paint = ui.Paint()
-      ..color = Colors.white.withValues(alpha: 0.18 * windStrength.clamp(0, 1))
       ..strokeWidth = 1.2
       ..strokeCap = ui.StrokeCap.round;
-    final streakLength = 18 + windStrength * 40;
-    for (var i = 0; i < (windStrength * 40).round(); i++) {
-      final x = rnd.nextDouble() * size.x;
-      final y = rnd.nextDouble() * size.y;
+    for (var i = 0; i < count; i++) {
+      final baseX = rnd.nextDouble() * size.x;
+      final baseY = rnd.nextDouble() * size.y;
+      final x = (baseX + drift) % size.x;
+      paint.color = color.withValues(alpha: 0.18 * strength);
       canvas.drawLine(
-        ui.Offset(x, y),
-        ui.Offset(x + streakLength, y - streakLength * 0.18),
+        ui.Offset(x, baseY),
+        ui.Offset(x + streakLength, baseY - streakLength * 0.18),
         paint,
+      );
+    }
+  }
+
+  /// Blurred orange/gold glow blobs drifting near the top edge, like distant
+  /// wildfire/volcanic flame lighting up the sky - shown whenever the
+  /// resolved wind type is [WindType.ash], independent of wind strength (a
+  /// still-air ash scene still has the fire glowing behind it).
+  void _paintSkyFlames(ui.Canvas canvas) {
+    final rnd = math.Random(21);
+    for (var i = 0; i < 6; i++) {
+      final x = rnd.nextDouble() * size.x;
+      final baseY = size.y * (0.04 + rnd.nextDouble() * 0.16);
+      final pulse =
+          0.6 +
+          0.4 * math.sin(_weatherPhase * (0.4 + rnd.nextDouble() * 0.5) + i);
+      final radius = (28 + rnd.nextDouble() * 42) * pulse;
+      canvas.drawCircle(
+        ui.Offset(x, baseY),
+        radius,
+        ui.Paint()
+          ..color = ui.Color.lerp(
+            const ui.Color(0xFFFF6D1F),
+            const ui.Color(0xFFFFC107),
+            rnd.nextDouble(),
+          )!.withValues(alpha: 0.16 * pulse)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 20),
       );
     }
   }

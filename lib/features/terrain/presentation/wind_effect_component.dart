@@ -3,11 +3,16 @@ import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 
+import '../../game_core/domain/enums/game_mode.dart';
+import '../../game_core/domain/models/game_config.dart';
+import '../../game_core/presentation/boomspire_game.dart';
 import '../domain/enums/biome.dart';
+import '../domain/enums/wind_type.dart';
 
-// Leaf colors for [WindStyle.autumn] - a wider mixed autumn palette (gold,
-// olive green, burnt orange, brick red, maroon, umber) picked per-particle
-// so a gust reads as a real mixed-color leaf fall, not just 2-3 repeats.
+// Leaf colors for [WindType.autumnLeaves] - a wider mixed autumn palette
+// (gold, olive green, burnt orange, brick red, maroon, umber) picked
+// per-particle so a gust reads as a real mixed-color leaf fall, not just
+// 2-3 repeats.
 const _autumnLeafColors = [
   ui.Color(0xFFE0B23A),
   ui.Color(0xFF7FA33C),
@@ -17,44 +22,68 @@ const _autumnLeafColors = [
   ui.Color(0xFFB8860B),
 ];
 
-WindStyle? _windStyleFor(Biome biome) => switch (biome) {
-  Biome.grassPlains || Biome.savanna => WindStyle.grass,
-  Biome.mountainForest => WindStyle.autumn,
-  Biome.snowTundra || Biome.frozenPeaks => WindStyle.snow,
-  Biome.desertDunes => WindStyle.sand,
-  Biome.cityRuins || Biome.sea => null,
-};
-
 /// Biome-flavored blown particles (grass clippings, snow flurries, blown
-/// sand, or tumbling autumn leaves) drifting sideways across the arena - a
-/// lightweight ambient cue that a scene's terrain isn't static, on top of
-/// `CloudLayerComponent`. Purely decorative, same as the cloud layer;
-/// renders nothing for biomes with no matching [WindStyle]. Motion is
-/// gust-modulated (a slow shared sine factor on speed) rather than
-/// constant-speed streaks, so it reads as natural wind rather than a
-/// conveyor belt.
-class WindEffectComponent extends PositionComponent {
+/// sand/dust, tumbling autumn leaves, or drifting ash) blowing sideways
+/// across the arena - a lightweight ambient cue that a scene's terrain
+/// isn't static, on top of `CloudLayerComponent`. Purely decorative, same
+/// as the cloud layer.
+///
+/// The style shown is [Biome.defaultWindType] unless the scene's live
+/// weather keyframe explicitly overrides it (see
+/// `WeatherKeyframe.resolvedWindType`) - checked every frame in [update]
+/// so a dynamic weather timeline can change the look mid-match, not just
+/// once at scene start. Motion is gust-modulated (a slow shared sine
+/// factor on speed) rather than constant-speed streaks, so it reads as
+/// natural wind rather than a conveyor belt.
+class WindEffectComponent extends PositionComponent
+    with HasGameReference<BoomspireGame> {
   final Vector2 _arenaSize;
-  final WindStyle? _style;
+  final Biome _biome;
   final Random _rnd = Random();
 
+  WindType? _currentType;
   final List<_WindParticle> _particles = [];
 
   WindEffectComponent({required Vector2 arenaSize, required Biome biome})
     : _arenaSize = arenaSize,
-      _style = _windStyleFor(biome),
+      // External param name (`biome`) intentionally differs from the
+      // private field it fills, so an initializing formal can't be used.
+      // ignore: prefer_initializing_formals
+      _biome = biome,
       super(position: Vector2.zero(), size: arenaSize, priority: 150);
+
+  /// This scene's match-progress fraction (0..1) - mirrors
+  /// `TerrainComponent._matchProgress` so both sample the same weather.
+  double get _matchProgress {
+    if (game.scene.mode == GameMode.skirmish) {
+      return (game.elapsedSeconds / GameConfig.skirmishWeatherCycleSeconds)
+          .clamp(0.0, 1.0);
+    }
+    final total = game.gameState.totalWaves;
+    if (total <= 0) return 0;
+    return ((game.gameState.currentWave - 1) / total).clamp(0.0, 1.0);
+  }
+
+  WindType get _resolvedType =>
+      game.scene.environment.sample(_matchProgress).resolvedWindType(_biome);
 
   @override
   Future<void> onLoad() async {
-    final style = _style;
-    if (style == null) return;
+    _restyle(_resolvedType);
+  }
 
+  /// Rebuilds [_particles] for a newly resolved [style] - called once from
+  /// [onLoad] and again whenever [update] notices the resolved style has
+  /// changed (e.g. a dynamic weather keyframe switching in an ash wind).
+  void _restyle(WindType style) {
+    _currentType = style;
+    _particles.clear();
     final rnd = Random(13);
     final count = switch (style) {
-      WindStyle.snow => 50,
-      WindStyle.autumn => 26,
-      WindStyle.grass || WindStyle.sand => 30,
+      WindType.snow => 50,
+      WindType.autumnLeaves || WindType.ash => 26,
+      WindType.grassLeaves || WindType.sand || WindType.dust => 30,
+      WindType.automatic => 0, // unreachable - always resolved concretely
     };
     for (var i = 0; i < count; i++) {
       _particles.add(
@@ -64,15 +93,20 @@ class WindEffectComponent extends PositionComponent {
             rnd.nextDouble() * _arenaSize.y,
           ),
           speed: switch (style) {
-            WindStyle.grass => 45 + rnd.nextDouble() * 35,
-            WindStyle.snow => 22 + rnd.nextDouble() * 26,
-            WindStyle.sand => 90 + rnd.nextDouble() * 70,
-            WindStyle.autumn => 18 + rnd.nextDouble() * 22,
+            WindType.grassLeaves => 45 + rnd.nextDouble() * 35,
+            WindType.snow => 22 + rnd.nextDouble() * 26,
+            WindType.sand => 90 + rnd.nextDouble() * 70,
+            WindType.dust => 55 + rnd.nextDouble() * 40,
+            WindType.autumnLeaves => 18 + rnd.nextDouble() * 22,
+            WindType.ash => 16 + rnd.nextDouble() * 20,
+            WindType.automatic => 0,
           },
           drop: switch (style) {
-            WindStyle.snow => 16 + rnd.nextDouble() * 18,
-            WindStyle.autumn => 12 + rnd.nextDouble() * 14,
-            WindStyle.grass || WindStyle.sand => 0,
+            WindType.snow => 16 + rnd.nextDouble() * 18,
+            WindType.autumnLeaves => 12 + rnd.nextDouble() * 14,
+            WindType.ash => 10 + rnd.nextDouble() * 12,
+            WindType.grassLeaves || WindType.sand || WindType.dust => 0,
+            WindType.automatic => 0,
           },
           scale: 0.5 + rnd.nextDouble() * 1.0,
           opacity: 0.12 + rnd.nextDouble() * 0.3,
@@ -88,14 +122,14 @@ class WindEffectComponent extends PositionComponent {
 
   @override
   void render(ui.Canvas canvas) {
-    final style = _style;
+    final style = _currentType;
     if (style == null) return;
 
     for (final p in _particles) {
       final bob = sin(p.bobPhase) * 2;
       final center = ui.Offset(p.position.x, p.position.y + bob);
       switch (style) {
-        case WindStyle.grass:
+        case WindType.grassLeaves:
           final paint = ui.Paint()
             ..color = const ui.Color(0xFFB7C97A).withValues(alpha: p.opacity)
             ..strokeWidth = 2 * p.scale
@@ -105,20 +139,27 @@ class WindEffectComponent extends PositionComponent {
             center.translate(-14 * p.scale, 4 * p.scale),
             paint,
           );
-        case WindStyle.snow:
+        case WindType.snow:
           canvas.drawCircle(
             center,
             2.5 * p.scale,
             ui.Paint()
               ..color = const ui.Color(0xFFFFFFFF).withValues(alpha: p.opacity),
           );
-        case WindStyle.sand:
+        case WindType.sand:
           final paint = ui.Paint()
             ..color = const ui.Color(0xFFD8C08A).withValues(alpha: p.opacity)
             ..strokeWidth = 1.5 * p.scale
             ..strokeCap = ui.StrokeCap.round;
           canvas.drawLine(center, center.translate(-22 * p.scale, 0), paint);
-        case WindStyle.autumn:
+        case WindType.dust:
+          final paint = ui.Paint()
+            ..color = const ui.Color(0xFFDCD3B8)
+                .withValues(alpha: p.opacity * 0.7)
+            ..strokeWidth = 1.2 * p.scale
+            ..strokeCap = ui.StrokeCap.round;
+          canvas.drawLine(center, center.translate(-16 * p.scale, 0), paint);
+        case WindType.autumnLeaves:
           final leafSize = 5 * p.scale;
           canvas.save();
           canvas.translate(center.dx, center.dy);
@@ -135,6 +176,34 @@ class WindEffectComponent extends PositionComponent {
               ),
           );
           canvas.restore();
+        case WindType.ash:
+          // Alternates fleck vs. smudge per-particle (fixed at spawn, not
+          // re-randomized every frame) so each piece of ash keeps its own
+          // identity as it drifts naturally with the gust.
+          if (p.colorIndex.isEven) {
+            canvas.drawCircle(
+              center,
+              1.6 * p.scale,
+              ui.Paint()
+                ..color = ui.Color.lerp(
+                  const ui.Color(0xFF9e9e9e),
+                  const ui.Color(0xFF2b2b2b),
+                  p.opacity,
+                )!.withValues(alpha: p.opacity),
+            );
+          } else {
+            canvas.drawLine(
+              center,
+              center.translate(-10 * p.scale, 3 * p.scale),
+              ui.Paint()
+                ..color = const ui.Color(0xFF4a3524)
+                    .withValues(alpha: p.opacity)
+                ..strokeWidth = 1.4 * p.scale
+                ..strokeCap = ui.StrokeCap.round,
+            );
+          }
+        case WindType.automatic:
+          break; // unreachable - always resolved concretely
       }
     }
   }
@@ -142,6 +211,9 @@ class WindEffectComponent extends PositionComponent {
   @override
   void update(double dt) {
     super.update(dt);
+    final resolved = _resolvedType;
+    if (resolved != _currentType) _restyle(resolved);
+
     for (final p in _particles) {
       p.gustPhase += dt * 0.6;
       final gust = 0.7 + 0.3 * sin(p.gustPhase);
@@ -159,12 +231,6 @@ class WindEffectComponent extends PositionComponent {
     }
   }
 }
-
-/// Which flavor of blown-particle effect a biome gets - `null` means the
-/// biome has no wind effect at all (e.g. the sea/city-ruins scenes).
-/// [WindStyle.autumn] is the mixed yellow/green/red tumbling-leaf fall used
-/// for forest scenes.
-enum WindStyle { grass, snow, sand, autumn }
 
 class _WindParticle {
   Vector2 position;
