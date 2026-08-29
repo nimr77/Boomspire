@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../theme/app_theme/app_theme_colors.dart';
-import '../../../theme/app_theme/app_theme_paddings.dart';
-import '../../../theme/app_theme/app_theme_spacing.dart';
+import '../../../shared/app_theme/app_theme_colors.dart';
+import '../../../shared/app_theme/app_theme_paddings.dart';
+import '../../../shared/app_theme/app_theme_spacing.dart';
 import '../domain/models/account_profile.dart';
 import 'account_avatar.dart';
 import 'state/account_profile_state.dart';

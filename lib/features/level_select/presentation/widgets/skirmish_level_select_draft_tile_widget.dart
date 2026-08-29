@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
 import '../../../map_editor/domain/models/map_draft.dart';
 import '../../../terrain/extensions/biome_extensions.dart';
 

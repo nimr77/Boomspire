@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
 import '../../../game_core/domain/models/game_difficulty.dart';
 import '../../../game_core/extensions/game_difficulty_extensions.dart';
 import 'level_select_difficulty_segment_widget.dart';

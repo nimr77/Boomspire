@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
 import '../../../game_core/presentation/player_palette.dart';
 
 /// A single numbered, colored home-site marker that glows and scales up on

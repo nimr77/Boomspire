@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../shared/app_theme/app_theme_colors.dart';
 
 /// Circular commander avatar. Loads [avatarUrl] via [CachedNetworkImage]
 /// when present; falls back to a plain icon glyph on a null/empty url or

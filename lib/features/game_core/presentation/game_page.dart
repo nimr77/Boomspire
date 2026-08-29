@@ -11,7 +11,7 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/rendering/domain/repos/unit_render_repository.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
-import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../shared/app_theme/app_theme_colors.dart';
 import '../../account/presentation/state/account_profile_state.dart';
 import '../../ai_director/domain/repos/ai_director_repository.dart';
 import '../../audio/domain/repos/audio_repository.dart';

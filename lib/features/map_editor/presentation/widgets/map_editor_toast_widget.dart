@@ -3,10 +3,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
-import '../../../../theme/app_theme/app_theme_spacing.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_spacing.dart';
 
 /// Frosted, auto-dismissing confirmation toast - the non-modal counterpart
 /// to the game's `showGlassMessage` sheet, used for brief editor feedback

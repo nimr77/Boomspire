@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
 import '../../../game_core/presentation/player_palette.dart';
 
 /// A "1 · You"/"2 · AI" chip below the placement surface identifying each

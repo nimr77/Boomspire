@@ -2,9 +2,9 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/di/service_locator.dart';
-import '../../../theme/app_theme/app_theme_borders.dart';
-import '../../../theme/app_theme/app_theme_colors.dart';
-import '../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../shared/app_theme/app_theme_borders.dart';
+import '../../../shared/app_theme/app_theme_colors.dart';
+import '../../../shared/app_theme/app_theme_paddings.dart';
 import '../../terrain/extensions/biome_extensions.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/repos/map_draft_repository.dart';

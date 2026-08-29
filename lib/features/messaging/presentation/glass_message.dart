@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../theme/app_theme/app_theme_colors.dart';
+import '../../../shared/app_theme/app_theme_colors.dart';
 import 'widgets/messaging_glass_card_widget.dart';
 
 /// Shows a frosted-glass "messaging" surface: forces focus onto its content

@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
 
 /// The rounded, frosted card body used by [showGlassMessage] - centered as
 /// a dialog on wide/desktop layouts, or docked to the bottom as a sheet on

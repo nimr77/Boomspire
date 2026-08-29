@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
 
 /// Single easy/normal/hard option inside [LevelSelectDifficultySelectorWidget]
 /// - a HUD-styled segment (matches the build menu's tab strip) rather than

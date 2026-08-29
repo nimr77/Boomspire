@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/routes.dart';
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
-import '../../../../theme/app_theme/app_theme_spacing.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_spacing.dart';
 import '../../../game_core/domain/models/game_scene.dart';
 import '../../../terrain/extensions/biome_extensions.dart';
 import '../biome_preview.dart';

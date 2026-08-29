@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/routes.dart';
 import '../../../../generated/l10n.dart';
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
-import '../../../../theme/app_theme/app_theme_spacing.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_spacing.dart';
 import '../../../game_core/domain/models/game_difficulty.dart';
 import '../../../game_core/domain/models/game_scene.dart';
 import '../../../progress/domain/models/progress_snapshot.dart';

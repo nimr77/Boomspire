@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../generated/l10n.dart';
-import '../../theme/app_theme/app_theme_colors.dart';
+import '../../shared/app_theme/app_theme_colors.dart';
 
 /// Fullscreen toggle icon button (desktop only) - tracks the OS window's
 /// live fullscreen state so its icon/tooltip stay in sync even if the user

@@ -7,10 +7,10 @@ import '../../../core/widgets/hover_scale_card.dart';
 import '../../../core/widgets/menu_option_content.dart';
 import '../../../core/widgets/window_controls.dart';
 import '../../../generated/l10n.dart';
-import '../../../theme/app_theme/app_theme_borders.dart';
-import '../../../theme/app_theme/app_theme_colors.dart';
-import '../../../theme/app_theme/app_theme_paddings.dart';
-import '../../../theme/app_theme/app_theme_spacing.dart';
+import '../../../shared/app_theme/app_theme_borders.dart';
+import '../../../shared/app_theme/app_theme_colors.dart';
+import '../../../shared/app_theme/app_theme_paddings.dart';
+import '../../../shared/app_theme/app_theme_spacing.dart';
 
 /// Single Player drill-down: choose Tower Defense (the original wave
 /// survival campaigns) or Skirmish (home-vs-home battles against the AI),

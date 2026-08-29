@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
 import '../../domain/models/game_scene.dart';
 import '../boomspire_game.dart';
 import 'end_screen.dart';

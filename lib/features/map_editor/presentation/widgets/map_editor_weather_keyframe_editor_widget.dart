@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/l10n.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
 import '../../domain/models/weather_keyframe.dart';
 
 /// One editable card in the environment section's weather timeline - lets

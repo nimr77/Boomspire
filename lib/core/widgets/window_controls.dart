@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../generated/l10n.dart';
-import '../../theme/app_theme/app_theme_borders.dart';
-import '../../theme/app_theme/app_theme_colors.dart';
-import '../../theme/app_theme/app_theme_paddings.dart';
+import '../../shared/app_theme/app_theme_borders.dart';
+import '../../shared/app_theme/app_theme_colors.dart';
+import '../../shared/app_theme/app_theme_paddings.dart';
 import 'window_controls_fullscreen_button_widget.dart';
 
 /// Small pill of icon buttons for window-level chrome (fullscreen toggle,

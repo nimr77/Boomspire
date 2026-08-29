@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
-import '../../../../theme/app_theme/app_theme_spacing.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_spacing.dart';
 
 /// A small icon+text pill used in [HudOverlay]'s left-hand stat column
 /// (health/gold/score).

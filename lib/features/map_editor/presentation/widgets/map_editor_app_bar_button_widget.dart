@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
-import '../../../../theme/app_theme/app_theme_spacing.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_spacing.dart';
 
 /// HUD-panel-styled action button for the editor's AppBar (Save/Play) -
 /// matches the translucent bordered look used by in-game action buttons

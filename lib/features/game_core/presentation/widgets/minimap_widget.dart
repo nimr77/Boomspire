@@ -2,8 +2,8 @@ import 'package:flame/components.dart' show Vector2;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../../../../theme/app_theme/app_theme_borders.dart';
-import '../../../../theme/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_borders.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
 import '../boomspire_game.dart';
 import 'game_core_minimap_painter.dart';
 

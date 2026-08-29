@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/app_theme/app_theme_colors.dart';
-import '../../../../theme/app_theme/app_theme_paddings.dart';
+import '../../../../shared/app_theme/app_theme_colors.dart';
+import '../../../../shared/app_theme/app_theme_paddings.dart';
 
 /// Small cyan caps-lock-styled label used to separate side-panel sections
 /// (Brush, Map, Waves, Environment) in the map editor.
