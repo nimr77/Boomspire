@@ -10,4 +10,5 @@ enum Biome {
   savanna,
   frozenPeaks,
   sea,
+  snowyGrassland,
 }

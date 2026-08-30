@@ -40,4 +40,5 @@ const _$BiomeEnumMap = {
   Biome.savanna: 'savanna',
   Biome.frozenPeaks: 'frozenPeaks',
   Biome.sea: 'sea',
+  Biome.snowyGrassland: 'snowyGrassland',
 };

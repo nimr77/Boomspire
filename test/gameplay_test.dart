@@ -14,7 +14,6 @@ import 'package:boomspire/core/combat/team.dart';
 import 'package:boomspire/core/combat/unit_kind.dart';
 import 'package:boomspire/core/combat/unit_objective.dart';
 import 'package:boomspire/core/combat/weapon_type.dart';
-import 'package:boomspire/core/rendering/impl/procedural_unit_render_repository_impl.dart';
 import 'package:boomspire/features/ai_director/impl/ai_director_repository_impl.dart';
 import 'package:boomspire/features/audio/domain/models/ambient_sound_type.dart';
 import 'package:boomspire/features/audio/domain/models/sfx_type.dart';
@@ -38,7 +37,7 @@ import 'package:boomspire/features/towers/presentation/rocket_silo_tower_compone
 import 'package:boomspire/features/towers/presentation/training_center_component.dart';
 import 'package:boomspire/features/towers/presentation/war_factory_component.dart';
 import 'package:boomspire/features/waves/impl/wave_repository_impl.dart';
-import 'package:boomspire/features/waves/presentation/wave_director_component.dart';
+import 'package:boomspire/core/rendering/impl/procedural_unit_render_repository_impl.dart';
 import 'package:boomspire/generated/l10n.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/widgets.dart' show Locale;
@@ -110,12 +109,12 @@ void main() {
       final grid = game.terrainMap.grid;
       game.gameState.addGold(1000);
 
-      // Tech Lab now requires a Power Plant built first.
+      // Tech Lab requires a Power Plant first (see `boomspire_game.dart`'s
+      // `buildBlockReason`).
       final powerPlantCell = _findOpenCell(game);
       game.selectTowerType(BuildingType.powerPlant);
       game.handleArenaTap(grid.cellCenter(powerPlantCell));
       game.handleArenaTap(grid.cellCenter(powerPlantCell));
-
       expect(game.buildBlockReason(BuildingType.techLab), isNull);
 
       final cell = _findOpenCell(game);
@@ -139,15 +138,14 @@ void main() {
       final commandPostGrid = commandPostGame.terrainMap.grid;
       commandPostGame.gameState.addGold(2000);
 
-      // Command Post now requires a War Factory or Training Center built
-      // first.
-      final trainingCenterCell = _findOpenCell(commandPostGame);
-      commandPostGame.selectTowerType(BuildingType.trainingCenter);
+      // Command Post requires a War Factory or Training Center first.
+      final warFactoryCell = _findOpenCell(commandPostGame);
+      commandPostGame.selectTowerType(BuildingType.warFactory);
       commandPostGame.handleArenaTap(
-        commandPostGrid.cellCenter(trainingCenterCell),
+        commandPostGrid.cellCenter(warFactoryCell),
       );
       commandPostGame.handleArenaTap(
-        commandPostGrid.cellCenter(trainingCenterCell),
+        commandPostGrid.cellCenter(warFactoryCell),
       );
 
       final firstCell = _findOpenCell(commandPostGame);
@@ -264,23 +262,14 @@ void main() {
       game.gameState.addGold(3000);
       final grid = game.terrainMap.grid;
 
-      // Strip the auto-added wave director: this test runs long enough
-      // (two 8s assertion loops) to cross its pre-wave timer, and a real
-      // spawned invader hit by the silo could splash-damage closeEnemy
-      // sitting in the dead zone - a source of flakiness unrelated to the
-      // minRange logic under test.
-      for (final director
-          in game.world.children.whereType<WaveDirectorComponent>().toList()) {
-        director.removeFromParent();
-      }
-
-      // Rocket Silo requires a Power Plant, Tech Lab, a War Factory or
-      // Training Center, and a Command Post to be built first (see
-      // `boomspire_game.dart`'s `buildBlockReason`).
+      // Rocket Silo requires both Tech Lab and Command Post to be built
+      // first (see `boomspire_game.dart`'s `buildBlockReason`) - which in
+      // turn each require their own prerequisite (Power Plant, and War
+      // Factory/Training Center respectively).
       for (final prereq in [
         BuildingType.powerPlant,
+        BuildingType.warFactory,
         BuildingType.techLab,
-        BuildingType.trainingCenter,
         BuildingType.commandPost,
       ]) {
         final prereqCell = _findOpenCell(game);
@@ -290,7 +279,14 @@ void main() {
       }
 
       final cell = _findOpenCell(game);
-      final siloPosition = grid.cellCenter(cell);
+      game.selectTowerType(TowerType.rocketSilo);
+      game.handleArenaTap(grid.cellCenter(cell));
+      game.handleArenaTap(grid.cellCenter(cell));
+      final silo = game.world.activeTowers
+          .whereType<RocketSiloTowerComponent>()
+          .first;
+      await Future<void>.delayed(Duration.zero);
+      game.update(0);
 
       final blueprint = TowerRepositoryImpl().blueprintFor(
         TowerType.rocketSilo,
@@ -308,16 +304,7 @@ void main() {
         size: 34,
       );
 
-      // Enemy well inside the dead zone: should never take damage. Spawned
-      // and positioned *before* the silo is built (see below) - otherwise
-      // a `rushBase` unit's real (random, possibly in-range) initial spawn
-      // point is briefly live the moment it mounts, and an already-built
-      // silo could acquire + launch a homing rocket at it right then; the
-      // rocket keeps flying to wherever the target currently is even
-      // after we override its position into the dead zone next, landing a
-      // hit the minRange check was supposed to prevent (regression: this
-      // is what made the test flaky under the full suite but not alone -
-      // it depended on which spawn point `Random` happened to pick).
+      // Enemy well inside the dead zone: should never take damage.
       // Position is set only after mounting, since
       // MobileUnitComponent.onLoad overwrites `position` to a random spawn
       // point (for `UnitObjective.rushBase` units).
@@ -329,17 +316,7 @@ void main() {
       game.world.spawnUnit(closeEnemy);
       await Future<void>.delayed(Duration.zero);
       game.update(0);
-      closeEnemy.position = siloPosition + Vector2(blueprint.minRange / 2, 0);
-
-      game.selectTowerType(TowerType.rocketSilo);
-      game.handleArenaTap(siloPosition);
-      game.handleArenaTap(siloPosition);
-      final silo = game.world.activeTowers
-          .whereType<RocketSiloTowerComponent>()
-          .first;
-      await Future<void>.delayed(Duration.zero);
-      game.update(0);
-
+      closeEnemy.position = silo.position + Vector2(blueprint.minRange / 2, 0);
       for (var i = 0; i < 40; i++) {
         await Future<void>.delayed(Duration.zero);
         game.update(0.2);
@@ -536,18 +513,19 @@ void main() {
         }
 
         final firstCell = cellFor(base.position, 2)!;
+        // Tech Lab itself now requires a Power Plant first.
+        final powerPlantCell = cellFor(base.position, 1)!;
         final powerPlantBuilt = game.buildStructure(
           aiTeam,
           BuildingType.powerPlant,
-          game.terrainMap.grid.cellCenter(firstCell),
+          game.terrainMap.grid.cellCenter(powerPlantCell),
         );
         expect(powerPlantBuilt, isNotNull);
 
-        final techLabCell = cellFor(base.position, 3)!;
         final built = game.buildStructure(
           aiTeam,
           BuildingType.techLab,
-          game.terrainMap.grid.cellCenter(techLabCell),
+          game.terrainMap.grid.cellCenter(firstCell),
         );
         expect(built, isNotNull);
         expect(game.towerCountFor(BuildingType.techLab, owner: aiTeam), 1);
@@ -555,7 +533,7 @@ void main() {
 
         // A second Tech Lab is refused - same "max 1 built" cap the player
         // is bound by.
-        final secondCell = cellFor(base.position, 4)!;
+        final secondCell = cellFor(base.position, 3)!;
         final secondBuild = game.buildStructure(
           aiTeam,
           BuildingType.techLab,
@@ -709,38 +687,41 @@ void main() {
       },
     );
 
-    test('the AI produces its first unit within a reasonable number of '
-        'decision ticks using only its default starting gold, instead of '
-        'spending everything on buildings first (regression: the AI used to '
-        'burn through its whole wallet on infrastructure/towers before it '
-        'could ever afford to produce anything)', () async {
-      final game = await _bootGame(GameScenes.skirmishes.first);
-      final aiTeam = game.aiTeam!;
+    test(
+      'the AI produces its first unit within a reasonable number of '
+      'decision ticks using only its default starting gold, instead of '
+      'spending everything on buildings first (regression: the AI used to '
+      'burn through its whole wallet on infrastructure/towers before it '
+      'could ever afford to produce anything)',
+      () async {
+        final game = await _bootGame(GameScenes.skirmishes.first);
+        final aiTeam = game.aiTeam!;
 
-      for (var i = 0; i < 300; i++) {
-        game.update(0.1);
-      }
+        for (var i = 0; i < 300; i++) {
+          game.update(0.1);
+        }
 
-      final hasProduction = game.world.activeTowers.any(
-        (t) =>
-            t.owner.id == aiTeam.id &&
-            (t is TrainingCenterComponent || t is WarFactoryComponent),
-      );
-      expect(
-        hasProduction,
-        isTrue,
-        reason:
-            'the AI should have built its first production building '
-            'within default starting gold and this many decision ticks',
-      );
-      expect(
-        game.world.activeUnits.where((u) => u.team.id == aiTeam.id),
-        isNotEmpty,
-        reason:
-            'the AI should have actually produced a unit by now instead '
-            'of pouring every coin into more buildings',
-      );
-    });
+        final hasProduction = game.world.activeTowers.any(
+          (t) =>
+              t.owner.id == aiTeam.id &&
+              (t is TrainingCenterComponent || t is WarFactoryComponent),
+        );
+        expect(
+          hasProduction,
+          isTrue,
+          reason:
+              'the AI should have built its first production building '
+              'within default starting gold and this many decision ticks',
+        );
+        expect(
+          game.world.activeUnits.where((u) => u.team.id == aiTeam.id),
+          isNotEmpty,
+          reason:
+              'the AI should have actually produced a unit by now instead '
+              'of pouring every coin into more buildings',
+        );
+      },
+    );
   });
 
   group('combat damage fixes', () {
@@ -995,95 +976,98 @@ void main() {
       },
     );
 
-    test('after destroying an attack-ordered target, the unit automatically '
-        'presses on to the next hostile within its radius instead of '
-        'freezing in place once it arrives', () async {
-      final game = await _bootGame(GameScenes.all.first);
-      const allyBlueprint = MobileUnitBlueprint(
-        kind: UnitKind.soldier,
-        name: 'Test Ally',
-        maxHealth: 40,
-        speed: 80,
-        bounty: 0,
-        size: 34,
-        attackDamage: 200,
-        attackRange: 150,
-        attackInterval: 0.1,
-        weaponType: WeaponType.laser,
-      );
-      final ally = MobileUnitComponent(
-        blueprint: allyBlueprint,
-        team: game.playerTeam,
-        objective: UnitObjective.huntHostiles,
-      );
-      game.world.spawnUnit(ally);
-      await Future<void>.delayed(Duration.zero);
-      game.update(0);
-      ally.position = Vector2(300, 300);
-
-      const nearEnemyBlueprint = MobileUnitBlueprint(
-        kind: UnitKind.soldier,
-        name: 'Test Enemy Near',
-        maxHealth: 10,
-        speed: 0,
-        bounty: 0,
-        size: 34,
-      );
-      final nearEnemy = MobileUnitComponent(
-        blueprint: nearEnemyBlueprint,
-        team: Team.invaders,
-        objective: UnitObjective.huntHostiles,
-      );
-      game.world.spawnUnit(nearEnemy);
-      await Future<void>.delayed(Duration.zero);
-      game.update(0);
-      nearEnemy.position = Vector2(340, 300);
-
-      const farEnemyBlueprint = MobileUnitBlueprint(
-        kind: UnitKind.soldier,
-        name: 'Test Enemy Far',
-        maxHealth: 200,
-        speed: 0,
-        bounty: 0,
-        size: 34,
-      );
-      final farEnemy = MobileUnitComponent(
-        blueprint: farEnemyBlueprint,
-        team: Team.invaders,
-        objective: UnitObjective.huntHostiles,
-      );
-      game.world.spawnUnit(farEnemy);
-      await Future<void>.delayed(Duration.zero);
-      game.update(0);
-      // Outside attack range (150) but well inside the auto-continue
-      // radius (attackRange * 3 = 450), so the unit must walk toward it.
-      // Kept far enough away (400) that, even after nearEnemy dies and
-      // the ally spends the first assertion loop (10 * 0.2s = 2s)
-      // closing the gap at its 80 units/s speed, it still can't have
-      // covered enough ground to already be in range and one-shot it
-      // before the first checkpoint below - it must still be alive and
-      // merely "being hunted" at that point.
-      farEnemy.position = Vector2(700, 300);
-
-      game.handleArenaTap(ally.position);
-      game.handleArenaTap(nearEnemy.position);
-      expect(ally.forcedTarget, nearEnemy);
-
-      for (var i = 0; i < 10; i++) {
+    test(
+      'after destroying an attack-ordered target, the unit automatically '
+      'presses on to the next hostile within its radius instead of '
+      'freezing in place once it arrives',
+      () async {
+        final game = await _bootGame(GameScenes.all.first);
+        const allyBlueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Ally',
+          maxHealth: 40,
+          speed: 80,
+          bounty: 0,
+          size: 34,
+          attackDamage: 200,
+          attackRange: 150,
+          attackInterval: 0.1,
+          weaponType: WeaponType.laser,
+        );
+        final ally = MobileUnitComponent(
+          blueprint: allyBlueprint,
+          team: game.playerTeam,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(ally);
         await Future<void>.delayed(Duration.zero);
-        game.update(0.2);
-      }
+        game.update(0);
+        ally.position = Vector2(300, 300);
 
-      expect(nearEnemy.destroyed, isTrue);
-      expect(ally.forcedTarget, farEnemy);
-
-      for (var i = 0; i < 30; i++) {
+        const nearEnemyBlueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Enemy Near',
+          maxHealth: 10,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final nearEnemy = MobileUnitComponent(
+          blueprint: nearEnemyBlueprint,
+          team: Team.invaders,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(nearEnemy);
         await Future<void>.delayed(Duration.zero);
-        game.update(0.2);
-      }
+        game.update(0);
+        nearEnemy.position = Vector2(340, 300);
 
-      expect(farEnemy.health, lessThan(farEnemy.blueprint.maxHealth));
-    });
+        const farEnemyBlueprint = MobileUnitBlueprint(
+          kind: UnitKind.soldier,
+          name: 'Test Enemy Far',
+          maxHealth: 200,
+          speed: 0,
+          bounty: 0,
+          size: 34,
+        );
+        final farEnemy = MobileUnitComponent(
+          blueprint: farEnemyBlueprint,
+          team: Team.invaders,
+          objective: UnitObjective.huntHostiles,
+        );
+        game.world.spawnUnit(farEnemy);
+        await Future<void>.delayed(Duration.zero);
+        game.update(0);
+        // Outside attack range (150) but well inside the auto-continue
+        // radius (attackRange * 3 = 450), so the unit must walk toward it.
+        // Kept far enough away (400) that, even after nearEnemy dies and
+        // the ally spends the first assertion loop (10 * 0.2s = 2s)
+        // closing the gap at its 80 units/s speed, it still can't have
+        // covered enough ground to already be in range and one-shot it
+        // before the first checkpoint below - it must still be alive and
+        // merely "being hunted" at that point.
+        farEnemy.position = Vector2(700, 300);
+
+        game.handleArenaTap(ally.position);
+        game.handleArenaTap(nearEnemy.position);
+        expect(ally.forcedTarget, nearEnemy);
+
+        for (var i = 0; i < 10; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.2);
+        }
+
+        expect(nearEnemy.destroyed, isTrue);
+        expect(ally.forcedTarget, farEnemy);
+
+        for (var i = 0; i < 30; i++) {
+          await Future<void>.delayed(Duration.zero);
+          game.update(0.2);
+        }
+
+        expect(farEnemy.health, lessThan(farEnemy.blueprint.maxHealth));
+      },
+    );
 
     test(
       'tapping an enemy while a unit is selected issues an attack order',

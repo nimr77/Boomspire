@@ -56,6 +56,27 @@ class LevelSelectBiomeThumbPainter extends CustomPainter {
         0,
       );
     }
+    final lakeShape = TerrainPainter.lakeShape(terrainMap);
+    if (lakeShape != null) {
+      TerrainPainter.paintLakeFlow(
+        canvas,
+        lakeShape,
+        terrainMap.grid.cellSize,
+        0,
+      );
+    }
+    final volcanicLakeShape = TerrainPainter.lakeShape(
+      terrainMap,
+      kind: ObstacleKind.volcanicLake,
+    );
+    if (volcanicLakeShape != null) {
+      TerrainPainter.paintVolcanicLakeFlow(
+        canvas,
+        volcanicLakeShape,
+        terrainMap.grid.cellSize,
+        0,
+      );
+    }
     canvas.restore();
   }
 

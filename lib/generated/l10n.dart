@@ -390,6 +390,16 @@ class S {
     return Intl.message('Open Sea', name: 'biomeNameSea', desc: '', args: []);
   }
 
+  /// `Snowy Grassland`
+  String get biomeNameSnowyGrassland {
+    return Intl.message(
+      'Snowy Grassland',
+      name: 'biomeNameSnowyGrassland',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Open fields, rocky ridges, a winding river.`
   String get biomeDescriptionGrassPlains {
     return Intl.message(
@@ -465,6 +475,16 @@ class S {
     return Intl.message(
       'Open water studded with reefs - the fleet closes in.',
       name: 'biomeDescriptionSea',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Frost-dusted grass and snow-laden trees under a pale winter sky.`
+  String get biomeDescriptionSnowyGrassland {
+    return Intl.message(
+      'Frost-dusted grass and snow-laden trees under a pale winter sky.',
+      name: 'biomeDescriptionSnowyGrassland',
       desc: '',
       args: [],
     );

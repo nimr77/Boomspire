@@ -337,6 +337,20 @@ class MapEditorCanvasPainter extends CustomPainter {
           r,
           Paint()..color = const Color(0xFF1f3d22).withValues(alpha: 0.9),
         );
+      case Biome.snowyGrassland:
+        trunk(0xFF4a3421);
+        canvas.drawCircle(
+          canopyCenter,
+          r,
+          Paint()..color = const Color(0xFF1f3d22).withValues(alpha: 0.92),
+        );
+        canvas.drawArc(
+          Rect.fromCenter(center: canopyCenter, width: r * 2, height: r * 1.6),
+          pi,
+          pi,
+          false,
+          Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: 0.8),
+        );
     }
   }
 

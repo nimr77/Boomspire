@@ -26,6 +26,8 @@ class TerrainComponent extends PositionComponent
   late final ui.Image _baseImage;
   ui.Path? _riverPath;
   ui.Path? _lavaPath;
+  ui.Path? _lakeShape;
+  ui.Path? _volcanicLakeShape;
   double _riverPhase = 0;
   double _treeSwayPhase = 0;
   double _weatherPhase = 0;
@@ -48,6 +50,11 @@ class TerrainComponent extends PositionComponent
       terrainMap,
       size.y,
       kind: ObstacleKind.lava,
+    );
+    _lakeShape = TerrainPainter.lakeShape(terrainMap);
+    _volcanicLakeShape = TerrainPainter.lakeShape(
+      terrainMap,
+      kind: ObstacleKind.volcanicLake,
     );
   }
 
@@ -83,6 +90,24 @@ class TerrainComponent extends PositionComponent
       TerrainPainter.paintLavaFlow(
         canvas,
         lavaPath,
+        terrainMap.grid.cellSize,
+        _riverPhase,
+      );
+    }
+    final lakeShape = _lakeShape;
+    if (lakeShape != null) {
+      TerrainPainter.paintLakeFlow(
+        canvas,
+        lakeShape,
+        terrainMap.grid.cellSize,
+        _riverPhase,
+      );
+    }
+    final volcanicLakeShape = _volcanicLakeShape;
+    if (volcanicLakeShape != null) {
+      TerrainPainter.paintVolcanicLakeFlow(
+        canvas,
+        volcanicLakeShape,
         terrainMap.grid.cellSize,
         _riverPhase,
       );

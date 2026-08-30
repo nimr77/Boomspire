@@ -111,6 +111,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "biomeDescriptionSnowTundra": MessageLookupByLibrary.simpleMessage(
       "Frozen ground, snow-capped peaks, an icy river.",
     ),
+    "biomeDescriptionSnowyGrassland": MessageLookupByLibrary.simpleMessage(
+      "Frost-dusted grass and snow-laden trees under a pale winter sky.",
+    ),
     "biomeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Biome"),
     "biomeNameCityRuins": MessageLookupByLibrary.simpleMessage("City Ruins"),
     "biomeNameDesertDunes": MessageLookupByLibrary.simpleMessage(
@@ -128,6 +131,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "biomeNameSavanna": MessageLookupByLibrary.simpleMessage("Savanna"),
     "biomeNameSea": MessageLookupByLibrary.simpleMessage("Open Sea"),
     "biomeNameSnowTundra": MessageLookupByLibrary.simpleMessage("Snow Tundra"),
+    "biomeNameSnowyGrassland": MessageLookupByLibrary.simpleMessage(
+      "Snowy Grassland",
+    ),
     "brushLabelEditorPage": MessageLookupByLibrary.simpleMessage("Brush"),
     "brushTypeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Type"),
     "brushTypeMatchBiomeEditorPage": MessageLookupByLibrary.simpleMessage(

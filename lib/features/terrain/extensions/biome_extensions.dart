@@ -14,7 +14,8 @@ extension BiomeExtensions on Biome {
   WindType get defaultWindType => switch (this) {
     Biome.grassPlains || Biome.savanna => WindType.grassLeaves,
     Biome.mountainForest => WindType.autumnLeaves,
-    Biome.snowTundra || Biome.frozenPeaks => WindType.snow,
+    Biome.snowTundra || Biome.frozenPeaks || Biome.snowyGrassland =>
+      WindType.snow,
     Biome.desertDunes => WindType.sand,
     Biome.cityRuins || Biome.sea => WindType.dust,
   };
@@ -28,6 +29,7 @@ extension BiomeExtensions on Biome {
     Biome.savanna => S.current.biomeDescriptionSavanna,
     Biome.frozenPeaks => S.current.biomeDescriptionFrozenPeaks,
     Biome.sea => S.current.biomeDescriptionSea,
+    Biome.snowyGrassland => S.current.biomeDescriptionSnowyGrassland,
   };
 
   String get displayName => switch (this) {
@@ -39,6 +41,7 @@ extension BiomeExtensions on Biome {
     Biome.savanna => S.current.biomeNameSavanna,
     Biome.frozenPeaks => S.current.biomeNameFrozenPeaks,
     Biome.sea => S.current.biomeNameSea,
+    Biome.snowyGrassland => S.current.biomeNameSnowyGrassland,
   };
 
   BiomePalette get palette => switch (this) {
@@ -137,6 +140,19 @@ extension BiomeExtensions on Biome {
       // A strong current/channel, rendered with the winding-ribbon routine.
       crossing: ObstacleKind.river,
       hasTrees: false,
+    ),
+    // Grassland dusted with snow - still green underfoot, unlike the fully
+    // white snowTundra/frozenPeaks biomes.
+    Biome.snowyGrassland => const BiomePalette(
+      groundTop: Color(0xFF6b8f6e),
+      groundMid: Color(0xFF7fa17f),
+      groundBottom: Color(0xFF587a5c),
+      ridgeLight: Color(0xFFf2f7fa),
+      ridgeDark: Color(0xFF8496a1),
+      capColor: Color(0xFFFFFFFF),
+      highGround: ObstacleKind.mountain,
+      crossing: ObstacleKind.river,
+      hasTrees: true,
     ),
   };
 }

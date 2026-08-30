@@ -193,7 +193,6 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
                   DropdownMenuItem(
                     value: type,
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           _windTypeIcon(type),
@@ -201,7 +200,12 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
                           size: 14,
                         ),
                         SizedBox(width: AppThemeSpacing.space6),
-                        Text(type.label),
+                        Flexible(
+                          child: Text(
+                            type.label,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ),

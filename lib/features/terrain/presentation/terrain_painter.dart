@@ -230,7 +230,9 @@ class TerrainPainter {
         final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
         final center =
             tangent.position + normal * jitter - ui.Offset(0, rise * 0.3);
-        final alpha = (1 - rise / 60).clamp(0.0, 1.0);
+        // Fade in then out, so a fresh ember never pops in at full
+        // brightness and never vanishes abruptly either.
+        final alpha = sin(pi * (rise / 60)).clamp(0.0, 1.0);
         canvas.drawCircle(
           center,
           1.4,
@@ -240,8 +242,134 @@ class TerrainPainter {
     }
   }
 
-  /// Live per-frame animated overlay for a river: a scrolling specular
-  /// dash streak plus ripple arcs that both drift downstream as [phase]
+  /// Live per-frame glassy shimmer for still water (lakes): soft blurred
+  /// glints drift slowly across the surface and gentle ripple rings expand
+  /// and fade - the stillwater counterpart to [paintRiverFlow]'s
+  /// directional flow, clipped to [shape] so nothing bleeds past the
+  /// shoreline.
+  static void paintLakeFlow(
+    ui.Canvas canvas,
+    ui.Path shape,
+    double cellSize,
+    double phase,
+  ) {
+    final bounds = shape.getBounds();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    canvas.save();
+    canvas.clipPath(shape);
+
+    // Soft glassy highlight bands drifting slowly across the pond.
+    final diag = bounds.width + bounds.height;
+    final bandPaint = ui.Paint()
+      ..style = ui.PaintingStyle.stroke
+      ..strokeCap = ui.StrokeCap.round
+      ..strokeWidth = cellSize * 0.4
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 7);
+    for (var i = 0; i < 4; i++) {
+      final t = ((phase * 0.05) + i / 4) % 1.0;
+      final dist = t * diag * 1.4 - bounds.height;
+      // Fade in/out across the drift instead of popping in/out at the ends.
+      final fade = sin(pi * t);
+      bandPaint.color = const ui.Color(0xFFeafbff)
+          .withValues(alpha: 0.12 * fade);
+      canvas.drawLine(
+        ui.Offset(bounds.left + dist, bounds.top),
+        ui.Offset(bounds.left + dist - bounds.height, bounds.bottom),
+        bandPaint,
+      );
+    }
+
+    // Small shimmering glints scattered across the surface.
+    final rnd = Random(29);
+    for (var i = 0; i < 12; i++) {
+      final gx = bounds.left + rnd.nextDouble() * bounds.width;
+      final gy = bounds.top + rnd.nextDouble() * bounds.height;
+      final pulse = 0.4 + 0.6 * (0.5 + 0.5 * sin(phase * 1.5 + i * 1.7));
+      canvas.drawCircle(
+        ui.Offset(gx, gy),
+        1.0 + pulse * 1.5,
+        ui.Paint()
+          ..color = const ui.Color(0xFFffffff).withValues(alpha: 0.3 * pulse)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 2),
+      );
+    }
+
+    // Gentle expanding ripple rings that loop endlessly.
+    for (var i = 0; i < 5; i++) {
+      final seedRnd = Random(101 + i);
+      final cx = bounds.left + seedRnd.nextDouble() * bounds.width;
+      final cy = bounds.top + seedRnd.nextDouble() * bounds.height;
+      const cycle = 4.0;
+      final t = ((phase + i * 0.9) % cycle) / cycle;
+      final radius = t * cellSize * 2.4;
+      // Fade in then out across the ring's whole lifetime, not just out.
+      final alpha = sin(pi * t).clamp(0.0, 1.0) * 0.22;
+      canvas.drawCircle(
+        ui.Offset(cx, cy),
+        radius,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 1.3
+          ..color = const ui.Color(0xFFeafbff).withValues(alpha: alpha)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 2.5),
+      );
+    }
+
+    canvas.restore();
+  }
+
+  /// Live per-frame magma shimmer for volcanic lakes: a pulsing ambient
+  /// glow plus rising, fading embers, clipped to [shape] - the pond
+  /// counterpart to [paintLavaFlow].
+  static void paintVolcanicLakeFlow(
+    ui.Canvas canvas,
+    ui.Path shape,
+    double cellSize,
+    double phase,
+  ) {
+    final bounds = shape.getBounds();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    canvas.save();
+    canvas.clipPath(shape);
+
+    final pulse = 0.5 + 0.5 * sin(phase * 2.0);
+    canvas.drawRect(
+      bounds,
+      ui.Paint()
+        ..color = ui.Color.lerp(
+          const ui.Color(0xFFff7a1a),
+          const ui.Color(0xFFffe066),
+          pulse,
+        )!.withValues(alpha: 0.06 + pulse * 0.05)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 10),
+    );
+
+    final rnd = Random(41);
+    final emberCount =
+        ((bounds.width * bounds.height) / (cellSize * cellSize * 3))
+            .round()
+            .clamp(6, 40);
+    for (var i = 0; i < emberCount; i++) {
+      final baseX = bounds.left + rnd.nextDouble() * bounds.width;
+      final baseY = bounds.top + rnd.nextDouble() * bounds.height;
+      final rise = ((phase * 26 + i * 41) % 70);
+      // Fade in then out, so nothing pops in/out at full brightness.
+      final alpha = sin(pi * (rise / 70)).clamp(0.0, 1.0);
+      canvas.drawCircle(
+        ui.Offset(baseX, baseY - rise * 0.35),
+        1.2 + rnd.nextDouble() * 1.3,
+        ui.Paint()
+          ..color = const ui.Color(0xFFffcf7a).withValues(alpha: alpha * 0.75),
+      );
+    }
+
+    canvas.restore();
+  }
+
+  /// Live per-frame animated overlay for a river: soft, blurred glassy
+  /// highlight bands ripple along the flow (a translucent, softly-lit
+  /// glassy "wave" look, rather than crisp dashes) plus gentle shimmering
+  /// glints and expanding ripple rings - all drift downstream as [phase]
   /// (elapsed seconds) advances, on top of the static [_paintRiverBed].
   static void paintRiverFlow(
     ui.Canvas canvas,
@@ -252,57 +380,94 @@ class TerrainPainter {
     final metrics = path.computeMetrics().toList();
     if (metrics.isEmpty) return;
 
-    const dashLen = 30.0;
-    const gapLen = 26.0;
-    const period = dashLen + gapLen;
-    final flowOffset = (phase * 70) % period;
-    final highlightPaint = ui.Paint()
+    const bandLen = 46.0;
+    const gapLen = 34.0;
+    const period = bandLen + gapLen;
+    final flowOffset = (phase * 62) % period;
+    final glassPaint = ui.Paint()
       ..style = ui.PaintingStyle.stroke
       ..strokeCap = ui.StrokeCap.round
       ..strokeJoin = ui.StrokeJoin.round
-      ..strokeWidth = cellSize * 0.32
-      ..color = const ui.Color(0xFFbfeeff).withValues(alpha: 0.45);
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 3.4);
+    final glintPaint = ui.Paint()
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 2.2);
     final ripplePaint = ui.Paint()
       ..style = ui.PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = const ui.Color(0xFFe8fbff).withValues(alpha: 0.3);
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 2.5);
 
     for (final metric in metrics) {
       final length = metric.length;
       if (length <= 0) continue;
 
+      // Soft glassy bands: wide, blurred, gently wobbling highlight strokes
+      // that read as light refracting through moving water rather than a
+      // hard specular line.
       for (var dist = -flowOffset; dist < length; dist += period) {
         final start = dist.clamp(0.0, length);
-        final end = (dist + dashLen).clamp(0.0, length);
+        final end = (dist + bandLen).clamp(0.0, length);
         if (end <= start) continue;
-        final sub = metric
-            .extractPath(start, end)
-            .shift(const ui.Offset(-4, -3));
-        canvas.drawPath(sub, highlightPaint);
+        final sub = metric.extractPath(start, end);
+        final wobble = sin(phase * 1.4 + dist * 0.02) * cellSize * 0.12;
+        // Fade the band as it's clipped entering/leaving the visible
+        // range, instead of popping in/out at full strength.
+        final visibleFrac = ((end - start) / bandLen).clamp(0.0, 1.0);
+        glassPaint
+          ..strokeWidth = cellSize * (0.5 + 0.08 * sin(phase + dist * 0.01))
+          ..color = const ui.Color(0xFFdcfbff)
+              .withValues(alpha: 0.16 * visibleFrac);
+        canvas.drawPath(sub.shift(ui.Offset(-3, wobble - 3)), glassPaint);
       }
 
-      final rippleCount = (length / (cellSize * 1.4)).floor().clamp(0, 200);
+      // Small shimmering glints, pulsing gently as they drift downstream.
+      final glintCount = (length / (cellSize * 1.6)).floor().clamp(0, 160);
+      if (glintCount > 0) {
+        final rnd = Random(7);
+        final step = length / glintCount;
+        for (var i = 0; i < glintCount; i++) {
+          final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
+          final dist = ((i + 0.5) * step + phase * 40) % length;
+          final tangent = metric.getTangentForOffset(dist);
+          if (tangent == null) continue;
+          final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
+          final center = tangent.position + normal * jitter;
+          final pulse = 0.5 + 0.5 * sin(phase * 2.0 + i * 1.3);
+          // Fade in/out near the wrap point instead of teleporting back to
+          // the start of the path at full brightness.
+          final fadeMargin = length * 0.12;
+          final edgeFade = dist < fadeMargin
+              ? dist / fadeMargin
+              : dist > length - fadeMargin
+              ? (length - dist) / fadeMargin
+              : 1.0;
+          canvas.drawCircle(
+            center,
+            1.2 + pulse * 1.6,
+            glintPaint
+              ..color = const ui.Color(0xFFf2ffff)
+                  .withValues(alpha: 0.28 * pulse * edgeFade),
+          );
+        }
+      }
+
+      // Gentle expanding ripple rings (soft/blurred, not crisp arcs).
+      final rippleCount = (length / (cellSize * 2.4)).floor().clamp(0, 80);
       if (rippleCount == 0) continue;
-      final rnd = Random(7);
-      final step = length / rippleCount;
+      final rippleRnd = Random(23);
+      final rippleStep = length / rippleCount;
       for (var i = 0; i < rippleCount; i++) {
-        final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
-        final dist = ((i + 0.5) * step + phase * 40) % length;
+        final baseDist = (i + 0.5) * rippleStep;
+        const cycle = 3.2;
+        final t = ((phase + i * 0.7) % cycle) / cycle;
+        final dist = (baseDist + rippleRnd.nextDouble() * cellSize) % length;
         final tangent = metric.getTangentForOffset(dist);
         if (tangent == null) continue;
-        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
-        final center = tangent.position + normal * jitter;
-        canvas.drawArc(
-          ui.Rect.fromCenter(
-            center: center,
-            width: cellSize * 0.5,
-            height: cellSize * 0.22,
-          ),
-          0,
-          pi,
-          false,
-          ripplePaint,
-        );
+        final radius = t * cellSize * 0.9;
+        // Fade in then out across the ring's whole lifetime, not just out.
+        final alpha = sin(pi * t).clamp(0.0, 1.0) * 0.22;
+        ripplePaint
+          ..strokeWidth = 1.2
+          ..color = const ui.Color(0xFFe8fbff).withValues(alpha: alpha);
+        canvas.drawCircle(tangent.position, radius, ripplePaint);
       }
     }
   }
@@ -372,6 +537,30 @@ class TerrainPainter {
       hasAny = true;
     }
     return hasAny ? combined : null;
+  }
+
+  /// Combined path of every connected blob of [kind] cells in [terrainMap]
+  /// (lake or volcanicLake) - null if the map has none. The area-fill
+  /// counterpart of [riverPath], used to drive the live [paintLakeFlow]/
+  /// [paintVolcanicLakeFlow] overlays.
+  static ui.Path? lakeShape(
+    TerrainMap terrainMap, {
+    ObstacleKind kind = ObstacleKind.lake,
+  }) {
+    final components = _connectedCells(
+      terrainMap.grid,
+      terrainMap.obstacleKinds,
+      kind,
+    );
+    if (components.isEmpty) return null;
+    final combined = ui.Path();
+    for (final cells in components) {
+      combined.addPath(
+        _unionCellsShape(cells, terrainMap.grid.cellSize),
+        ui.Offset.zero,
+      );
+    }
+    return combined;
   }
 
   /// Resolves the brush-type [Biome] painted at a chain's first point, for
@@ -674,13 +863,11 @@ class TerrainPainter {
 
   /// Fills a connected blob of lake cells as one unioned pond shape (an
   /// area feature, unlike the linear river/valley ribbons).
-  static void _paintLake(
-    ui.Canvas canvas,
-    List<Point<int>> cells,
-    double cellSize,
-    BiomePalette palette,
-  ) {
-    if (cells.isEmpty) return;
+  /// Unions every cell's rounded rect into one blob shape - shared by
+  /// [_paintLake]/[_paintVolcanicLake] (baked once) and [lakeShape] (the
+  /// combined shape passed to the live [paintLakeFlow]/
+  /// [paintVolcanicLakeFlow] overlays).
+  static ui.Path _unionCellsShape(List<Point<int>> cells, double cellSize) {
     var shape = ui.Path();
     for (final cell in cells) {
       final rect = ui.Rect.fromLTWH(
@@ -695,35 +882,103 @@ class TerrainPainter {
         );
       shape = ui.Path.combine(ui.PathOperation.union, shape, piece);
     }
+    return shape;
+  }
+
+  /// A natural, glassy-looking still pond: a radial (sunlit center, deeper
+  /// toward the shore) gradient instead of a flat top-to-bottom stripe,
+  /// soft organic current mottling, and a static sheen highlight - the live
+  /// shimmer/ripples are drawn separately every frame by [paintLakeFlow].
+  static void _paintLake(
+    ui.Canvas canvas,
+    List<Point<int>> cells,
+    double cellSize,
+    BiomePalette palette,
+  ) {
+    if (cells.isEmpty) return;
+    final shape = _unionCellsShape(cells, cellSize);
     final bounds = shape.getBounds();
+    final shoreColor = ui.Color.lerp(
+      const ui.Color(0xFFd8c48a),
+      palette.groundMid,
+      0.4,
+    )!;
+    // Soft, wide shore blur so the bank melts into the surrounding ground
+    // instead of reading as a sharp cutout.
     canvas.drawPath(
       shape,
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = cellSize * 0.5
-        ..color = ui.Color.lerp(
-          const ui.Color(0xFFd8c48a),
-          palette.groundMid,
-          0.4,
-        )!.withValues(alpha: 0.45),
+        ..strokeWidth = cellSize * 0.7
+        ..color = shoreColor.withValues(alpha: 0.35)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 5),
     );
     canvas.drawPath(
       shape,
       ui.Paint()
-        ..shader = ui.Gradient.linear(
-          bounds.topCenter,
-          bounds.bottomCenter,
-          [
-            for (final c in const [
-              ui.Color(0xFF0a3450),
-              ui.Color(0xFF1f7fa8),
-              ui.Color(0xFF0a3450),
-            ])
-              ui.Color.lerp(c, palette.capColor, 0.22)!,
-          ],
-          const [0.0, 0.5, 1.0],
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = cellSize * 0.42
+        ..color = shoreColor.withValues(alpha: 0.5),
+    );
+
+    final deep = ui.Color.lerp(
+      const ui.Color(0xFF07283f),
+      palette.capColor,
+      0.15,
+    )!;
+    final mid = ui.Color.lerp(
+      const ui.Color(0xFF1c8a9e),
+      palette.capColor,
+      0.25,
+    )!;
+    final surface = ui.Color.lerp(
+      const ui.Color(0xFF6fd0dd),
+      palette.capColor,
+      0.3,
+    )!;
+    canvas.save();
+    canvas.clipPath(shape);
+    // Natural pond depth: a lighter, sunlit center fading out toward a
+    // darker edge instead of a flat top-to-bottom stripe.
+    canvas.drawRect(
+      bounds,
+      ui.Paint()
+        ..shader = ui.Gradient.radial(
+          bounds.center,
+          max(bounds.width, bounds.height) * 0.65,
+          [surface, mid, deep],
+          const [0.0, 0.55, 1.0],
         ),
     );
+    // Subtle organic current mottling so the body isn't a flat fill.
+    final rnd = Random(cells.first.x * 733 + cells.first.y * 911);
+    for (var i = 0; i < (cells.length * 3).clamp(6, 60); i++) {
+      final x = bounds.left + rnd.nextDouble() * bounds.width;
+      final y = bounds.top + rnd.nextDouble() * bounds.height;
+      canvas.drawCircle(
+        ui.Offset(x, y),
+        cellSize * (0.18 + rnd.nextDouble() * 0.22),
+        ui.Paint()
+          ..color = (rnd.nextBool() ? surface : deep).withValues(alpha: 0.08)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 6),
+      );
+    }
+    // Static glassy sheen - a soft bright streak near one edge, like a
+    // permanent light reflection on the surface.
+    canvas.drawOval(
+      ui.Rect.fromCenter(
+        center: ui.Offset(
+          bounds.left + bounds.width * 0.32,
+          bounds.top + bounds.height * 0.28,
+        ),
+        width: bounds.width * 0.5,
+        height: bounds.height * 0.16,
+      ),
+      ui.Paint()
+        ..color = const ui.Color(0xFFEAFBFF).withValues(alpha: 0.18)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 8),
+    );
+    canvas.restore();
   }
 
   /// Molten counterpart of [_paintRiverBed] - a charcoal/basalt bank
@@ -772,6 +1027,35 @@ class TerrainPainter {
           const [0.0, 0.25, 0.5, 0.75, 1.0],
         ),
     );
+    // Organic magma blobs along the channel so the molten body reads as a
+    // churning liquid instead of a flat gradient stripe.
+    final rnd = Random(53);
+    for (final metric in path.computeMetrics()) {
+      final length = metric.length;
+      if (length <= 0) continue;
+      final blobCount = (length / (cellSize * 0.9)).floor().clamp(0, 200);
+      if (blobCount == 0) continue;
+      for (var i = 0; i < blobCount; i++) {
+        final dist = ((i + rnd.nextDouble() * 0.6) * (length / blobCount))
+            .clamp(0.0, length);
+        final tangent = metric.getTangentForOffset(dist);
+        if (tangent == null) continue;
+        final normal = ui.Offset(-tangent.vector.dy, tangent.vector.dx);
+        final jitter = (rnd.nextDouble() - 0.5) * cellSize * 0.5;
+        final center = tangent.position + normal * jitter;
+        canvas.drawCircle(
+          center,
+          cellSize * (0.14 + rnd.nextDouble() * 0.18),
+          ui.Paint()
+            ..color =
+                (rnd.nextBool()
+                        ? const ui.Color(0xFFffcf6b)
+                        : const ui.Color(0xFF2a0a01))
+                    .withValues(alpha: 0.16)
+            ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 4),
+        );
+      }
+    }
   }
 
   static void _paintMountain(
@@ -932,9 +1216,26 @@ class TerrainPainter {
           0.4,
         )!.withValues(alpha: 0.6),
     );
+    // Soft blurred glow beneath the crisp water fill for depth, so the
+    // channel doesn't read as a flat stripe.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 1.5
+        ..color = ui.Color.lerp(
+          const ui.Color(0xFF0d4a68),
+          palette.capColor,
+          0.2,
+        )!.withValues(alpha: 0.35)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 5),
+    );
     // Water body with a deep-to-mid gradient across its width, tinted
     // toward the brush type's cap color (icy pale for snow/frozen, murky
-    // for desert, etc.).
+    // for desert, etc.) - richer teal/turquoise stops for a more natural
+    // liquid color than a flat blue.
     canvas.drawPath(
       path,
       ui.Paint()
@@ -948,15 +1249,27 @@ class TerrainPainter {
           [
             for (final c in const [
               ui.Color(0xFF0a3450),
-              ui.Color(0xFF1f7fa8),
+              ui.Color(0xFF1c8a9e),
               ui.Color(0xFF0a3450),
-              ui.Color(0xFF1f7fa8),
+              ui.Color(0xFF1c8a9e),
               ui.Color(0xFF0a3450),
             ])
               ui.Color.lerp(c, palette.capColor, 0.22)!,
           ],
           const [0.0, 0.25, 0.5, 0.75, 1.0],
         ),
+    );
+    // Thin bright glassy glint down the middle, like light catching a
+    // gently rippled surface.
+    canvas.drawPath(
+      path,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeCap = ui.StrokeCap.round
+        ..strokeJoin = ui.StrokeJoin.round
+        ..strokeWidth = cellSize * 0.22
+        ..color = const ui.Color(0xFFdcfbff).withValues(alpha: 0.18)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 2),
     );
   }
 
@@ -1102,6 +1415,8 @@ class TerrainPainter {
         _paintScorchedTree(canvas, canopyCx, cy, scale);
       case Biome.grassPlains:
         _paintRoundCanopy(canvas, canopyCx, cy, scale);
+      case Biome.snowyGrassland:
+        _paintSnowyCanopy(canvas, canopyCx, cy, scale);
     }
   }
 
@@ -1200,44 +1515,61 @@ class TerrainPainter {
     double cellSize,
   ) {
     if (cells.isEmpty) return;
-    var shape = ui.Path();
-    for (final cell in cells) {
-      final rect = ui.Rect.fromLTWH(
-        cell.x * cellSize - 2,
-        cell.y * cellSize - 2,
-        cellSize + 4,
-        cellSize + 4,
-      );
-      final piece = ui.Path()
-        ..addRRect(
-          ui.RRect.fromRectAndRadius(rect, ui.Radius.circular(cellSize * 0.4)),
-        );
-      shape = ui.Path.combine(ui.PathOperation.union, shape, piece);
-    }
+    final shape = _unionCellsShape(cells, cellSize);
     final bounds = shape.getBounds();
     canvas.drawPath(
       shape,
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = cellSize * 0.5
-        ..color = const ui.Color(0xFF261a16).withValues(alpha: 0.6),
+        ..strokeWidth = cellSize * 0.7
+        ..color = const ui.Color(0xFF241a17).withValues(alpha: 0.5)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 5),
     );
     canvas.drawPath(
       shape,
       ui.Paint()
-        ..shader = ui.Gradient.linear(
-          bounds.topCenter,
-          bounds.bottomCenter,
-          [
-            const ui.Color(0xFF3a0d02),
-            const ui.Color(0xFFd93a0a),
-            const ui.Color(0xFFffb347),
-            const ui.Color(0xFFd93a0a),
-            const ui.Color(0xFF3a0d02),
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = cellSize * 0.4
+        ..color = const ui.Color(0xFF261a16).withValues(alpha: 0.7),
+    );
+
+    canvas.save();
+    canvas.clipPath(shape);
+    // Radial (hot core, cooler toward the shore) fill instead of a flat
+    // top-to-bottom stripe.
+    canvas.drawRect(
+      bounds,
+      ui.Paint()
+        ..shader = ui.Gradient.radial(
+          bounds.center,
+          max(bounds.width, bounds.height) * 0.65,
+          const [
+            ui.Color(0xFFffcf6b),
+            ui.Color(0xFFd93a0a),
+            ui.Color(0xFF3a0d02),
           ],
-          const [0.0, 0.3, 0.5, 0.7, 1.0],
+          const [0.0, 0.5, 1.0],
         ),
     );
+    // Organic convection-cell blobs so the molten body reads as a churning
+    // liquid instead of a flat gradient fill.
+    final rnd = Random(cells.first.x * 577 + cells.first.y * 349 + 1);
+    for (var i = 0; i < (cells.length * 3).clamp(6, 60); i++) {
+      final x = bounds.left + rnd.nextDouble() * bounds.width;
+      final y = bounds.top + rnd.nextDouble() * bounds.height;
+      canvas.drawCircle(
+        ui.Offset(x, y),
+        cellSize * (0.18 + rnd.nextDouble() * 0.26),
+        ui.Paint()
+          ..color =
+              (rnd.nextBool()
+                      ? const ui.Color(0xFFffe066)
+                      : const ui.Color(0xFF3a0d02))
+                  .withValues(alpha: 0.16)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 7),
+      );
+    }
+    canvas.restore();
   }
 
   /// Smooths a polyline into a curved [ui.Path] by quadratic-bezier-ing

@@ -20,7 +20,7 @@ import 'state/map_editor_draft_state.dart';
 import 'state/map_editor_persistence_state.dart';
 import 'widgets/map_editor_app_bar_button_widget.dart';
 import 'widgets/map_editor_canvas_painter.dart';
-import 'widgets/map_editor_section_label_widget.dart';
+import 'widgets/map_editor_sidebar_section_widget.dart';
 import 'widgets/map_editor_toast_widget.dart';
 import 'widgets/map_editor_weather_keyframe_editor_widget.dart';
 
@@ -128,42 +128,56 @@ class _MapEditorPageState extends State<MapEditorPage> {
                   children: [
                     Padding(
                       padding: AppThemePaddings.ltrb16_8_16_0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          IconButton(
-                            tooltip: S.current.zoomOutTooltipEditorPage,
-                            icon: const Icon(
-                              Icons.remove,
-                              color: AppThemeColors.textMuted,
-                            ),
-                            onPressed: () => _zoomBy(1 / 1.25),
-                          ),
-                          Text(
-                            S.current.zoomPercentEditorPage(
-                              (currentZoom * 100).round(),
-                            ),
-                            style: const TextStyle(
-                              color: AppThemeColors.textMuted,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          padding: AppThemePaddings.h8v2,
+                          decoration: BoxDecoration(
+                            color: AppThemeColors.glassPill,
+                            borderRadius: AppThemeBorders.radius20,
+                            border: Border.all(
+                              color: AppThemeColors.borderSubtle,
+                              width: AppThemeBorders.width1,
                             ),
                           ),
-                          IconButton(
-                            tooltip: S.current.zoomInTooltipEditorPage,
-                            icon: const Icon(
-                              Icons.add,
-                              color: AppThemeColors.textMuted,
-                            ),
-                            onPressed: () => _zoomBy(1.25),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: S.current.zoomOutTooltipEditorPage,
+                                icon: const Icon(
+                                  Icons.remove,
+                                  color: AppThemeColors.textMuted,
+                                ),
+                                onPressed: () => _zoomBy(1 / 1.25),
+                              ),
+                              Text(
+                                S.current.zoomPercentEditorPage(
+                                  (currentZoom * 100).round(),
+                                ),
+                                style: const TextStyle(
+                                  color: AppThemeColors.textMuted,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: S.current.zoomInTooltipEditorPage,
+                                icon: const Icon(
+                                  Icons.add,
+                                  color: AppThemeColors.textMuted,
+                                ),
+                                onPressed: () => _zoomBy(1.25),
+                              ),
+                              IconButton(
+                                tooltip: S.current.resetZoomTooltipEditorPage,
+                                icon: const Icon(
+                                  Icons.center_focus_weak,
+                                  color: AppThemeColors.textMuted,
+                                ),
+                                onPressed: _resetZoom,
+                              ),
+                            ],
                           ),
-                          IconButton(
-                            tooltip: S.current.resetZoomTooltipEditorPage,
-                            icon: const Icon(
-                              Icons.center_focus_weak,
-                              color: AppThemeColors.textMuted,
-                            ),
-                            onPressed: _resetZoom,
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                     Expanded(
@@ -276,479 +290,494 @@ class _MapEditorPageState extends State<MapEditorPage> {
                     child: ListView(
                       padding: AppThemePaddings.all16,
                       children: [
-                        MapEditorSectionLabelWidget(
-                          S.current.brushLabelEditorPage,
-                        ),
-                        Wrap(
-                          spacing: AppThemeSpacing.space8,
-                          runSpacing: AppThemeSpacing.space8,
+                        MapEditorSidebarSectionWidget(
+                          icon: Icons.brush,
+                          title: S.current.brushLabelEditorPage,
                           children: [
-                            for (final tool in EditorTool.values)
-                              ChoiceChip(
-                                label: Text(tool.label),
-                                selected: currentTool == tool,
-                                onSelected: (_) => _draftState.setTool(tool),
-                                backgroundColor: AppThemeColors.surfacePanel,
-                                selectedColor: AppThemeColors.accentCyan
-                                    .withValues(alpha: 0.22),
-                                side: BorderSide(
-                                  color: currentTool == tool
-                                      ? AppThemeColors.accentCyan
-                                      : AppThemeColors.borderSubtle,
-                                ),
-                                labelStyle: TextStyle(
-                                  color: currentTool == tool
-                                      ? AppThemeColors.accentCyan
-                                      : AppThemeColors.textSecondary,
-                                  fontWeight: currentTool == tool
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                          ],
-                        ),
-                        if (currentTool == EditorTool.homeSite) ...[
-                          SizedBox(height: AppThemeSpacing.space8),
-                          Text(
-                            S.current.homeSitesHintEditorPage(
-                              currentDraft.homeSites.length,
-                              _draftState.maxHomeSites,
-                            ),
-                            style: const TextStyle(
-                              color: AppThemeColors.textMuted,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                        if (currentTool == EditorTool.river ||
-                            currentTool == EditorTool.lava) ...[
-                          SizedBox(height: AppThemeSpacing.space8),
-                          Text(
-                            S.current.riverWidthLabelEditorPage(
-                              currentRiverWidth.round(),
-                            ),
-                            style: const TextStyle(
-                              color: AppThemeColors.textMuted,
-                            ),
-                          ),
-                          Slider(
-                            value: currentRiverWidth,
-                            min: 16,
-                            max: 160,
-                            onChanged: (value) =>
-                                _draftState.setRiverWidth(value),
-                          ),
-                        ],
-                        if (currentTool == EditorTool.mountain ||
-                            currentTool == EditorTool.dune ||
-                            currentTool == EditorTool.river ||
-                            currentTool == EditorTool.lake ||
-                            currentTool == EditorTool.lava ||
-                            currentTool == EditorTool.volcanicLake ||
-                            currentTool == EditorTool.tree) ...[
-                          SizedBox(height: AppThemeSpacing.space8),
-                          Text(
-                            S.current.brushTypeLabelEditorPage,
-                            style: const TextStyle(
-                              color: AppThemeColors.textMuted,
-                            ),
-                          ),
-                          SizedBox(height: AppThemeSpacing.space8),
-                          Wrap(
-                            spacing: AppThemeSpacing.space8,
-                            runSpacing: AppThemeSpacing.space8,
-                            children: [
-                              ChoiceChip(
-                                label: Text(
-                                  S.current.brushTypeMatchBiomeEditorPage,
-                                ),
-                                selected: currentVariant == null,
-                                onSelected: (_) => _draftState.setVariant(null),
-                              ),
-                              for (final biome in Biome.values)
-                                ChoiceChip(
-                                  label: Text(biome.displayName),
-                                  selected: currentVariant == biome,
-                                  onSelected: (_) =>
-                                      _draftState.setVariant(biome),
-                                ),
-                            ],
-                          ),
-                        ],
-                        const Divider(
-                          color: AppThemeColors.borderSubtle,
-                          height: 32,
-                        ),
-                        MapEditorSectionLabelWidget(
-                          S.current.mapLabelEditorPage,
-                        ),
-                        DropdownButtonFormField<Biome>(
-                          initialValue: currentDraft.biome,
-                          dropdownColor: AppThemeColors.surfacePanel,
-                          style: const TextStyle(
-                            color: AppThemeColors.textPrimary,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: S.current.biomeLabelEditorPage,
-                          ),
-                          items: [
-                            for (final biome in Biome.values)
-                              DropdownMenuItem(
-                                value: biome,
-                                child: Text(biome.displayName),
-                              ),
-                          ],
-                          onChanged: (biome) {
-                            if (biome != null) _draftState.setBiome(biome);
-                          },
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                            top: AppThemeSpacing.space4,
-                            bottom: AppThemeSpacing.space8,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.park,
-                                size: 14,
-                                color: currentDraft.biome.palette.hasTrees
-                                    ? AppThemeColors.accentEmerald
-                                    : AppThemeColors.textMuted,
-                              ),
-                              SizedBox(width: AppThemeSpacing.space6),
-                              Expanded(
-                                child: Text(
-                                  currentDraft.biome.palette.hasTrees
-                                      ? S.current.treesOnHintEditorPage
-                                      : S.current.treesOffHintEditorPage,
-                                  style: const TextStyle(
-                                    color: AppThemeColors.textMuted,
-                                    fontSize: 12,
+                            Wrap(
+                              spacing: AppThemeSpacing.space8,
+                              runSpacing: AppThemeSpacing.space8,
+                              children: [
+                                for (final tool in EditorTool.values)
+                                  ChoiceChip(
+                                    label: Text(tool.label),
+                                    selected: currentTool == tool,
+                                    onSelected: (_) =>
+                                        _draftState.setTool(tool),
+                                    backgroundColor:
+                                        AppThemeColors.surfacePanel,
+                                    selectedColor: AppThemeColors.accentCyan
+                                        .withValues(alpha: 0.22),
+                                    side: BorderSide(
+                                      color: currentTool == tool
+                                          ? AppThemeColors.accentCyan
+                                          : AppThemeColors.borderSubtle,
+                                    ),
+                                    labelStyle: TextStyle(
+                                      color: currentTool == tool
+                                          ? AppThemeColors.accentCyan
+                                          : AppThemeColors.textSecondary,
+                                      fontWeight: currentTool == tool
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
                                   ),
+                              ],
+                            ),
+                            if (currentTool == EditorTool.homeSite) ...[
+                              SizedBox(height: AppThemeSpacing.space8),
+                              Text(
+                                S.current.homeSitesHintEditorPage(
+                                  currentDraft.homeSites.length,
+                                  _draftState.maxHomeSites,
+                                ),
+                                style: const TextStyle(
+                                  color: AppThemeColors.textMuted,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                        DropdownButtonFormField<GameMode>(
-                          initialValue: currentDraft.mode,
-                          dropdownColor: AppThemeColors.surfacePanel,
-                          style: const TextStyle(
-                            color: AppThemeColors.textPrimary,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: S.current.modeLabelEditorPage,
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: GameMode.waveDefense,
-                              child: Text(
-                                S.current.waveDefenseOptionEditorPage,
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: GameMode.skirmish,
-                              child: Text(S.current.skirmishOptionEditorPage),
-                            ),
-                          ],
-                          onChanged: (mode) {
-                            if (mode != null) _draftState.setMode(mode);
-                          },
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _widthController,
+                            if (currentTool == EditorTool.river ||
+                                currentTool == EditorTool.lava) ...[
+                              SizedBox(height: AppThemeSpacing.space8),
+                              Text(
+                                S.current.riverWidthLabelEditorPage(
+                                  currentRiverWidth.round(),
+                                ),
                                 style: const TextStyle(
-                                  color: AppThemeColors.textPrimary,
-                                ),
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  labelText: S.current.widthLabelEditorPage,
-                                ),
-                                onSubmitted: (_) => _applyArenaSize(),
-                                onEditingComplete: _applyArenaSize,
-                              ),
-                            ),
-                            SizedBox(width: AppThemeSpacing.space12),
-                            Expanded(
-                              child: TextField(
-                                controller: _heightController,
-                                style: const TextStyle(
-                                  color: AppThemeColors.textPrimary,
-                                ),
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  labelText: S.current.heightLabelEditorPage,
-                                ),
-                                onSubmitted: (_) => _applyArenaSize(),
-                                onEditingComplete: _applyArenaSize,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: AppThemeSpacing.space12),
-                        TextField(
-                          controller: _startingGoldController,
-                          style: const TextStyle(
-                            color: AppThemeColors.textPrimary,
-                          ),
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: S.current.startingGoldLabelEditorPage,
-                          ),
-                          onSubmitted: (_) => _applyStartingGold(),
-                          onEditingComplete: _applyStartingGold,
-                        ),
-                        if (currentDraft.mode == GameMode.waveDefense) ...[
-                          const Divider(
-                            color: AppThemeColors.borderSubtle,
-                            height: 32,
-                          ),
-                          MapEditorSectionLabelWidget(
-                            S.current.wavesLabelEditorPage,
-                          ),
-                          TextField(
-                            controller: _waveCountController,
-                            style: const TextStyle(
-                              color: AppThemeColors.textPrimary,
-                            ),
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: S.current.waveCountLabelEditorPage,
-                            ),
-                            onSubmitted: (_) => _applyWaveCount(),
-                            onEditingComplete: _applyWaveCount,
-                          ),
-                          SizedBox(height: AppThemeSpacing.space8),
-                          OutlinedButton.icon(
-                            onPressed: _draftState.randomizeAllWaves,
-                            icon: const Icon(Icons.shuffle),
-                            label: Text(
-                              S.current.randomizeAllWavesLabelEditorPage(
-                                currentDraft.waveCount,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: AppThemeSpacing.space12),
-                          Row(
-                            children: [
-                              IconButton(
-                                tooltip:
-                                    S.current.previousWaveTooltipEditorPage,
-                                icon: const Icon(
-                                  Icons.chevron_left,
                                   color: AppThemeColors.textMuted,
                                 ),
-                                onPressed: currentSelectedWave > 1
-                                    ? () => _draftState.setSelectedWaveNumber(
-                                        currentSelectedWave - 1,
-                                      )
-                                    : null,
                               ),
-                              Expanded(
-                                child: Text(
-                                  S.current.waveHeaderEditorPage(
-                                        currentSelectedWave,
-                                        currentDraft.waveCount,
-                                      ) +
-                                      (_draftState.hasCustomLoadout(
-                                            currentSelectedWave,
-                                          )
-                                          ? ''
-                                          : S.current.autoSuffixEditorPage),
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: AppThemeColors.textMuted,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: S.current.nextWaveTooltipEditorPage,
-                                icon: const Icon(
-                                  Icons.chevron_right,
-                                  color: AppThemeColors.textMuted,
-                                ),
-                                onPressed:
-                                    currentSelectedWave < currentDraft.waveCount
-                                    ? () => _draftState.setSelectedWaveNumber(
-                                        currentSelectedWave + 1,
-                                      )
-                                    : null,
+                              Slider(
+                                value: currentRiverWidth,
+                                min: 16,
+                                max: 160,
+                                onChanged: (value) =>
+                                    _draftState.setRiverWidth(value),
                               ),
                             ],
-                          ),
-                          for (final kind in UnitKind.values)
+                            if (currentTool == EditorTool.mountain ||
+                                currentTool == EditorTool.dune ||
+                                currentTool == EditorTool.river ||
+                                currentTool == EditorTool.lake ||
+                                currentTool == EditorTool.lava ||
+                                currentTool == EditorTool.volcanicLake ||
+                                currentTool == EditorTool.tree) ...[
+                              SizedBox(height: AppThemeSpacing.space8),
+                              Text(
+                                S.current.brushTypeLabelEditorPage,
+                                style: const TextStyle(
+                                  color: AppThemeColors.textMuted,
+                                ),
+                              ),
+                              SizedBox(height: AppThemeSpacing.space8),
+                              Wrap(
+                                spacing: AppThemeSpacing.space8,
+                                runSpacing: AppThemeSpacing.space8,
+                                children: [
+                                  ChoiceChip(
+                                    label: Text(
+                                      S.current.brushTypeMatchBiomeEditorPage,
+                                    ),
+                                    selected: currentVariant == null,
+                                    onSelected: (_) =>
+                                        _draftState.setVariant(null),
+                                  ),
+                                  for (final biome in Biome.values)
+                                    ChoiceChip(
+                                      label: Text(biome.displayName),
+                                      selected: currentVariant == biome,
+                                      onSelected: (_) =>
+                                          _draftState.setVariant(biome),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                        MapEditorSidebarSectionWidget(
+                          icon: Icons.map,
+                          title: S.current.mapLabelEditorPage,
+                          children: [
+                            DropdownButtonFormField<Biome>(
+                              initialValue: currentDraft.biome,
+                              dropdownColor: AppThemeColors.surfacePanel,
+                              style: const TextStyle(
+                                color: AppThemeColors.textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: S.current.biomeLabelEditorPage,
+                              ),
+                              items: [
+                                for (final biome in Biome.values)
+                                  DropdownMenuItem(
+                                    value: biome,
+                                    child: Text(biome.displayName),
+                                  ),
+                              ],
+                              onChanged: (biome) {
+                                if (biome != null) _draftState.setBiome(biome);
+                              },
+                            ),
                             Padding(
-                              padding: AppThemePaddings.v2,
+                              padding: EdgeInsets.only(
+                                top: AppThemeSpacing.space4,
+                                bottom: AppThemeSpacing.space8,
+                              ),
                               child: Row(
                                 children: [
+                                  Icon(
+                                    Icons.park,
+                                    size: 14,
+                                    color: currentDraft.biome.palette.hasTrees
+                                        ? AppThemeColors.accentEmerald
+                                        : AppThemeColors.textMuted,
+                                  ),
+                                  SizedBox(width: AppThemeSpacing.space6),
                                   Expanded(
                                     child: Text(
-                                      kind.name,
+                                      currentDraft.biome.palette.hasTrees
+                                          ? S.current.treesOnHintEditorPage
+                                          : S.current.treesOffHintEditorPage,
+                                      style: const TextStyle(
+                                        color: AppThemeColors.textMuted,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            DropdownButtonFormField<GameMode>(
+                              initialValue: currentDraft.mode,
+                              dropdownColor: AppThemeColors.surfacePanel,
+                              style: const TextStyle(
+                                color: AppThemeColors.textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: S.current.modeLabelEditorPage,
+                              ),
+                              items: [
+                                DropdownMenuItem(
+                                  value: GameMode.waveDefense,
+                                  child: Text(
+                                    S.current.waveDefenseOptionEditorPage,
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: GameMode.skirmish,
+                                  child: Text(
+                                    S.current.skirmishOptionEditorPage,
+                                  ),
+                                ),
+                              ],
+                              onChanged: (mode) {
+                                if (mode != null) _draftState.setMode(mode);
+                              },
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _widthController,
+                                    style: const TextStyle(
+                                      color: AppThemeColors.textPrimary,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      labelText: S.current.widthLabelEditorPage,
+                                    ),
+                                    onSubmitted: (_) => _applyArenaSize(),
+                                    onEditingComplete: _applyArenaSize,
+                                  ),
+                                ),
+                                SizedBox(width: AppThemeSpacing.space12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _heightController,
+                                    style: const TextStyle(
+                                      color: AppThemeColors.textPrimary,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          S.current.heightLabelEditorPage,
+                                    ),
+                                    onSubmitted: (_) => _applyArenaSize(),
+                                    onEditingComplete: _applyArenaSize,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: AppThemeSpacing.space12),
+                            TextField(
+                              controller: _startingGoldController,
+                              style: const TextStyle(
+                                color: AppThemeColors.textPrimary,
+                              ),
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText:
+                                    S.current.startingGoldLabelEditorPage,
+                              ),
+                              onSubmitted: (_) => _applyStartingGold(),
+                              onEditingComplete: _applyStartingGold,
+                            ),
+                          ],
+                        ),
+                        if (currentDraft.mode == GameMode.waveDefense)
+                          MapEditorSidebarSectionWidget(
+                            icon: Icons.waves,
+                            title: S.current.wavesLabelEditorPage,
+                            children: [
+                              TextField(
+                                controller: _waveCountController,
+                                style: const TextStyle(
+                                  color: AppThemeColors.textPrimary,
+                                ),
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: S.current.waveCountLabelEditorPage,
+                                ),
+                                onSubmitted: (_) => _applyWaveCount(),
+                                onEditingComplete: _applyWaveCount,
+                              ),
+                              SizedBox(height: AppThemeSpacing.space8),
+                              OutlinedButton.icon(
+                                onPressed: _draftState.randomizeAllWaves,
+                                icon: const Icon(Icons.shuffle),
+                                label: Text(
+                                  S.current.randomizeAllWavesLabelEditorPage(
+                                    currentDraft.waveCount,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: AppThemeSpacing.space12),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    tooltip:
+                                        S.current.previousWaveTooltipEditorPage,
+                                    icon: const Icon(
+                                      Icons.chevron_left,
+                                      color: AppThemeColors.textMuted,
+                                    ),
+                                    onPressed: currentSelectedWave > 1
+                                        ? () =>
+                                              _draftState.setSelectedWaveNumber(
+                                                currentSelectedWave - 1,
+                                              )
+                                        : null,
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      S.current.waveHeaderEditorPage(
+                                            currentSelectedWave,
+                                            currentDraft.waveCount,
+                                          ) +
+                                          (_draftState.hasCustomLoadout(
+                                                currentSelectedWave,
+                                              )
+                                              ? ''
+                                              : S.current.autoSuffixEditorPage),
+                                      textAlign: TextAlign.center,
                                       style: const TextStyle(
                                         color: AppThemeColors.textMuted,
                                       ),
                                     ),
                                   ),
                                   IconButton(
-                                    tooltip: S.current.fewerTooltipEditorPage,
+                                    tooltip:
+                                        S.current.nextWaveTooltipEditorPage,
                                     icon: const Icon(
-                                      Icons.remove_circle_outline,
-                                      color: AppThemeColors.textSecondary,
+                                      Icons.chevron_right,
+                                      color: AppThemeColors.textMuted,
                                     ),
-                                    onPressed: () =>
-                                        _draftState.setWaveUnitCount(
-                                          kind,
-                                          _draftState.currentLoadout.countOf(
-                                                kind,
-                                              ) -
-                                              1,
-                                        ),
-                                  ),
-                                  SizedBox(
-                                    width: 28,
-                                    child: Text(
-                                      '${_draftState.currentLoadout.countOf(kind)}',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: AppThemeColors.textPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    tooltip: S.current.moreTooltipEditorPage,
-                                    icon: const Icon(
-                                      Icons.add_circle_outline,
-                                      color: AppThemeColors.textSecondary,
-                                    ),
-                                    onPressed: () =>
-                                        _draftState.setWaveUnitCount(
-                                          kind,
-                                          _draftState.currentLoadout.countOf(
-                                                kind,
-                                              ) +
-                                              1,
-                                        ),
+                                    onPressed:
+                                        currentSelectedWave <
+                                            currentDraft.waveCount
+                                        ? () =>
+                                              _draftState.setSelectedWaveNumber(
+                                                currentSelectedWave + 1,
+                                              )
+                                        : null,
                                   ),
                                 ],
                               ),
-                            ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: _draftState.randomizeSelectedWave,
-                                  icon: const Icon(Icons.casino),
-                                  label: Text(
-                                    S.current.randomizeWaveLabelEditorPage,
+                              for (final kind in UnitKind.values)
+                                Padding(
+                                  padding: AppThemePaddings.v2,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          kind.name,
+                                          style: const TextStyle(
+                                            color: AppThemeColors.textMuted,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        tooltip:
+                                            S.current.fewerTooltipEditorPage,
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                          color: AppThemeColors.textSecondary,
+                                        ),
+                                        onPressed: () =>
+                                            _draftState.setWaveUnitCount(
+                                              kind,
+                                              _draftState.currentLoadout
+                                                      .countOf(kind) -
+                                                  1,
+                                            ),
+                                      ),
+                                      SizedBox(
+                                        width: 28,
+                                        child: Text(
+                                          '${_draftState.currentLoadout.countOf(kind)}',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: AppThemeColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        tooltip:
+                                            S.current.moreTooltipEditorPage,
+                                        icon: const Icon(
+                                          Icons.add_circle_outline,
+                                          color: AppThemeColors.textSecondary,
+                                        ),
+                                        onPressed: () =>
+                                            _draftState.setWaveUnitCount(
+                                              kind,
+                                              _draftState.currentLoadout
+                                                      .countOf(kind) +
+                                                  1,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              SizedBox(width: AppThemeSpacing.space8),
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: _draftState.clearSelectedWave,
-                                  icon: const Icon(Icons.restore),
-                                  label: Text(
-                                    S.current.resetToAutoLabelEditorPage,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed:
+                                          _draftState.randomizeSelectedWave,
+                                      icon: const Icon(Icons.casino),
+                                      label: Text(
+                                        S.current.randomizeWaveLabelEditorPage,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  SizedBox(width: AppThemeSpacing.space8),
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: _draftState.clearSelectedWave,
+                                      icon: const Icon(Icons.restore),
+                                      label: Text(
+                                        S.current.resetToAutoLabelEditorPage,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                        const Divider(
-                          color: AppThemeColors.borderSubtle,
-                          height: 32,
-                        ),
-                        MapEditorSectionLabelWidget(
-                          S.current.environmentLabelEditorPage,
-                        ),
-                        Row(
+                        MapEditorSidebarSectionWidget(
+                          icon: Icons.wb_sunny,
+                          title: S.current.environmentLabelEditorPage,
                           children: [
-                            Expanded(
-                              child: Text(
-                                S.current.dynamicWeatherLabelEditorPage,
-                                style: const TextStyle(
-                                  color: AppThemeColors.textMuted,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    S.current.dynamicWeatherLabelEditorPage,
+                                    style: const TextStyle(
+                                      color: AppThemeColors.textMuted,
+                                    ),
+                                  ),
+                                ),
+                                Switch(
+                                  value:
+                                      currentDraft.environment.dynamicWeather,
+                                  activeThumbColor: AppThemeColors.accentCyan,
+                                  onChanged: (value) =>
+                                      _draftState.setDynamicWeather(value),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: AppThemeSpacing.space8),
+                            Text(
+                              S.current.sunAngleLabelEditorPage(
+                                (currentDraft.environment.sunAngle * 100)
+                                    .round(),
+                              ),
+                              style: const TextStyle(
+                                color: AppThemeColors.textMuted,
+                              ),
+                            ),
+                            Slider(
+                              value: currentDraft.environment.sunAngle,
+                              activeColor: AppThemeColors.accentAmber,
+                              onChanged: (value) =>
+                                  _draftState.setSunAngle(value),
+                            ),
+                            SizedBox(height: AppThemeSpacing.space8),
+                            Text(
+                              S.current.previewWeatherLabelEditorPage(
+                                (currentPreviewProgress * 100).round(),
+                              ),
+                              style: const TextStyle(
+                                color: AppThemeColors.textMuted,
+                              ),
+                            ),
+                            Slider(
+                              value: currentPreviewProgress,
+                              activeColor: AppThemeColors.accentCyan,
+                              onChanged: (value) =>
+                                  _draftState.setPreviewProgress(value),
+                            ),
+                            SizedBox(height: AppThemeSpacing.space8),
+                            Text(
+                              S.current.weatherTimelineLabelEditorPage,
+                              style: const TextStyle(
+                                color: AppThemeColors.textMuted,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (!currentDraft.environment.dynamicWeather &&
+                                currentDraft.environment.timeline.length > 1)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  top: AppThemeSpacing.space4,
+                                ),
+                                child: Text(
+                                  S.current.singleKeyframeHintEditorPage,
+                                  style: const TextStyle(
+                                    color: AppThemeColors.accentAmber,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Switch(
-                              value: currentDraft.environment.dynamicWeather,
-                              activeThumbColor: AppThemeColors.accentCyan,
-                              onChanged: (value) =>
-                                  _draftState.setDynamicWeather(value),
+                            for (final (index, keyframe)
+                                in currentDraft.environment.timeline.indexed)
+                              MapEditorWeatherKeyframeEditorWidget(
+                                keyframe: keyframe,
+                                onChanged: (updated) =>
+                                    _draftState.replaceKeyframe(index, updated),
+                                onRemove: () =>
+                                    _draftState.removeKeyframe(index),
+                              ),
+                            SizedBox(height: AppThemeSpacing.space8),
+                            OutlinedButton.icon(
+                              onPressed: _draftState.addKeyframe,
+                              icon: const Icon(Icons.add),
+                              label: Text(S.current.addKeyframeLabelEditorPage),
                             ),
                           ],
-                        ),
-                        SizedBox(height: AppThemeSpacing.space8),
-                        Text(
-                          S.current.sunAngleLabelEditorPage(
-                            (currentDraft.environment.sunAngle * 100).round(),
-                          ),
-                          style: const TextStyle(
-                            color: AppThemeColors.textMuted,
-                          ),
-                        ),
-                        Slider(
-                          value: currentDraft.environment.sunAngle,
-                          activeColor: AppThemeColors.accentAmber,
-                          onChanged: (value) => _draftState.setSunAngle(value),
-                        ),
-                        SizedBox(height: AppThemeSpacing.space8),
-                        Text(
-                          S.current.previewWeatherLabelEditorPage(
-                            (currentPreviewProgress * 100).round(),
-                          ),
-                          style: const TextStyle(
-                            color: AppThemeColors.textMuted,
-                          ),
-                        ),
-                        Slider(
-                          value: currentPreviewProgress,
-                          activeColor: AppThemeColors.accentCyan,
-                          onChanged: (value) =>
-                              _draftState.setPreviewProgress(value),
-                        ),
-                        SizedBox(height: AppThemeSpacing.space8),
-                        Text(
-                          S.current.weatherTimelineLabelEditorPage,
-                          style: const TextStyle(
-                            color: AppThemeColors.textMuted,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (!currentDraft.environment.dynamicWeather &&
-                            currentDraft.environment.timeline.length > 1)
-                          Padding(
-                            padding: EdgeInsets.only(
-                              top: AppThemeSpacing.space4,
-                            ),
-                            child: Text(
-                              S.current.singleKeyframeHintEditorPage,
-                              style: const TextStyle(
-                                color: AppThemeColors.accentAmber,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        for (final (index, keyframe)
-                            in currentDraft.environment.timeline.indexed)
-                          MapEditorWeatherKeyframeEditorWidget(
-                            keyframe: keyframe,
-                            onChanged: (updated) =>
-                                _draftState.replaceKeyframe(index, updated),
-                            onRemove: () => _draftState.removeKeyframe(index),
-                          ),
-                        SizedBox(height: AppThemeSpacing.space8),
-                        OutlinedButton.icon(
-                          onPressed: _draftState.addKeyframe,
-                          icon: const Icon(Icons.add),
-                          label: Text(S.current.addKeyframeLabelEditorPage),
                         ),
                       ],
                     ),

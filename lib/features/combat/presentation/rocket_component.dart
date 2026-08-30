@@ -12,9 +12,15 @@ import 'explosion_component.dart';
 import 'fire_component.dart';
 import 'smoke_trail_component.dart';
 
-/// Slower homing rocket/shell that leaves a smoke trail and detonates into a
+/// Ballistic rocket/shell that leaves a smoke trail and detonates into a
 /// splash-damage explosion on arrival. Shared by the rocket battery and the
-/// siege cannon (with different colors/impact damage).
+/// siege cannon (with different colors/impact damage). Deliberately NOT
+/// homing: it aims at wherever [target] was standing the instant it was
+/// fired ([_aimPoint], snapshotted once) and flies a straight line there
+/// regardless of what the target does afterward - it doesn't curve to
+/// chase a target that keeps moving, and if the target dies mid-flight it
+/// keeps flying to that same spot and detonates there instead of exploding
+/// on the spot it happened to be at when the target disappeared.
 class RocketComponent extends PositionComponent
     with HasGameReference<BoomspireGame> {
   static const _speed = 340.0;
@@ -34,6 +40,10 @@ class RocketComponent extends PositionComponent
   /// (mobile units, towers, and the home base alike) to splash-damage, see
   /// [_detonate].
   final Team firedBy;
+
+  /// Where [target] was standing the moment this shell was fired - the
+  /// fixed impact point this shell flies straight toward, see the class doc.
+  final Vector2 _aimPoint;
   double _trailTimer = 0;
   RocketComponent({
     required Vector2 start,
@@ -48,7 +58,8 @@ class RocketComponent extends PositionComponent
       UnitDomain.air,
       UnitDomain.sea,
     },
-  }) : super(position: start, size: Vector2(15, 5), anchor: Anchor.center);
+  }) : _aimPoint = target.position.clone(),
+       super(position: start, size: Vector2(15, 5), anchor: Anchor.center);
 
   @override
   void render(Canvas canvas) {
@@ -75,15 +86,12 @@ class RocketComponent extends PositionComponent
       game.world.spawn(SmokeTrailComponent(position: position.clone()));
     }
 
-    final aimPoint = (target.isMounted && !target.isRemoving)
-        ? target.position
-        : position;
-    final toTarget = aimPoint - position;
+    final toTarget = _aimPoint - position;
     final dist = toTarget.length;
     angle = atan2(toTarget.y, toTarget.x);
 
     final step = _speed * dt;
-    if (dist <= step || target.isRemoving || !target.isMounted) {
+    if (dist <= step) {
       _detonate();
       return;
     }
