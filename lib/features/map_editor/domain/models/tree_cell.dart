@@ -17,10 +17,7 @@ abstract class TreeCell with _$TreeCell {
 
     /// Overrides which [Biome]'s canopy style this one tree renders with,
     /// instead of the map's own biome (e.g. a snow-capped tree dropped
-    /// into a desert map) - only honored when this map's
-    /// `EnvironmentSettings.adaptation` is manual; null means "render with
-    /// the map's own biome", matching every tree placed before this
-    /// brush-type feature existed.
+    /// into a desert map) - null means "render with the map's own biome".
     Biome? variant,
   }) = _TreeCell;
 

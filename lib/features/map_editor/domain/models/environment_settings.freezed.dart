@@ -19,13 +19,7 @@ mixin _$EnvironmentSettings {
  bool get dynamicWeather;/// Sun direction as a fraction of a full arc, 0..1 (0 = sunrise/east,
 /// 0.5 = overhead, 1 = sunset/west) - drives ambient light tint/shadow
 /// angle wherever that's rendered.
- double get sunAngle; List<WeatherKeyframe> get timeline;/// [EnvironmentAdaptation.automatic] (default) keeps every terrain
-/// object (trees) matching this map's own biome.
-/// [EnvironmentAdaptation.manual] lets an author mix tree styles
-/// instead - e.g. snow-dusted trees on a desert map. Wind type is a
-/// separate, always-editable per-keyframe override - see
-/// `WeatherKeyframe.resolvedWindType`.
- EnvironmentAdaptation get adaptation;
+ double get sunAngle; List<WeatherKeyframe> get timeline;
 /// Create a copy of EnvironmentSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -38,16 +32,16 @@ $EnvironmentSettingsCopyWith<EnvironmentSettings> get copyWith => _$EnvironmentS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EnvironmentSettings&&(identical(other.dynamicWeather, dynamicWeather) || other.dynamicWeather == dynamicWeather)&&(identical(other.sunAngle, sunAngle) || other.sunAngle == sunAngle)&&const DeepCollectionEquality().equals(other.timeline, timeline)&&(identical(other.adaptation, adaptation) || other.adaptation == adaptation));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EnvironmentSettings&&(identical(other.dynamicWeather, dynamicWeather) || other.dynamicWeather == dynamicWeather)&&(identical(other.sunAngle, sunAngle) || other.sunAngle == sunAngle)&&const DeepCollectionEquality().equals(other.timeline, timeline));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,dynamicWeather,sunAngle,const DeepCollectionEquality().hash(timeline),adaptation);
+int get hashCode => Object.hash(runtimeType,dynamicWeather,sunAngle,const DeepCollectionEquality().hash(timeline));
 
 @override
 String toString() {
-  return 'EnvironmentSettings(dynamicWeather: $dynamicWeather, sunAngle: $sunAngle, timeline: $timeline, adaptation: $adaptation)';
+  return 'EnvironmentSettings(dynamicWeather: $dynamicWeather, sunAngle: $sunAngle, timeline: $timeline)';
 }
 
 
@@ -58,7 +52,7 @@ abstract mixin class $EnvironmentSettingsCopyWith<$Res>  {
   factory $EnvironmentSettingsCopyWith(EnvironmentSettings value, $Res Function(EnvironmentSettings) _then) = _$EnvironmentSettingsCopyWithImpl;
 @useResult
 $Res call({
- bool dynamicWeather, double sunAngle, List<WeatherKeyframe> timeline, EnvironmentAdaptation adaptation
+ bool dynamicWeather, double sunAngle, List<WeatherKeyframe> timeline
 });
 
 
@@ -75,13 +69,12 @@ class _$EnvironmentSettingsCopyWithImpl<$Res>
 
 /// Create a copy of EnvironmentSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? dynamicWeather = null,Object? sunAngle = null,Object? timeline = null,Object? adaptation = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? dynamicWeather = null,Object? sunAngle = null,Object? timeline = null,}) {
   return _then(EnvironmentSettings(
 dynamicWeather: null == dynamicWeather ? _self.dynamicWeather : dynamicWeather // ignore: cast_nullable_to_non_nullable
 as bool,sunAngle: null == sunAngle ? _self.sunAngle : sunAngle // ignore: cast_nullable_to_non_nullable
 as double,timeline: null == timeline ? _self.timeline : timeline // ignore: cast_nullable_to_non_nullable
-as List<WeatherKeyframe>,adaptation: null == adaptation ? _self.adaptation : adaptation // ignore: cast_nullable_to_non_nullable
-as EnvironmentAdaptation,
+as List<WeatherKeyframe>,
   ));
 }
 
@@ -166,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool dynamicWeather,  double sunAngle,  List<WeatherKeyframe> timeline,  EnvironmentAdaptation adaptation)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool dynamicWeather,  double sunAngle,  List<WeatherKeyframe> timeline)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EnvironmentSettings() when $default != null:
-return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline,_that.adaptation);case _:
+return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline);case _:
   return orElse();
 
 }
@@ -187,10 +180,10 @@ return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline,_that.adaptat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool dynamicWeather,  double sunAngle,  List<WeatherKeyframe> timeline,  EnvironmentAdaptation adaptation)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool dynamicWeather,  double sunAngle,  List<WeatherKeyframe> timeline)  $default,) {final _that = this;
 switch (_that) {
 case _EnvironmentSettings():
-return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline,_that.adaptation);case _:
+return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +200,10 @@ return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline,_that.adaptat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool dynamicWeather,  double sunAngle,  List<WeatherKeyframe> timeline,  EnvironmentAdaptation adaptation)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool dynamicWeather,  double sunAngle,  List<WeatherKeyframe> timeline)?  $default,) {final _that = this;
 switch (_that) {
 case _EnvironmentSettings() when $default != null:
-return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline,_that.adaptation);case _:
+return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline);case _:
   return null;
 
 }
@@ -222,7 +215,7 @@ return $default(_that.dynamicWeather,_that.sunAngle,_that.timeline,_that.adaptat
 @JsonSerializable()
 
 class _EnvironmentSettings extends EnvironmentSettings {
-  const _EnvironmentSettings({this.dynamicWeather = true, this.sunAngle = 0.5,  List<WeatherKeyframe> timeline = const [_defaultKeyframe], this.adaptation = EnvironmentAdaptation.automatic}): _timeline = timeline,super._();
+  const _EnvironmentSettings({this.dynamicWeather = true, this.sunAngle = 0.5,  List<WeatherKeyframe> timeline = const [_defaultKeyframe]}): _timeline = timeline,super._();
   factory _EnvironmentSettings.fromJson(Map<String, dynamic> json) => _$EnvironmentSettingsFromJson(json);
 
 @override@JsonKey() final  bool dynamicWeather;
@@ -237,13 +230,6 @@ class _EnvironmentSettings extends EnvironmentSettings {
   return EqualUnmodifiableListView(_timeline);
 }
 
-/// [EnvironmentAdaptation.automatic] (default) keeps every terrain
-/// object (trees) matching this map's own biome.
-/// [EnvironmentAdaptation.manual] lets an author mix tree styles
-/// instead - e.g. snow-dusted trees on a desert map. Wind type is a
-/// separate, always-editable per-keyframe override - see
-/// `WeatherKeyframe.resolvedWindType`.
-@override@JsonKey() final  EnvironmentAdaptation adaptation;
 
 /// Create a copy of EnvironmentSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -258,16 +244,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnvironmentSettings&&(identical(other.dynamicWeather, dynamicWeather) || other.dynamicWeather == dynamicWeather)&&(identical(other.sunAngle, sunAngle) || other.sunAngle == sunAngle)&&const DeepCollectionEquality().equals(other._timeline, _timeline)&&(identical(other.adaptation, adaptation) || other.adaptation == adaptation));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnvironmentSettings&&(identical(other.dynamicWeather, dynamicWeather) || other.dynamicWeather == dynamicWeather)&&(identical(other.sunAngle, sunAngle) || other.sunAngle == sunAngle)&&const DeepCollectionEquality().equals(other._timeline, _timeline));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,dynamicWeather,sunAngle,const DeepCollectionEquality().hash(_timeline),adaptation);
+int get hashCode => Object.hash(runtimeType,dynamicWeather,sunAngle,const DeepCollectionEquality().hash(_timeline));
 
 @override
 String toString() {
-  return 'EnvironmentSettings(dynamicWeather: $dynamicWeather, sunAngle: $sunAngle, timeline: $timeline, adaptation: $adaptation)';
+  return 'EnvironmentSettings(dynamicWeather: $dynamicWeather, sunAngle: $sunAngle, timeline: $timeline)';
 }
 
 
@@ -278,7 +264,7 @@ abstract mixin class _$EnvironmentSettingsCopyWith<$Res> implements $Environment
   factory _$EnvironmentSettingsCopyWith(_EnvironmentSettings value, $Res Function(_EnvironmentSettings) _then) = __$EnvironmentSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- bool dynamicWeather, double sunAngle, List<WeatherKeyframe> timeline, EnvironmentAdaptation adaptation
+ bool dynamicWeather, double sunAngle, List<WeatherKeyframe> timeline
 });
 
 
@@ -295,13 +281,12 @@ class __$EnvironmentSettingsCopyWithImpl<$Res>
 
 /// Create a copy of EnvironmentSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? dynamicWeather = null,Object? sunAngle = null,Object? timeline = null,Object? adaptation = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? dynamicWeather = null,Object? sunAngle = null,Object? timeline = null,}) {
   return _then(_EnvironmentSettings(
 dynamicWeather: null == dynamicWeather ? _self.dynamicWeather : dynamicWeather // ignore: cast_nullable_to_non_nullable
 as bool,sunAngle: null == sunAngle ? _self.sunAngle : sunAngle // ignore: cast_nullable_to_non_nullable
 as double,timeline: null == timeline ? _self._timeline : timeline // ignore: cast_nullable_to_non_nullable
-as List<WeatherKeyframe>,adaptation: null == adaptation ? _self.adaptation : adaptation // ignore: cast_nullable_to_non_nullable
-as EnvironmentAdaptation,
+as List<WeatherKeyframe>,
   ));
 }
 

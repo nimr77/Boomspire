@@ -310,6 +310,7 @@ class _GameCoreEntityPanelWidgetState extends State<GameCoreEntityPanelWidget> {
     UnitKind.antiTankSoldier => Icons.gps_fixed,
     UnitKind.antiAirSoldier => Icons.arrow_circle_up,
     UnitKind.stealthBomber => Icons.airplanemode_active,
+    UnitKind.drone => Icons.radar,
     _ => Icons.directions_walk,
   };
 }

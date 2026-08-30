@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart' show compute;
 import '../../../core/pathfinding/grid.dart';
 import '../../terrain/domain/models/biome.dart';
 import '../../terrain/domain/models/obstacle_kind.dart';
-import '../domain/enums/environment_adaptation.dart';
 import '../domain/models/editor_terrain_preview.dart';
 import '../domain/models/map_draft.dart';
 import '../domain/models/water_path.dart';
@@ -46,17 +45,13 @@ EditorTerrainPreview _generatePreview(MapDraft draft) {
     _rasterizeWaterPath(path, cols, rows, paint);
   }
 
-  // Per-tree brush-type overrides only take effect once an author opts
-  // into manual environment adaptation - otherwise every tree keeps
-  // rendering with this map's own biome, exactly as before this feature
-  // existed.
-  if (draft.environment.adaptation == EnvironmentAdaptation.manual) {
-    for (final tree in draft.treeCells) {
-      final variant = tree.variant;
-      if (variant == null) continue;
-      if (!grid.inBounds(tree.col, tree.row)) continue;
-      variants[tree.row][tree.col] = variant;
-    }
+  // Same as painted obstacles above: a null variant just renders with
+  // this map's own biome, a set one overrides it - no extra toggle needed.
+  for (final tree in draft.treeCells) {
+    final variant = tree.variant;
+    if (variant == null) continue;
+    if (!grid.inBounds(tree.col, tree.row)) continue;
+    variants[tree.row][tree.col] = variant;
   }
 
   return EditorTerrainPreview(

@@ -15,12 +15,6 @@ _EnvironmentSettings _$EnvironmentSettingsFromJson(Map<String, dynamic> json) =>
               ?.map((e) => WeatherKeyframe.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [_defaultKeyframe],
-      adaptation:
-          $enumDecodeNullable(
-            _$EnvironmentAdaptationEnumMap,
-            json['adaptation'],
-          ) ??
-          EnvironmentAdaptation.automatic,
     );
 
 Map<String, dynamic> _$EnvironmentSettingsToJson(
@@ -29,10 +23,4 @@ Map<String, dynamic> _$EnvironmentSettingsToJson(
   'dynamicWeather': instance.dynamicWeather,
   'sunAngle': instance.sunAngle,
   'timeline': instance.timeline.map((e) => e.toJson()).toList(),
-  'adaptation': _$EnvironmentAdaptationEnumMap[instance.adaptation]!,
-};
-
-const _$EnvironmentAdaptationEnumMap = {
-  EnvironmentAdaptation.automatic: 'automatic',
-  EnvironmentAdaptation.manual: 'manual',
 };

@@ -366,16 +366,6 @@
   "@environmentLabelEditorPage": {},
   "dynamicWeatherLabelEditorPage": "Dynamic weather over match",
   "@dynamicWeatherLabelEditorPage": {},
-  "environmentAdaptationLabelEditorPage": "Environment adaptation",
-  "@environmentAdaptationLabelEditorPage": {},
-  "environmentAdaptationAutomaticEditorPage": "Automatic",
-  "@environmentAdaptationAutomaticEditorPage": {},
-  "environmentAdaptationManualEditorPage": "Manual",
-  "@environmentAdaptationManualEditorPage": {},
-  "environmentAdaptationAutomaticHintEditorPage": "Trees always match this map's biome",
-  "@environmentAdaptationAutomaticHintEditorPage": {},
-  "environmentAdaptationManualHintEditorPage": "Trees can use any biome's look",
-  "@environmentAdaptationManualHintEditorPage": {},
   "sunAngleLabelEditorPage": "Sun angle: {percent}%",
   "@sunAngleLabelEditorPage": {
     "placeholders": {
@@ -398,14 +388,6 @@
   "@singleKeyframeHintEditorPage": {},
   "addKeyframeLabelEditorPage": "Add keyframe",
   "@addKeyframeLabelEditorPage": {},
-  "keyframeAtProgressLabelEditorPage": "At {percent}% of match",
-  "@keyframeAtProgressLabelEditorPage": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
   "windLabelEditorPage": "Wind",
   "@windLabelEditorPage": {},
   "windTypeFieldLabelEditorPage": "Wind type",

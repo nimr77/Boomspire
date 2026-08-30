@@ -72,10 +72,39 @@ class GameConfig {
   /// AI-held node pays into `AiEconomy.gold` at this rate instead.
   static const aiResourceNodeGoldPerTick = 60;
 
-  /// Nominal full-match length (seconds) used only to map elapsed time to
-  /// a 0..1 weather-timeline progress fraction in [GameMode.skirmish] -
-  /// unlike wave-defense, skirmish has no wave count to derive progress
-  /// from (see `TerrainComponent._matchProgress`). Not a hard timer/does
-  /// not end the match.
-  static const skirmishWeatherCycleSeconds = 480.0;
+  /// How often (seconds) `WeatherFocusState` locks in a brand new random
+  /// blend of the scene's weather keyframes, uniformly between this and
+  /// [weatherFocusMaxShiftSeconds].
+  static const weatherFocusMinShiftSeconds = 60.0;
+
+  /// Upper bound (seconds) on how long one blend holds before the next
+  /// random reroll - 5 minutes, per design ("changes on a random timing,
+  /// max 5 min").
+  static const weatherFocusMaxShiftSeconds = 300.0;
+
+  /// How long (seconds) `WeatherFocusState` takes to ease from one blend
+  /// to the next once a reroll fires, uniformly between this and
+  /// [weatherFocusTransitionMaxSeconds] - never instant, so the look/sound
+  /// drifts naturally instead of jumping.
+  static const weatherFocusTransitionMinSeconds = 15.0;
+  static const weatherFocusTransitionMaxSeconds = 45.0;
+
+  /// How much (0..1) sustained weapon fire ducks ambient weather sound -
+  /// kept below 1 so a firefight quiets the ambience without silencing it
+  /// (see `BoomspireGame.combatIntensity`/`AmbientWeatherAudioComponent`).
+  static const combatAmbientDuckStrength = 0.75;
+
+  /// How much each shot (`BoomspireGame.shakeCamera` call) bumps
+  /// `BoomspireGame.combatIntensity`.
+  static const combatIntensityPerShot = 0.15;
+
+  /// How fast (per second) `BoomspireGame.combatIntensity` decays back
+  /// toward 0 once shooting stops.
+  static const combatIntensityDecayPerSecond = 0.4;
+
+  /// Ceiling ambient volume (0..1) for the wind/rain ambience loops at
+  /// full keyframe intensity (`windStrength`/`rainIntensity` == 1), before
+  /// combat ducking - kept below 1 so ambience always sits under SFX.
+  static const ambientWindMaxVolume = 0.45;
+  static const ambientRainMaxVolume = 0.55;
 }

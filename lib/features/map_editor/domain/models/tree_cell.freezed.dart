@@ -18,10 +18,7 @@ mixin _$TreeCell {
 
  int get col; int get row;/// Overrides which [Biome]'s canopy style this one tree renders with,
 /// instead of the map's own biome (e.g. a snow-capped tree dropped
-/// into a desert map) - only honored when this map's
-/// `EnvironmentSettings.adaptation` is manual; null means "render with
-/// the map's own biome", matching every tree placed before this
-/// brush-type feature existed.
+/// into a desert map) - null means "render with the map's own biome".
  Biome? get variant;
 /// Create a copy of TreeCell
 /// with the given fields replaced by the non-null parameter values.
@@ -225,10 +222,7 @@ class _TreeCell implements TreeCell {
 @override final  int row;
 /// Overrides which [Biome]'s canopy style this one tree renders with,
 /// instead of the map's own biome (e.g. a snow-capped tree dropped
-/// into a desert map) - only honored when this map's
-/// `EnvironmentSettings.adaptation` is manual; null means "render with
-/// the map's own biome", matching every tree placed before this
-/// brush-type feature existed.
+/// into a desert map) - null means "render with the map's own biome".
 @override final  Biome? variant;
 
 /// Create a copy of TreeCell

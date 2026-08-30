@@ -44,4 +44,10 @@ enum UnitKind {
   /// stripe overlay (see `TeamStripeMarkerComponent`), not by recoloring
   /// the model itself.
   stealthBomber,
+
+  /// Small, cheap UAV fielded by both sides - shares the exact same
+  /// strafing-pass flight AI as [attackPlane]/[aircraft] (its `bodyType` is
+  /// also `VehicleUnitType.plane`, see `unit_kind_extensions.dart`), just
+  /// priced and statted well below the other plane-type units.
+  drone,
 }

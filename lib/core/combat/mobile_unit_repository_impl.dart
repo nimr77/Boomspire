@@ -176,6 +176,28 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       prefersStructures: true,
       isStealth: true,
     ),
+    // Small, cheap UAV - same strafing-pass flight AI as Attack Plane (its
+    // `bodyType` is also `VehicleUnitType.plane`), just far weaker/frailer
+    // and with a shorter reload, so it shows up as an early, throwaway air
+    // harasser rather than a serious threat on its own.
+    UnitKind.drone: MobileUnitBlueprint(
+      kind: UnitKind.drone,
+      name: 'Drone',
+      maxHealth: 35,
+      speed: 230,
+      bounty: 20,
+      size: 32,
+      domain: UnitDomain.air,
+      attackDomains: {UnitDomain.ground, UnitDomain.air},
+      isVehicle: true,
+      attackDamage: 16,
+      attackRange: 160,
+      attackInterval: 1.6,
+      projectileCount: 2,
+      clipShotInterval: 0.3,
+      movementStyle: MovementStyle.swoop,
+      weaponType: WeaponType.rocket,
+    ),
   };
 
   // Note: these are the stats a fresh, un-upgraded Training Center/War
@@ -316,6 +338,28 @@ class MobileUnitRepositoryImpl implements MobileUnitRepository {
       movementStyle: MovementStyle.swoop,
       weaponType: WeaponType.rocket,
       isStealth: true,
+    ),
+    // Player-side counterpart of the enemy Drone - the cheapest plane-body
+    // unit in the War Factory roster, well below Ally Aircraft's cost, for
+    // a fast/frail early air-harassment option.
+    UnitKind.drone: MobileUnitBlueprint(
+      kind: UnitKind.drone,
+      name: 'Ally Drone',
+      cost: 120,
+      maxHealth: 30,
+      speed: 230,
+      bounty: 18,
+      size: 32,
+      domain: UnitDomain.air,
+      attackDomains: {UnitDomain.ground, UnitDomain.air},
+      isVehicle: true,
+      attackDamage: 14,
+      attackRange: 160,
+      attackInterval: 1.6,
+      projectileCount: 2,
+      clipShotInterval: 0.3,
+      movementStyle: MovementStyle.swoop,
+      weaponType: WeaponType.rocket,
     ),
   };
 

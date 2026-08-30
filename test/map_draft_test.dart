@@ -165,6 +165,46 @@ void main() {
     });
   });
 
+  group('EnvironmentSettings.sampleBlend', () {
+    test('mixes every keyframe by its weight, not just two neighbors', () {
+      const settings = EnvironmentSettings(
+        timeline: [
+          WeatherKeyframe(atProgress: 0, rainIntensity: 0),
+          WeatherKeyframe(atProgress: 0.5, rainIntensity: 1),
+          WeatherKeyframe(atProgress: 1, rainIntensity: 0.5),
+        ],
+      );
+
+      // 60% / 10% / 30% focus split, per the feature's own example.
+      final blended = settings.sampleBlend([0.6, 0.1, 0.3]);
+      expect(blended.rainIntensity, closeTo(0.6 * 0 + 0.1 * 1 + 0.3 * 0.5, 0.0001));
+    });
+
+    test('windType comes from whichever keyframe has the most focus', () {
+      const settings = EnvironmentSettings(
+        timeline: [
+          WeatherKeyframe(atProgress: 0, windType: WindType.snow),
+          WeatherKeyframe(atProgress: 1, windType: WindType.ash),
+        ],
+      );
+
+      expect(settings.sampleBlend([0.7, 0.3]).windType, WindType.snow);
+      expect(settings.sampleBlend([0.3, 0.7]).windType, WindType.ash);
+    });
+
+    test('stays on the first keyframe when not dynamic, same as sample', () {
+      const settings = EnvironmentSettings(
+        dynamicWeather: false,
+        timeline: [
+          WeatherKeyframe(atProgress: 0, rainIntensity: 0.2),
+          WeatherKeyframe(atProgress: 1, rainIntensity: 1),
+        ],
+      );
+
+      expect(settings.sampleBlend([0.1, 0.9]).rainIntensity, 0.2);
+    });
+  });
+
   group('LocalMapDraftRepositoryImpl', () {
     setUp(() => AppDatabase.useForTest(ToStore.memory));
     tearDown(AppDatabase.reset);
@@ -299,9 +339,9 @@ void main() {
       expect(preview.obstacleKinds[0][0], isNull);
     });
 
-    test("a tree's brush-type variant only reaches the terrain's variants grid "
-        'when EnvironmentAdaptation is manual', () async {
-      const automaticDraft = MapDraft(
+    test("a tree's brush-type variant reaches the terrain's variants grid "
+        'unconditionally, same as any other brush', () async {
+      const draft = MapDraft(
         id: 'x',
         name: 'x',
         arenaWidth: 400,
@@ -310,20 +350,8 @@ void main() {
         treeCells: [TreeCell(col: 2, row: 2, variant: Biome.snowTundra)],
       );
 
-      final automaticPreview = await EditorTerrainGenerator().generate(
-        automaticDraft,
-      );
-      expect(automaticPreview.variants[2][2], isNull);
-
-      final manualDraft = automaticDraft.copyWith(
-        environment: const EnvironmentSettings(
-          adaptation: EnvironmentAdaptation.manual,
-        ),
-      );
-      final manualPreview = await EditorTerrainGenerator().generate(
-        manualDraft,
-      );
-      expect(manualPreview.variants[2][2], Biome.snowTundra);
+      final preview = await EditorTerrainGenerator().generate(draft);
+      expect(preview.variants[2][2], Biome.snowTundra);
     });
   });
 }

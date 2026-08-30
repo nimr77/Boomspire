@@ -9,7 +9,6 @@ import 'dart:ui';
 import 'package:boomspire/core/combat/unit_kind.dart';
 import 'package:boomspire/features/game_core/domain/models/game_scene.dart';
 import 'package:boomspire/features/game_core/presentation/player_palette.dart';
-import 'package:boomspire/features/map_editor/domain/models/environment_settings.dart';
 import 'package:boomspire/features/map_editor/domain/models/map_draft.dart';
 import 'package:boomspire/features/map_editor/domain/models/water_path.dart';
 import 'package:boomspire/features/map_editor/domain/models/weather_keyframe.dart';
@@ -180,8 +179,8 @@ void main() {
     });
 
     test('a tree brush-type override is stamped on the TreeCell itself '
-        '(EnvironmentAdaptation only gates whether it is later honored at '
-        'generation time, not whether it can be authored)', () async {
+        '(honored unconditionally at generation time, same as any other '
+        'brush variant - see map_draft_test.dart)', () async {
       final state = newState();
       addTearDown(state.dispose);
       await state.initialize();
@@ -236,17 +235,6 @@ void main() {
 
       state.setDynamicWeather(true);
       expect(state.draft.value.environment.dynamicWeather, isTrue);
-
-      state.setEnvironmentAdaptation(EnvironmentAdaptation.manual);
-      expect(
-        state.draft.value.environment.adaptation,
-        EnvironmentAdaptation.manual,
-      );
-      state.setEnvironmentAdaptation(EnvironmentAdaptation.automatic);
-      expect(
-        state.draft.value.environment.adaptation,
-        EnvironmentAdaptation.automatic,
-      );
 
       state.setSunAngle(0.75);
       expect(state.draft.value.environment.sunAngle, 0.75);

@@ -25,8 +25,9 @@ abstract class WeatherKeyframe with _$WeatherKeyframe {
 
     /// [WindType.automatic] (the default) inherits the map's own biome's
     /// natural wind look - see [resolvedWindType]. Any other value is an
-    /// explicit author override, editable in the map editor regardless of
-    /// [EnvironmentAdaptation] (that toggle only gates tree variants).
+    /// explicit author override, always editable per-keyframe regardless
+    /// of any other setting - same self-contained pattern as a brush's own
+    /// biome-variant override.
     @Default(WindType.automatic) WindType windType,
   }) = _WeatherKeyframe;
 

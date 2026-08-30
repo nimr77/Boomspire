@@ -121,6 +121,8 @@ class GameWorld extends World
         biome: game.scene.biome,
       ),
     );
+    // Disabled for now - the procedural ambient loops need rework before
+    // this is worth turning back on (see AmbientWeatherAudioComponent).
     playerHomeBase = HomeBaseComponent(
       position: Vector2(
         game.terrainMap.basePoint.x,

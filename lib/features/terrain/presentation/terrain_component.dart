@@ -5,8 +5,6 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show Colors;
 
 import '../../../core/rendering/procedural_image.dart';
-import '../../game_core/domain/enums/game_mode.dart';
-import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 import '../../map_editor/domain/models/environment_settings.dart';
 import '../../map_editor/domain/models/weather_keyframe.dart';
@@ -37,22 +35,6 @@ class TerrainComponent extends PositionComponent
         size: Vector2(terrainMap.arenaWidth, terrainMap.arenaHeight),
         priority: -10,
       );
-
-  /// This scene's match-progress fraction (0..1), used to sample
-  /// [EnvironmentSettings.sample] - the same wave-progress fraction the HUD
-  /// shows, so a dynamic weather timeline changes pace with the campaign.
-  /// [GameMode.skirmish] has no wave count to derive this from, so it
-  /// falls back to elapsed time instead - otherwise it would be stuck at 0
-  /// (always the timeline's first keyframe) for the whole match.
-  double get _matchProgress {
-    if (game.scene.mode == GameMode.skirmish) {
-      return (game.elapsedSeconds / GameConfig.skirmishWeatherCycleSeconds)
-          .clamp(0.0, 1.0);
-    }
-    final total = game.gameState.totalWaves;
-    if (total <= 0) return 0;
-    return ((game.gameState.currentWave - 1) / total).clamp(0.0, 1.0);
-  }
 
   @override
   Future<void> onLoad() async {
@@ -167,7 +149,9 @@ class TerrainComponent extends PositionComponent
   /// Redraws every tree fresh each frame (instead of baking them into
   /// [_baseImage]) so [WeatherKeyframe.windStrength] can make canopies sway.
   void _paintLiveTrees(ui.Canvas canvas) {
-    final weather = game.scene.environment.sample(_matchProgress);
+    final weather = game.scene.environment.sampleBlend(
+      game.weatherFocus.weights,
+    );
     TerrainPainter.paintTrees(
       canvas,
       ui.Size(size.x, size.y),
@@ -302,7 +286,7 @@ class TerrainComponent extends PositionComponent
     EnvironmentSettings environment,
     ui.Rect rect,
   ) {
-    final weather = environment.sample(_matchProgress);
+    final weather = environment.sampleBlend(game.weatherFocus.weights);
 
     _paintWindStreaks(canvas, weather);
 

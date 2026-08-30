@@ -40,18 +40,8 @@ class MapEditorWeatherKeyframeEditorWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
-                  child: Text(
-                    S.current.keyframeAtProgressLabelEditorPage(
-                      (keyframe.atProgress * 100).round(),
-                    ),
-                    style: const TextStyle(
-                      color: AppThemeColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
                 IconButton(
                   icon: const Icon(
                     Icons.close,

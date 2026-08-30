@@ -456,8 +456,48 @@ void main() {
     ),
   );
 
+  // Wind ambience: a low, gently gusting rumble - continuously looped and
+  // volume-driven live by the weather-focus engine (see
+  // `AmbientWeatherAudioComponent`), unlike every one-shot SFX above.
+  const windLoopSeconds = 6.0;
+  final windBed = lowPass(noise(windLoopSeconds, seed: 500), 0.05);
+  final windGust = lowPass(noise(windLoopSeconds, seed: 501), 0.002);
+  final windSamples = List<double>.generate(
+    windBed.length,
+    (i) => windBed[i] * (0.6 + 0.4 * windGust[i].clamp(-1.0, 1.0)),
+  );
+  writeWav(
+    '$dir/wind_ambience.wav',
+    loopify(normalize(windSamples, peak: 0.5)),
+  );
+
+  // Rain ambience: a steady hiss bed plus sparse louder droplet transients -
+  // same continuous-loop role as the wind ambience above.
+  const rainLoopSeconds = 6.0;
+  var rainSamples = lowPass(noise(rainLoopSeconds, seed: 600), 0.3);
+  final dropletRnd = Random(601);
+  for (var i = 0; i < 40; i++) {
+    final offset = dropletRnd.nextDouble() * rainLoopSeconds;
+    final droplet = envelope(
+      highPass(noise(0.03, seed: 700 + i), 0.6),
+      attackSec: 0.001,
+      decayTau: 0.02,
+    );
+    rainSamples = addAt(
+      rainSamples,
+      droplet,
+      offset,
+      gain: 0.25 + dropletRnd.nextDouble() * 0.25,
+    );
+  }
+  writeWav(
+    '$dir/rain_ambience.wav',
+    loopify(normalize(rainSamples, peak: 0.55)),
+  );
+
   stdout.writeln('Audio generation complete.');
 }
+
 
 const sampleRate = 44100;
 
@@ -514,6 +554,21 @@ List<double> lowPass(List<double> input, double alpha) {
   for (var i = 0; i < input.length; i++) {
     y += alpha * (input[i] - y);
     out[i] = y;
+  }
+  return out;
+}
+
+/// Fades both ends of [input] down toward silence over [seconds] so it can
+/// be played back-to-back on a hard loop (see [FlameAudio.loop] callers)
+/// with no audible click at the wrap-around point - unlike every one-shot
+/// SFX above, which never repeat.
+List<double> loopify(List<double> input, {double seconds = 0.2}) {
+  final n = (seconds * sampleRate).round().clamp(0, input.length ~/ 2);
+  final out = List<double>.from(input);
+  for (var i = 0; i < n; i++) {
+    final fade = i / n;
+    out[i] *= fade;
+    out[out.length - 1 - i] *= fade;
   }
   return out;
 }

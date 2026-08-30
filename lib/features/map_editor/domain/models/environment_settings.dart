@@ -1,9 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../enums/environment_adaptation.dart';
 import 'weather_keyframe.dart';
-
-export '../enums/environment_adaptation.dart';
 
 part 'environment_settings.freezed.dart';
 part 'environment_settings.g.dart';
@@ -26,14 +23,6 @@ abstract class EnvironmentSettings with _$EnvironmentSettings {
     /// angle wherever that's rendered.
     @Default(0.5) double sunAngle,
     @Default([_defaultKeyframe]) List<WeatherKeyframe> timeline,
-
-    /// [EnvironmentAdaptation.automatic] (default) keeps every terrain
-    /// object (trees) matching this map's own biome.
-    /// [EnvironmentAdaptation.manual] lets an author mix tree styles
-    /// instead - e.g. snow-dusted trees on a desert map. Wind type is a
-    /// separate, always-editable per-keyframe override - see
-    /// `WeatherKeyframe.resolvedWindType`.
-    @Default(EnvironmentAdaptation.automatic) EnvironmentAdaptation adaptation,
   }) = _EnvironmentSettings;
 
   factory EnvironmentSettings.fromJson(Map<String, dynamic> json) =>
@@ -73,6 +62,49 @@ abstract class EnvironmentSettings with _$EnvironmentSettings {
       );
     }
     return sorted.last;
+  }
+
+  /// Weighted blend across every entry in [timeline] by [weights] (same
+  /// length/order, expected to sum to ~1) - used by the live
+  /// `WeatherFocusState` engine instead of [sample] once a match is
+  /// running, so the look drifts across every authored keyframe's "focus"
+  /// over real time instead of tracking match progress. Falls back to
+  /// [sample]'s static/single-keyframe behavior the same way.
+  WeatherKeyframe sampleBlend(List<double> weights) {
+    if (timeline.isEmpty) return _defaultKeyframe;
+    if (!dynamicWeather || timeline.length == 1) return timeline.first;
+
+    var windStrength = 0.0;
+    var rainIntensity = 0.0;
+    var snowIntensity = 0.0;
+    var fogDensity = 0.0;
+    var cloudCover = 0.0;
+    var dominantWeight = -1.0;
+    var dominantWindType = WindType.automatic;
+    for (var i = 0; i < timeline.length; i++) {
+      final w = i < weights.length ? weights[i] : 0.0;
+      final kf = timeline[i];
+      windStrength += kf.windStrength * w;
+      rainIntensity += kf.rainIntensity * w;
+      snowIntensity += kf.snowIntensity * w;
+      fogDensity += kf.fogDensity * w;
+      cloudCover += kf.cloudCover * w;
+      // Discrete, not blend-able - the most-focused keyframe decides it,
+      // same "switches, doesn't fade" rule [sample] uses at its midpoint.
+      if (w > dominantWeight) {
+        dominantWeight = w;
+        dominantWindType = kf.windType;
+      }
+    }
+    return WeatherKeyframe(
+      atProgress: 0,
+      windStrength: windStrength.clamp(0.0, 1.0),
+      rainIntensity: rainIntensity.clamp(0.0, 1.0),
+      snowIntensity: snowIntensity.clamp(0.0, 1.0),
+      fogDensity: fogDensity.clamp(0.0, 1.0),
+      cloudCover: cloudCover.clamp(0.0, 1.0),
+      windType: dominantWindType,
+    );
   }
 
   double _lerp(double a, double b, double t) => a + (b - a) * t;

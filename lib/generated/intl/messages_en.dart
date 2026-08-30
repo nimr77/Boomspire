@@ -41,27 +41,25 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m9(name) => "Imported \"${name}\"";
 
-  static String m10(percent) => "At ${percent}% of match";
+  static String m10(max) => "Only ${max} home sites supported";
 
-  static String m11(max) => "Only ${max} home sites supported";
+  static String m11(percent) => "Preview weather at: ${percent}% of match";
 
-  static String m12(percent) => "Preview weather at: ${percent}% of match";
+  static String m12(count) => "Randomize all ${count} waves";
 
-  static String m13(count) => "Randomize all ${count} waves";
+  static String m13(width) => "River width: ${width}";
 
-  static String m14(width) => "River width: ${width}";
+  static String m14(name) => "Saved \"${name}\"";
 
-  static String m15(name) => "Saved \"${name}\"";
+  static String m15(percent) => "Sun angle: ${percent}%";
 
-  static String m16(percent) => "Sun angle: ${percent}%";
+  static String m16(tier) => "Tier ${tier}";
 
-  static String m17(tier) => "Tier ${tier}";
+  static String m17(current, total) => "Wave ${current} / ${total}";
 
-  static String m18(current, total) => "Wave ${current} / ${total}";
+  static String m18(count) => "${count} WAVES";
 
-  static String m19(count) => "${count} WAVES";
-
-  static String m20(percent) => "${percent}%";
+  static String m19(percent) => "${percent}%";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -170,18 +168,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "enterFullscreenTooltip": MessageLookupByLibrary.simpleMessage(
       "Enter fullscreen",
     ),
-    "environmentAdaptationAutomaticEditorPage":
-        MessageLookupByLibrary.simpleMessage("Automatic"),
-    "environmentAdaptationAutomaticHintEditorPage":
-        MessageLookupByLibrary.simpleMessage(
-          "Trees always match this map\'s biome",
-        ),
-    "environmentAdaptationLabelEditorPage":
-        MessageLookupByLibrary.simpleMessage("Environment adaptation"),
-    "environmentAdaptationManualEditorPage":
-        MessageLookupByLibrary.simpleMessage("Manual"),
-    "environmentAdaptationManualHintEditorPage":
-        MessageLookupByLibrary.simpleMessage("Trees can use any biome\'s look"),
     "environmentLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Environment",
     ),
@@ -207,7 +193,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "hudAiBaseLabel": m7,
     "hudWaveLabel": m8,
     "importedMapEditorPage": m9,
-    "keyframeAtProgressLabelEditorPage": m10,
     "lakeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Lake"),
     "lavaLabelEditorPage": MessageLookupByLibrary.simpleMessage("Lava"),
     "levelSelectSubtitle": MessageLookupByLibrary.simpleMessage(
@@ -245,10 +230,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "nextWaveTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
       "Next wave",
     ),
-    "onlyHomeSitesSupportedEditorPage": m11,
+    "onlyHomeSitesSupportedEditorPage": m10,
     "playAgain": MessageLookupByLibrary.simpleMessage("PLAY AGAIN"),
     "playLabelEditorPage": MessageLookupByLibrary.simpleMessage("Play"),
-    "previewWeatherLabelEditorPage": m12,
+    "previewWeatherLabelEditorPage": m11,
     "previousWaveTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
       "Previous wave",
     ),
@@ -256,7 +241,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "PRODUCE UNITS",
     ),
     "rainLabelEditorPage": MessageLookupByLibrary.simpleMessage("Rain"),
-    "randomizeAllWavesLabelEditorPage": m13,
+    "randomizeAllWavesLabelEditorPage": m12,
     "randomizeWaveLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Randomize",
     ),
@@ -267,9 +252,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Reset zoom",
     ),
     "riverLabelEditorPage": MessageLookupByLibrary.simpleMessage("River"),
-    "riverWidthLabelEditorPage": m14,
+    "riverWidthLabelEditorPage": m13,
     "saveLabelEditorPage": MessageLookupByLibrary.simpleMessage("Save"),
-    "savedMapEditorPage": m15,
+    "savedMapEditorPage": m14,
     "sceneCompleted": MessageLookupByLibrary.simpleMessage("COMPLETED"),
     "singleKeyframeHintEditorPage": MessageLookupByLibrary.simpleMessage(
       "Only the first keyframe applies while Dynamic Weather is off",
@@ -325,7 +310,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "startingGoldLabelEditorPage": MessageLookupByLibrary.simpleMessage(
       "Starting gold",
     ),
-    "sunAngleLabelEditorPage": m16,
+    "sunAngleLabelEditorPage": m15,
     "testingHandDrawnMapBriefingEditorPage":
         MessageLookupByLibrary.simpleMessage(
           "Testing your hand-drawn map draft.",
@@ -343,7 +328,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "towerNameRocket": MessageLookupByLibrary.simpleMessage("Rocket Battery"),
     "towerNameRocketSilo": MessageLookupByLibrary.simpleMessage("Rocket Silo"),
     "towerNameSam": MessageLookupByLibrary.simpleMessage("SAM Site"),
-    "towerTier": m17,
+    "towerTier": m16,
     "treeLabelEditorPage": MessageLookupByLibrary.simpleMessage("Tree"),
     "treesOffHintEditorPage": MessageLookupByLibrary.simpleMessage(
       "This biome has no automatic trees - use the Tree tool to add your own",
@@ -367,8 +352,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "waveDefenseOptionEditorPage": MessageLookupByLibrary.simpleMessage(
       "Wave Defense",
     ),
-    "waveHeaderEditorPage": m18,
-    "wavesCount": m19,
+    "waveHeaderEditorPage": m17,
+    "wavesCount": m18,
     "wavesLabelEditorPage": MessageLookupByLibrary.simpleMessage("Waves"),
     "weaponLabelBullet": MessageLookupByLibrary.simpleMessage("Bullets"),
     "weaponLabelCannon": MessageLookupByLibrary.simpleMessage("Cannon Shells"),
@@ -399,6 +384,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "zoomOutTooltipEditorPage": MessageLookupByLibrary.simpleMessage(
       "Zoom out",
     ),
-    "zoomPercentEditorPage": m20,
+    "zoomPercentEditorPage": m19,
   };
 }

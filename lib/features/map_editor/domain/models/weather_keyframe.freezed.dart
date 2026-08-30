@@ -19,8 +19,9 @@ mixin _$WeatherKeyframe {
 /// How far through the match this keyframe applies, 0 (start) to 1 (end).
  double get atProgress; double get windStrength; double get rainIntensity; double get snowIntensity; double get fogDensity; double get cloudCover;/// [WindType.automatic] (the default) inherits the map's own biome's
 /// natural wind look - see [resolvedWindType]. Any other value is an
-/// explicit author override, editable in the map editor regardless of
-/// [EnvironmentAdaptation] (that toggle only gates tree variants).
+/// explicit author override, always editable per-keyframe regardless
+/// of any other setting - same self-contained pattern as a brush's own
+/// biome-variant override.
  WindType get windType;
 /// Create a copy of WeatherKeyframe
 /// with the given fields replaced by the non-null parameter values.
@@ -233,8 +234,9 @@ class _WeatherKeyframe extends WeatherKeyframe {
 @override@JsonKey() final  double cloudCover;
 /// [WindType.automatic] (the default) inherits the map's own biome's
 /// natural wind look - see [resolvedWindType]. Any other value is an
-/// explicit author override, editable in the map editor regardless of
-/// [EnvironmentAdaptation] (that toggle only gates tree variants).
+/// explicit author override, always editable per-keyframe regardless
+/// of any other setting - same self-contained pattern as a brush's own
+/// biome-variant override.
 @override@JsonKey() final  WindType windType;
 
 /// Create a copy of WeatherKeyframe

@@ -22,6 +22,7 @@ import '../../combat/presentation/move_order_marker_component.dart';
 import '../../game_content/domain/models/build_requirement.dart';
 import '../../game_content/impl/game_object_definition_mapper.dart';
 import '../../terrain/domain/models/terrain_map.dart';
+import '../../terrain/domain/models/weather_focus_state.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
 import '../../terrain/presentation/cloud_layer_component.dart';
 import '../../terrain/presentation/terrain_component.dart';
@@ -144,11 +145,18 @@ class BoomspireGame extends FlameGame<GameWorld>
   int _shakeEventCount = 0;
   double _shakeEventWindow = 0;
 
-  /// Seconds since this match started (reset on [restart]) - the only
-  /// match-progress signal available in [GameMode.skirmish], which has no
-  /// wave count to derive one from (see `TerrainComponent._matchProgress`/
-  /// `WindEffectComponent._matchProgress`).
-  double elapsedSeconds = 0;
+  /// Runtime engine blending `GameScene.environment`'s weather keyframes
+  /// for the live match (see `EnvironmentSettings.sampleBlend`) - reset on
+  /// every [restart], same as the rest of the per-match runtime state.
+  late WeatherFocusState weatherFocus;
+  final Random _weatherRandom = Random();
+
+  /// A rolling 0..1 measure of how much weapon fire has happened very
+  /// recently - bumped by every [shakeCamera] call ("whenever something
+  /// fires"), decays back toward 0 once things go quiet. Purely used to
+  /// duck ambient weather sound during a firefight, see
+  /// `AmbientWeatherAudioComponent`/`GameConfig.combatAmbientDuckStrength`.
+  double combatIntensity = 0;
   BoomspireGame({
     required this.terrainRepository,
     required this.towerRepository,
@@ -581,6 +589,10 @@ class BoomspireGame extends FlameGame<GameWorld>
     // fires after the enclosing GameWidget build/layout pass has finished.
     await Future<void>.delayed(Duration.zero);
     terrainMap = terrainRepository.loadTerrain(scene: scene);
+    weatherFocus = WeatherFocusState.initial(
+      scene.environment.timeline.length,
+      _weatherRandom,
+    );
     _terrainReady = true;
     _setupSkirmishState();
     gameState.reset(startingGold: _resolvedStartingGold);
@@ -600,7 +612,11 @@ class BoomspireGame extends FlameGame<GameWorld>
 
   void restart() {
     terrainMap = terrainRepository.loadTerrain(scene: scene);
-    elapsedSeconds = 0;
+    weatherFocus = WeatherFocusState.initial(
+      scene.environment.timeline.length,
+      _weatherRandom,
+    );
+    combatIntensity = 0;
     _setupSkirmishState();
     gameState.reset(startingGold: _resolvedStartingGold);
     world.activeUnits.clear();
@@ -625,6 +641,8 @@ class BoomspireGame extends FlameGame<GameWorld>
         biome: scene.biome,
       ),
     );
+    // Disabled for now - the procedural ambient loops need rework before
+    // this is worth turning back on (see AmbientWeatherAudioComponent).
     world.playerHomeBase = HomeBaseComponent(
       position: Vector2(terrainMap.basePoint.x, terrainMap.basePoint.y),
       owner: playerTeam,
@@ -684,6 +702,8 @@ class BoomspireGame extends FlameGame<GameWorld>
   /// and shots closer to the camera's focal point (the arena's center)
   /// shake harder, like a real camera would.
   void shakeCamera({required double power, required Vector2 origin}) {
+    combatIntensity = (combatIntensity + GameConfig.combatIntensityPerShot)
+        .clamp(0.0, 1.0);
     final focus = Vector2(
       GameConfig.arenaWidth / 2,
       GameConfig.arenaHeight / 2,
@@ -748,7 +768,9 @@ class BoomspireGame extends FlameGame<GameWorld>
   @override
   void update(double dt) {
     super.update(dt);
-    elapsedSeconds += dt;
+    weatherFocus.advance(dt, scene.environment.timeline.length, _weatherRandom);
+    combatIntensity = (combatIntensity - dt * GameConfig.combatIntensityDecayPerSecond)
+        .clamp(0.0, 1.0);
     _syncMoveOrderMarker();
     if (_shakeEventWindow > 0) {
       _shakeEventWindow -= dt;

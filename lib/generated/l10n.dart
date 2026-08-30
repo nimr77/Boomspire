@@ -1385,56 +1385,6 @@ class S {
     );
   }
 
-  /// `Environment adaptation`
-  String get environmentAdaptationLabelEditorPage {
-    return Intl.message(
-      'Environment adaptation',
-      name: 'environmentAdaptationLabelEditorPage',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Automatic`
-  String get environmentAdaptationAutomaticEditorPage {
-    return Intl.message(
-      'Automatic',
-      name: 'environmentAdaptationAutomaticEditorPage',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Manual`
-  String get environmentAdaptationManualEditorPage {
-    return Intl.message(
-      'Manual',
-      name: 'environmentAdaptationManualEditorPage',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Trees always match this map's biome`
-  String get environmentAdaptationAutomaticHintEditorPage {
-    return Intl.message(
-      'Trees always match this map\'s biome',
-      name: 'environmentAdaptationAutomaticHintEditorPage',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Trees can use any biome's look`
-  String get environmentAdaptationManualHintEditorPage {
-    return Intl.message(
-      'Trees can use any biome\'s look',
-      name: 'environmentAdaptationManualHintEditorPage',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Sun angle: {percent}%`
   String sunAngleLabelEditorPage(int percent) {
     return Intl.message(
@@ -1482,16 +1432,6 @@ class S {
       name: 'addKeyframeLabelEditorPage',
       desc: '',
       args: [],
-    );
-  }
-
-  /// `At {percent}% of match`
-  String keyframeAtProgressLabelEditorPage(int percent) {
-    return Intl.message(
-      'At $percent% of match',
-      name: 'keyframeAtProgressLabelEditorPage',
-      desc: '',
-      args: [percent],
     );
   }
 

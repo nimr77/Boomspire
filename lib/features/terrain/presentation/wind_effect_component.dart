@@ -3,8 +3,6 @@ import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 
-import '../../game_core/domain/enums/game_mode.dart';
-import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 import '../domain/enums/biome.dart';
 import '../domain/enums/wind_type.dart';
@@ -52,20 +50,10 @@ class WindEffectComponent extends PositionComponent
       _biome = biome,
       super(position: Vector2.zero(), size: arenaSize, priority: 150);
 
-  /// This scene's match-progress fraction (0..1) - mirrors
-  /// `TerrainComponent._matchProgress` so both sample the same weather.
-  double get _matchProgress {
-    if (game.scene.mode == GameMode.skirmish) {
-      return (game.elapsedSeconds / GameConfig.skirmishWeatherCycleSeconds)
-          .clamp(0.0, 1.0);
-    }
-    final total = game.gameState.totalWaves;
-    if (total <= 0) return 0;
-    return ((game.gameState.currentWave - 1) / total).clamp(0.0, 1.0);
-  }
-
   WindType get _resolvedType =>
-      game.scene.environment.sample(_matchProgress).resolvedWindType(_biome);
+      game.scene.environment
+          .sampleBlend(game.weatherFocus.weights)
+          .resolvedWindType(_biome);
 
   @override
   Future<void> onLoad() async {

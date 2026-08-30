@@ -260,9 +260,6 @@ class MapEditorDraftState {
   void setDynamicWeather(bool value) =>
       _mutateEnvironment((env) => env.copyWith(dynamicWeather: value));
 
-  void setEnvironmentAdaptation(EnvironmentAdaptation value) =>
-      _mutateEnvironment((env) => env.copyWith(adaptation: value));
-
   void setMode(GameMode mode) => _mutateDraft(
     (d) => d.copyWith(
       mode: mode,

@@ -18,6 +18,7 @@ class EnemySpriteFactory {
   static Sprite? _rocketBarrage;
   static Sprite? _antiAirVehicle;
   static Sprite? _stealthBomber;
+  static Sprite? _drone;
   EnemySpriteFactory._();
 
   static Future<Sprite> antiAirVehicle() async {
@@ -39,6 +40,13 @@ class EnemySpriteFactory {
     if (cached != null) return cached;
     final image = await renderToImage(50, 50, _paintAttackPlane);
     return _attackPlane = Sprite(image);
+  }
+
+  static Future<Sprite> drone() async {
+    final cached = _drone;
+    if (cached != null) return cached;
+    final image = await renderToImage(42, 42, _paintDrone);
+    return _drone = Sprite(image);
   }
 
   static Future<Sprite> heavySoldier() async {
@@ -79,6 +87,7 @@ class EnemySpriteFactory {
     UnitKind.rocketBarrage => rocketBarrage(),
     UnitKind.antiAirVehicle => antiAirVehicle(),
     UnitKind.stealthBomber => stealthBomber(),
+    UnitKind.drone => drone(),
     _ => throw ArgumentError('No enemy sprite for $kind'),
   };
 
@@ -101,7 +110,8 @@ class EnemySpriteFactory {
     UnitKind.artilleryBarrage ||
     UnitKind.rocketBarrage ||
     UnitKind.antiAirVehicle ||
-    UnitKind.stealthBomber => true,
+    UnitKind.stealthBomber ||
+    UnitKind.drone => true,
     _ => false,
   };
 
@@ -456,99 +466,252 @@ class EnemySpriteFactory {
     }
   }
 
+  /// Apache/Black Hawk-style attack-helicopter gunship - a tapered,
+  /// pointed-nose fuselage (instead of the old plain rounded blob), a chin
+  /// gun turret, stepped tandem canopy glazing, belly weapon-pylon pods,
+  /// and an upswept tail stabilizer fin alongside the tail rotor, so it
+  /// reads as an armed gunship rather than a civilian-looking helicopter.
   static void _paintHelicopter(Canvas canvas) {
     const size = 46.0;
     const center = Offset(size / 2, size / 2);
 
     canvas.drawOval(
-      Rect.fromCenter(center: center, width: size * 0.9, height: size * 0.28),
+      Rect.fromCenter(center: center, width: size * 0.92, height: size * 0.28),
       Paint()..color = const Color(0x40000000),
     );
 
     // Tail boom, thinning toward the tail rotor.
     final boomPath = Path()
-      ..moveTo(center.dx - size * 0.1, center.dy - size * 0.08)
-      ..lineTo(center.dx - size * 0.46, center.dy - size * 0.03)
-      ..lineTo(center.dx - size * 0.46, center.dy + size * 0.05)
-      ..lineTo(center.dx - size * 0.1, center.dy + size * 0.1)
+      ..moveTo(center.dx - size * 0.08, center.dy - size * 0.09)
+      ..lineTo(center.dx - size * 0.48, center.dy - size * 0.03)
+      ..lineTo(center.dx - size * 0.48, center.dy + size * 0.04)
+      ..lineTo(center.dx - size * 0.08, center.dy + size * 0.1)
       ..close();
-    canvas.drawPath(boomPath, Paint()..color = const Color(0xFF37474F));
+    canvas.drawPath(boomPath, Paint()..color = const Color(0xFF33383C));
 
-    // Tail fin + tail-rotor blur disc.
+    // Upswept tail stabilizer fin - the gunship silhouette cue absent from
+    // the old design.
+    final finPath = Path()
+      ..moveTo(center.dx - size * 0.46, center.dy - size * 0.02)
+      ..lineTo(center.dx - size * 0.58, center.dy - size * 0.2)
+      ..lineTo(center.dx - size * 0.36, center.dy - size * 0.04)
+      ..close();
+    canvas.drawPath(finPath, Paint()..color = const Color(0xFF1A1C20));
+
+    // Tail-rotor blur disc.
     canvas.drawCircle(
-      center.translate(-size * 0.46, 0),
-      size * 0.1,
+      center.translate(-size * 0.5, -size * 0.02),
+      size * 0.09,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.6
         ..color = const Color(0x99B0BEC5),
     );
 
-    // Fuselage body (rounder/bulkier than the old fixed-wing shape).
-    final bodyRect = Rect.fromCenter(
-      center: center.translate(size * 0.06, 0),
-      width: size * 0.5,
-      height: size * 0.34,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(bodyRect, const Radius.circular(14)),
+    // Fuselage - tapered, pointed nose instead of a plain rounded rect.
+    final bodyPath = Path()
+      ..moveTo(center.dx + size * 0.44, center.dy)
+      ..lineTo(center.dx + size * 0.2, center.dy - size * 0.14)
+      ..lineTo(center.dx - size * 0.18, center.dy - size * 0.15)
+      ..lineTo(center.dx - size * 0.2, center.dy - size * 0.02)
+      ..lineTo(center.dx - size * 0.2, center.dy + size * 0.1)
+      ..lineTo(center.dx - size * 0.1, center.dy + size * 0.16)
+      ..lineTo(center.dx + size * 0.2, center.dy + size * 0.14)
+      ..close();
+    canvas.drawPath(
+      bodyPath,
       Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF616161), Color(0xFF263238)],
+        ..shader = LinearGradient(
+          colors: const [Color(0xFF5A6560), Color(0xFF20262A)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-        ).createShader(bodyRect),
+        ).createShader(bodyPath.getBounds()),
     );
 
+    // Engine housing hump on the upper rear deck, with an exhaust port.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center.translate(-size * 0.08, -size * 0.2),
+          width: size * 0.24,
+          height: size * 0.1,
+        ),
+        const Radius.circular(3),
+      ),
+      Paint()..color = const Color(0xFF1A1C20),
+    );
+    canvas.drawCircle(
+      center.translate(-size * 0.18, -size * 0.19),
+      size * 0.035,
+      Paint()..color = const Color(0xFF0D0F10),
+    );
+
+    // Stepped tandem canopy (gunner up front/lower, pilot behind/higher) -
+    // dark tinted glazing with a small glint, instead of one big glowing
+    // bubble.
+    final frontCanopy = Rect.fromCenter(
+      center: center.translate(size * 0.22, -size * 0.06),
+      width: size * 0.16,
+      height: size * 0.1,
+    );
+    final rearCanopy = Rect.fromCenter(
+      center: center.translate(size * 0.02, -size * 0.12),
+      width: size * 0.16,
+      height: size * 0.1,
+    );
+    for (final canopy in [rearCanopy, frontCanopy]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(canopy, const Radius.circular(2)),
+        Paint()..color = const Color(0xFF11151A),
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(canopy.deflate(1.4), const Radius.circular(1)),
+        Paint()..color = const Color(0xFF37474F),
+      );
+    }
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: frontCanopy.center.translate(-frontCanopy.width * 0.2, -1),
+          width: frontCanopy.width * 0.3,
+          height: frontCanopy.height * 0.4,
+        ),
+        const Radius.circular(1),
+      ),
+      Paint()..color = const Color(0x99FFFFFF),
+    );
+
+    // Chin-mounted gun turret ball under the nose.
+    canvas.drawCircle(
+      center.translate(size * 0.3, size * 0.08),
+      size * 0.06,
+      Paint()..color = const Color(0xFF1A1C20),
+    );
+    canvas.drawCircle(
+      center.translate(size * 0.3, size * 0.08),
+      size * 0.035,
+      Paint()..color = const Color(0xFF37474F),
+    );
+
+    // Belly weapon-pylon pods (rocket/gun pods) hanging beneath the
+    // fuselage, ahead of the landing skids.
+    for (final dx in [-size * 0.02, size * 0.16]) {
+      final pod = Rect.fromCenter(
+        center: center.translate(dx, size * 0.16),
+        width: size * 0.14,
+        height: size * 0.08,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(pod, const Radius.circular(2)),
+        Paint()..color = const Color(0xFF2B2F33),
+      );
+      canvas.drawCircle(
+        Offset(pod.right, pod.center.dy),
+        pod.height * 0.28,
+        Paint()..color = const Color(0xFF0D0F10),
+      );
+    }
+
     // Landing skids.
-    for (final dy in [size * 0.19, size * 0.24]) {
+    for (final dy in [size * 0.24, size * 0.29]) {
       canvas.drawLine(
-        center.translate(-size * 0.1, dy),
-        center.translate(size * 0.24, dy),
+        center.translate(-size * 0.14, dy),
+        center.translate(size * 0.28, dy),
         Paint()
           ..color = const Color(0xFF1a1c20)
           ..strokeWidth = 1.6,
       );
     }
 
-    // Cockpit bubble at the nose (red - hostile), with a canopy frame and
-    // glass glint instead of a flat glow dot.
-    final cockpit = center.translate(size * 0.26, -size * 0.02);
-    canvas.drawCircle(
-      cockpit,
-      size * 0.15,
-      Paint()..color = const Color(0xFF1a1c20),
-    );
-    canvas.drawCircle(
-      cockpit,
-      size * 0.12,
-      Paint()..color = const Color(0xFFE53935),
-    );
-    canvas.drawCircle(
-      cockpit,
-      size * 0.15,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = const Color(0xFF9E9E9E),
-    );
-    canvas.drawCircle(
-      cockpit.translate(-size * 0.04, -size * 0.04),
-      size * 0.03,
-      Paint()..color = const Color(0xCCFFFFFF),
-    );
-
     // Rotor mast stub - the actual spinning blades are a separate live
     // child component layered on top so they can rotate every frame.
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
-          center: center.translate(0, -size * 0.16),
+          center: center.translate(0, -size * 0.24),
           width: size * 0.06,
           height: size * 0.14,
         ),
         const Radius.circular(2),
       ),
+      Paint()..color = const Color(0xFF1a1c20),
+    );
+  }
+
+  /// Small straight-wing UAV silhouette (Reaper/Predator-style) - long
+  /// high-aspect wings and a V-tail instead of the delta wings shared by
+  /// [_paintAttackPlane], so it reads as a distinct, cheap drone rather
+  /// than a smaller fighter jet. Flies the exact same strafing-run AI as
+  /// the other plane-body kinds (see `UnitKind.drone.bodyType`).
+  static void _paintDrone(Canvas canvas) {
+    const size = 42.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.5, height: size * 0.7),
+      Paint()..color = const Color(0x33000000),
+    );
+
+    // Long straight wings.
+    final wingRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.86,
+      height: size * 0.12,
+    );
+    canvas.drawRect(
+      wingRect,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF9E9D7D), Color(0xFF44432E)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(wingRect),
+    );
+
+    // Slender fuselage running nose-to-tail.
+    final fuselageRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.16,
+      height: size * 0.78,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(fuselageRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF9E9D7D), Color(0xFF33321F)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(fuselageRect),
+    );
+
+    // Inverted V-tail.
+    final tailPath = Path()
+      ..moveTo(center.dx, center.dy + size * 0.3)
+      ..lineTo(center.dx - size * 0.16, center.dy + size * 0.39)
+      ..lineTo(center.dx - size * 0.05, center.dy + size * 0.3)
+      ..close()
+      ..moveTo(center.dx, center.dy + size * 0.3)
+      ..lineTo(center.dx + size * 0.16, center.dy + size * 0.39)
+      ..lineTo(center.dx + size * 0.05, center.dy + size * 0.3)
+      ..close();
+    canvas.drawPath(tailPath, Paint()..color = const Color(0xFF33321F));
+
+    // Sensor ball under the nose (red - hostile).
+    canvas.drawCircle(
+      center.translate(0, -size * 0.34),
+      size * 0.07,
+      Paint()..color = const Color(0xFF1a1c20),
+    );
+    canvas.drawCircle(
+      center.translate(0, -size * 0.34),
+      size * 0.045,
+      Paint()..color = const Color(0xFFE53935),
+    );
+
+    // Pusher-prop hub at the tail.
+    canvas.drawCircle(
+      center.translate(0, size * 0.36),
+      size * 0.05,
       Paint()..color = const Color(0xFF1a1c20),
     );
   }

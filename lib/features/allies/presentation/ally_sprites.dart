@@ -17,6 +17,7 @@ class AllySpriteFactory {
   static Sprite? _antiTank;
   static Sprite? _antiAir;
   static Sprite? _stealthBomber;
+  static Sprite? _drone;
   static const _hull = Color(0xFF2B3A42);
 
   static const _hullDark = Color(0xFF172126);
@@ -42,6 +43,13 @@ class AllySpriteFactory {
     if (cached != null) return cached;
     final image = await renderToImage(48, 48, _paintAntiTank);
     return _antiTank = Sprite(image);
+  }
+
+  static Future<Sprite> drone() async {
+    final cached = _drone;
+    if (cached != null) return cached;
+    final image = await renderToImage(42, 42, _paintDrone);
+    return _drone = Sprite(image);
   }
 
   static Future<Sprite> lightVehicle() async {
@@ -74,6 +82,7 @@ class AllySpriteFactory {
     UnitKind.antiTankSoldier => antiTank(),
     UnitKind.antiAirSoldier => antiAir(),
     UnitKind.stealthBomber => stealthBomber(),
+    UnitKind.drone => drone(),
     _ => throw ArgumentError('No ally sprite for $kind'),
   };
 
@@ -95,7 +104,8 @@ class AllySpriteFactory {
     UnitKind.rocketBarrage ||
     UnitKind.antiTankSoldier ||
     UnitKind.antiAirSoldier ||
-    UnitKind.stealthBomber => true,
+    UnitKind.stealthBomber ||
+    UnitKind.drone => true,
     _ => false,
   };
 
@@ -401,6 +411,92 @@ class AllySpriteFactory {
         const Radius.circular(1),
       ),
       Paint()..color = weaponAccent.withValues(alpha: 0.9),
+    );
+  }
+
+  /// Small straight-wing UAV silhouette (Reaper/Predator-style) - long
+  /// high-aspect wings and a V-tail instead of the delta wings shared by
+  /// [_paintAircraft]/attack-plane kinds, so it reads as a distinct, cheap
+  /// drone rather than a smaller fighter jet. Flies the exact same
+  /// strafing-run AI as the other plane-body kinds (see
+  /// `UnitKind.drone.bodyType`).
+  static void _paintDrone(Canvas canvas) {
+    const size = 42.0;
+    const center = Offset(size / 2, size / 2);
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: size * 0.5, height: size * 0.7),
+      Paint()..color = const Color(0x33000000),
+    );
+
+    // Long straight wings.
+    final wingRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.86,
+      height: size * 0.12,
+    );
+    canvas.drawRect(
+      wingRect,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [_hull, _hullDark],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(wingRect),
+    );
+    canvas.drawRect(
+      wingRect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = _accent.withValues(alpha: 0.7),
+    );
+
+    // Slender fuselage running nose-to-tail.
+    final fuselageRect = Rect.fromCenter(
+      center: center,
+      width: size * 0.16,
+      height: size * 0.78,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(fuselageRect, const Radius.circular(6)),
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [_hull, _hullDark],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(fuselageRect),
+    );
+
+    // Inverted V-tail.
+    final tailPath = Path()
+      ..moveTo(center.dx, center.dy + size * 0.3)
+      ..lineTo(center.dx - size * 0.16, center.dy + size * 0.39)
+      ..lineTo(center.dx - size * 0.05, center.dy + size * 0.3)
+      ..close()
+      ..moveTo(center.dx, center.dy + size * 0.3)
+      ..lineTo(center.dx + size * 0.16, center.dy + size * 0.39)
+      ..lineTo(center.dx + size * 0.05, center.dy + size * 0.3)
+      ..close();
+    canvas.drawPath(tailPath, Paint()..color = _hullDark);
+
+    // Sensor ball under the nose.
+    canvas.drawCircle(
+      center.translate(0, -size * 0.34),
+      size * 0.07,
+      Paint()..color = const Color(0xFF1a1c20),
+    );
+    canvas.drawCircle(
+      center.translate(0, -size * 0.34),
+      size * 0.045,
+      Paint()..color = _accent.withValues(alpha: 0.9),
+    );
+
+    // Pusher-prop hub at the tail.
+    canvas.drawCircle(
+      center.translate(0, size * 0.36),
+      size * 0.05,
+      Paint()..color = const Color(0xFF1a1c20),
     );
   }
 

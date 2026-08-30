@@ -22,6 +22,7 @@ class WaveLoadoutGenerator {
     UnitKind.rocketBarrage: 4,
     UnitKind.antiAirVehicle: 3,
     UnitKind.stealthBomber: 5,
+    UnitKind.drone: 2,
   };
 
   /// The earliest wave number each unit kind is allowed to appear in when
@@ -38,6 +39,7 @@ class WaveLoadoutGenerator {
     UnitKind.rocketBarrage: 7,
     UnitKind.antiAirVehicle: 6,
     UnitKind.stealthBomber: 8,
+    UnitKind.drone: 3,
   };
 
   /// Generates one [WaveLoadout] per wave number from 1..[waveCount], each

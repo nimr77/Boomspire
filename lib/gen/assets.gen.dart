@@ -48,6 +48,9 @@ class $AssetsAudioGen {
   /// File path: assets/audio/machine_gun_shot.wav
   String get machineGunShot => 'assets/audio/machine_gun_shot.wav';
 
+  /// File path: assets/audio/rain_ambience.wav
+  String get rainAmbience => 'assets/audio/rain_ambience.wav';
+
   /// File path: assets/audio/rocket_launch.wav
   String get rocketLaunch => 'assets/audio/rocket_launch.wav';
 
@@ -78,6 +81,9 @@ class $AssetsAudioGen {
   /// File path: assets/audio/wave_start.wav
   String get waveStart => 'assets/audio/wave_start.wav';
 
+  /// File path: assets/audio/wind_ambience.wav
+  String get windAmbience => 'assets/audio/wind_ambience.wav';
+
   /// List of all assets
   List<String> get values => [
     antiAirShot,
@@ -92,6 +98,7 @@ class $AssetsAudioGen {
     goldGain,
     laserShot,
     machineGunShot,
+    rainAmbience,
     rocketLaunch,
     soldierPop,
     towerDestroyed,
@@ -102,6 +109,7 @@ class $AssetsAudioGen {
     vehicleExplosion,
     victory,
     waveStart,
+    windAmbience,
   ];
 }
 
@@ -130,6 +138,9 @@ class $AssetsModelsGen {
   /// File path: assets/models/ally_antiTankSoldier.json
   String get allyAntiTankSoldier => 'assets/models/ally_antiTankSoldier.json';
 
+  /// File path: assets/models/ally_drone.json
+  String get allyDrone => 'assets/models/ally_drone.json';
+
   /// File path: assets/models/ally_lightVehicle.json
   String get allyLightVehicle => 'assets/models/ally_lightVehicle.json';
 
@@ -154,6 +165,9 @@ class $AssetsModelsGen {
 
   /// File path: assets/models/enemy_attackPlane.json
   String get enemyAttackPlane => 'assets/models/enemy_attackPlane.json';
+
+  /// File path: assets/models/enemy_drone.json
+  String get enemyDrone => 'assets/models/enemy_drone.json';
 
   /// File path: assets/models/enemy_heavySoldier.json
   String get enemyHeavySoldier => 'assets/models/enemy_heavySoldier.json';
@@ -218,6 +232,7 @@ class $AssetsModelsGen {
     allyAircraft,
     allyAntiAirSoldier,
     allyAntiTankSoldier,
+    allyDrone,
     allyLightVehicle,
     allyRocketBarrage,
     allySoldier,
@@ -226,6 +241,7 @@ class $AssetsModelsGen {
     enemyAntiAirVehicle,
     enemyArtilleryBarrage,
     enemyAttackPlane,
+    enemyDrone,
     enemyHeavySoldier,
     enemyHelicopter,
     enemyRocketBarrage,

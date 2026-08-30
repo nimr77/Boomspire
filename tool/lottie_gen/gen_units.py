@@ -20,6 +20,7 @@ from lottie_shapes import (
     line_shape,
     op,
     polygon,
+    rect,
     rrect,
     stroke,
     write_layer,
@@ -197,6 +198,46 @@ def ally_light_vehicle():
     return ops, s, s
 
 
+def drone(hull, hull_dark, accent):
+    """Small straight-wing UAV silhouette (Reaper/Predator-style) shared
+    shape - long high-aspect wings and a V-tail instead of delta wings, so
+    it reads as a distinct, cheap drone. Mirrors
+    `AllySpriteFactory._paintDrone`/`EnemySpriteFactory._paintDrone`
+    (`accent` is the nose-sensor-ball color: cyan for ally, red for
+    enemy)."""
+    s = 42.0
+    cx = cy = s / 2
+    ops = [shadow(cx, cy, 0.5 * s, 0.7 * s, 0x33000000)]
+    wing = rect(cx, cy, 0.86 * s, 0.12 * s)
+    ops.append(op(wing, gradient_fill([hull, hull_dark], cx, cy, 0.86 * s, 0.12 * s, "vertical")))
+    fuselage = rrect(cx, cy, 0.16 * s, 0.78 * s, 6)
+    ops.append(op(fuselage, gradient_fill([hull, hull_dark], cx, cy, 0.16 * s, 0.78 * s, "vertical")))
+    tail_pts = [
+        (cx, cy + 0.3 * s),
+        (cx - 0.16 * s, cy + 0.39 * s),
+        (cx - 0.05 * s, cy + 0.3 * s),
+    ]
+    ops.append(op(polygon(tail_pts), fill(hull_dark)))
+    tail_pts2 = [
+        (cx, cy + 0.3 * s),
+        (cx + 0.16 * s, cy + 0.39 * s),
+        (cx + 0.05 * s, cy + 0.3 * s),
+    ]
+    ops.append(op(polygon(tail_pts2), fill(hull_dark)))
+    ops.append(op(circle(cx, cy - 0.34 * s, 0.07 * s), fill(0xFF1A1C20)))
+    ops.append(op(circle(cx, cy - 0.34 * s, 0.045 * s), fill(accent, alpha=0.9)))
+    ops.append(op(circle(cx, cy + 0.36 * s, 0.05 * s), fill(0xFF1A1C20)))
+    return ops, s, s
+
+
+def ally_drone():
+    return drone(HULL, HULL_DARK, ACCENT)
+
+
+def enemy_drone():
+    return drone(0xFF9E9D7D, 0xFF33321F, 0xFFE53935)
+
+
 def ally_rocket_barrage():
     s = 50.0
     cx = cy = s / 2
@@ -286,27 +327,69 @@ def enemy_attack_plane():
 
 
 def enemy_helicopter():
+    """Apache/Black Hawk-style attack-helicopter gunship - mirrors
+    `EnemySpriteFactory._paintHelicopter`: a tapered pointed-nose fuselage,
+    chin gun turret, stepped tandem canopy, belly weapon-pylon pods, and an
+    upswept tail stabilizer fin alongside the tail rotor."""
     s = 46.0
     cx = cy = s / 2
-    ops = [shadow(cx, cy, 0.9 * s, 0.28 * s)]
+    ops = [shadow(cx, cy, 0.92 * s, 0.28 * s)]
+
     boom_pts = [
-        (cx - 0.1 * s, cy - 0.08 * s),
-        (cx - 0.46 * s, cy - 0.03 * s),
-        (cx - 0.46 * s, cy + 0.05 * s),
-        (cx - 0.1 * s, cy + 0.1 * s),
+        (cx - 0.08 * s, cy - 0.09 * s),
+        (cx - 0.48 * s, cy - 0.03 * s),
+        (cx - 0.48 * s, cy + 0.04 * s),
+        (cx - 0.08 * s, cy + 0.1 * s),
     ]
-    ops.append(op(polygon(boom_pts), fill(0xFF37474F)))
-    ops.append(op(circle(cx - 0.46 * s, cy, 0.1 * s), stroke(0x99B0BEC5, 1.6)))
-    ops.append(op(rrect(cx + 0.06 * s, cy, 0.5 * s, 0.34 * s, 14),
-                  gradient_fill([0xFF616161, 0xFF263238], cx + 0.06 * s, cy, 0.5 * s, 0.34 * s, "vertical")))
-    for dy in (0.19 * s, 0.24 * s):
-        ops.append(op(line_shape((cx - 0.1 * s, cy + dy), (cx + 0.24 * s, cy + dy)), stroke(0xFF1A1C20, 1.6)))
-    cockpit = (cx + 0.26 * s, cy - 0.02 * s)
-    ops.append(op(circle(*cockpit, 0.15 * s), fill(0xFF1A1C20)))
-    ops.append(op(circle(*cockpit, 0.12 * s), fill(0xFFE53935)))
-    ops.append(op(circle(*cockpit, 0.15 * s), stroke(0xFF9E9E9E, 1.5)))
-    ops.append(op(circle(cockpit[0] - 0.04 * s, cockpit[1] - 0.04 * s, 0.03 * s), fill(0xCCFFFFFF)))
-    ops.append(op(rrect(cx, cy - 0.16 * s, 0.06 * s, 0.14 * s, 2), fill(0xFF1A1C20)))
+    ops.append(op(polygon(boom_pts), fill(0xFF33383C)))
+
+    fin_pts = [
+        (cx - 0.46 * s, cy - 0.02 * s),
+        (cx - 0.58 * s, cy - 0.2 * s),
+        (cx - 0.36 * s, cy - 0.04 * s),
+    ]
+    ops.append(op(polygon(fin_pts), fill(0xFF1A1C20)))
+
+    ops.append(op(circle(cx - 0.5 * s, cy - 0.02 * s, 0.09 * s), stroke(0x99B0BEC5, 1.6)))
+
+    body_pts = [
+        (cx + 0.44 * s, cy),
+        (cx + 0.2 * s, cy - 0.14 * s),
+        (cx - 0.18 * s, cy - 0.15 * s),
+        (cx - 0.2 * s, cy - 0.02 * s),
+        (cx - 0.2 * s, cy + 0.1 * s),
+        (cx - 0.1 * s, cy + 0.16 * s),
+        (cx + 0.2 * s, cy + 0.14 * s),
+    ]
+    bx, by, bw, bh = bounds(body_pts)
+    ops.append(op(polygon(body_pts), gradient_fill([0xFF5A6560, 0xFF20262A], bx, by, bw, bh, "vertical")))
+
+    ops.append(op(rrect(cx - 0.08 * s, cy - 0.2 * s, 0.24 * s, 0.1 * s, 3), fill(0xFF1A1C20)))
+    ops.append(op(circle(cx - 0.18 * s, cy - 0.19 * s, 0.035 * s), fill(0xFF0D0F10)))
+
+    front_canopy = (cx + 0.22 * s, cy - 0.06 * s, 0.16 * s, 0.1 * s)
+    rear_canopy = (cx + 0.02 * s, cy - 0.12 * s, 0.16 * s, 0.1 * s)
+    for ccx, ccy, cw, ch in (rear_canopy, front_canopy):
+        ops.append(op(rrect(ccx, ccy, cw, ch, 2), fill(0xFF11151A)))
+        ops.append(op(rrect(ccx, ccy, cw * 0.86, ch * 0.72, 1), fill(0xFF37474F)))
+    ops.append(op(
+        rrect(front_canopy[0] - front_canopy[2] * 0.2, front_canopy[1] - 0.02 * s,
+              front_canopy[2] * 0.3, front_canopy[3] * 0.4, 1),
+        fill(0xFFFFFFFF, alpha=0.6),
+    ))
+
+    ops.append(op(circle(cx + 0.3 * s, cy + 0.08 * s, 0.06 * s), fill(0xFF1A1C20)))
+    ops.append(op(circle(cx + 0.3 * s, cy + 0.08 * s, 0.035 * s), fill(0xFF37474F)))
+
+    for dx in (-0.02 * s, 0.16 * s):
+        pod_cx, pod_cy, pod_w, pod_h = cx + dx, cy + 0.16 * s, 0.14 * s, 0.08 * s
+        ops.append(op(rrect(pod_cx, pod_cy, pod_w, pod_h, 2), fill(0xFF2B2F33)))
+        ops.append(op(circle(pod_cx + pod_w / 2, pod_cy, pod_h * 0.28), fill(0xFF0D0F10)))
+
+    for dy in (0.24 * s, 0.29 * s):
+        ops.append(op(line_shape((cx - 0.14 * s, cy + dy), (cx + 0.28 * s, cy + dy)), stroke(0xFF1A1C20, 1.6)))
+
+    ops.append(op(rrect(cx, cy - 0.24 * s, 0.06 * s, 0.14 * s, 2), fill(0xFF1A1C20)))
     return ops, s, s
 
 
@@ -369,6 +452,7 @@ UNITS = {
     "ally_antiTankSoldier": ally_anti_tank,
     "ally_antiAirSoldier": ally_anti_air,
     "ally_stealthBomber": stealth_bomber,
+    "ally_drone": ally_drone,
     "enemy_soldier": lambda: enemy_infantry(False),
     "enemy_heavySoldier": lambda: enemy_infantry(True),
     "enemy_tank": enemy_tank,
@@ -378,6 +462,7 @@ UNITS = {
     "enemy_rocketBarrage": enemy_rocket_barrage,
     "enemy_antiAirVehicle": enemy_anti_air_vehicle,
     "enemy_stealthBomber": stealth_bomber,
+    "enemy_drone": enemy_drone,
 }
 
 
