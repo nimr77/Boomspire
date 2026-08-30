@@ -769,8 +769,11 @@ class BoomspireGame extends FlameGame<GameWorld>
   void update(double dt) {
     super.update(dt);
     weatherFocus.advance(dt, scene.environment.timeline.length, _weatherRandom);
-    combatIntensity = (combatIntensity - dt * GameConfig.combatIntensityDecayPerSecond)
-        .clamp(0.0, 1.0);
+    combatIntensity =
+        (combatIntensity - dt * GameConfig.combatIntensityDecayPerSecond).clamp(
+          0.0,
+          1.0,
+        );
     _syncMoveOrderMarker();
     if (_shakeEventWindow > 0) {
       _shakeEventWindow -= dt;

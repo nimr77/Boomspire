@@ -498,7 +498,6 @@ void main() {
   stdout.writeln('Audio generation complete.');
 }
 
-
 const sampleRate = 44100;
 
 /// Mixes [layer] into [base] starting at [offsetSeconds], extending base if
@@ -548,16 +547,6 @@ List<double> highPass(List<double> input, double alpha) {
   return List<double>.generate(input.length, (i) => input[i] - lp[i]);
 }
 
-List<double> lowPass(List<double> input, double alpha) {
-  final out = List<double>.filled(input.length, 0);
-  var y = 0.0;
-  for (var i = 0; i < input.length; i++) {
-    y += alpha * (input[i] - y);
-    out[i] = y;
-  }
-  return out;
-}
-
 /// Fades both ends of [input] down toward silence over [seconds] so it can
 /// be played back-to-back on a hard loop (see [FlameAudio.loop] callers)
 /// with no audible click at the wrap-around point - unlike every one-shot
@@ -569,6 +558,16 @@ List<double> loopify(List<double> input, {double seconds = 0.2}) {
     final fade = i / n;
     out[i] *= fade;
     out[out.length - 1 - i] *= fade;
+  }
+  return out;
+}
+
+List<double> lowPass(List<double> input, double alpha) {
+  final out = List<double>.filled(input.length, 0);
+  var y = 0.0;
+  for (var i = 0; i < input.length; i++) {
+    y += alpha * (input[i] - y);
+    out[i] = y;
   }
   return out;
 }

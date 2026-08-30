@@ -50,10 +50,9 @@ class WindEffectComponent extends PositionComponent
       _biome = biome,
       super(position: Vector2.zero(), size: arenaSize, priority: 150);
 
-  WindType get _resolvedType =>
-      game.scene.environment
-          .sampleBlend(game.weatherFocus.weights)
-          .resolvedWindType(_biome);
+  WindType get _resolvedType => game.scene.environment
+      .sampleBlend(game.weatherFocus.weights)
+      .resolvedWindType(_biome);
 
   @override
   Future<void> onLoad() async {

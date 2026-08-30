@@ -28,15 +28,6 @@ class WeatherFocusState {
   double _transitionDuration;
   double _secondsUntilNextShift;
 
-  WeatherFocusState._({
-    required this.weights,
-    required this._fromWeights,
-    required this._targetWeights,
-    required this._transitionElapsed,
-    required this._transitionDuration,
-    required this._secondsUntilNextShift,
-  });
-
   /// An even starting split across [keyframeCount] keyframes, with its
   /// first random reroll already scheduled via [rnd].
   factory WeatherFocusState.initial(int keyframeCount, Random rnd) {
@@ -50,6 +41,15 @@ class WeatherFocusState {
       secondsUntilNextShift: _randomShiftSeconds(rnd),
     );
   }
+
+  WeatherFocusState._({
+    required this.weights,
+    required this._fromWeights,
+    required this._targetWeights,
+    required this._transitionElapsed,
+    required this._transitionDuration,
+    required this._secondsUntilNextShift,
+  });
 
   /// Advances the blend by [dt] seconds. A no-op once [keyframeCount] is 0
   /// or 1 - there's nothing to blend between.
@@ -83,22 +83,10 @@ class WeatherFocusState {
     ];
   }
 
-  static double _lerp(double a, double b, double t) => a + (b - a) * t;
-
   static List<double> _evenWeights(int count) =>
       count <= 0 ? const [] : List.filled(count, 1 / count);
 
-  /// A uniformly-random split of 1.0 across [count] shares (a Dirichlet(1)
-  /// draw via the standard exponential-sampling trick) - naturally
-  /// produces varied, sometimes lopsided splits like "60% / 10% / 30%"
-  /// rather than everything hovering near an even share every time.
-  static List<double> _randomWeights(int count, Random rnd) {
-    if (count <= 0) return const [];
-    if (count == 1) return [1.0];
-    final raw = List<double>.generate(count, (_) => -log(1 - rnd.nextDouble()));
-    final total = raw.reduce((a, b) => a + b);
-    return [for (final v in raw) v / total];
-  }
+  static double _lerp(double a, double b, double t) => a + (b - a) * t;
 
   static double _randomShiftSeconds(Random rnd) =>
       GameConfig.weatherFocusMinShiftSeconds +
@@ -111,4 +99,16 @@ class WeatherFocusState {
       rnd.nextDouble() *
           (GameConfig.weatherFocusTransitionMaxSeconds -
               GameConfig.weatherFocusTransitionMinSeconds);
+
+  /// A uniformly-random split of 1.0 across [count] shares (a Dirichlet(1)
+  /// draw via the standard exponential-sampling trick) - naturally
+  /// produces varied, sometimes lopsided splits like "60% / 10% / 30%"
+  /// rather than everything hovering near an even share every time.
+  static List<double> _randomWeights(int count, Random rnd) {
+    if (count <= 0) return const [];
+    if (count == 1) return [1.0];
+    final raw = List<double>.generate(count, (_) => -log(1 - rnd.nextDouble()));
+    final total = raw.reduce((a, b) => a + b);
+    return [for (final v in raw) v / total];
+  }
 }

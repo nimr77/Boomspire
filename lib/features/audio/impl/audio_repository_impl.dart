@@ -78,14 +78,28 @@ class AudioRepositoryImpl implements AudioRepository {
 
   final Map<AmbientSoundType, double> _ambientTargetVolume = {};
 
-  double _pendingAmbientVolume(AmbientSoundType type) =>
-      _ambientTargetVolume[type] ?? 0;
-
   @override
   void play(SfxType type, {double volume = 1}) {
     final pool = _pools[type];
     if (pool == null) return;
     unawaited(pool.start(volume: volume));
+  }
+
+  @override
+  Future<void> preload() async {
+    await FlameAudio.audioCache.loadAll([
+      ..._files.values,
+      ..._ambientFiles.values,
+    ]);
+    await Future.wait(
+      _files.entries.map((entry) async {
+        _pools[entry.key] = await FlameAudio.createPool(
+          entry.value,
+          minPlayers: 2,
+          maxPlayers: _poolSizes[entry.key] ?? 3,
+        );
+      }),
+    );
   }
 
   @override
@@ -104,6 +118,9 @@ class AudioRepositoryImpl implements AudioRepository {
     unawaited(_startAmbient(type));
   }
 
+  double _pendingAmbientVolume(AmbientSoundType type) =>
+      _ambientTargetVolume[type] ?? 0;
+
   Future<void> _startAmbient(AmbientSoundType type) async {
     final file = _ambientFiles[type];
     if (file == null) return;
@@ -112,22 +129,5 @@ class AudioRepositoryImpl implements AudioRepository {
     _startingAmbient.remove(type);
     // The target may have changed (even dropped back to 0) while awaiting.
     await player.setVolume(_pendingAmbientVolume(type));
-  }
-
-  @override
-  Future<void> preload() async {
-    await FlameAudio.audioCache.loadAll([
-      ..._files.values,
-      ..._ambientFiles.values,
-    ]);
-    await Future.wait(
-      _files.entries.map((entry) async {
-        _pools[entry.key] = await FlameAudio.createPool(
-          entry.value,
-          minPlayers: 2,
-          maxPlayers: _poolSizes[entry.key] ?? 3,
-        );
-      }),
-    );
   }
 }
