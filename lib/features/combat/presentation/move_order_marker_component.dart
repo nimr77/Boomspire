@@ -1,7 +1,8 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+
+import 'util/paint_move_order_marker.dart';
 
 /// Pulsing pin shown at the point a player-controlled unit was just
 /// ordered to move to - stays up (see `BoomspireGame._syncMoveOrderMarker`)
@@ -15,24 +16,8 @@ class MoveOrderMarkerComponent extends PositionComponent {
     : super(anchor: Anchor.center, priority: 20);
 
   @override
-  void render(Canvas canvas) {
-    final pulse = 0.5 + 0.5 * sin(_phase);
-    canvas.drawCircle(
-      Offset.zero,
-      9 + pulse * 7,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = color.withValues(alpha: 0.25 + pulse * 0.35),
-    );
-    canvas.drawCircle(Offset.zero, 3.5, Paint()..color = color);
-    final tail = Path()
-      ..moveTo(-5, -9)
-      ..lineTo(5, -9)
-      ..lineTo(0, -20)
-      ..close();
-    canvas.drawPath(tail, Paint()..color = color);
-  }
+  void render(Canvas canvas) =>
+      paintMoveOrderMarker(canvas, color: color, phase: _phase);
 
   @override
   void update(double dt) {

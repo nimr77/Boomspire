@@ -8,6 +8,7 @@ import '../../../core/combat/unit.dart';
 import '../domain/models/game_status.dart';
 import 'boomspire_game.dart';
 import 'home_base_sprite.dart';
+import 'util/paint_home_base.dart';
 
 /// The AI opponent's home base in a [GameMode.skirmish] match - the mirror
 /// of [HomeBaseComponent] (same shared art, just tinted in the AI's own
@@ -65,35 +66,12 @@ class AiHomeBaseComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    if (_pulse > 0) {
-      final radius = size.x * (0.55 + (1 - _pulse) * 0.55);
-      canvas.drawCircle(
-        Offset(size.x / 2, size.y / 2),
-        radius,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 4
-          ..color = const Color(0xFFE53935).withValues(alpha: _pulse * 0.85),
-      );
-    }
-
-    final ratio = healthRatio;
-    final barWidth = size.x * 0.9;
-    final barX = (size.x - barWidth) / 2;
-    const barY = -12.0;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(barX, barY, barWidth, 6),
-        const Radius.circular(3),
-      ),
-      Paint()..color = const Color(0xAA000000),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(barX, barY, barWidth * ratio, 6),
-        const Radius.circular(3),
-      ),
-      Paint()..color = ratio > 0.4 ? owner.color : const Color(0xFFE53935),
+    paintHomeBase(
+      canvas,
+      size: size,
+      pulse: _pulse,
+      healthRatio: healthRatio,
+      ownerColor: owner.color,
     );
   }
 

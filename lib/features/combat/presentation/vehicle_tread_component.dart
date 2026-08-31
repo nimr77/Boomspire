@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 
+import 'util/paint_vehicle_tread.dart';
+
 /// Scrolling tread/wheel-tick overlay drawn along the bottom of a ground
 /// vehicle's hull - the flat baked hull sprite can't literally spin its
 /// wheels/tracks, so this fakes the same read by sliding a short row of
@@ -20,28 +22,8 @@ class VehicleTreadComponent extends PositionComponent {
       );
 
   @override
-  void render(Canvas canvas) {
-    const dashCount = 4;
-    final spacing = size.x / dashCount;
-    final dashWidth = spacing * 0.55;
-    final paint = Paint()..color = const Color(0xFF17191C);
-    // Local render coords run 0..size (top-left origin), so the vertical
-    // center of the dash strip is size.y / 2, not 0.
-    for (var i = 0; i < dashCount; i++) {
-      final x = (i * spacing + _scroll) % size.x;
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(x, size.y / 2),
-            width: dashWidth,
-            height: size.y,
-          ),
-          const Radius.circular(2),
-        ),
-        paint,
-      );
-    }
-  }
+  void render(Canvas canvas) =>
+      paintVehicleTread(canvas, size: size, scroll: _scroll);
 
   @override
   void update(double dt) {

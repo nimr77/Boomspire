@@ -6,6 +6,7 @@ import 'package:flutter/material.dart' show Colors, FontWeight, TextStyle;
 
 import '../../towers/presentation/tower_sprites.dart';
 import 'boomspire_game.dart';
+import 'util/paint_ghost_placement.dart';
 
 /// Shows a translucent footprint + a pulsing range ring (in the selected
 /// tower's accent color) at the pending build cell (see
@@ -51,61 +52,15 @@ class GhostPlacementComponent extends PositionComponent
 
     _hint.position = Vector2(center.x, center.y - grid.cellSize * 0.75);
 
-    // Footprint.
-    final half = grid.cellSize * 0.45;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: offset, width: half * 2, height: half * 2),
-        const Radius.circular(6),
-      ),
-      Paint()..color = accent.withValues(alpha: 0.25),
+    paintGhostPlacement(
+      canvas,
+      center: offset,
+      half: grid.cellSize * 0.45,
+      accent: accent,
+      pulse: pulse,
+      range: blueprint.range,
+      minRange: blueprint.minRange,
     );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: offset, width: half * 2, height: half * 2),
-        const Radius.circular(6),
-      ),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = accent.withValues(alpha: 0.7),
-    );
-
-    if (blueprint.range <= 0) return;
-
-    // Pulsing range ring.
-    canvas.drawCircle(
-      offset,
-      blueprint.range,
-      Paint()..color = accent.withValues(alpha: 0.05 + pulse * 0.05),
-    );
-    canvas.drawCircle(
-      offset,
-      blueprint.range,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5 + pulse
-        ..color = accent.withValues(alpha: 0.4 + pulse * 0.3),
-    );
-
-    // Dead-zone preview - mirrors the in-game ring drawn once built (see
-    // `TowerComponent.render`) so the min-range limitation is visible
-    // before the player commits to a build.
-    if (blueprint.minRange > 0) {
-      canvas.drawCircle(
-        offset,
-        blueprint.minRange,
-        Paint()..color = const Color(0xFFE53935).withValues(alpha: 0.18),
-      );
-      canvas.drawCircle(
-        offset,
-        blueprint.minRange,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5
-          ..color = const Color(0xFFE53935).withValues(alpha: 0.6),
-      );
-    }
   }
 
   @override

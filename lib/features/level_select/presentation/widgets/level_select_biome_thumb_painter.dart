@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../terrain/domain/models/obstacle_kind.dart';
 import '../../../terrain/domain/models/terrain_map.dart';
-import '../../../terrain/presentation/terrain_painter.dart';
+import '../../../terrain/presentation/components/terrain_painter/terrain_painter.dart';
 
 /// Renders a [TerrainMap] scaled down into a small preview canvas - the
 /// same procedural terrain painting used in-game, shrunk to thumbnail size.

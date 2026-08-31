@@ -1,7 +1,8 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+
+import 'util/paint_target_highlight.dart';
 
 /// Drawn as the last child of a targetable combat component (a mobile unit
 /// or a tower) so it renders on top of its sprite - fills the parent's own
@@ -24,23 +25,15 @@ class TargetHighlightComponent extends PositionComponent {
   double _pulsePhase = 0;
 
   @override
-  void render(Canvas canvas) {
-    if (_timer <= 0) return;
-    final ratio = _timer / _fadeDuration;
-    // A slow breathing pulse on top of the fade so a sustained lock (which
-    // re-triggers every frame while in range) still reads as "alive"
-    // instead of a static flat tint.
-    final pulse = 0.5 + 0.5 * sin(_pulsePhase);
-    canvas.drawCircle(
-      Offset(size.x / 2, size.y / 2),
-      size.x * (0.5 + pulse * 0.08),
-      Paint()
-        ..color = _color.withValues(
-          alpha: _baseAlpha * ratio * (0.6 + pulse * 0.4),
-        )
-        ..blendMode = BlendMode.srcATop,
-    );
-  }
+  void render(Canvas canvas) => paintTargetHighlight(
+    canvas,
+    size: size,
+    color: _color,
+    timer: _timer,
+    fadeDuration: _fadeDuration,
+    baseAlpha: _baseAlpha,
+    pulsePhase: _pulsePhase,
+  );
 
   void trigger(Color color) {
     _color = color;

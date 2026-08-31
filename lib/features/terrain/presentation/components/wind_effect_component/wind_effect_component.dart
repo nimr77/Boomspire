@@ -1,24 +1,20 @@
-import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 
-import '../../game_core/presentation/boomspire_game.dart';
-import '../domain/enums/biome.dart';
-import '../domain/enums/wind_type.dart';
-
-// Leaf colors for [WindType.autumnLeaves] - a wider mixed autumn palette
-// (gold, olive green, burnt orange, brick red, maroon, umber) picked
-// per-particle so a gust reads as a real mixed-color leaf fall, not just
-// 2-3 repeats.
-const _autumnLeafColors = [
-  ui.Color(0xFFE0B23A),
-  ui.Color(0xFF7FA33C),
-  ui.Color(0xFFC1502D),
-  ui.Color(0xFFD97B29),
-  ui.Color(0xFF8B3A2B),
-  ui.Color(0xFFB8860B),
-];
+import '../../../../game_core/presentation/boomspire_game.dart';
+import '../../../domain/enums/biome.dart';
+import '../../../domain/enums/wind_type.dart';
+import 'util/paint_ash_particle.dart';
+import 'util/paint_autumn_leaf_particle.dart';
+import 'util/paint_dust_particle.dart';
+import 'util/paint_grass_leaf_particle.dart';
+import 'util/paint_sand_particle.dart';
+import 'util/paint_snow_particle.dart';
+import 'util/spawn_wind_particles.dart';
+import 'util/wind_gust_factor.dart';
+import 'util/wind_particle_bob.dart';
+import 'util/wind_particle_respawn_y.dart';
 
 /// Biome-flavored blown particles (grass clippings, snow flurries, blown
 /// sand/dust, tumbling autumn leaves, or drifting ash) blowing sideways
@@ -37,7 +33,6 @@ class WindEffectComponent extends PositionComponent
     with HasGameReference<BoomspireGame> {
   final Vector2 _arenaSize;
   final Biome _biome;
-  final Random _rnd = Random();
 
   WindType? _currentType;
   final List<_WindParticle> _particles = [];
@@ -65,82 +60,61 @@ class WindEffectComponent extends PositionComponent
     if (style == null) return;
 
     for (final p in _particles) {
-      final bob = sin(p.bobPhase) * 2;
-      final center = ui.Offset(p.position.x, p.position.y + bob);
+      final bob = windParticleBob(p.bobPhase);
+      final x = p.position.x;
+      final y = p.position.y + bob;
       switch (style) {
         case WindType.grassLeaves:
-          final paint = ui.Paint()
-            ..color = const ui.Color(0xFFB7C97A).withValues(alpha: p.opacity)
-            ..strokeWidth = 2 * p.scale
-            ..strokeCap = ui.StrokeCap.round;
-          canvas.drawLine(
-            center,
-            center.translate(-14 * p.scale, 4 * p.scale),
-            paint,
+          paintGrassLeafParticle(
+            canvas,
+            x: x,
+            y: y,
+            scale: p.scale,
+            opacity: p.opacity,
           );
         case WindType.snow:
-          canvas.drawCircle(
-            center,
-            2.5 * p.scale,
-            ui.Paint()
-              ..color = const ui.Color(0xFFFFFFFF).withValues(alpha: p.opacity),
+          paintSnowParticle(
+            canvas,
+            x: x,
+            y: y,
+            scale: p.scale,
+            opacity: p.opacity,
           );
         case WindType.sand:
-          final paint = ui.Paint()
-            ..color = const ui.Color(0xFFD8C08A).withValues(alpha: p.opacity)
-            ..strokeWidth = 1.5 * p.scale
-            ..strokeCap = ui.StrokeCap.round;
-          canvas.drawLine(center, center.translate(-22 * p.scale, 0), paint);
-        case WindType.dust:
-          final paint = ui.Paint()
-            ..color = const ui.Color(0xFFDCD3B8)
-                .withValues(alpha: p.opacity * 0.7)
-            ..strokeWidth = 1.2 * p.scale
-            ..strokeCap = ui.StrokeCap.round;
-          canvas.drawLine(center, center.translate(-16 * p.scale, 0), paint);
-        case WindType.autumnLeaves:
-          final leafSize = 5 * p.scale;
-          canvas.save();
-          canvas.translate(center.dx, center.dy);
-          canvas.rotate(p.rotation);
-          canvas.drawOval(
-            ui.Rect.fromCenter(
-              center: ui.Offset.zero,
-              width: leafSize * 2,
-              height: leafSize,
-            ),
-            ui.Paint()
-              ..color = _autumnLeafColors[p.colorIndex].withValues(
-                alpha: p.opacity,
-              ),
+          paintSandParticle(
+            canvas,
+            x: x,
+            y: y,
+            scale: p.scale,
+            opacity: p.opacity,
           );
-          canvas.restore();
+        case WindType.dust:
+          paintDustParticle(
+            canvas,
+            x: x,
+            y: y,
+            scale: p.scale,
+            opacity: p.opacity,
+          );
+        case WindType.autumnLeaves:
+          paintAutumnLeafParticle(
+            canvas,
+            x: x,
+            y: y,
+            scale: p.scale,
+            opacity: p.opacity,
+            rotation: p.rotation,
+            colorIndex: p.colorIndex,
+          );
         case WindType.ash:
-          // Alternates fleck vs. smudge per-particle (fixed at spawn, not
-          // re-randomized every frame) so each piece of ash keeps its own
-          // identity as it drifts naturally with the gust.
-          if (p.colorIndex.isEven) {
-            canvas.drawCircle(
-              center,
-              1.6 * p.scale,
-              ui.Paint()
-                ..color = ui.Color.lerp(
-                  const ui.Color(0xFF9e9e9e),
-                  const ui.Color(0xFF2b2b2b),
-                  p.opacity,
-                )!.withValues(alpha: p.opacity),
-            );
-          } else {
-            canvas.drawLine(
-              center,
-              center.translate(-10 * p.scale, 3 * p.scale),
-              ui.Paint()
-                ..color = const ui.Color(0xFF4a3524)
-                    .withValues(alpha: p.opacity)
-                ..strokeWidth = 1.4 * p.scale
-                ..strokeCap = ui.StrokeCap.round,
-            );
-          }
+          paintAshParticle(
+            canvas,
+            x: x,
+            y: y,
+            scale: p.scale,
+            opacity: p.opacity,
+            colorIndex: p.colorIndex,
+          );
         case WindType.automatic:
           break; // unreachable - always resolved concretely
       }
@@ -155,14 +129,14 @@ class WindEffectComponent extends PositionComponent
 
     for (final p in _particles) {
       p.gustPhase += dt * 0.6;
-      final gust = 0.7 + 0.3 * sin(p.gustPhase);
+      final gust = windGustFactor(p.gustPhase);
       p.position.x += p.speed * gust * dt;
       p.position.y += p.drop * gust * dt;
       p.bobPhase += dt * 1.2;
       p.rotation += p.rotationSpeed * dt;
       if (p.position.x > _arenaSize.x + 20) {
         p.position.x = -20;
-        p.position.y = _rnd.nextDouble() * _arenaSize.y;
+        p.position.y = windParticleRespawnY(_arenaSize.y);
       }
       if (p.position.y > _arenaSize.y + 20) {
         p.position.y = -20;
@@ -176,43 +150,24 @@ class WindEffectComponent extends PositionComponent
   void _restyle(WindType style) {
     _currentType = style;
     _particles.clear();
-    final rnd = Random(13);
-    final count = switch (style) {
-      WindType.snow => 50,
-      WindType.autumnLeaves || WindType.ash => 26,
-      WindType.grassLeaves || WindType.sand || WindType.dust => 30,
-      WindType.automatic => 0, // unreachable - always resolved concretely
-    };
-    for (var i = 0; i < count; i++) {
+    final spawned = spawnWindParticles(
+      style: style,
+      arenaWidth: _arenaSize.x,
+      arenaHeight: _arenaSize.y,
+    );
+    for (final particle in spawned) {
       _particles.add(
         _WindParticle(
-          position: Vector2(
-            rnd.nextDouble() * _arenaSize.x,
-            rnd.nextDouble() * _arenaSize.y,
-          ),
-          speed: switch (style) {
-            WindType.grassLeaves => 45 + rnd.nextDouble() * 35,
-            WindType.snow => 22 + rnd.nextDouble() * 26,
-            WindType.sand => 90 + rnd.nextDouble() * 70,
-            WindType.dust => 55 + rnd.nextDouble() * 40,
-            WindType.autumnLeaves => 18 + rnd.nextDouble() * 22,
-            WindType.ash => 16 + rnd.nextDouble() * 20,
-            WindType.automatic => 0,
-          },
-          drop: switch (style) {
-            WindType.snow => 16 + rnd.nextDouble() * 18,
-            WindType.autumnLeaves => 12 + rnd.nextDouble() * 14,
-            WindType.ash => 10 + rnd.nextDouble() * 12,
-            WindType.grassLeaves || WindType.sand || WindType.dust => 0,
-            WindType.automatic => 0,
-          },
-          scale: 0.5 + rnd.nextDouble() * 1.0,
-          opacity: 0.12 + rnd.nextDouble() * 0.3,
-          bobPhase: rnd.nextDouble() * 2 * pi,
-          gustPhase: rnd.nextDouble() * 2 * pi,
-          rotation: rnd.nextDouble() * 2 * pi,
-          rotationSpeed: (rnd.nextDouble() - 0.5) * 2.4,
-          colorIndex: rnd.nextInt(_autumnLeafColors.length),
+          position: Vector2(particle.x, particle.y),
+          speed: particle.speed,
+          drop: particle.drop,
+          scale: particle.scale,
+          opacity: particle.opacity,
+          bobPhase: particle.bobPhase,
+          gustPhase: particle.gustPhase,
+          rotation: particle.rotation,
+          rotationSpeed: particle.rotationSpeed,
+          colorIndex: particle.colorIndex,
         ),
       );
     }

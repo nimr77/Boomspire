@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../domain/models/biome.dart';
-import '../domain/models/obstacle_kind.dart';
+import '../../../domain/models/biome.dart';
+import '../../../domain/models/obstacle_kind.dart';
 
 /// Preview color for a rasterized obstacle cell - shared by the map editor
 /// canvas and any other read-only terrain preview (e.g. the pre-game

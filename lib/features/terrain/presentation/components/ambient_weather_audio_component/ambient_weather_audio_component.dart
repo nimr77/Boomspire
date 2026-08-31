@@ -1,8 +1,8 @@
 import 'package:flame/components.dart';
 
-import '../../audio/domain/models/ambient_sound_type.dart';
-import '../../game_core/domain/models/game_config.dart';
-import '../../game_core/presentation/boomspire_game.dart';
+import '../../../../audio/domain/models/ambient_sound_type.dart';
+import '../../../../game_core/presentation/boomspire_game.dart';
+import 'util/ambient_weather_volumes.dart';
 
 /// Keeps the wind/rain ambience loops tracking the live weather blend from
 /// `BoomspireGame.weatherFocus` every frame - the aural counterpart to
@@ -18,15 +18,18 @@ class AmbientWeatherAudioComponent extends Component
     final weather = game.scene.environment.sampleBlend(
       game.weatherFocus.weights,
     );
-    final duck =
-        1 - game.combatIntensity * GameConfig.combatAmbientDuckStrength;
+    final volumes = ambientWeatherVolumes(
+      windStrength: weather.windStrength,
+      rainIntensity: weather.rainIntensity,
+      combatIntensity: game.combatIntensity,
+    );
     game.audioRepository.setAmbientVolume(
       AmbientSoundType.wind,
-      weather.windStrength * duck * GameConfig.ambientWindMaxVolume,
+      volumes.wind,
     );
     game.audioRepository.setAmbientVolume(
       AmbientSoundType.rain,
-      weather.rainIntensity * duck * GameConfig.ambientRainMaxVolume,
+      volumes.rain,
     );
   }
 }

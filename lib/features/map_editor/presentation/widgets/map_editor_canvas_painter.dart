@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../game_core/presentation/home_site_marker_painter.dart';
 import '../../../terrain/domain/models/biome.dart';
 import '../../../terrain/extensions/biome_extensions.dart';
-import '../../../terrain/presentation/obstacle_color.dart';
+import '../../../terrain/presentation/components/obstacle_color/obstacle_color.dart';
 import '../../domain/models/editor_point.dart';
 import '../../domain/models/editor_terrain_preview.dart';
 import '../../domain/models/environment_settings.dart';

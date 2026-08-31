@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 
+import 'util/paint_smoke_trail.dart';
+
 /// Short-lived puff left behind a flying rocket.
 class SmokeTrailComponent extends PositionComponent {
   static const _duration = 0.4;
@@ -11,19 +13,8 @@ class SmokeTrailComponent extends PositionComponent {
     : super(position: position, anchor: Anchor.center);
 
   @override
-  void render(Canvas canvas) {
-    final t = (_age / _duration).clamp(0.0, 1.0);
-    canvas.drawCircle(
-      Offset.zero,
-      5 + t * 6,
-      Paint()
-        ..color = Color.lerp(
-          const Color(0xAA9E9E9E),
-          const Color(0x009E9E9E),
-          t,
-        )!,
-    );
-  }
+  void render(Canvas canvas) =>
+      paintSmokeTrail(canvas, age: _age, duration: _duration);
 
   @override
   void update(double dt) {

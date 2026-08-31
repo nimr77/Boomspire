@@ -14,8 +14,9 @@ extension BiomeExtensions on Biome {
   WindType get defaultWindType => switch (this) {
     Biome.grassPlains || Biome.savanna => WindType.grassLeaves,
     Biome.mountainForest => WindType.autumnLeaves,
-    Biome.snowTundra || Biome.frozenPeaks || Biome.snowyGrassland =>
-      WindType.snow,
+    Biome.snowTundra ||
+    Biome.frozenPeaks ||
+    Biome.snowyGrassland => WindType.snow,
     Biome.desertDunes => WindType.sand,
     Biome.cityRuins || Biome.sea => WindType.dust,
   };

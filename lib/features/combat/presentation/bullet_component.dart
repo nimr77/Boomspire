@@ -6,6 +6,7 @@ import 'package:flame/components.dart';
 import '../../../core/combat/targetable.dart';
 import '../../game_core/presentation/boomspire_game.dart';
 import 'impact_spark_component.dart';
+import 'util/paint_bullet.dart';
 
 /// Fast tracer round - flies straight toward wherever [target] was standing
 /// the instant it was fired ([_aimPoint], snapshotted once) and applies
@@ -35,17 +36,11 @@ class BulletComponent extends PositionComponent
        super(position: start, size: Vector2(11, 3), anchor: Anchor.center);
 
   @override
-  void render(Canvas canvas) {
-    final color = fromEnemy ? const Color(0xFFFF5252) : const Color(0xFFFFD54A);
-    final glow = Paint()
-      ..color = color.withValues(alpha: 0.35)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    canvas.drawCircle(Offset(size.x / 2, size.y / 2), 5, glow);
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      Paint()..color = color,
-    );
-  }
+  void render(Canvas canvas) => paintBullet(
+    canvas,
+    size: size,
+    color: fromEnemy ? const Color(0xFFFF5252) : const Color(0xFFFFD54A),
+  );
 
   @override
   void update(double dt) {

@@ -24,9 +24,9 @@ import '../../game_content/impl/game_object_definition_mapper.dart';
 import '../../terrain/domain/models/terrain_map.dart';
 import '../../terrain/domain/models/weather_focus_state.dart';
 import '../../terrain/domain/repos/terrain_repository.dart';
-import '../../terrain/presentation/cloud_layer_component.dart';
-import '../../terrain/presentation/terrain_component.dart';
-import '../../terrain/presentation/wind_effect_component.dart';
+import '../../terrain/presentation/components/cloud_layer_component/cloud_layer_component.dart';
+import '../../terrain/presentation/components/terrain_component/terrain_component.dart';
+import '../../terrain/presentation/components/wind_effect_component/wind_effect_component.dart';
 import '../../towers/domain/models/building_type.dart';
 import '../../towers/domain/models/tower_type.dart';
 import '../../towers/domain/models/unit_blueprint.dart';
@@ -176,6 +176,9 @@ class BoomspireGame extends FlameGame<GameWorld>
            height: GameConfig.arenaHeight,
          ),
        );
+
+  // @override
+  // bool get debugMode => kDebugMode;
 
   /// Sum of every standing Gold Mine's kill-gold bonus (see
   /// `GoldMineComponent.killGoldBonus`) - added on top of the normal

@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 
+import 'util/paint_track_mark.dart';
+
 /// A tread print stamped into the ground behind a heavy (tracked) vehicle -
 /// unlike the light vehicle's [DustPuffComponent] this lingers for a while
 /// so a driven-over path visibly reads as tracks on the map.
@@ -19,20 +21,8 @@ class TrackMarkComponent extends PositionComponent {
       );
 
   @override
-  void render(Canvas canvas) {
-    final fade = (1 - _age / _duration).clamp(0.0, 1.0);
-    final paint = Paint()
-      ..color = const Color(0xFF2B2B2B).withValues(alpha: 0.35 * fade);
-    for (final dx in [-6.0, 6.0]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(dx, 0), width: 5, height: 14),
-          const Radius.circular(2),
-        ),
-        paint,
-      );
-    }
-  }
+  void render(Canvas canvas) =>
+      paintTrackMark(canvas, age: _age, duration: _duration);
 
   @override
   void update(double dt) {

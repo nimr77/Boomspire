@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 
 import '../../../core/combat/team.dart';
+import 'util/paint_vehicle_player_marker.dart';
 
 /// Static team-color roundel mounted on a ground vehicle's hull - a plain
 /// ownership marker (no aiming, no weapon), replacing the old gun-turret
@@ -20,10 +21,6 @@ class VehiclePlayerMarkerComponent extends PositionComponent {
       );
 
   @override
-  void render(Canvas canvas) {
-    final center = Offset(size.x / 2, size.y / 2);
-    final radius = size.x / 2;
-    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFF2B2E33));
-    canvas.drawCircle(center, radius * 0.68, Paint()..color = accent);
-  }
+  void render(Canvas canvas) =>
+      paintVehiclePlayerMarker(canvas, size: size, accent: accent);
 }

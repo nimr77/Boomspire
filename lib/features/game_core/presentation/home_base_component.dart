@@ -8,6 +8,7 @@ import '../../../core/combat/unit.dart';
 import '../domain/models/game_config.dart';
 import 'boomspire_game.dart';
 import 'home_base_sprite.dart';
+import 'util/paint_home_base.dart';
 
 /// The player's home base at the terrain's end point: a defended structure
 /// (instead of a plain marker circle) that shows its remaining health and
@@ -69,39 +70,12 @@ class HomeBaseComponent extends PositionComponent
 
   @override
   void render(ui.Canvas canvas) {
-    if (_pulse > 0) {
-      final radius = size.x * (0.55 + (1 - _pulse) * 0.55);
-      canvas.drawCircle(
-        ui.Offset(size.x / 2, size.y / 2),
-        radius,
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 4
-          ..color = const ui.Color(0xFFE53935).withValues(alpha: _pulse * 0.85),
-      );
-    }
-
-    final ratio = (game.gameState.health / GameConfig.startingHealth).clamp(
-      0.0,
-      1.0,
-    );
-    final barWidth = size.x * 0.9;
-    final barX = (size.x - barWidth) / 2;
-    const barY = -12.0;
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(
-        ui.Rect.fromLTWH(barX, barY, barWidth, 6),
-        const ui.Radius.circular(3),
-      ),
-      ui.Paint()..color = const ui.Color(0xAA000000),
-    );
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(
-        ui.Rect.fromLTWH(barX, barY, barWidth * ratio, 6),
-        const ui.Radius.circular(3),
-      ),
-      ui.Paint()
-        ..color = ratio > 0.4 ? owner.color : const ui.Color(0xFFE53935),
+    paintHomeBase(
+      canvas,
+      size: size,
+      pulse: _pulse,
+      healthRatio: healthRatio,
+      ownerColor: owner.color,
     );
   }
 

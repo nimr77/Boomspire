@@ -1,9 +1,9 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
 
 import '../../../core/combat/team.dart';
+import 'util/paint_team_stripe_marker.dart';
 
 /// Pulsing team-color light mounted on a plane's hull - the flying-wing
 /// body type's analog of [VehiclePlayerMarkerComponent]'s roundel, which
@@ -25,24 +25,8 @@ class TeamStripeMarkerComponent extends PositionComponent {
       );
 
   @override
-  void render(Canvas canvas) {
-    final pulse = 0.5 + 0.5 * sin(_phase);
-    final center = Offset(size.x / 2, size.y / 2);
-    final radius = size.x * 0.5;
-
-    canvas.drawCircle(
-      center,
-      radius * (1.3 + pulse * 0.4),
-      Paint()
-        ..color = accent.withValues(alpha: 0.2 + pulse * 0.25)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.6),
-    );
-    canvas.drawCircle(
-      center,
-      radius * (0.7 + pulse * 0.3),
-      Paint()..color = accent.withValues(alpha: 0.75 + pulse * 0.25),
-    );
-  }
+  void render(Canvas canvas) =>
+      paintTeamStripeMarker(canvas, size: size, accent: accent, phase: _phase);
 
   @override
   void update(double dt) {

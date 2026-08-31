@@ -18,9 +18,9 @@ import '../../../core/combat/unit_objective.dart';
 import '../../../core/combat/weapon_type.dart';
 import '../../../core/pathfinding/astar.dart';
 import '../../ai_director/domain/models/strategy_directive.dart';
-import '../../allies/presentation/ally_sprites.dart';
+import '../../allies/presentation/components/ally_sprite_factory/ally_sprite_factory.dart';
 import '../../audio/domain/models/sfx_type.dart';
-import '../../enemies/presentation/enemy_sprites.dart';
+import '../../enemies/presentation/components/enemy_sprite_factory/enemy_sprite_factory.dart';
 import '../../enemies/presentation/floating_text_component.dart';
 import '../../game_core/domain/models/game_config.dart';
 import '../../game_core/domain/models/game_status.dart';
@@ -42,6 +42,11 @@ import 'smoke_trail_component.dart';
 import 'target_highlight_component.dart';
 import 'team_stripe_marker_component.dart';
 import 'track_mark_component.dart';
+import 'util/paint_mobile_unit_overlay.dart';
+import 'util/spawn_base_rush_position.dart';
+import 'util/spawn_pre_explosion_delay.dart';
+import 'util/spawn_random_phase.dart';
+import 'util/spawn_repath_delay.dart';
 import 'vapor_cone_component.dart';
 import 'vehicle_player_marker_component.dart';
 import 'vehicle_tread_component.dart';
@@ -164,13 +169,13 @@ class MobileUnitComponent extends PositionComponent
   Vector2 _loiterCenter = Vector2.zero();
   Attackable? _engaging;
   Attackable? _huntTarget;
-  double _bobPhase = Random().nextDouble() * pi * 2;
+  double _bobPhase = spawnRandomPhase();
 
   /// Drives the pulsing selection ring/glow in [render] - same idea as
   /// `TowerComponent._idlePhase`, just a separate field so a unit's own
   /// bob/facing animation timing (which varies per [MovementStyle]) never
   /// has to double as the selection-indicator's pulse rate.
-  double _idlePhase = Random().nextDouble() * pi * 2;
+  double _idlePhase = spawnRandomPhase();
 
   /// This unit's actual heading, set by movement/engage code - [_applyBob]
   /// layers its wobble on top of this every frame instead of accumulating
@@ -389,12 +394,12 @@ class MobileUnitComponent extends PositionComponent
   /// placed at their producing building).
   Vector2? initialPosition() {
     if (objective != UnitObjective.rushBase) return null;
-    final jitter = (Random().nextDouble() - 0.5) * 60;
+    final jitter = spawnBaseRushJitter();
     if (spawnOverride != null) {
       return Vector2(spawnOverride!.x, spawnOverride!.y + jitter);
     }
     final spawnPoints = game.terrainMap.spawnPoints;
-    final sp = spawnPoints[Random().nextInt(spawnPoints.length)];
+    final sp = spawnPoints[spawnRandomSpawnPointIndex(spawnPoints.length)];
     return Vector2(sp.x, sp.y + jitter);
   }
 
@@ -571,56 +576,16 @@ class MobileUnitComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    // Selection indicator - mirrors `TowerComponent.render`'s selection
-    // ring so tapping a unit reads the same way as tapping a tower: a
-    // pulsing glow around the unit itself plus (when it actually has a
-    // weapon) a range ring showing how far it can engage from here. Its
-    // current focus target is separately tinted via [markTargeted] in
-    // [_maybeEngage].
-    if (game.selectedUnit.value == this) {
-      final center = Offset(size.x / 2, size.y / 2);
-      final accent = team.color;
-      final pulse = 0.5 + 0.5 * sin(_idlePhase * 1.6);
-
-      if (blueprint.attackRange > 0) {
-        canvas.drawCircle(
-          center,
-          blueprint.attackRange,
-          Paint()..color = accent.withValues(alpha: 0.04 + pulse * 0.04),
-        );
-        canvas.drawCircle(
-          center,
-          blueprint.attackRange,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.5 + pulse
-            ..color = accent.withValues(alpha: 0.35 + pulse * 0.3),
-        );
-      }
-
-      canvas.drawCircle(
-        center,
-        size.x * 0.62 + pulse * 3,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2 + pulse
-          ..color = accent.withValues(alpha: 0.55 + pulse * 0.35)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-      );
-    }
-
-    if (health >= effectiveMaxHealth) return;
-    final ratio = healthRatio;
-    final barWidth = size.x * 0.8;
-    final barX = (size.x - barWidth) / 2;
-    const barY = -8.0;
-    canvas.drawRect(
-      Rect.fromLTWH(barX, barY, barWidth, 4),
-      Paint()..color = const Color(0xAA000000),
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(barX, barY, barWidth * ratio, 4),
-      Paint()..color = team.color,
+    paintMobileUnitOverlay(
+      canvas,
+      selected: game.selectedUnit.value == this,
+      idlePhase: _idlePhase,
+      accent: team.color,
+      attackRange: blueprint.attackRange,
+      health: health,
+      effectiveMaxHealth: effectiveMaxHealth,
+      healthRatio: healthRatio,
+      size: size,
     );
   }
 
@@ -659,7 +624,7 @@ class MobileUnitComponent extends PositionComponent
     if (blueprint.isVehicle && showsLowHealthTelegraph && healthRatio < 0.3) {
       _preExplosionTimer -= dt;
       if (_preExplosionTimer <= 0) {
-        _preExplosionTimer = 0.35 + Random().nextDouble() * 0.3;
+        _preExplosionTimer = spawnPreExplosionDelay();
         game.world.spawn(
           SmokeTrailComponent(position: position.clone() + Vector2(0, -6)),
         );
@@ -787,7 +752,7 @@ class MobileUnitComponent extends PositionComponent
     if (points.isNotEmpty) points[points.length - 1] = goal.clone();
     _path = points;
     _pathIndex = 0;
-    _repathTimer = 0.5 + Random().nextDouble() * 0.3;
+    _repathTimer = spawnRepathDelay();
   }
 
   void _die() {
@@ -1225,7 +1190,7 @@ class MobileUnitComponent extends PositionComponent
           if (_clipShotsFired >= blueprint.projectileCount) {
             _planePhase = _PlaneAttackPhase.loiter;
             _loiterTimer = blueprint.attackInterval; // reload while looping
-            _loiterAngle = Random().nextDouble() * pi * 2;
+            _loiterAngle = spawnRandomPhase();
             _loiterCenter = target.position.clone();
           } else {
             _attackCooldown = blueprint.clipShotInterval;

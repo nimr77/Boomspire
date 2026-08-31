@@ -11,6 +11,7 @@ import '../../game_core/presentation/boomspire_game.dart';
 import 'explosion_component.dart';
 import 'fire_component.dart';
 import 'smoke_trail_component.dart';
+import 'util/paint_rocket.dart';
 
 /// Ballistic rocket/shell that leaves a smoke trail and detonates into a
 /// splash-damage explosion on arrival. Shared by the rocket battery and the
@@ -62,20 +63,8 @@ class RocketComponent extends PositionComponent
        super(position: start, size: Vector2(15, 5), anchor: Anchor.center);
 
   @override
-  void render(Canvas canvas) {
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.x, size.y),
-        const Radius.circular(2),
-      ),
-      Paint()..color = bodyColor,
-    );
-    canvas.drawCircle(
-      Offset(size.x - 2, size.y / 2),
-      2.6,
-      Paint()..color = tipColor,
-    );
-  }
+  void render(Canvas canvas) =>
+      paintRocket(canvas, size: size, bodyColor: bodyColor, tipColor: tipColor);
 
   @override
   void update(double dt) {

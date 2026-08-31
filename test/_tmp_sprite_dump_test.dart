@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:boomspire/features/allies/presentation/ally_sprites.dart';
-import 'package:boomspire/features/enemies/presentation/enemy_sprites.dart';
+import 'package:boomspire/features/allies/presentation/components/ally_sprite_factory/ally_sprite_factory.dart';
+import 'package:boomspire/features/enemies/presentation/components/enemy_sprite_factory/enemy_sprite_factory.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
